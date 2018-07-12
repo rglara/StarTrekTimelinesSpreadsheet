@@ -27,8 +27,9 @@ const FB = require('fb');
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow;
 
-// If seeing certificate errors, uncomment this line. DO NOT SHIP THIS TURNED ON!
-// app.commandLine.appendSwitch('ignore-certificate-errors'); 
+// Create a second, hidden window to host our server - this offloads resource intensive
+// operations from the main and renderere processes and creates a secure isolation layer.
+let serverWindow;
 
 // Keep a reference for dev mode
 let dev = false;
@@ -36,7 +37,7 @@ if (process.defaultApp || /[\\/]electron-prebuilt[\\/]/.test(process.execPath) |
   dev = true;
 }
 
-function createWindow() {
+function createWindows() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -46,6 +47,17 @@ function createWindow() {
     icon: path.join(__dirname, 'src/assets/icons/ATFleet.ico'),
     webPreferences: { webSecurity: false }
   });
+
+  serverWindow = new BrowserWindow({
+    width: 400,
+    height: 500,
+    show: false,
+    contextIsolation: true,
+    icon: path.join(__dirname, 'src/assets/icons/ATFleet.ico'),
+    webPreferences: { webSecurity: false }
+  });
+
+  serverWindow.setMenu(null);
 
   mainWindow.setTitle('Star Trek Timelines Crew Management v' + app.getVersion());
   mainWindow.setMenu(null);
@@ -66,7 +78,9 @@ function createWindow() {
       slashes: true
     });
   }
+
   mainWindow.loadURL(indexPath);
+  serverWindow.loadURL(indexPath.replace('index.html', 'server.html'));
 
   // Don't show until we are ready and loaded
   mainWindow.once('ready-to-show', () => {
@@ -77,12 +91,24 @@ function createWindow() {
     }
   });
 
+  if (dev) {
+    // In development mode, show the server window as well, for debugging purposes
+    serverWindow.once('ready-to-show', () => {
+      serverWindow.show();
+      serverWindow.webContents.openDevTools();
+    });
+  }
+
   // Emitted when the window is closed.
   mainWindow.on('closed', () => {
     // Dereference the window object, usually you would store windows
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null;
+
+    // Also start cleaning up the server when the main window is closed
+    serverWindow.close();
+    serverWindow = null;
   });
 }
 
@@ -129,7 +155,7 @@ app.setAppUserModelId("IAmPicard.StarTrekTimelinesTool");
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow);
+app.on('ready', createWindows);
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
@@ -144,6 +170,6 @@ app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
   if (mainWindow === null) {
-    createWindow();
+    createWindows();
   }
 });

@@ -1,15 +1,13 @@
 {
-  "compileOnSave": false,
   "compilerOptions": {
     "target": "es2016",
-    "moduleResolution": "node",
+    "module": "commonjs",
     "pretty": true,
-    "newLine": "LF",
-    "allowSyntheticDefaultImports": true,
     "strict": true,
     "sourceMap": true,
-    "skipLibCheck": true,
     "allowJs": true,
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "types": ["node"],
+    "strictPropertyInitialization": false
   }
 }

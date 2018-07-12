@@ -12,11 +12,14 @@ const OUTPUT_DIR = path.resolve(__dirname, 'dist');
 const defaultInclude = [SRC_DIR];
 
 module.exports = {
-	entry: SRC_DIR + '/index.js',
+	entry: {
+		main: SRC_DIR + '/index.js',
+		server: SRC_DIR + '/index_server.js'
+	},
 	output: {
 		path: OUTPUT_DIR,
 		publicPath: '',
-		filename: 'bundle.js',
+		filename: '[name].js',
 		globalObject: 'this'
 	},
 	module: {
@@ -34,12 +37,12 @@ module.exports = {
 			{
 				test: /\.(png|jpg|gif)$/,
 				use: [
-				  {
-					loader: 'url-loader',
-					options: {
-					  limit: 8192
+					{
+						loader: 'url-loader',
+						options: {
+							limit: 8192
+						}
 					}
-				  }
 				],
 				include: defaultInclude
 			},
@@ -49,23 +52,27 @@ module.exports = {
 				include: defaultInclude
 			},
 			{
-				test: /\.ts$/,
-				enforce: 'pre',
-				loader: 'tslint-loader',
-				options: {
-					typeCheck: true,
-					emitErrors: true
-				}
-			},
-			{
 				test: /\.tsx?$/,
-				loader: ['babel-loader', 'ts-loader']
+				use: 'ts-loader',
+				exclude: /node_modules/,
+				include: defaultInclude
 			}
 		]
 	},
+	resolve: {
+		extensions: [".ts", ".tsx", ".js"]
+	},
 	target: 'electron-renderer',
 	plugins: [
-		new HtmlWebpackPlugin({ title: 'Star Trek Timelines Crew Management v' + PACKAGE.version }),
+		new HtmlWebpackPlugin({
+			title: 'Star Trek Timelines Crew Management v' + PACKAGE.version,
+			chunks: ['main']
+		}),
+		new HtmlWebpackPlugin({
+			filename: 'server.html',
+			title: 'SERVER - Star Trek Timelines Crew Management v' + PACKAGE.version,
+			chunks: ['server']
+		}),
 		new webpack.DefinePlugin({
 			'process.env.NODE_ENV': JSON.stringify('development')
 		})
