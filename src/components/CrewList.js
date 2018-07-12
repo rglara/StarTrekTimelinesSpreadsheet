@@ -16,8 +16,8 @@ import { ItemDisplay } from './ItemDisplay';
 
 import { sortItems, columnClick } from '../utils/listUtils.js';
 
-import STTApi from 'sttapi';
-import { CONFIG } from 'sttapi';
+import STTApi from 'sttapi-frontend';
+import { CONFIG } from 'sttapi-frontend';
 
 function groupBy(items, fieldName) {
 	let groups = items.reduce((currentGroups, currentItem, index) => {

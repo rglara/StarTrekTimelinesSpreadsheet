@@ -14,8 +14,8 @@ import Logger from '../utils/logger';
 
 import { openShellExternal, download } from '../utils/pal';
 
-import STTApi from 'sttapi';
-import { CONFIG, loadGauntlet, gauntletCrewSelection, gauntletRoundOdds, payToGetNewOpponents, payToReviveCrew, claimRankRewards, playContest, enterGauntlet, formatCrewStats } from 'sttapi';
+import STTApi from 'sttapi-frontend';
+import { CONFIG, loadGauntlet, gauntletCrewSelection, gauntletRoundOdds, payToGetNewOpponents, payToReviveCrew, claimRankRewards, playContest, enterGauntlet, formatCrewStats } from 'sttapi-frontend';
 
 class GauntletCrew extends React.Component {
 	render() {

@@ -52,8 +52,8 @@ import { FeedbackPanel } from './FeedbackPanel.js';
 import { ShakingButton } from './ShakingButton.js';
 import { VoyageTools } from './VoyageTools.js';
 
-import STTApi from 'sttapi';
-import { loginSequence } from 'sttapi';
+import STTApi from 'sttapi-frontend';
+import { loginSequence } from 'sttapi-frontend';
 import { download, openShellExternal, getAppVersion } from '../utils/pal';
 
 import { loadTheme, ColorClassNames } from '@uifabric/styling';

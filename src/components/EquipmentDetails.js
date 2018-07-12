@@ -5,8 +5,8 @@ import uuidv4 from 'uuid/v4';
 import vis from 'vis';
 import '!css-loader?url=false!vis/dist/vis.css';
 
-import STTApi from 'sttapi';
-import { CONFIG } from 'sttapi';
+import STTApi from 'sttapi-frontend';
+import { CONFIG } from 'sttapi-frontend';
 
 export class EquipmentSlot extends React.Component {
 	constructor(props) {

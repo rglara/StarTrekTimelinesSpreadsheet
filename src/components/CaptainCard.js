@@ -2,8 +2,8 @@ import '../assets/css/semantic.min.css';
 
 import React from 'react';
 
-import STTApi from 'sttapi';
-import { CONFIG } from 'sttapi';
+import STTApi from 'sttapi-frontend';
+import { CONFIG } from 'sttapi-frontend';
 
 import { openDevTools } from '../utils/pal';
 

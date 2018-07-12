@@ -10,7 +10,7 @@ import { loginPubNub } from '../utils/chat';
 import { sortItems, columnClick } from '../utils/listUtils';
 import { download } from '../utils/pal';
 
-import STTApi from 'sttapi';
+import STTApi from 'sttapi-frontend';
 
 import { parse as json2csv } from 'json2csv';
 

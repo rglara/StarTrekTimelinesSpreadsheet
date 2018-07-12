@@ -9,8 +9,8 @@ import '!css-loader?url=false!vis/dist/vis.css';
 
 import { getTheme } from '@uifabric/styling';
 
-import STTApi from 'sttapi';
-import { CONFIG, calculateQuestRecommendations } from 'sttapi';
+import STTApi from 'sttapi-frontend';
+import { CONFIG, calculateQuestRecommendations } from 'sttapi-frontend';
 
 export class MissionDetails extends React.Component {
 	constructor(props) {

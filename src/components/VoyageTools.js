@@ -10,8 +10,8 @@ import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
 import { Icon } from 'office-ui-fabric-react/lib/Icon';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
 
-import STTApi from 'sttapi';
-import { CONFIG, bestVoyageShip, loadVoyage, startVoyage, formatCrewStats, bonusCrewForCurrentEvent } from 'sttapi';
+import STTApi from 'sttapi-frontend';
+import { CONFIG, bestVoyageShip, loadVoyage, startVoyage, formatCrewStats, bonusCrewForCurrentEvent } from 'sttapi-frontend';
 
 import { download } from '../utils/pal';
 

@@ -1,5 +1,5 @@
-import STTApi from 'sttapi';
-import { CONFIG } from 'sttapi';
+import STTApi from 'sttapi-frontend';
+import { CONFIG } from 'sttapi-frontend';
 
 import { getAppVersion, download, openShellExternal } from '../utils/pal';
 

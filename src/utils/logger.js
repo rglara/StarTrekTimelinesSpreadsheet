@@ -1,7 +1,7 @@
 const fs = require('fs');
 
-import STTApi from 'sttapi';
-import { CONFIG } from 'sttapi';
+import STTApi from 'sttapi-frontend';
+import { CONFIG } from 'sttapi-frontend';
 
 import { getAppPath } from './pal';
 

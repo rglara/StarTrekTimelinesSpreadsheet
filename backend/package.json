@@ -1,0 +1,30 @@
+{
+  "name": "sttapi-backend",
+  "version": "0.0.1",
+  "description": "TypeScript Server API for Star Trek Timelines Tool",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "prepare": "npm run build",
+    "build": "tsc",
+    "postbuild": "node_modules/.bin/copyfiles -f src/*.d.ts dist",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "IAmPicard",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "@types/cookie-session": "latest",
+    "@types/cors": "latest",
+    "@types/express": "latest",
+    "@types/node": "latest",
+    "copyfiles": "latest",
+    "typescript": "latest"
+  },
+  "dependencies": {
+    "body-parser": "latest",
+    "cookie-session": "latest",
+    "cors": "latest",
+    "express": "latest"
+  }
+}

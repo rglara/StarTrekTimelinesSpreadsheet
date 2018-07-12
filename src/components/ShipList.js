@@ -5,7 +5,7 @@ import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
 import { RarityStars } from './RarityStars';
 
 import { sortItems, columnClick } from '../utils/listUtils.js';
-import STTApi from 'sttapi';
+import STTApi from 'sttapi-frontend';
 
 export class ShipList extends React.Component {
 	constructor(props) {

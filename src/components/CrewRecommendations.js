@@ -6,8 +6,8 @@ import { CrewList } from './CrewList.js';
 import { CollapsibleSection } from './CollapsibleSection.js';
 import { ItemDisplay } from './ItemDisplay';
 
-import STTApi from 'sttapi';
-import { CONFIG } from 'sttapi';
+import STTApi from 'sttapi-frontend';
+import { CONFIG } from 'sttapi-frontend';
 
 import { download } from '../utils/pal';
 

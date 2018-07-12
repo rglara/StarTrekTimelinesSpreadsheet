@@ -1,4 +1,4 @@
-import app from "./app";
+import app from 'sttapi-backend';
 
 const PORT = 3000;
 
@@ -7,7 +7,7 @@ export class STTServer {
 	}
 
 	async start(logCallback: (msg: string) => void) {
-        await new Promise((resolve, reject) => app.listen(PORT, () => resolve()));
+        await new Promise((resolve, reject) => app.getExpressApplication().listen(PORT, () => resolve()));
 
         logCallback(`Server listening on port ${PORT}`);
     }

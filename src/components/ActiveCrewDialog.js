@@ -7,8 +7,8 @@ import { Spinner, SpinnerSize } from 'office-ui-fabric-react/lib/Spinner';
 
 import { CollapsibleSection } from './CollapsibleSection.js';
 
-import STTApi from 'sttapi';
-import { CONFIG, loadVoyage } from 'sttapi';
+import STTApi from 'sttapi-frontend';
+import { CONFIG, loadVoyage } from 'sttapi-frontend';
 
 export class ShuttleAdventure extends React.Component {
     constructor(props) {

@@ -1,4 +1,4 @@
-import STTApi from 'sttapi';
+import STTApi from 'sttapi-frontend';
 
 import { parse as json2csv } from 'json2csv';
 

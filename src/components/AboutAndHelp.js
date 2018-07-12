@@ -5,7 +5,7 @@ import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
 
 import { getAppVersion, openShellExternal } from '../utils/pal';
 
-import STTApi from 'sttapi';
+import STTApi from 'sttapi-frontend';
 
 export class AboutAndHelp extends React.Component {
 	constructor(props) {

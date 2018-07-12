@@ -4,7 +4,7 @@ import cookieSession = require('cookie-session');
 import * as bodyParser from 'body-parser';
 import { Routes } from './routes/apiRoutes';
 
-class App {
+export class App {
     private app: express.Application;
     private routes: Routes = new Routes();
 
@@ -61,5 +61,3 @@ class App {
         return this.app;
     }
 }
-
-export default new App().getExpressApplication();
