@@ -27,6 +27,61 @@ import { AssetImageProvider } from './AssetImageProvider';
 import Dexie from "dexie";
 import CONFIG from "./CONFIG";
 
+// Start moving temporary code into this class
+export class STTFrontendLogic {
+	private _backendUrl: string;
+	private _accessToken: string | undefined;
+
+	setBackendURL(url: string) {
+		this._backendUrl = url;
+	}
+
+	private async _loginWithAccessToken(access_token: string, autoLogin: boolean): Promise<void> {
+		this._accessToken = access_token;
+
+		/*await*/ this._cache.config.put({
+			key: 'autoLogin',
+			value: autoLogin
+		});
+
+		if (autoLogin) {
+			/*await*/ this._cache.config.put({
+				key: 'accessToken',
+				value: access_token
+			});
+		}
+	}
+
+	async loginWithCachedAccessToken(): Promise<boolean> {
+		let res = await fetch(this._backendUrl + '/loginStatus', { credentials: 'include' });
+        if (!res.ok) {
+			return false;
+		}
+
+		this._accessToken = await res.text();
+		let isLoggedIn = this._accessToken.length > 0;
+		
+		return isLoggedIn;
+	}
+
+	async login(username: string, password: string, autoLogin: boolean): Promise<any> {
+		let res = await fetch(this._backendUrl + '/login', {
+			method: "post",
+			headers: {"Content-type": "application/json"},
+			credentials: "include",
+			body: JSON.stringify({username, password})
+		});
+        if (!res.ok) {
+			let data = await res.text();
+			throw new Error(data);
+		}
+
+		let data = await res.json();
+		this._accessToken = data.access_token;
+		return this._loginWithAccessToken(data.access_token, autoLogin);
+	}
+}
+
 export class STTApiClass {
 	private _accessToken: string | undefined;
 	private _net: NetworkInterface;
@@ -47,10 +102,14 @@ export class STTApiClass {
 	public minimalComplement?: MinimalComplement;
 	public imageProvider! : ImageProvider;
 
+	public tempfronted : STTFrontendLogic;
+
 	constructor() {
 		this.refreshEverything(true);
 
 		this._net = new NetworkFetch();
+
+		this.tempfronted = new STTFrontendLogic();
 
 		// TODO: Dexie uses IndexedDB, so doesn't work in plain node.js without polyfill - should the caching be an interface?
 		this._cache = new DexieCache("sttcache");

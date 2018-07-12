@@ -25,6 +25,7 @@
     "body-parser": "latest",
     "cookie-session": "latest",
     "cors": "latest",
-    "express": "latest"
+    "express": "latest",
+    "node-fetch": "latest"
   }
 }

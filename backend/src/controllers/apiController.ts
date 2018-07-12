@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 
+import DBTools from '../DBTools';
+
 export class ApiController {
     public nocache(req: Request, res: Response, next: NextFunction) {
         res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
@@ -8,21 +10,24 @@ export class ApiController {
         next();
     }
 
-    public login(req: Request, res: Response) {
+    async login(req: Request, res: Response) {
         let loginData = req.body;
 
         if (!loginData.username || !loginData.password) {
             res.status(403).send('username and password required').end();
         } else {
-            //TODO: login
-            let whatever = {
-                foo: 'bar'
-            };
+            try
+            {
+                let access_token = await DBTools.login(loginData.username, loginData.password);
 
-            // Store a cookie with the access token so users don't need to login every time
-            req.session.access_token = 'aa';
+                // Store a cookie with the access token so users don't need to login every time
+                req.session.access_token = access_token;
 
-            res.status(200).json(whatever).end();
+                res.status(200).json({access_token}).end();
+            }
+            catch(error) {
+                res.status(403).send(error).end();
+            }
         }
     }
 
@@ -34,9 +39,9 @@ export class ApiController {
 
     public loginStatus(req: Request, res: Response) {
         if (req.session.access_token) {
-            res.status(200).send(`true`).end();
+            res.status(200).send(req.session.access_token).end();
         } else {
-            res.status(200).send(`false`).end();
+            res.status(200).send(``).end();
         }
     }
 }

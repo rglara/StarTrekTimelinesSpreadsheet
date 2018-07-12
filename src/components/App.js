@@ -64,6 +64,8 @@ class App extends React.Component {
 	constructor(props) {
 		super(props);
 
+		STTApi.tempfronted.setBackendURL('http://localhost:3000');
+
 		this.state = {
 			showSpinner: false,
 			dataLoaded: false,
