@@ -180,6 +180,9 @@ class VoyageCrewRankWorker : public Nan::AsyncProgressWorker
 	std::unique_ptr<VoyageTools::VoyageCalculator> voyageCalculator;
 };
 
+constexpr std::array<const char *, VoyageTools::SKILL_COUNT> VoyageCrewRankWorker::skillNames;
+constexpr std::array<const char *, VoyageTools::SKILL_COUNT> VoyageCrewRankWorker::altSkillNames;
+
 NAN_METHOD(calculateVoyageRecommendations)
 {
 	if (info.Length() != 3)
