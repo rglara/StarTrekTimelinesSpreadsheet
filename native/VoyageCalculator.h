@@ -79,6 +79,7 @@ struct Crew
 	unsigned int score{0};
 	unsigned int max_rarity{0};
 	bool ff100 = false;
+	float weightedSum{0};
 };
 using CrewArray = std::array<const Crew *, SLOT_COUNT>;
 
