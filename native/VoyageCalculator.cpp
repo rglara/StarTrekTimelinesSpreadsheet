@@ -41,6 +41,8 @@ constexpr float ssChance = 0.25f;
 constexpr float osChance = 0.1f;
 constexpr unsigned int dilPerMin = 5;
 
+static constexpr std::array<const char *, SKILL_COUNT> SKILL_NAMES = {"COM", "SCI", "SEC", "ENG", "DIP", "MED"};
+
 unsigned int VoyageCalculator::computeScore(const Crew& crew, std::uint8_t skill, size_t traitSlot) const noexcept
 {
 	if (crew.skills[skill] == 0)
@@ -104,10 +106,26 @@ VoyageCalculator::VoyageCalculator(const char* jsonInput, bool rankMode) noexcep
 			c.skillMaxProfs[i] = skillData[i*3 + 2];
 			c.skillMinProfs[i] = skillData[i*3 + 1];
 			c.skills[i] = skillData[i*3] + (c.skillMaxProfs[i] + c.skillMinProfs[i]) / 2;
+			float skill = skillData[i*3] + (c.skillMaxProfs[i] + c.skillMinProfs[i]) / 2.0f;
+
+			if (skill > 0)
+			{
+				for (uint iSkill = 0; iSkill < SKILL_COUNT; ++iSkill)
+				{
+					if (iSkill == binaryConfig.primarySkill)
+						c.weightedSum += skill * binaryConfig.skillPrimaryMultiplier;
+					else if (iSkill == binaryConfig.secondarySkill)
+						c.weightedSum += skill * binaryConfig.skillSecondaryMultiplier;
+					else
+						c.weightedSum += skill * binaryConfig.skillMatchingMultiplier;
+				};
+			}
 		}
 
-		log << c.name << " " << c.skills[0] << " " << c.skills[1] << " " << c.skills[2] << " "
-			<< c.skills[3] << " " << c.skills[4] << " " << c.skills[5] << " " << std::endl;
+		log << c.name;
+		for (uint s = 0; s < SKILL_NAMES.size(); ++s)
+			log << " " << SKILL_NAMES[s] << ":" << c.skills[s];
+		log << " ws: " << c.weightedSum << std::endl;
 
 		roster.emplace_back(std::move(c));
 	}
@@ -510,9 +528,10 @@ float VoyageCalculator::calculateDuration(const std::array<const Crew *, SLOT_CO
 
 	if (debug)
 	{
-		log << shipAM << " "
-			<< totals.skills[0] << " " << totals.skills[1] << " " << totals.skills[2] << " "
-			<< totals.skills[3] << " " << totals.skills[4] << " " << totals.skills[5] << std::endl;
+		log << shipAM;
+		for (uint s = 0; s < SKILL_NAMES.size(); ++s)
+			log << " " << SKILL_NAMES[s] << ":" << totals.skills[s];
+		log << std::endl;
 	}
 
 	//unsigned int PrimarySkill = totals.skills[binaryConfig.primarySkill];
