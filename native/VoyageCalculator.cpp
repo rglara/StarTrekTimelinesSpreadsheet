@@ -412,6 +412,10 @@ void VoyageCalculator::calculateSA() noexcept
 			 << (sk == binaryConfig.secondarySkill ? "(sec)" : "")
 			 << std::endl;
 	}
+
+	bestconsidered = assignments;
+	bestscore = voyTime;
+	progressUpdate(bestconsidered, bestscore);
 }
 
 void VoyageCalculator::calculate() noexcept
@@ -422,24 +426,24 @@ void VoyageCalculator::calculate() noexcept
 		log << std::endl << "END NEW CALCULATION METHOD" << std::endl << std::endl;
 	}
 
-	for (unsigned int iteration = 1;;++iteration) {
-		log << "iteration " << iteration << std::endl;
+	// for (unsigned int iteration = 1;;++iteration) {
+	// 	log << "iteration " << iteration << std::endl;
 
-		float prevBest = bestscore;
+	// 	float prevBest = bestscore;
 
-		resetRosters();
-		updateSlotRosterScores();
-		findBest();
+	// 	resetRosters();
+	// 	updateSlotRosterScores();
+	// 	findBest();
 
-		if (bestscore > prevBest) {
-			continue;
-		} else {
-			log << "final result:" << std::endl;
-			calculateDuration(bestconsidered, true);
-			log << "stopping after " << iteration << " iterations" << std::endl;
-			break;
-		}
-	}
+	// 	if (bestscore > prevBest) {
+	// 		continue;
+	// 	} else {
+	// 		log << "final result:" << std::endl;
+	// 		calculateDuration(bestconsidered, true);
+	// 		log << "stopping after " << iteration << " iterations" << std::endl;
+	// 		break;
+	// 	}
+	// }
 }
 
 void VoyageCalculator::resetRosters() noexcept
