@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include <map>
+#include <random>
 
 #ifdef max
 #undef max // cstdlib included in json.hpp
@@ -43,6 +44,7 @@ constexpr unsigned int dilPerMin = 5;
 
 static constexpr std::array<const char *, SKILL_COUNT> SKILL_NAMES = {"COM", "SCI", "SEC", "ENG", "DIP", "MED"};
 static constexpr std::array<const char *, SLOT_COUNT> SLOT_NAMES = {"com1", "com2", "sci1", "sci2", "sec1", "sec2", "eng1", "eng2", "dip1", "dip2", "med1", "med2"};
+static constexpr std::array<const unsigned int, SLOT_COUNT> SLOT_SKILLS = { 0,0, 1,1, 2,2, 3,3, 4,4, 5,5 };
 
 unsigned int VoyageCalculator::computeScore(const Crew& crew, std::uint8_t skill, size_t traitSlot) const noexcept
 {
@@ -246,6 +248,54 @@ void VoyageCalculator::calculateSA() noexcept
 	float voyTime = calculateDuration(assignments, true);
 	log << " prepop crew lasted " << voyTime << std::endl;
 
+	// Build a slot roster that only includes applicable skills per slot
+	std::array<std::vector<const Crew*>, SLOT_COUNT> candidates;
+	for (uint c = 0; c < roster.size(); ++c)
+	{
+		Crew* crew = &roster[c];
+		for (uint s = 0; s < SLOT_COUNT; ++s)
+		{
+			auto skill = SLOT_SKILLS[s];
+			if (crew->skills[skill] > 0)
+			{
+				//log << " crew " << crew->name << " has " << SKILL_NAMES[skill] << "(" << skill << ") = " << crew->skills[skill] << " for slot " << s << std::endl;
+				candidates[s].push_back(crew);
+			}
+		}
+	}
+
+	// Sort crashes; must be doing something wrong
+	// for (int s=0; s < SKILL_COUNT; ++s)
+	// {
+	// 	std::sort(candidates[s].begin(), candidates[s].end(),
+	// 				 [&](const Crew *left, const Crew *right) {
+	// 					 return (left->skills[s] > right->skills[s]);
+	// 				 });
+	// }
+
+	float temperature = 10000;
+	const float coolingRate = 0.003;
+
+	std::default_random_engine rng;
+	std::uniform_real_distribution<float> randDist(0, 1);
+
+	while (temperature > 1)
+	{
+		CrewArray testAssignments(assignments);
+		uint testSlot = std::floor(randDist(rng) * SLOT_COUNT);
+		//log << " testing slot " << testSlot << std::endl;
+		std::vector<const Crew *> testSlotRoster = candidates[testSlot];
+		if (testSlotRoster.empty())
+			//TODO: notify UI of failure
+			break;
+		int testCrewOffset = std::floor(randDist(rng) * testSlotRoster.size());
+		const Crew *testCrew = testSlotRoster[testCrewOffset];
+
+		log << " testing crew(" << testCrewOffset << "/" << testSlotRoster.size() << ") "
+			<< testCrew->name << " in slot " << SLOT_NAMES[testSlot] << "(" << testSlot << ")" << std::endl;
+
+		temperature *= 1 - coolingRate;
+	}
 }
 
 void VoyageCalculator::calculate() noexcept
