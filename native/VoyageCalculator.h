@@ -120,7 +120,7 @@ private:
 	void updateSlotRosterScores() noexcept;
 	void resetRosters() noexcept;
 	float calculateDuration(const std::array<const Crew *, SLOT_COUNT> &complement, bool debug = false) noexcept;
-	
+
 	// old disused functions
 	void refine() noexcept;
 	unsigned int computeScore(const Crew& crew, std::uint8_t skill, size_t trait) const noexcept;
@@ -162,6 +162,7 @@ private:
 	float bestscore{0.0};
 
 	Timer totalTime{"voyage calculation"};
+	Timer totalTimeSA{"voyage calculation (simulated annealing)", false};
 	Timer voyageCalcTime{"actual calc", false};
 	Timer scoreUpdateTime{"score update", false};
 };

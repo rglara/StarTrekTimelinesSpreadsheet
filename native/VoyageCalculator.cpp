@@ -145,7 +145,7 @@ VoyageCalculator::VoyageCalculator(const char* jsonInput, bool rankMode) noexcep
 
 			// compute score - not really used anymore except for checking whether
 			//	crew can fit in slot (score > 0), and perhaps for troubleshooting
-			slotRoster[iCrew].score = 
+			slotRoster[iCrew].score =
 				computeScore(slotRoster[iCrew], binaryConfig.slotSkills[iSlot], iSlot);
 
 			// set references
@@ -290,13 +290,14 @@ void VoyageCalculator::calculateSA() noexcept
 	// 				 });
 	// }
 
-	float temperature = 10000;
-	const float coolingRate = 0.003;
+	const float TEMPERATURE_INITIAL = 20000;
+	const float COOLING_RATE = 0.002;
 
 	std::default_random_engine rng;
 	std::uniform_real_distribution<float> randDist(0, 1);
 
 	uint iteration = 0;
+	float temperature = TEMPERATURE_INITIAL;
 	while (temperature > 1)
 	{
 		++iteration;
@@ -377,7 +378,7 @@ void VoyageCalculator::calculateSA() noexcept
 			}
 		}
 
-		temperature *= 1 - coolingRate;
+		temperature *= 1 - COOLING_RATE;
 	}
 
 	log << " final assignments (x" << iteration << " VOYAGE TIME: " << voyTime << ")" << std::endl;
@@ -415,12 +416,15 @@ void VoyageCalculator::calculateSA() noexcept
 
 void VoyageCalculator::calculate() noexcept
 {
-	calculateSA();
-	log << std::endl << "END NEW CALCULATION METHOD" << std::endl << std::endl;
+	{
+		Timer::Scope saTimer(totalTimeSA);
+		calculateSA();
+		log << std::endl << "END NEW CALCULATION METHOD" << std::endl << std::endl;
+	}
 
 	for (unsigned int iteration = 1;;++iteration) {
 		log << "iteration " << iteration << std::endl;
-		
+
 		float prevBest = bestscore;
 
 		resetRosters();
@@ -535,7 +539,7 @@ void VoyageCalculator::findBest() noexcept
 	log << "minScore: " << minScore << std::endl;
 	log << "primary: " << SkillName(binaryConfig.primarySkill) << std::endl;
 	log << "secondary: " << SkillName(binaryConfig.secondarySkill) << std::endl;
-	
+
 	{ Timer::Scope timer(voyageCalcTime);
 		for (size_t iMinDepth = minDepth; iMinDepth < MAX_SCAN_DEPTH; ++iMinDepth)
 		{
@@ -578,7 +582,7 @@ void VoyageCalculator::fillSlot(size_t iSlot, unsigned int minScore, size_t minD
 
 		if (slot == seedSlot) {
 			thread = iCrew;
-		} else 
+		} else
 		if (crew.original->considered[thread])
 			continue;
 
@@ -634,7 +638,7 @@ void VoyageCalculator::refine() noexcept
 	for (const Crew &crew : roster) {
 		std::fill(crew.considered.begin(), crew.considered.end(), false);
 	}
-	
+
 	auto considered = bestconsidered;
 	for (size_t iSlot = 0; iSlot < SLOT_COUNT; ++iSlot) {
 		considered[iSlot]->original->considered[0] = true;
@@ -643,7 +647,7 @@ void VoyageCalculator::refine() noexcept
 	// refinement loops
 	for (;;) {
 		bool refinementFound = false;
-		
+
 		auto fUpdateBest = [&,this]{
 			refinementFound = true;
 			float score = calculateDuration(considered);
@@ -669,7 +673,7 @@ void VoyageCalculator::refine() noexcept
 					continue;
 				/*if (crew.score < considered[iSlot]->score/2)
 					break;*/
-				
+
 				// try swapping
 				const Crew *prevCrew = considered[iSlot];
 				considered[iSlot] = crew;
@@ -739,7 +743,7 @@ float VoyageCalculator::calculateDuration(const std::array<const Crew *, SLOT_CO
 			totals.skills[iSkill] += crew->skills[iSkill];
 			// apparently it's possible for min to be higher than max:
 			// https://forum.disruptorbeam.com/stt/discussion/4078/guinan-is-so-awesome-her-min-prof-roll-is-higher-than-her-max-prof-roll
-			totalProfRange[iSkill] += 
+			totalProfRange[iSkill] +=
 				std::max(crew->skillMaxProfs[iSkill], crew->skillMinProfs[iSkill]) -
 				crew->skillMinProfs[iSkill];
 		}
