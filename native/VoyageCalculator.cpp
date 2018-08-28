@@ -238,6 +238,23 @@ void prepopulate(CrewArray& assignments, const std::vector<Crew>& roster)
 	}
 }
 
+// simulated annealing probability function to accept the new voyage time; factors in current temperature of the system
+float testAccept(float voyTime, float voyTimeTest, float temperature, float r)
+{
+	const float UNREASONABLY_LONG_VOYAGE_DURATION = 20;
+	int energy = std::floor((UNREASONABLY_LONG_VOYAGE_DURATION - voyTime) * 100000);
+	int newEnergy = std::floor((UNREASONABLY_LONG_VOYAGE_DURATION - voyTimeTest) * 100000);
+
+	// If the new solution is better, accept it
+	if (newEnergy < energy)
+	{
+		return true;
+	}
+	// If the new solution is worse, calculate an acceptance probability
+	float prob = std::exp((energy - newEnergy) / temperature);
+	return prob > r;
+}
+
 void VoyageCalculator::calculateSA() noexcept
 {
 	CrewArray assignments;
@@ -279,8 +296,11 @@ void VoyageCalculator::calculateSA() noexcept
 	std::default_random_engine rng;
 	std::uniform_real_distribution<float> randDist(0, 1);
 
+	uint iteration = 0;
 	while (temperature > 1)
 	{
+		++iteration;
+		bool debug = iteration % 100 == 0;
 		CrewArray testAssignments(assignments);
 		uint testSlot = std::floor(randDist(rng) * SLOT_COUNT);
 		//log << " testing slot " << testSlot << std::endl;
@@ -288,13 +308,108 @@ void VoyageCalculator::calculateSA() noexcept
 		if (testSlotRoster.empty())
 			//TODO: notify UI of failure
 			break;
-		int testCrewOffset = std::floor(randDist(rng) * testSlotRoster.size());
-		const Crew *testCrew = testSlotRoster[testCrewOffset];
+		int testCrewOffset = 0;
+		const Crew *testCrew = nullptr;
+		do
+		{
+			testCrewOffset = std::floor(randDist(rng) * testSlotRoster.size());
+			testCrew = testSlotRoster[testCrewOffset];
+			// don't pick the same crew currently in the slot
+		} while (testCrew->id == testAssignments[testSlot]->id);
 
-		log << " testing crew(" << testCrewOffset << "/" << testSlotRoster.size() << ") "
-			<< testCrew->name << " in slot " << SLOT_NAMES[testSlot] << "(" << testSlot << ")" << std::endl;
+		if (debug)
+			log << " (" << iteration << ") testing crew(" << testCrewOffset << "/" << testSlotRoster.size() << ") "
+				<< testCrew->name << " in slot " << SLOT_NAMES[testSlot] << "(" << testSlot << ")" << std::endl;
+
+		// const Crew *curr = testAssignments[testSlot];
+		// bool betterOverall = curr->weightedSum < testCrewOffset->weightedSum;
+		// bool betterSkill = curr->skills[SLOT_SKILLS[testSlot]] < testCrewOffset->skills[SLOT_SKILLS[testSlot]];
+		// log << "traits? crew: " << testCrewOffset->traitIds.test(testSlot) << " curr (" << curr->name << ") " << curr->traitIds.test(testSlot) << std::endl;
+		// bool traited = !curr->traitIds.test(testSlot) && testCrewOffset->traitIds.test(testSlot);
+
+		// assignment updated; now need to see if 'testCrew' is used elsewhere and needs to be replaced
+		testAssignments[testSlot] = testCrew;
+
+		bool failedReplace = false;
+		int otherAssignment = findAssignment(testAssignments, testCrew->id, &testSlot);
+		if (otherAssignment >= 0)
+		{
+			if (debug)
+				log << " found other assignment at " << otherAssignment << " for " << testCrew->name << std::endl;
+			// find the best unassigned that matches the skill for the slot
+			const Crew* replacer = nullptr;
+			for (uint c = 0; c < testSlotRoster.size(); ++c)
+			{
+				const Crew* cm = testSlotRoster[c];
+				int pos = findAssignment(testAssignments, cm->id);
+				if (pos >= 0)
+					continue;
+
+				if (replacer == nullptr || replacer->weightedSum < cm->weightedSum)
+					replacer = cm;
+			}
+			if (replacer == nullptr)
+			{
+				// could not find replacement for swap; abort this iteration
+				failedReplace = true;
+			}
+			else
+			{
+				if (debug)
+					log << " replacing other assignment at " << otherAssignment << " with " << replacer->name << std::endl;
+				testAssignments[otherAssignment] = replacer;
+			}
+		}
+
+		if (!failedReplace)
+		{
+			float voyTimeTest = calculateDuration(testAssignments, debug);
+			if (debug)
+				log << " test crew lasted " << voyTimeTest << " (vs current best " << voyTime << ")" << std::endl;
+
+			if ( //betterOverall || betterSkill || traited ||
+				testAccept(voyTime, voyTimeTest, temperature, randDist(rng)))
+			{
+				voyTime = voyTimeTest;
+				assignments = testAssignments;
+				if (debug)
+					log << " kept test crew @ " << voyTimeTest;
+			}
+		}
 
 		temperature *= 1 - coolingRate;
+	}
+
+	log << " final assignments (x" << iteration << " VOYAGE TIME: " << voyTime << ")" << std::endl;
+	std::array<uint, SKILL_COUNT> totals;
+	totals.fill(0);
+
+	for (uint s = 0; s < SLOT_COUNT; ++s)
+	{
+		log << "  " << assignments[s]->name << " " << SLOT_NAMES[s] << std::endl;
+
+		const auto crew = assignments[s];
+
+		// NOTE: this is not how the game client displays totals
+		//	the game client seems to add all profs first, then divide by 2,
+		//	which is slightly more precise.
+		for (uint sk = 0; sk < SKILL_COUNT; ++sk)
+		{
+			totals[sk] += crew->skills[sk];
+			// apparently it's possible for min to be higher than max:
+			// https://forum.disruptorbeam.com/stt/discussion/4078/guinan-is-so-awesome-her-min-prof-roll-is-higher-than-her-max-prof-roll
+			//totals[sk] +=
+			//	 std::max(crew->skillMaxProfs[sk], crew->skillMinProfs[sk]) -
+			//	 crew->skillMinProfs[sk];
+		}
+	}
+
+	for (uint sk = 0; sk < SKILL_COUNT; ++sk)
+	{
+		log << SKILL_NAMES[sk] << ":" << totals[sk]
+			 << (sk == binaryConfig.primarySkill ? "(pri)" : "")
+			 << (sk == binaryConfig.secondarySkill ? "(sec)" : "")
+			 << std::endl;
 	}
 }
 
