@@ -42,6 +42,7 @@ constexpr float osChance = 0.1f;
 constexpr unsigned int dilPerMin = 5;
 
 static constexpr std::array<const char *, SKILL_COUNT> SKILL_NAMES = {"COM", "SCI", "SEC", "ENG", "DIP", "MED"};
+static constexpr std::array<const char *, SLOT_COUNT> SLOT_NAMES = {"com1", "com2", "sci1", "sci2", "sec1", "sec2", "eng1", "eng2", "dip1", "dip2", "med1", "med2"};
 
 unsigned int VoyageCalculator::computeScore(const Crew& crew, std::uint8_t skill, size_t traitSlot) const noexcept
 {
@@ -187,8 +188,71 @@ CrewArray VoyageCalculator::GetAlternateCrew(unsigned int level) const noexcept
 	return altCrew;
 }
 
+int findAssignment(CrewArray &assignments, uint crewId, uint *ignore_slot=nullptr)
+{
+	for (uint i=0; i<SLOT_COUNT; ++i)
+	{
+		if (ignore_slot != nullptr && *ignore_slot == i)
+			continue;
+		if (assignments[i] != nullptr && assignments[i]->id == crewId)
+			return i;
+	}
+	return -1;
+}
+
+void prepopulate(CrewArray& assignments, const std::vector<Crew>& roster)
+{
+	log << " Starting prepopulation " << std::endl;
+	for (uint s = 0; s < SLOT_COUNT; ++s)
+	{
+		const Crew *bestCrew = nullptr;
+		for (uint c = 0; c < roster.size(); ++c)
+		{
+			const Crew *crewMember = &roster[c];
+			if (findAssignment(assignments, crewMember->id) >= 0)
+				continue;
+			if (crewMember->skills[s] <= 0)
+				continue;
+
+			if (bestCrew == nullptr || bestCrew->weightedSum < crewMember->weightedSum)
+			{
+				//log << " " << crewMember->name << " beats " << (bestCrew == nullptr ? "nobody" : bestCrew->name) << " at " << s << std::endl;
+				bestCrew = crewMember;
+			}
+		}
+
+		if (bestCrew != nullptr)
+		{
+			log << "prepopulating " << SLOT_NAMES[s] << " with " << bestCrew->name << std::endl;
+			assignments[s] = bestCrew;
+		}
+		else
+		{
+			//FIXME: need to abort and report to the UI
+			log << "Not enough crew of skill for slot " << SLOT_NAMES[s] << " to fulfill voyage" << std::endl;
+
+			return;
+		}
+	}
+}
+
+void VoyageCalculator::calculateSA() noexcept
+{
+	CrewArray assignments;
+	assignments.fill(nullptr);
+
+	prepopulate(assignments, roster);
+
+	float voyTime = calculateDuration(assignments, true);
+	log << " prepop crew lasted " << voyTime << std::endl;
+
+}
+
 void VoyageCalculator::calculate() noexcept
 {
+	calculateSA();
+	log << std::endl << "END NEW CALCULATION METHOD" << std::endl << std::endl;
+
 	for (unsigned int iteration = 1;;++iteration) {
 		log << "iteration " << iteration << std::endl;
 		

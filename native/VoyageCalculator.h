@@ -114,6 +114,7 @@ public:
 
 private:
 	void calculate() noexcept;
+	void calculateSA() noexcept;
 	void findBest() noexcept;
 	void fillSlot(size_t slot, unsigned int minScore, size_t minDepth, size_t seedSlot, size_t thread = -1) noexcept;
 	void updateSlotRosterScores() noexcept;
