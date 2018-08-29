@@ -42,9 +42,10 @@ constexpr float ssChance = 0.25f;
 constexpr float osChance = 0.1f;
 constexpr unsigned int dilPerMin = 5;
 
+// This is the order skills are provided via binaryConfig in VoyageTools.js
 static constexpr std::array<const char *, SKILL_COUNT> SKILL_NAMES = {"COM", "SCI", "SEC", "ENG", "DIP", "MED"};
-static constexpr std::array<const char *, SLOT_COUNT> SLOT_NAMES = {"com1", "com2", "sci1", "sci2", "sec1", "sec2", "eng1", "eng2", "dip1", "dip2", "med1", "med2"};
-static constexpr std::array<const unsigned int, SLOT_COUNT> SLOT_SKILLS = { 0,0, 1,1, 2,2, 3,3, 4,4, 5,5 };
+// This is the order slot ids are provided via binaryConfig in VoyageTools.js
+static constexpr std::array<const char *, SLOT_COUNT> SLOT_NAMES = {"com1-fo", "com2-helm", "dip1-comm", "dip2-dipl", "sec1-cseco", "sec2-tac", "eng1-ceng", "eng2-eng", "sci1-cscio", "sci2-depsci", "med1-cmedo", "med2-couns"};
 
 unsigned int VoyageCalculator::computeScore(const Crew& crew, std::uint8_t skill, size_t traitSlot) const noexcept
 {
@@ -202,7 +203,7 @@ int findAssignment(CrewArray &assignments, uint crewId, uint *ignore_slot=nullpt
 	return -1;
 }
 
-void prepopulate(CrewArray& assignments, const std::vector<Crew>& roster)
+void VoyageCalculator::prepopulate(CrewArray& assignments, const std::vector<Crew>& roster)
 {
 	log << " Starting prepopulation " << std::endl;
 	for (uint s = 0; s < SLOT_COUNT; ++s)
@@ -213,7 +214,7 @@ void prepopulate(CrewArray& assignments, const std::vector<Crew>& roster)
 			const Crew *crewMember = &roster[c];
 			if (findAssignment(assignments, crewMember->id) >= 0)
 				continue;
-			if (crewMember->skills[s] <= 0)
+			if (crewMember->skills[binaryConfig.slotSkills[s]] <= 0)
 				continue;
 
 			if (bestCrew == nullptr || bestCrew->weightedSum < crewMember->weightedSum)
@@ -225,7 +226,6 @@ void prepopulate(CrewArray& assignments, const std::vector<Crew>& roster)
 
 		if (bestCrew != nullptr)
 		{
-			log << "prepopulating " << SLOT_NAMES[s] << " with " << bestCrew->name << std::endl;
 			assignments[s] = bestCrew;
 		}
 		else
@@ -236,14 +236,50 @@ void prepopulate(CrewArray& assignments, const std::vector<Crew>& roster)
 			return;
 		}
 	}
+
+	print("prepopulating ", 0, assignments);
+}
+
+void VoyageCalculator::print(std::string prefix, float voyTime, CrewArray &assignments)
+{
+	log << prefix << " VOYAGE TIME: " << voyTime << std::endl;
+	std::array<uint, SKILL_COUNT> totals;
+	totals.fill(0);
+
+	for (uint s = 0; s < SLOT_COUNT; ++s)
+	{
+		log << "  " << assignments[s]->name << " " << SLOT_NAMES[s] << " " << assignments[s]->skills[binaryConfig.slotSkills[s]];
+
+		const auto crew = assignments[s];
+
+		for (uint sk = 0; sk < SKILL_COUNT; ++sk)
+			totals[sk] += crew->skills[sk];
+
+		if (crew->traitIds.test(s))
+			log << " (traitmatch)";
+		log << std::endl;
+	}
+
+	for (uint sk = 0; sk < SKILL_COUNT; ++sk)
+	{
+		log << SKILL_NAMES[sk] << ":" << totals[sk]
+			 << (sk == binaryConfig.primarySkill ? "(pri)" : "")
+			 << (sk == binaryConfig.secondarySkill ? "(sec)" : "")
+			 << std::endl;
+	}
 }
 
 // simulated annealing probability function to accept the new voyage time; factors in current temperature of the system
 float testAccept(float voyTime, float voyTimeTest, float temperature, float r)
 {
-	const float UNREASONABLY_LONG_VOYAGE_DURATION = 20;
-	int energy = std::floor((UNREASONABLY_LONG_VOYAGE_DURATION - voyTime) * 100000);
-	int newEnergy = std::floor((UNREASONABLY_LONG_VOYAGE_DURATION - voyTimeTest) * 100000);
+	//const float UNREASONABLY_LONG_VOYAGE_DURATION = 20;
+	// int energy = std::floor((UNREASONABLY_LONG_VOYAGE_DURATION - voyTime) * 100000);
+	// int newEnergy = std::floor((UNREASONABLY_LONG_VOYAGE_DURATION - voyTimeTest) * 100000);
+
+	// Use a floating maximum to compute entropy
+	const float max = std::max(voyTime, voyTimeTest);
+	float energy = max - voyTime * 10000;
+	float newEnergy = max - voyTimeTest * 10000;
 
 	// If the new solution is better, accept it
 	if (newEnergy < energy)
@@ -272,7 +308,7 @@ void VoyageCalculator::calculateSA() noexcept
 		Crew* crew = &roster[c];
 		for (uint s = 0; s < SLOT_COUNT; ++s)
 		{
-			auto skill = SLOT_SKILLS[s];
+			auto skill = binaryConfig.slotSkills[s];
 			if (crew->skills[skill] > 0)
 			{
 				//log << " crew " << crew->name << " has " << SKILL_NAMES[skill] << "(" << skill << ") = " << crew->skills[skill] << " for slot " << s << std::endl;
@@ -290,8 +326,8 @@ void VoyageCalculator::calculateSA() noexcept
 	// 				 });
 	// }
 
-	const float TEMPERATURE_INITIAL = 20000;
-	const float COOLING_RATE = 0.002;
+	const float TEMPERATURE_INITIAL = 10000;
+	const float COOLING_RATE = 0.005;
 
 	std::default_random_engine rng;
 	std::uniform_real_distribution<float> randDist(0, 1);
@@ -301,11 +337,11 @@ void VoyageCalculator::calculateSA() noexcept
 	while (temperature > 1)
 	{
 		++iteration;
-		bool debug = iteration % 100 == 0;
+		bool debug = iteration % 200 == 0;
 		CrewArray testAssignments(assignments);
 		uint testSlot = std::floor(randDist(rng) * SLOT_COUNT);
 		//log << " testing slot " << testSlot << std::endl;
-		std::vector<const Crew *> testSlotRoster = candidates[testSlot];
+		auto &testSlotRoster = candidates[testSlot];
 		if (testSlotRoster.empty())
 			//TODO: notify UI of failure
 			break;
@@ -320,28 +356,32 @@ void VoyageCalculator::calculateSA() noexcept
 
 		if (debug)
 			log << " (" << iteration << ") testing crew(" << testCrewOffset << "/" << testSlotRoster.size() << ") "
-				<< testCrew->name << " in slot " << SLOT_NAMES[testSlot] << "(" << testSlot << ")" << std::endl;
+				 << testCrew->name << " in slot " << SLOT_NAMES[testSlot] << "(" << testSlot << ")"
+				 << " skill " << SKILL_NAMES[binaryConfig.slotSkills[testSlot]] << " = " // "(" << binaryConfig.slotSkills[testSlot] << ") = " //FIXME: print uint8_t
+				 << testCrew->skills[binaryConfig.slotSkills[testSlot]] << std::endl;
 
 		// const Crew *curr = testAssignments[testSlot];
 		// bool betterOverall = curr->weightedSum < testCrewOffset->weightedSum;
-		// bool betterSkill = curr->skills[SLOT_SKILLS[testSlot]] < testCrewOffset->skills[SLOT_SKILLS[testSlot]];
+		// bool betterSkill = curr->skills[binaryConfig.slotSkills[testSlot]] < testCrewOffset->skills[binaryConfig.slotSkills[testSlot]];
 		// log << "traits? crew: " << testCrewOffset->traitIds.test(testSlot) << " curr (" << curr->name << ") " << curr->traitIds.test(testSlot) << std::endl;
 		// bool traited = !curr->traitIds.test(testSlot) && testCrewOffset->traitIds.test(testSlot);
 
 		// assignment updated; now need to see if 'testCrew' is used elsewhere and needs to be replaced
 		testAssignments[testSlot] = testCrew;
 
+		const Crew* replacer = nullptr;
 		bool failedReplace = false;
 		int otherAssignment = findAssignment(testAssignments, testCrew->id, &testSlot);
 		if (otherAssignment >= 0)
 		{
 			if (debug)
 				log << " found other assignment at " << otherAssignment << " for " << testCrew->name << std::endl;
+
+			auto &replaceRoster = candidates[otherAssignment];
 			// find the best unassigned that matches the skill for the slot
-			const Crew* replacer = nullptr;
-			for (uint c = 0; c < testSlotRoster.size(); ++c)
+			for (uint c = 0; c < replaceRoster.size(); ++c)
 			{
-				const Crew* cm = testSlotRoster[c];
+				const Crew *cm = replaceRoster[c];
 				int pos = findAssignment(testAssignments, cm->id);
 				if (pos >= 0)
 					continue;
@@ -374,44 +414,20 @@ void VoyageCalculator::calculateSA() noexcept
 				voyTime = voyTimeTest;
 				assignments = testAssignments;
 				if (debug)
-					log << " kept test crew @ " << voyTimeTest;
+				{
+					log << " iter(" << iteration << ") voytime:" << voyTimeTest << " kept test crew " << testCrew->name
+						<< " at " << SLOT_NAMES[testSlot];
+					if (replacer != nullptr)
+						log << " and replacer: " << replacer->name << " at " << SLOT_NAMES[otherAssignment];
+					log << std::endl;
+				}
 			}
 		}
 
 		temperature *= 1 - COOLING_RATE;
 	}
 
-	log << " final assignments (x" << iteration << " VOYAGE TIME: " << voyTime << ")" << std::endl;
-	std::array<uint, SKILL_COUNT> totals;
-	totals.fill(0);
-
-	for (uint s = 0; s < SLOT_COUNT; ++s)
-	{
-		log << "  " << assignments[s]->name << " " << SLOT_NAMES[s] << std::endl;
-
-		const auto crew = assignments[s];
-
-		// NOTE: this is not how the game client displays totals
-		//	the game client seems to add all profs first, then divide by 2,
-		//	which is slightly more precise.
-		for (uint sk = 0; sk < SKILL_COUNT; ++sk)
-		{
-			totals[sk] += crew->skills[sk];
-			// apparently it's possible for min to be higher than max:
-			// https://forum.disruptorbeam.com/stt/discussion/4078/guinan-is-so-awesome-her-min-prof-roll-is-higher-than-her-max-prof-roll
-			//totals[sk] +=
-			//	 std::max(crew->skillMaxProfs[sk], crew->skillMinProfs[sk]) -
-			//	 crew->skillMinProfs[sk];
-		}
-	}
-
-	for (uint sk = 0; sk < SKILL_COUNT; ++sk)
-	{
-		log << SKILL_NAMES[sk] << ":" << totals[sk]
-			 << (sk == binaryConfig.primarySkill ? "(pri)" : "")
-			 << (sk == binaryConfig.secondarySkill ? "(sec)" : "")
-			 << std::endl;
-	}
+	print("final assignments (SA) ", voyTime, assignments);
 
 	bestconsidered = assignments;
 	bestscore = voyTime;
@@ -426,24 +442,37 @@ void VoyageCalculator::calculate() noexcept
 		log << std::endl << "END NEW CALCULATION METHOD" << std::endl << std::endl;
 	}
 
-	// for (unsigned int iteration = 1;;++iteration) {
-	// 	log << "iteration " << iteration << std::endl;
+	//HACK: retain from SA calc
+	auto tempBest = bestconsidered;
+	auto tempTime = bestscore;
 
-	// 	float prevBest = bestscore;
+	for (unsigned int iteration = 1;;++iteration) {
+		log << "iteration " << iteration << std::endl;
 
-	// 	resetRosters();
-	// 	updateSlotRosterScores();
-	// 	findBest();
+		float prevBest = bestscore;
 
-	// 	if (bestscore > prevBest) {
-	// 		continue;
-	// 	} else {
-	// 		log << "final result:" << std::endl;
-	// 		calculateDuration(bestconsidered, true);
-	// 		log << "stopping after " << iteration << " iterations" << std::endl;
-	// 		break;
-	// 	}
-	// }
+		resetRosters();
+		updateSlotRosterScores();
+		findBest();
+
+		if (bestscore > prevBest) {
+			continue;
+		} else {
+			float voytime = calculateDuration(bestconsidered, true);
+			log << "final result:" << voytime << std::endl;
+			log << "stopping after " << iteration << " iterations" << std::endl;
+			break;
+		}
+	}
+
+	print("final assignments ", bestscore, bestconsidered);
+
+	//HACK: use SA results
+	bestconsidered = tempBest;
+	bestscore = tempTime;
+	progressUpdate(bestconsidered, bestscore);
+
+	print("final assignments SA ", bestscore, bestconsidered);
 }
 
 void VoyageCalculator::resetRosters() noexcept
