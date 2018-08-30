@@ -226,9 +226,6 @@ void VoyageCalculator::prepopulate(CrewArray& assignments, const std::vector<Cre
 
 		if (bestCrew != nullptr)
 		{
-			log << "prepopulating " << SLOT_NAMES[s] << "(" << s << ") with " << bestCrew->name << " " << SKILL_NAMES[binaryConfig.slotSkills[s]] << "("
-				 << binaryConfig.slotSkills[s] << ") = " << bestCrew->skills[binaryConfig.slotSkills[s]] << std::endl;
-
 			assignments[s] = bestCrew;
 		}
 		else
@@ -239,14 +236,50 @@ void VoyageCalculator::prepopulate(CrewArray& assignments, const std::vector<Cre
 			return;
 		}
 	}
+
+	print("prepopulating ", 0, assignments);
+}
+
+void VoyageCalculator::print(std::string prefix, float voyTime, CrewArray &assignments)
+{
+	log << prefix << " VOYAGE TIME: " << voyTime << std::endl;
+	std::array<uint, SKILL_COUNT> totals;
+	totals.fill(0);
+
+	for (uint s = 0; s < SLOT_COUNT; ++s)
+	{
+		log << "  " << assignments[s]->name << " " << SLOT_NAMES[s] << " " << assignments[s]->skills[binaryConfig.slotSkills[s]];
+
+		const auto crew = assignments[s];
+
+		for (uint sk = 0; sk < SKILL_COUNT; ++sk)
+			totals[sk] += crew->skills[sk];
+
+		if (crew->traitIds.test(s))
+			log << " (traitmatch)";
+		log << std::endl;
+	}
+
+	for (uint sk = 0; sk < SKILL_COUNT; ++sk)
+	{
+		log << SKILL_NAMES[sk] << ":" << totals[sk]
+			 << (sk == binaryConfig.primarySkill ? "(pri)" : "")
+			 << (sk == binaryConfig.secondarySkill ? "(sec)" : "")
+			 << std::endl;
+	}
 }
 
 // simulated annealing probability function to accept the new voyage time; factors in current temperature of the system
 float testAccept(float voyTime, float voyTimeTest, float temperature, float r)
 {
-	const float UNREASONABLY_LONG_VOYAGE_DURATION = 20;
-	int energy = std::floor((UNREASONABLY_LONG_VOYAGE_DURATION - voyTime) * 100000);
-	int newEnergy = std::floor((UNREASONABLY_LONG_VOYAGE_DURATION - voyTimeTest) * 100000);
+	//const float UNREASONABLY_LONG_VOYAGE_DURATION = 20;
+	// int energy = std::floor((UNREASONABLY_LONG_VOYAGE_DURATION - voyTime) * 100000);
+	// int newEnergy = std::floor((UNREASONABLY_LONG_VOYAGE_DURATION - voyTimeTest) * 100000);
+
+	// Use a floating maximum to compute entropy
+	const float max = std::max(voyTime, voyTimeTest);
+	float energy = max - voyTime * 10000;
+	float newEnergy = max - voyTimeTest * 10000;
 
 	// If the new solution is better, accept it
 	if (newEnergy < energy)
@@ -293,8 +326,8 @@ void VoyageCalculator::calculateSA() noexcept
 	// 				 });
 	// }
 
-	const float TEMPERATURE_INITIAL = 20000;
-	const float COOLING_RATE = 0.002;
+	const float TEMPERATURE_INITIAL = 10000;
+	const float COOLING_RATE = 0.005;
 
 	std::default_random_engine rng;
 	std::uniform_real_distribution<float> randDist(0, 1);
@@ -394,37 +427,7 @@ void VoyageCalculator::calculateSA() noexcept
 		temperature *= 1 - COOLING_RATE;
 	}
 
-	log << " final assignments (x" << iteration << " VOYAGE TIME: " << voyTime << ")" << std::endl;
-	std::array<uint, SKILL_COUNT> totals;
-	totals.fill(0);
-
-	for (uint s = 0; s < SLOT_COUNT; ++s)
-	{
-		log << "  " << assignments[s]->name << " " << SLOT_NAMES[s] << std::endl;
-
-		const auto crew = assignments[s];
-
-		// NOTE: this is not how the game client displays totals
-		//	the game client seems to add all profs first, then divide by 2,
-		//	which is slightly more precise.
-		for (uint sk = 0; sk < SKILL_COUNT; ++sk)
-		{
-			totals[sk] += crew->skills[sk];
-			// apparently it's possible for min to be higher than max:
-			// https://forum.disruptorbeam.com/stt/discussion/4078/guinan-is-so-awesome-her-min-prof-roll-is-higher-than-her-max-prof-roll
-			//totals[sk] +=
-			//	 std::max(crew->skillMaxProfs[sk], crew->skillMinProfs[sk]) -
-			//	 crew->skillMinProfs[sk];
-		}
-	}
-
-	for (uint sk = 0; sk < SKILL_COUNT; ++sk)
-	{
-		log << SKILL_NAMES[sk] << ":" << totals[sk]
-			 << (sk == binaryConfig.primarySkill ? "(pri)" : "")
-			 << (sk == binaryConfig.secondarySkill ? "(sec)" : "")
-			 << std::endl;
-	}
+	print("final assignments (SA) ", voyTime, assignments);
 
 	bestconsidered = assignments;
 	bestscore = voyTime;
@@ -439,24 +442,37 @@ void VoyageCalculator::calculate() noexcept
 		log << std::endl << "END NEW CALCULATION METHOD" << std::endl << std::endl;
 	}
 
-	// for (unsigned int iteration = 1;;++iteration) {
-	// 	log << "iteration " << iteration << std::endl;
+	//HACK: retain from SA calc
+	auto tempBest = bestconsidered;
+	auto tempTime = bestscore;
 
-	// 	float prevBest = bestscore;
+	for (unsigned int iteration = 1;;++iteration) {
+		log << "iteration " << iteration << std::endl;
 
-	// 	resetRosters();
-	// 	updateSlotRosterScores();
-	// 	findBest();
+		float prevBest = bestscore;
 
-	// 	if (bestscore > prevBest) {
-	// 		continue;
-	// 	} else {
-	// 		float voytime = calculateDuration(bestconsidered, true);
-	// 		log << "final result:" << voytime << std::endl;
-	// 		log << "stopping after " << iteration << " iterations" << std::endl;
-	// 		break;
-	// 	}
-	// }
+		resetRosters();
+		updateSlotRosterScores();
+		findBest();
+
+		if (bestscore > prevBest) {
+			continue;
+		} else {
+			float voytime = calculateDuration(bestconsidered, true);
+			log << "final result:" << voytime << std::endl;
+			log << "stopping after " << iteration << " iterations" << std::endl;
+			break;
+		}
+	}
+
+	print("final assignments ", bestscore, bestconsidered);
+
+	//HACK: use SA results
+	bestconsidered = tempBest;
+	bestscore = tempTime;
+	progressUpdate(bestconsidered, bestscore);
+
+	print("final assignments SA ", bestscore, bestconsidered);
 }
 
 void VoyageCalculator::resetRosters() noexcept
