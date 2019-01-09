@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { CONFIG } from 'sttapi';
+import { CONFIG } from '../../api';
 import { getMissionCost } from './utils';
 
 export class ItemSources extends React.Component {

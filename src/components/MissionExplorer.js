@@ -7,8 +7,8 @@ import { getTheme } from '@uifabric/styling';
 
 import { MissionDisplay } from '../utils/canvasutils';
 
-import STTApi from 'sttapi';
-import { CONFIG, calculateQuestRecommendations } from 'sttapi';
+import STTApi from '../api';
+import { CONFIG, calculateQuestRecommendations } from '../api';
 
 export class MissionDetails extends React.Component {
     constructor(props) {

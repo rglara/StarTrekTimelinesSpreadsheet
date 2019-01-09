@@ -1,4 +1,4 @@
-import STTApi from 'sttapi';
+import STTApi from '../api';
 
 import { simplejson2csv } from './simplejson2csv';
 

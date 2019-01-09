@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Container, Header, Divider, Grid, Button, Icon, List, Label, Form, Message } from 'semantic-ui-react';
 
-import STTApi from 'sttapi';
+import STTApi from '../../api';
 
 export class HomePage extends React.Component {
     constructor(props) {

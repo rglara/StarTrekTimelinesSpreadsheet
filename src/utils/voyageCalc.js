@@ -1,5 +1,5 @@
-import STTApi from 'sttapi';
-import { CONFIG } from 'sttapi';
+import STTApi from '../api';
+import { CONFIG } from '../api';
 
 function parseResults(result, callback) {
     let dv = new DataView(result.buffer);

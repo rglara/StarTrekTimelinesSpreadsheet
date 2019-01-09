@@ -4,7 +4,7 @@ import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dia
 
 import { CrewList } from './CrewList.js';
 
-import STTApi from 'sttapi';
+import STTApi from '../api';
 
 export class CrewDuplicates extends React.Component {
     constructor(props) {

@@ -1,4 +1,4 @@
-import STTApi from 'sttapi';
+import STTApi from '../../api';
 
 class STTToolsClass {
     get assetProvider() {

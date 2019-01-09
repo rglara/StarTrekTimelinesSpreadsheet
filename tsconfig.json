@@ -1,15 +1,18 @@
 {
-  "compileOnSave": false,
-  "compilerOptions": {
-    "target": "es2016",
-    "moduleResolution": "node",
-    "pretty": true,
-    "newLine": "LF",
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
+	"compileOnSave": false,
+	"compilerOptions": {
+		"target": "es2016",
+		"moduleResolution": "node",
+		"jsx": "react",
+		"pretty": true,
+		"strict": true,
     "sourceMap": true,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "jsx": "preserve"
-  }
+		"skipLibCheck": true,
+		"allowSyntheticDefaultImports": true,
+		"strictPropertyInitialization": false,
+		"allowJs": true
+	},
+	"exclude": [
+		"node_modules"
+	]
 }

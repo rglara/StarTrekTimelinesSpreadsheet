@@ -5,8 +5,8 @@ import { SpinButton } from 'office-ui-fabric-react/lib/SpinButton';
 import { PrimaryButton, DefaultButton } from 'office-ui-fabric-react/lib/Button';
 import UserStore from './Styles';
 
-import STTApi from 'sttapi';
-import { CONFIG, getChronitonCount } from 'sttapi';
+import STTApi from '../api';
+import { CONFIG, getChronitonCount } from '../api';
 
 export class WarpDialog extends React.Component {
     constructor(props) {

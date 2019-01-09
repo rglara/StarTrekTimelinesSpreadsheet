@@ -5,8 +5,8 @@ import { Dialog, DialogType } from 'office-ui-fabric-react/lib/Dialog';
 import { CollapsibleSection } from './CollapsibleSection.js';
 import UserStore from './Styles';
 
-import STTApi from 'sttapi';
-import { CONFIG, loadVoyage, formatTimeSeconds } from 'sttapi';
+import STTApi from '../api';
+import { CONFIG, loadVoyage, formatTimeSeconds } from '../api';
 
 export class ShuttleAdventure extends React.Component {
     constructor(props) {

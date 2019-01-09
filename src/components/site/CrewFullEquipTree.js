@@ -5,7 +5,7 @@ import { ItemDisplay } from './ItemDisplay';
 import { ItemSources } from './ItemSources';
 
 import STTTools from './api';
-import { CONFIG } from 'sttapi';
+import { CONFIG } from '../../api';
 import { parseRecipeDemands, estimateChronitonCost } from './utils';
 
 export class CrewFullEquipTree extends React.Component {

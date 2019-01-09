@@ -7,7 +7,7 @@ import { exportItemsCsv } from '../utils/csvExporter.js';
 
 import { download } from '../utils/pal';
 
-import STTApi from 'sttapi';
+import STTApi from '../api';
 
 export class ItemPage extends React.Component {
 	constructor(props) {

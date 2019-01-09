@@ -1,5 +1,5 @@
 import React from 'react';
-import { CONFIG } from 'sttapi';
+import { CONFIG } from '../api';
 
 export class ItemDisplay extends React.Component {
     render() {

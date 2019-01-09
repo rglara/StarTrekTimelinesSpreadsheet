@@ -11,8 +11,8 @@ import { loginPubNub } from '../utils/chat';
 // #!endif
 import { download } from '../utils/pal';
 
-import STTApi from 'sttapi';
-import { formatTimeSeconds } from 'sttapi';
+import STTApi from '../api';
+import { formatTimeSeconds } from '../api';
 
 import { simplejson2csv } from '../utils/simplejson2csv';
 

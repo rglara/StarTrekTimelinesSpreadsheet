@@ -1,4 +1,4 @@
-import { CONFIG } from 'sttapi';
+import { CONFIG } from '../api';
 
 class SimpleCanvas {
     constructor(canvas, onSelectionChanged) {

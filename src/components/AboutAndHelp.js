@@ -4,7 +4,7 @@ import { getAppVersion, openShellExternal } from '../utils/pal';
 
 import snarkdown from 'snarkdown';
 
-import STTApi from 'sttapi';
+import STTApi from '../api';
 
 export class AboutAndHelp extends React.Component {
 	constructor(props) {

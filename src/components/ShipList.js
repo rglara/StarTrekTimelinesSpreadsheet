@@ -5,7 +5,7 @@ import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
 
 import { RarityStars } from './RarityStars';
 
-import STTApi from 'sttapi';
+import STTApi from '../api';
 
 export class ShipList extends React.Component {
 	constructor(props) {

@@ -10,7 +10,7 @@ import { shareCrew } from '../utils/pastebin.js';
 
 import { download } from '../utils/pal';
 
-import STTApi from 'sttapi';
+import STTApi from '../api';
 
 export class CrewPage extends React.Component {
 	constructor(props) {

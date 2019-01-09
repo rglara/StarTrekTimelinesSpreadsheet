@@ -17,8 +17,7 @@ import { ActiveCrewDialog } from './ActiveCrewDialog';
 import { RarityStars } from './RarityStars';
 import { ItemDisplay } from './ItemDisplay';
 
-import STTApi from 'sttapi';
-import { CONFIG } from 'sttapi';
+import STTApi, { CONFIG } from '../api';
 
 export class CrewList extends React.Component {
 

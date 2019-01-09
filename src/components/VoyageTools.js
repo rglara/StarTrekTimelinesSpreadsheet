@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Message, Dropdown, Button, Header, Select, Checkbox, Form, List, Image, Icon, Card } from 'semantic-ui-react';
 
-import STTApi from 'sttapi';
+import STTApi from '../api';
 import {
 	CONFIG,
 	bestVoyageShip,
@@ -13,7 +13,7 @@ import {
 	formatCrewStats,
 	bonusCrewForCurrentEvent,
 	formatTimeSeconds
-} from 'sttapi';
+} from '../api';
 import { CollapsibleSection } from './CollapsibleSection';
 import { RarityStars } from './RarityStars';
 import ReactTable from 'react-table';

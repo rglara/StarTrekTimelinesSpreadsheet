@@ -1,6 +1,6 @@
 import React from 'react';
 
-import STTApi from 'sttapi';
+import STTApi from '../api';
 
 class CryoCollection extends React.Component {
     constructor(props) {

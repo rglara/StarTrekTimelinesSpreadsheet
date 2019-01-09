@@ -1,12 +1,12 @@
 import React from 'react';
 
-import { Accordion, Icon, Button, Segment, Header } from 'semantic-ui-react';
+import { Accordion, Button, Segment, Header } from 'semantic-ui-react';
 import { getTheme } from '@uifabric/styling';
 
 import { ItemDisplay } from './ItemDisplay';
 
-import STTApi from 'sttapi';
-import { CONFIG, refreshAllFactions, loadFactionStore } from 'sttapi';
+import STTApi from '../api';
+import { CONFIG, refreshAllFactions, loadFactionStore } from '../api';
 
 class StoreItem extends React.Component {
 	constructor(props) {

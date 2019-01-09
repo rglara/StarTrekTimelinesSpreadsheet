@@ -8,8 +8,8 @@ import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator'
 import { ItemDisplay } from './ItemDisplay';
 import UserStore from './Styles';
 
-import STTApi from 'sttapi';
-import { CONFIG, replicatorCurrencyCost, replicatorFuelCost, canReplicate, replicatorFuelValue, canUseAsFuel, replicate } from 'sttapi';
+import STTApi from '../api';
+import { CONFIG, replicatorCurrencyCost, replicatorFuelCost, canReplicate, replicatorFuelValue, canUseAsFuel, replicate } from '../api';
 
 export class ReplicatorDialog extends React.Component {
 	constructor(props) {

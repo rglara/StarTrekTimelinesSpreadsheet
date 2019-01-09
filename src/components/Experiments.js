@@ -4,8 +4,7 @@ import { Button, Item, Image, List, Accordion, Icon } from 'semantic-ui-react';
 
 import { ItemDisplay } from './ItemDisplay';
 
-import STTApi from 'sttapi';
-import { CONFIG } from 'sttapi';
+import STTApi from '../api';
 
 function parseAdventure(adventure, crew_bonuses) {
 	let demands = [];

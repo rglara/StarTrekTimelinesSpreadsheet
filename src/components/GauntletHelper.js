@@ -12,11 +12,11 @@ import Logger from '../utils/logger';
 
 import { download } from '../utils/pal';
 
-import STTApi from 'sttapi';
+import STTApi from '../api';
 import {
 	CONFIG, loadGauntlet, gauntletCrewSelection, gauntletRoundOdds, payToGetNewOpponents,
 	payToReviveCrew, claimRankRewards, playContest, enterGauntlet, formatCrewStats, formatTimeSeconds
-} from 'sttapi';
+} from '../api';
 
 class GauntletCrew extends React.Component {
 	render() {

@@ -1,7 +1,7 @@
 import React from 'react';
 
-import STTApi from 'sttapi';
-import { CONFIG } from 'sttapi';
+import STTApi from '../api';
+import { CONFIG } from '../api';
 
 export class GuaranteedSuccess extends React.Component {
     render() {

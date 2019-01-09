@@ -32,8 +32,8 @@ import { Experiments } from './Experiments';
 import { ModalNotification } from './ModalNotification';
 import { loadUITheme } from './Styles';
 
-import STTApi from 'sttapi';
-import { loginSequence } from 'sttapi';
+import STTApi from '../api';
+import { loginSequence } from '../api';
 import { createIssue } from '../utils/githubUtils';
 import { openShellExternal, getAppVersion } from '../utils/pal';
 

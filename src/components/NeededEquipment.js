@@ -8,8 +8,8 @@ import { ReplicatorDialog } from './ReplicatorDialog';
 import { WarpDialog } from './WarpDialog';
 import { CollapsibleSection } from './CollapsibleSection.js';
 
-import STTApi from 'sttapi';
-import { CONFIG } from 'sttapi';
+import STTApi from '../api';
+import { CONFIG } from '../api';
 
 import { download } from '../utils/pal';
 

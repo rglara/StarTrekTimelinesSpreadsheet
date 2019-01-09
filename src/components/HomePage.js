@@ -2,8 +2,8 @@ import React from 'react';
 
 import { ItemDisplay } from './ItemDisplay';
 
-import STTApi from 'sttapi';
-import { CONFIG, getChronitonCount, formatTimeSeconds, loadGauntlet, loadVoyage } from 'sttapi';
+import STTApi from '../api';
+import { CONFIG, getChronitonCount, formatTimeSeconds, loadGauntlet, loadVoyage } from '../api';
 
 import { openDevTools } from '../utils/pal';
 

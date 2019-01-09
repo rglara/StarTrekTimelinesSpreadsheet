@@ -4,7 +4,7 @@ import { DefaultButton } from 'office-ui-fabric-react/lib/Button';
 
 import { ItemDisplay } from './ItemDisplay';
 import { RarityStars } from './RarityStars';
-import { CONFIG } from 'sttapi';
+import { CONFIG } from '../api';
 
 export class ItemList extends React.Component {
 	constructor(props) {

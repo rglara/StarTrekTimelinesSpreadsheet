@@ -1,5 +1,5 @@
-import STTApi from 'sttapi';
-import { CONFIG } from 'sttapi';
+import STTApi from '../api';
+import { CONFIG } from '../api';
 
 export class ServerImageProvider {
     _baseURLAsset;

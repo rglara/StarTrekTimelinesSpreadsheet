@@ -31,7 +31,7 @@ import { getHello } from '../utils/langhello';
 
 import { AppHome } from './AppHome';
 
-import STTApi from 'sttapi';
+import STTApi from '../api';
 
 class App extends React.Component {
 	constructor(props) {

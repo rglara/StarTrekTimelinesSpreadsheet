@@ -5,9 +5,9 @@ import { ItemDisplay } from './ItemDisplay';
 import { ItemSources } from './ItemSources';
 import { CrewFullEquipTree } from './CrewFullEquipTree';
 
-import STTApi from 'sttapi';
+import STTApi from '../../api';
 import STTTools from './api';
-import { CONFIG } from 'sttapi';
+import { CONFIG } from '../../api';
 import { parseRecipeDemands } from './utils';
 
 export class ModalCrewDetails extends React.Component {

@@ -1,7 +1,7 @@
 const PubNub = require('pubnub');
 const uuidv4 = require('uuid/v4');
 
-import STTApi from 'sttapi';
+import STTApi from '../api';
 
 function loadSubscriberDetails() {
 	return STTApi.executeGetRequest("notification/subscriber_details");

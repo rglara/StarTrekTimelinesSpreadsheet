@@ -27,15 +27,16 @@ module.exports = {
 			},
 			{
 				test: /\.tsx?$/,
-				use: [{ loader: 'babel-loader' }, { loader: 'ts-loader' }, { loader: 'webpack-preprocessor-loader', options: { params: { ENV: 'electron' } } }],
+				use: [{ loader: 'ts-loader' }, { loader: 'webpack-preprocessor-loader', options: { params: { ENV: 'electron' } } }],
 				include: defaultInclude
 			}
 		]
 	},
+	resolve: {
+		extensions: ['.js', '.ts', '.tsx', '.jsx']
+	},
 	plugins: [
 		new webpack.DefinePlugin({ 'process.env.APP_VERSION': JSON.stringify(PACKAGE.version) }),
-		new CopyWebpackPlugin([
-			{ from: 'src/assets/semantic', to: 'css' }
-		])
+		new CopyWebpackPlugin([{ from: 'src/assets/semantic', to: 'css' }])
 	]
 };
