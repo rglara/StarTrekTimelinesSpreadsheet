@@ -1,6 +1,6 @@
 import React from 'react';
-import ReactTable from "react-table";
-import { DefaultButton } from 'office-ui-fabric-react/lib/Button';
+import ReactTable from 'react-table';
+import { Button } from 'semantic-ui-react';
 
 import { ItemDisplay } from './ItemDisplay';
 import { RarityStars } from './RarityStars';
@@ -12,7 +12,7 @@ export class ItemList extends React.Component {
 
 		this.state = {
 			items: this.props.data,
-			sorted: [{ id: 'name', desc: false }, { id:'rarity'}],
+			sorted: [{ id: 'name', desc: false }, { id: 'rarity' }],
 			columns: [
 				{
 					id: 'icon',
@@ -21,9 +21,9 @@ export class ItemList extends React.Component {
 					maxWidth: 50,
 					resizable: false,
 					accessor: 'name',
-					Cell: (p) => {
+					Cell: p => {
 						let item = p.original;
-						return (<ItemDisplay src={item.iconUrl} size={50} maxRarity={item.rarity} rarity={item.rarity} />);
+						return <ItemDisplay src={item.iconUrl} size={50} maxRarity={item.rarity} rarity={item.rarity} />;
 					}
 				},
 				{
@@ -33,9 +33,13 @@ export class ItemList extends React.Component {
 					maxWidth: 180,
 					resizable: true,
 					accessor: 'name',
-					Cell: (p) => {
+					Cell: p => {
 						let item = p.original;
-						return (<a href={'https://stt.wiki/wiki/' + item.name.split(' ').join('_')} target='_blank'>{item.name}</a>);
+						return (
+							<a href={'https://stt.wiki/wiki/' + item.name.split(' ').join('_')} target='_blank'>
+								{item.name}
+							</a>
+						);
 					}
 				},
 				{
@@ -45,15 +49,9 @@ export class ItemList extends React.Component {
 					minWidth: 75,
 					maxWidth: 75,
 					resizable: false,
-					Cell: (p) => {
+					Cell: p => {
 						let item = p.original;
-						return (
-							<RarityStars
-								min={1}
-								max={item.rarity}
-								value={item.rarity ? item.rarity : null}
-							/>
-						);
+						return <RarityStars min={1} max={item.rarity} value={item.rarity ? item.rarity : null} />;
 					}
 				},
 				{
@@ -71,7 +69,7 @@ export class ItemList extends React.Component {
 					maxWidth: 120,
 					resizable: true,
 					accessor: 'typeName',
-					Cell: (p) => {
+					Cell: p => {
 						let item = p.original;
 
 						let typeName = CONFIG.REWARDS_ITEM_TYPE[item.type];
@@ -80,14 +78,14 @@ export class ItemList extends React.Component {
 						}
 
 						// fall-through case
-						typeName = item.icon.file.replace("/items", "").split("/")[1];
+						typeName = item.icon.file.replace('/items', '').split('/')[1];
 						if (typeName) {
 							return typeName;
 						}
 
 						// show something so we know to fix these
 						if (item.item_type) {
-							return item.type + "." + item.item_type;
+							return item.type + '.' + item.item_type;
 						}
 						return item.type;
 					}
@@ -106,23 +104,29 @@ export class ItemList extends React.Component {
 
 	render() {
 		let { columns, items, sorted } = this.state;
-		const defaultButton = props => <DefaultButton {...props} text={props.children} style={{ width: '100%' }} />;
-		return <div className='data-grid' data-is-scrollable='true'>
-			<ReactTable
-				data={items}
-				columns={columns}
-				defaultPageSize={(items.length <= 50) ? items.length : 50}
-				pageSize={(items.length <= 50) ? items.length : 50}
-				sorted={sorted}
-				onSortedChange={sorted => this.setState({ sorted })}
-				showPagination={(items.length > 50)}
-				showPageSizeOptions={false}
-				className="-striped -highlight"
-				NextComponent={defaultButton}
-				PreviousComponent={defaultButton}
-				style={(items.length > 50) ? { height: 'calc(100vh - 88px)' } : {}}
-			/>
-		</div>;
+		const defaultButton = props => (
+			<Button {...props} style={{ width: '100%' }}>
+				{props.children}
+			</Button>
+		);
+		return (
+			<div className='data-grid' data-is-scrollable='true'>
+				<ReactTable
+					data={items}
+					columns={columns}
+					defaultPageSize={items.length <= 50 ? items.length : 50}
+					pageSize={items.length <= 50 ? items.length : 50}
+					sorted={sorted}
+					onSortedChange={sorted => this.setState({ sorted })}
+					showPagination={items.length > 50}
+					showPageSizeOptions={false}
+					className='-striped -highlight'
+					NextComponent={defaultButton}
+					PreviousComponent={defaultButton}
+					style={items.length > 50 ? { height: 'calc(100vh - 88px)' } : {}}
+				/>
+			</div>
+		);
 	}
 
 	_filterItem(item, searchString) {
@@ -133,12 +137,12 @@ export class ItemList extends React.Component {
 			}
 
 			// now search the traits
-			if (item.symbol && (item.symbol.toLowerCase().indexOf(text) > -1)) {
+			if (item.symbol && item.symbol.toLowerCase().indexOf(text) > -1) {
 				return true;
 			}
 
 			// now search the raw traits
-			if (item.flavor && (item.flavor.toLowerCase().indexOf(text) > -1)) {
+			if (item.flavor && item.flavor.toLowerCase().indexOf(text) > -1) {
 				return true;
 			}
 
@@ -148,9 +152,7 @@ export class ItemList extends React.Component {
 
 	filter(newValue) {
 		this.setState({
-			items: newValue ?
-				this.props.data.filter(i => this._filterItem(i, newValue.toLowerCase())) :
-				this.props.data
+			items: newValue ? this.props.data.filter(i => this._filterItem(i, newValue.toLowerCase())) : this.props.data
 		});
 	}
 }

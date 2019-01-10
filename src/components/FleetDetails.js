@@ -1,7 +1,6 @@
 import React from 'react';
 import ReactTable from "react-table";
-import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
-import { PrimaryButton } from 'office-ui-fabric-react/lib/Button';
+import { Button } from 'semantic-ui-react';
 
 import { CollapsibleSection } from './CollapsibleSection';
 import { RarityStars } from './RarityStars';
@@ -31,7 +30,7 @@ export class MemberList extends React.Component {
 					maxWidth: 44,
 					resizable: false,
 					accessor: 'display_name',
-					Cell: (cell) => cell.original.iconUrl ? <Image src={cell.original.iconUrl} width={32} height={32} imageFit={ImageFit.contain} /> : <span />
+					Cell: (cell) => cell.original.iconUrl ? <img src={cell.original.iconUrl} width={32} height={32} style={{objectFit: 'contain'}} /> : <span />
 				},
 				{
 					id: 'display_name',
@@ -174,7 +173,7 @@ export class MemberList extends React.Component {
 				showPageSizeOptions={false}
 				className="-striped -highlight"
 			/>
-			<PrimaryButton onClick={this._exportCSV} text='Export member list as CSV...' />
+			<Button primary onClick={this._exportCSV} content='Export member list as CSV...' />
 		</CollapsibleSection>);
 	}
 }

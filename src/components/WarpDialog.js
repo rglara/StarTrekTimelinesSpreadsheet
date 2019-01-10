@@ -1,6 +1,5 @@
 import React from 'react';
 import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
-import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
 import { PrimaryButton, DefaultButton } from 'office-ui-fabric-react/lib/Button';
 import UserStore from './Styles';
 import NumberPicker from './NumberPicker';
@@ -99,7 +98,7 @@ export class WarpDialog extends React.Component {
             }}
         >
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 3fr', gridTemplateAreas: `'image description' 'image chronitons' 'image warpcount'`, color: currentTheme.semanticColors.bodyText, backgroundColor: currentTheme.semanticColors.bodyBackground }}>
-                <div style={{ gridArea: 'image' }}><Image src={this.state.iconUrl} width={200} height={200} imageFit={ImageFit.contain} /></div>
+                <div style={{ gridArea: 'image' }}><img src={this.state.iconUrl} width={200} height={200} style={{objectFit: 'contain'}} /></div>
                 <div style={{ gridArea: 'description' }}>
                     <p>{this.state.quest.description}</p>
                     {this.state.mastery.locked && <p>This mission is locked; you can't warp it until you complete this mastery level in the game</p>}

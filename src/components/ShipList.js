@@ -1,7 +1,6 @@
 import React from 'react';
-import ReactTable from "react-table";
-import { DefaultButton } from 'office-ui-fabric-react/lib/Button';
-import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
+import ReactTable from 'react-table';
+import { Button } from 'semantic-ui-react';
 
 import { RarityStars } from './RarityStars';
 
@@ -16,7 +15,7 @@ export class ShipList extends React.Component {
 				ship.sort_level = ship.level / ship.max_level;
 				return ship;
 			}),
-			sorted: [{ id: 'name', desc: false }, { id:'sort_level'}],
+			sorted: [{ id: 'name', desc: false }, { id: 'sort_level' }],
 			playerSchematics: STTApi.playerData.character.items.filter(item => item.type === 8),
 			columns: [
 				{
@@ -25,7 +24,7 @@ export class ShipList extends React.Component {
 					minWidth: 60,
 					maxWidth: 60,
 					accessor: 'name',
-					Cell: (p) => <Image src={p.original.iconUrl} width={48} height={48} imageFit={ImageFit.contain} />
+					Cell: p => <img src={p.original.iconUrl} width={48} height={48} style={{ objectFit: 'contain' }} />
 				},
 				{
 					id: 'name',
@@ -44,7 +43,7 @@ export class ShipList extends React.Component {
 					minWidth: 145,
 					maxWidth: 145,
 					resizable: true,
-					Cell: (p) => <RarityStars min={1} max={p.original.max_level + 1} value={(p.original.level > 0) ? (p.original.level + 1) : null} />,
+					Cell: p => <RarityStars min={1} max={p.original.max_level + 1} value={p.original.level > 0 ? p.original.level + 1 : null} />,
 					isPadded: true
 				},
 				{
@@ -54,7 +53,7 @@ export class ShipList extends React.Component {
 					maxWidth: 75,
 					resizable: true,
 					accessor: 'rarity',
-					Cell: (p) => <RarityStars min={1} max={p.original.rarity} value={p.original.rarity} />,
+					Cell: p => <RarityStars min={1} max={p.original.rarity} value={p.original.rarity} />,
 					isPadded: true
 				},
 				{
@@ -89,7 +88,11 @@ export class ShipList extends React.Component {
 					maxWidth: 90,
 					resizable: true,
 					accessor: 'attack',
-					Cell: (p) => <span>{p.original.attack} ({p.original.attacks_per_second}/s)</span>
+					Cell: p => (
+						<span>
+							{p.original.attack} ({p.original.attacks_per_second}/s)
+						</span>
+					)
 				},
 				{
 					id: 'accuracy',
@@ -121,7 +124,7 @@ export class ShipList extends React.Component {
 					minWidth: 80,
 					maxWidth: 250,
 					resizable: true,
-					accessor: 'traitNames',
+					accessor: 'traitNames'
 				},
 				{
 					id: 'flavor',
@@ -146,22 +149,28 @@ export class ShipList extends React.Component {
 
 	render() {
 		let { columns, items, sorted } = this.state;
-		const defaultButton = props => <DefaultButton {...props} text={props.children} style={{ width: '100%' }} />;
-		return <div className='tab-panel' data-is-scrollable='true'>
-			<ReactTable
-				data={items}
-				columns={columns}
-				defaultPageSize={(items.length <= 50) ? items.length : 50}
-				pageSize={(items.length <= 50) ? items.length : 50}
-				sorted={sorted}
-				onSortedChange={sorted => this.setState({ sorted })}
-				showPagination={(items.length > 50)}
-				showPageSizeOptions={false}
-				className="-striped -highlight"
-				NextComponent={defaultButton}
-				PreviousComponent={defaultButton}
-				style={{ height: 'calc(100vh - 56px)' }}
-			/>
-		</div>;
+		const defaultButton = props => (
+			<Button {...props} style={{ width: '100%' }}>
+				{props.children}
+			</Button>
+		);
+		return (
+			<div className='tab-panel' data-is-scrollable='true'>
+				<ReactTable
+					data={items}
+					columns={columns}
+					defaultPageSize={items.length <= 50 ? items.length : 50}
+					pageSize={items.length <= 50 ? items.length : 50}
+					sorted={sorted}
+					onSortedChange={sorted => this.setState({ sorted })}
+					showPagination={items.length > 50}
+					showPageSizeOptions={false}
+					className='-striped -highlight'
+					NextComponent={defaultButton}
+					PreviousComponent={defaultButton}
+					style={{ height: 'calc(100vh - 56px)' }}
+				/>
+			</div>
+		);
 	}
 }
