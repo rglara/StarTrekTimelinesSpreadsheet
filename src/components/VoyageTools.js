@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Message, Dropdown, Button, Header, Select, Checkbox, Form, List, Image, Icon, Card } from 'semantic-ui-react';
+import { Message, Dropdown, Button, Header, Select, Checkbox, Form, List, Image, Icon, Card, Popup } from 'semantic-ui-react';
 
 import STTApi from '../api';
 import {
@@ -578,6 +578,18 @@ export class VoyageLog extends React.Component {
 				voyageNarrative = voyageNarrative.filter(e => e.encounter_type !== 'flavor');
 			}
 
+			// compute skill check counts
+			let skillChecks = voyageNarrative.reduce(function(r, a) {
+				if (a.skill_check && a.skill_check.skill && a.encounter_type === "hazard") {
+					if (!r[a.skill_check.skill])
+						r[a.skill_check.skill] = [0,0];
+					r[a.skill_check.skill][0]++;
+					if (a.skill_check.passed)
+						r[a.skill_check.skill][1]++;
+				}
+				return r;
+			}, Object.create(null));
+
 			// Group by index
 			voyageNarrative = voyageNarrative.reduce(function(r, a) {
 				r[a.index] = r[a.index] || [];
@@ -626,6 +638,7 @@ export class VoyageLog extends React.Component {
 				crew_slots: voyage.crew_slots,
 				voyage: voyage,
 				voyageNarrative: voyageNarrative,
+				skillChecks: skillChecks,
 				estimatedMinutesLeft: voyage.hp / 21,
 				estimatedMinutesLeftRefill: voyage.hp / 21,
 				nativeEstimate: false,
@@ -820,6 +833,14 @@ export class VoyageLog extends React.Component {
 		}
 	}
 
+	renderCrewSkills(crew) {
+		return Object.keys(crew.skills).map(s => {
+			return (<span key={s}><img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
+				{crew.skills[s].core} ({crew.skills[s].range_min}-{crew.skills[s].range_max})
+			</span>);
+		})
+	}
+
 	render() {
 		if (this.state.showSpinner) {
 			return (
@@ -854,9 +875,15 @@ export class VoyageLog extends React.Component {
 											return (
 												<li key={slot.symbol}>
 													<span className='quest-mastery'>
+														<img src={CONFIG.SPRITES['icon_' + slot.skill].url} height={18} /> &nbsp;
 														{slot.name} &nbsp;{' '}
-														<img src={STTApi.roster.find(rosterCrew => rosterCrew.id == slot.crew.archetype_id).iconUrl} height={20} />{' '}
-														&nbsp; {slot.crew.name}
+														<Popup flowing
+															trigger={<span className='quest-mastery'>
+																<img src={STTApi.roster.find(rosterCrew => rosterCrew.id == slot.crew.archetype_id).iconUrl} height={20} />{' '}
+																&nbsp; {slot.crew.name}
+																</span>}
+															content={this.renderCrewSkills(slot.crew)}
+														/>
 													</span>
 												</li>
 											);
@@ -871,7 +898,11 @@ export class VoyageLog extends React.Component {
 											<li key={skill.skill}>
 												<span className='quest-mastery'>
 													<img src={CONFIG.SPRITES['icon_' + skill.skill].url} height={18} /> &nbsp; {skill.core} ({skill.range_min}-
-													{skill.range_max})
+													{skill.range_max})&nbsp;&nbsp;
+													<Popup
+														trigger={<Icon name='thumbs up' />}
+														content="Skill checks passed"
+													/> {this.state.skillChecks[skill.skill][1]}/{this.state.skillChecks[skill.skill][0]}
 												</span>
 											</li>
 										);
