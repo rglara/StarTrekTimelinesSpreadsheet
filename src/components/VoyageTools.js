@@ -833,6 +833,14 @@ export class VoyageLog extends React.Component {
 		}
 	}
 
+	renderCrewSkills(crew) {
+		return Object.keys(crew.skills).map(s => {
+			return (<span key={s}><img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
+				{crew.skills[s].core} ({crew.skills[s].range_min}-{crew.skills[s].range_max})
+			</span>);
+		})
+	}
+
 	render() {
 		if (this.state.showSpinner) {
 			return (
@@ -867,9 +875,15 @@ export class VoyageLog extends React.Component {
 											return (
 												<li key={slot.symbol}>
 													<span className='quest-mastery'>
+														<img src={CONFIG.SPRITES['icon_' + slot.skill].url} height={18} /> &nbsp;
 														{slot.name} &nbsp;{' '}
-														<img src={STTApi.roster.find(rosterCrew => rosterCrew.id == slot.crew.archetype_id).iconUrl} height={20} />{' '}
-														&nbsp; {slot.crew.name}
+														<Popup flowing
+															trigger={<span className='quest-mastery'>
+																<img src={STTApi.roster.find(rosterCrew => rosterCrew.id == slot.crew.archetype_id).iconUrl} height={20} />{' '}
+																&nbsp; {slot.crew.name}
+																</span>}
+															content={this.renderCrewSkills(slot.crew)}
+														/>
 													</span>
 												</li>
 											);
