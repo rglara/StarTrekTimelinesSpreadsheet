@@ -1,9 +1,9 @@
 import React from 'react';
 import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
 import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
-import { SpinButton } from 'office-ui-fabric-react/lib/SpinButton';
 import { PrimaryButton, DefaultButton } from 'office-ui-fabric-react/lib/Button';
 import UserStore from './Styles';
+import NumberPicker from './NumberPicker';
 
 import STTApi from '../api';
 import { CONFIG, getChronitonCount } from '../api';
@@ -109,10 +109,7 @@ export class WarpDialog extends React.Component {
                     <p>Chronitons needed: {chronNeeded} / {chronAvailable}</p>
                 </div>
                 <div style={{ gridArea: 'warpcount' }}>
-                    <SpinButton value={this.state.warpCount} label={'Warp count:'} min={1} max={10} step={1}
-						onIncrement={(value) => { this.setState({ warpCount: +value + 1 }); }}
-						onDecrement={(value) => { this.setState({ warpCount: +value - 1 }); }}
-					/>
+                    <NumberPicker value={this.state.warpCount} compact label={'Warp count:'} min={1} max={100} step={1} onChange={({value}) => { this.setState({ warpCount: value }); }} />
                 </div>
             </div>
 

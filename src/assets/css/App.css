@@ -291,6 +291,10 @@
 .blinking_thing {
     animation: blinker 1s linear infinite;
 }
+
+.number_picker_input {
+    width: 60px
+}
   
 @keyframes blinker {
     50% {
