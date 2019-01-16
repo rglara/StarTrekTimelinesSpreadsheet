@@ -590,6 +590,12 @@ export class VoyageLog extends React.Component {
 				return r;
 			}, Object.create(null));
 
+			Object.keys(CONFIG.SKILLS).forEach(sk => {
+				if (!skillChecks[sk]) {
+					skillChecks[sk] = [0,0];
+				}
+			});
+
 			// Group by index
 			voyageNarrative = voyageNarrative.reduce(function(r, a) {
 				r[a.index] = r[a.index] || [];
