@@ -898,7 +898,7 @@ export class VoyageLog extends React.Component {
 											<li key={skill.skill}>
 												<span className='quest-mastery'>
 													<img src={CONFIG.SPRITES['icon_' + skill.skill].url} height={18} /> &nbsp; {skill.core} ({skill.range_min}-
-													{skill.range_max})&nbsp;&nbsp;
+													{skill.range_max})&nbsp;[{skill.core + (skill.range_min + skill.range_max)/2}]&nbsp;&nbsp;
 													<Popup
 														trigger={<Icon name='thumbs up' />}
 														content="Skill checks passed"
