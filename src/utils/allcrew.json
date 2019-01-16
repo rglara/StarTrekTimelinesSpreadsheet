@@ -1,0 +1,53 @@
+[
+   {
+      "id":10001,
+      "name":"Seven in Silver",
+      "short_name":"Seven",
+      "symbol":"seven_in_silver",
+      "rarity":5,
+      "max_rarity":5,
+      "base_skills":{
+         "engineering_skill":{
+            "core": 1249,
+            "range_min": 230,
+            "range_max": 480
+         },
+         "science_skill":{
+            "core": 1031,
+            "range_min": 150,
+            "range_max": 365
+         }
+      },
+      "skills": {
+         "engineering_skill": {
+            "core": 1249,
+            "range_min": 230,
+            "range_max": 480
+         },
+         "science_skill": {
+            "core": 1031,
+            "range_min": 150,
+            "range_max": 365
+         }
+      },
+      "level":100,
+      "max_level":100,
+      "equipment":[],
+      "equipment_slots":[],
+      "flavor":null,
+      "traits":[],
+      "rawTraits":[],
+      "traits_hidden": [],
+      "portrait":{
+         "file":""
+      },
+      "icon": {
+         "file": ""
+      },
+      "full_body": {
+         "file": ""
+      },
+      "action":{},
+      "ship_battle":{}
+   }
+]
