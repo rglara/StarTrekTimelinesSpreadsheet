@@ -10,9 +10,9 @@ export class AboutAndHelp extends React.Component {
 	constructor(props) {
 		super(props);
 
-		STTApi.getGithubReleases().then((data) => {
-			this.setState({ version: data[0] });
-		});
+		// STTApi.getGithubReleases().then((data) => {
+		// 	this.setState({ version: data[0] });
+		// });
 
 		this.state = {
 			version: undefined

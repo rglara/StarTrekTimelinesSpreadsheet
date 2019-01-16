@@ -23,7 +23,7 @@ export default class CONFIG {
 	static readonly CLIENT_PLATFORM: string = 'webgl';
 
 	// releases URL
-	static readonly URL_GITHUBRELEASES: string = 'https://api.github.com/repos/IAmPicard/StarTrekTimelinesSpreadsheet/releases';
+	// static readonly URL_GITHUBRELEASES: string = 'https://api.github.com/repos/IAmPicard/StarTrekTimelinesSpreadsheet/releases';
 
 	// Every 10 days, check the wiki again for updated / new images
 	static readonly HOURS_TO_RECOVERY: number = 24 * 10;

@@ -53,7 +53,7 @@ export class STTApiClass {
 	public inWebMode: boolean;
 	public allcrew!: any[];
 
-	public serverAddress: string = 'https://iampicard.com/';
+	public serverAddress: string = 'http://localhost/';
 
 	constructor() {
 		this.refreshEverything(true);
@@ -433,9 +433,9 @@ export class STTApiClass {
 		}
 	}
 
-	getGithubReleases(): Promise<any> {
-		return this._net.get(CONFIG.URL_GITHUBRELEASES, {});
-	}
+	// getGithubReleases(): Promise<any> {
+	// 	return this._net.get(CONFIG.URL_GITHUBRELEASES, {});
+	// }
 
 	async refreshRoster(): Promise<any> {
 		// TODO: need to reload icon urls as well
