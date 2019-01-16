@@ -84,6 +84,7 @@ function rosterFromCrew(rosterEntry: any, crew: any|ICrew): void {
 		rosterEntry.equipment_slots[equipment[0]].have = true;
 	});
 
+	rosterEntry.traits = '';
 	rosterEntry.traits = crew.traits.concat(crew.traits_hidden).map((trait: any) => { return STTApi.getTraitName(trait); }).join();
 	rosterEntry.rawTraits = crew.traits.concat(crew.traits_hidden);
 
