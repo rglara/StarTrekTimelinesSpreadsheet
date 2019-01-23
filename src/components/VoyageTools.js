@@ -754,23 +754,10 @@ export class VoyageLog extends React.Component {
 	}
 
 	async _chooseDilemma(voyageId, dilemmaId, index) {
-		// #!if ENV === 'electron'
 		if (index < 0) {
-			// TODO: this should pick a random index out of the unlocked resolutions
-			let promises = [];
-			for (let i = 0; i < 21; i++) {
-				promises.push(resolveDilemma(voyageId, dilemmaId, i % (-1 * index)));
-			}
-
-			await Promise.all(promises).catch(error => {
-				/*console.warn(error);*/
-			});
-		} else {
-			await resolveDilemma(voyageId, dilemmaId, index);
+			return;
 		}
-		// #!else
 		await resolveDilemma(voyageId, dilemmaId, index);
-		// #!endif
 
 		// Remove the dilemma that was just resolved
 		STTApi.playerData.character.voyage[0].dilemma = null;
@@ -818,18 +805,6 @@ export class VoyageLog extends React.Component {
 									);
 								}
 							})}
-
-							<div
-								className='item'
-								key={-1}
-								onClick={() =>
-									this._chooseDilemma(this.state.voyage.id, this.state.voyage.dilemma.id, -1 * this.state.voyage.dilemma.resolutions.length)
-								}>
-								<img src={CONFIG.SPRITES['question_icon'].url} height={18} />
-								<div className='content'>
-									<div className='header'>Random choice!</div>
-								</div>
-							</div>
 						</div>
 					</div>
 				</div>

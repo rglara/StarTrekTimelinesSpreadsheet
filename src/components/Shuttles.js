@@ -281,19 +281,6 @@ export class Shuttles extends React.Component {
 		}
 	}
 
-	async _completeShuttle(shuttle_id) {
-		let promises = [];
-		for (let i = 0; i < 1; i++) {
-			promises.push(shuttleComplete(shuttle_id));
-		}
-
-		await Promise.all(promises)
-			.catch(error => {
-				/*console.warn(error);*/
-			})
-			.then(() => this._reconcileCalc());
-	}
-
 	renderShuttle(shuttle) {
 		let faction = STTApi.playerData.character.factions.find(faction => faction.id === shuttle.faction_id);
 
@@ -333,7 +320,6 @@ export class Shuttles extends React.Component {
 					</Item.Description>
 					<Item.Extra>
 						State: {this.getState(shuttle.state)}
-						{shuttle.state === 2 && <Button floated='right' onClick={() => this._completeShuttle(shuttle.id)} content='Complete' />}
 					</Item.Extra>
 				</Item.Content>
 			</Item>
