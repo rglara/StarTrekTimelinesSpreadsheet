@@ -428,18 +428,6 @@ export class HomePage extends React.Component {
 						<img src={this.props.captainAvatarBodyUrl} height='320px' />
 					</div>
 					<div style={{ gridArea: 'description' }}>
-						<div style={{ float: 'right' }}>
-							{(!STTApi.playerData.patreonData || !STTApi.playerData.patreonData.patron) && (
-								<a href='https://www.patreon.com/bePatron?u=10555637' target='_blank' data-patreon-widget-type='become-patron-button'>
-									<img src='https://c5.patreon.com/external/logo/become_a_patron_button.png' />
-								</a>
-							)}
-							<br />
-							{STTApi.playerData.patreonData && !STTApi.playerData.patreonData.patron && (
-								<a href={STTApi.playerData.patreonData.loginUrl}>Already a supporter? Log in here</a>
-							)}
-						</div>
-
 						<h3>Welcome, {STTApi.playerData.character.display_name}!</h3>
 						<p>DBID {STTApi.playerData.dbid}</p>
 						<p>

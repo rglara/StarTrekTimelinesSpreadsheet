@@ -332,38 +332,30 @@ export class AppHome extends React.Component {
 				iconOnly: true,
 				subMenuProps: {
 					items: [this._tabMenuItem({ key: 'About', name: 'Help and About', itemIcon: 'Help', iconOnly: true }),
-					{
-						key: 'ReportBug',
-						name: 'Report bug...',
-						iconProps: { iconName: 'Bug' },
-						onClick: () => {
-							createIssue(false);
-						}
-					},
-					{
-						key: 'SendFeedback',
-						name: 'Feature request...',
-						iconProps: { iconName: 'Comment' },
-						onClick: () => {
-							createIssue(true);
-						}
-					},
-					{
-						key: 'PatreonLink',
-						name: 'Support me on Patreon...',
-						iconProps: { iconName: 'CoffeeScript' },
-						onClick: () => {
-							openShellExternal("https://www.patreon.com/bePatron?u=10555637");
-						}
-					},
-					{
-						key: 'EmailMe',
-						name: 'info@iampicard.com',
-						iconProps: { iconName: 'Mail' },
-						onClick: () => {
-							openShellExternal("mailto:info@iampicard.com");
-						}
-					}
+					// {
+					// 	key: 'ReportBug',
+					// 	name: 'Report bug...',
+					// 	iconProps: { iconName: 'Bug' },
+					// 	onClick: () => {
+					// 		createIssue(false);
+					// 	}
+					// },
+					// {
+					// 	key: 'SendFeedback',
+					// 	name: 'Feature request...',
+					// 	iconProps: { iconName: 'Comment' },
+					// 	onClick: () => {
+					// 		createIssue(true);
+					// 	}
+					// },
+					// {
+					// 	key: 'EmailMe',
+					// 	name: 'info@iampicard.com',
+					// 	iconProps: { iconName: 'Mail' },
+					// 	onClick: () => {
+					// 		openShellExternal("mailto:info@iampicard.com");
+					// 	}
+					// }
 				]}
 			}
 		];

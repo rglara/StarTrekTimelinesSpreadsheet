@@ -2,11 +2,9 @@ import React from 'react';
 import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
 
 import { CrewList } from './CrewList.js';
-import { ShareDialog } from './ShareDialog.js';
 
 import { exportExcel } from '../utils/excelExporter.js';
 import { exportCsv } from '../utils/csvExporter.js';
-import { shareCrew } from '../utils/pastebin.js';
 
 import { download } from '../utils/pal';
 
@@ -83,12 +81,6 @@ export class CrewPage extends React.Component {
                                     let csv = exportCsv();
                                     download('My Crew.csv', csv, 'Export Star Trek Timelines crew roster', 'Export');
                                 }
-                            },
-                            {
-                                key: 'share',
-                                name: 'Share...',
-                                iconProps: { iconName: 'Share' },
-                                onClick: () => { this.refs.shareDialog._showDialog(STTApi.playerData.character.display_name); }
                             }]
                         }
                 },
@@ -173,7 +165,6 @@ export class CrewPage extends React.Component {
                 onSearch={(newValue) => this.refs.crewList.filter(newValue)}
             />
             <CrewList data={this.state.crewData} ref='crewList' groupRarity={this.state.groupRarity} showBuyback={this.state.showBuyback} compactMode={this.state.compactMode} />
-            <ShareDialog ref='shareDialog' onShare={shareCrew} />
         </div>;
 	}
 }

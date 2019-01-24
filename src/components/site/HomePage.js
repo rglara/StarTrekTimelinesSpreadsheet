@@ -102,7 +102,7 @@ export class HomePage extends React.Component {
             </List>
 
             <br />
-            <p>If you want to get in touch with me please open an issue on <a href='https://github.com/IAmPicard/StarTrekTimelinesSpreadsheet/issues' target='_blank'>GitHub</a> or email me at <a href='mailto:info@iampicard.com'>info@iampicard.com</a>.</p>
+            {/* <p>If you want to get in touch with me please open an issue on <a href='https://github.com/IAmPicard/StarTrekTimelinesSpreadsheet/issues' target='_blank'>GitHub</a> or email me at <a href='mailto:info@iampicard.com'>info@iampicard.com</a>.</p> */}
             <Label size="small"><b>DISCLAIMER</b> This tool is provided "as is", without warranty of any kind. Use at your own risk! It should be understood that Star Trek Timelines content and materials are trademarks and copyrights of <a href='https://www.disruptorbeam.com/tos/' target='_blank'>Disruptor Beam, Inc.</a> or its licensors. All rights reserved. This tool is neither endorsed by nor affiliated with Disruptor Beam, Inc..</Label>
         </Container>;
     }
