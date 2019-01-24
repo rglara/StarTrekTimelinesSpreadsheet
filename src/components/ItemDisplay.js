@@ -1,5 +1,6 @@
 import React from 'react';
-import { CONFIG } from '../api';
+import { Header } from 'semantic-ui-react';
+import STTApi, { CONFIG } from '../api';
 
 export class ItemDisplay extends React.Component {
     render() {
@@ -19,14 +20,48 @@ export class ItemDisplay extends React.Component {
             }
         }
 
+        let count = 0;
+        if (this.props.itemId) {
+            let have = STTApi.playerData.character.items.find(item => item.archetype_id === this.props.itemId);
+            if (have && have.quantity > 0) {
+                count = have.quantity;
+            }
+        }
+
         let divStyle = this.props.style || {};
         divStyle.position = 'relative';
         divStyle.width = this.props.size + 'px';
         divStyle.height = this.props.size + 'px';
 
         return <div style={divStyle}>
-            <img src={this.props.src} style={{ borderStyle: 'solid', borderRadius: borderRadius + 'px', borderWidth: borderWidth + 'px', borderColor: borderColor, width: (this.props.size - 2 * borderWidth) + 'px', height: (this.props.size - 2 * borderWidth) + 'px' }} />
-            {!this.props.hideRarity && <div style={{ position: 'absolute', width: this.props.size + 'px', bottom: bottomStar + 'px', left: '50%', transform: 'translate(-50%, 0)', textAlign: 'center'}}>{rarity}</div>}
+            <img src={this.props.src}
+                 style={{ borderStyle: 'solid',
+                          borderRadius: borderRadius + 'px',
+                          borderWidth: borderWidth + 'px',
+                          borderColor: borderColor,
+                          width: (this.props.size - 2 * borderWidth) + 'px',
+                          height: (this.props.size - 2 * borderWidth) + 'px' }} />
+            {!this.props.hideRarity &&
+                <div style={{ position: 'absolute',
+                              width: this.props.size + 'px',
+                              bottom: bottomStar + 'px',
+                              left: '50%',
+                              transform: 'translate(-50%, 0)',
+                              textAlign: 'center'
+                }}>{rarity}</div>}
+            {count > 0 &&
+                <Header as='h4'
+
+                style={{ position: 'absolute',
+                top: borderWidth + 'px',
+                right: 2 * borderWidth + 'px',
+                backgroundColor: 'white',
+                borderColor: 'black',
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                margin: 0
+
+            }}>{count}</Header>}
         </div>;
     }
 }

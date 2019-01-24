@@ -36,6 +36,7 @@ class StoreItem extends React.Component {
 						size={80}
 						maxRarity={this.props.storeItem.offer.game_item.rarity}
 						rarity={this.props.storeItem.offer.game_item.rarity}
+						itemId={this.props.storeItem.offer.game_item.id}
 					/>
 				</Segment>
 				<Button attached='bottom' primary disabled={locked} onClick={() => this.props.onBuy()}>
