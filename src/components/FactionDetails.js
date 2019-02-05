@@ -14,6 +14,20 @@ class StoreItem extends React.Component {
 	}
 
 	render() {
+		let archetypes = STTApi.itemArchetypeCache.archetypes
+		let equipment = archetypes.find(e => e.id === this.props.storeItem.offer.game_item.id);
+		let sources = undefined;
+		if (equipment) {
+			let isMission = equipment.item_sources.filter(e => e.type === 0).length > 0;
+			let isShipBattle = equipment.item_sources.filter(e => e.type === 2).length > 0;
+			// obviously it is faction obtainable since this is a faction item
+			//let isFaction = equipment.item_sources.filter(e => e.type === 1).length > 0;
+			//TODO: figure out cadet mission availability
+			if (!isMission && !isShipBattle) {
+				sources = '*'
+			}
+		}
+
 		let curr = CONFIG.CURRENCIES[this.props.storeItem.offer.cost.currency];
 		let locked = this.props.storeItem.locked || this.props.storeItem.offer.purchase_avail === 0;
 
@@ -37,6 +51,7 @@ class StoreItem extends React.Component {
 						maxRarity={this.props.storeItem.offer.game_item.rarity}
 						rarity={this.props.storeItem.offer.game_item.rarity}
 						itemId={this.props.storeItem.offer.game_item.id}
+						sources={sources}
 					/>
 				</Segment>
 				<Button attached='bottom' primary disabled={locked} onClick={() => this.props.onBuy()}>

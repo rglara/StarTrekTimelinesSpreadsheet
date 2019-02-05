@@ -51,17 +51,28 @@ export class ItemDisplay extends React.Component {
                 }}>{rarity}</div>}
             {count > 0 &&
                 <Header as='h4'
-
-                style={{ position: 'absolute',
-                top: borderWidth + 'px',
-                right: 2 * borderWidth + 'px',
-                backgroundColor: 'white',
-                borderColor: 'black',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                margin: 0
-
+                    style={{ position: 'absolute',
+                        top: borderWidth + 'px',
+                        right: 2 * borderWidth + 'px',
+                        backgroundColor: 'white',
+                        borderColor: 'black',
+                        borderWidth: '1px',
+                        borderStyle: 'solid',
+                        margin: 0
             }}>{count}</Header>}
+            {this.props.sources &&
+                <Header as='h4'
+                    style={{
+                        position: 'absolute',
+                        top: borderWidth + 'px',
+                        left: 2 * borderWidth + 'px',
+                        backgroundColor: 'white',
+                        borderColor: 'black',
+                        borderWidth: '1px',
+                        borderStyle: 'solid',
+                        margin: 0
+
+                    }}>{this.props.sources}</Header>}
         </div>;
     }
 }
