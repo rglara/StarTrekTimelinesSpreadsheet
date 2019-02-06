@@ -49,12 +49,22 @@ class CryoCollection extends React.Component {
 
         let isDone = this.props.collection.milestone.goal === 0;
 
-        return <div className="ui vertical segment" style={{ backgroundImage: (this.state.imageUrl ? `url("${fixFileUrl(this.state.imageUrl)}")` : ''), backgroundPosition: 'right bottom', backgroundRepeat: 'no-repeat', backgroundSize: 'contain', marginTop: '20px', paddingRight: '360px' }} >
+        return <div className="ui vertical segment" style={{
+                backgroundImage: (this.state.imageUrl ? `url("${fixFileUrl(this.state.imageUrl)}")` : ''),
+                backgroundPosition: 'right bottom',
+                backgroundRepeat: 'no-repeat',
+                backgroundSize: '360px',
+                marginTop: '20px',
+                paddingRight: '360px' }} >
             <h4>{this.props.collection.name}</h4>
             <p dangerouslySetInnerHTML={this.htmlDecode(this.props.collection.description)} />
-            {isDone && <p>Complete ({this.props.collection.progress} / {this.props.collection.progress})</p>}
-            {!isDone && <p>Progress: {this.props.collection.progress} / {this.props.collection.milestone.goal}</p>}
-            {(this.state.ownedCrew.length > 0) && <p><b>Crew:</b> {this.state.ownedCrew.map(crew => <span key={crew.id}>{crew.name} ({crew.rarity}/{crew.max_rarity})</span>).reduce((prev, curr) => [prev, ', ', curr])}</p>}
+            <p>
+                <span style={{ color:"#ECA50B" }}>Milestone Goal{isDone? "s Complete":""}:&nbsp;
+                {this.props.collection.progress} / {isDone ? this.props.collection.progress : this.props.collection.milestone.goal} Immortalized</span>
+            </p>
+            <p><b><span style={{ color: "#5AAAFF" }}>Owned Crew ({this.state.ownedCrew.length} / {this.state.ownedCrew.length + this.state.unownedCrew.length}):
+                </span></b> {this.state.ownedCrew.map(crew => <span key={crew.id}>{crew.name} ({crew.rarity}/{crew.max_rarity})</span>)
+                        .reduce((prev, curr) => [prev, ', ', curr])}</p>
             {(this.state.unownedCrew.length > 0) && <p><b>Unowned crew:</b> {this.state.unownedCrew.map(crew => <span key={crew.id}>{crew.name}</span>).reduce((prev, curr) => [prev, ', ', curr])}</p>}
         </div>;
     }
