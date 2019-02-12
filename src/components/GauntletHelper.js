@@ -20,12 +20,17 @@ import {
 
 class GauntletCrew extends React.Component {
 	render() {
+		//let curr = CONFIG.CURRENCIES[this.props.reviveCost.currency];
+
 		return <div className="ui compact segments" style={{ textAlign: 'center', margin: '8px' }}>
 			<h5 className="ui top attached header" style={{ color: getTheme().palette.neutralDark, backgroundColor: getTheme().palette.themeLighter, padding: '2px' }}>{STTApi.getCrewAvatarBySymbol(this.props.crew.archetype_symbol).name}</h5>
 			<div className="ui attached segment" style={{ backgroundColor: getTheme().palette.themeLighter, padding: '0' }}>
 				<div style={{ position: 'relative', display: 'inline-block' }}>
 					<img src={STTApi.getCrewAvatarBySymbol(this.props.crew.archetype_symbol).iconUrl} className={this.props.crew.disabled ? 'image-disabled' : ''} height={Math.min(200, this.props.maxwidth)} />
-					<div className={"ui circular label " + (this.props.crew.disabled ? "red" : "green")} style={{ position: 'absolute', right: '0', top: '0' }}>{this.props.crew.crit_chance}%</div>
+					<div style={{ position: 'absolute', right: '0', top: '0' }}>
+						<CircularLabel percent={this.props.crew.crit_chance} />
+					</div>
+
 				</div>
 			</div>
 			<div className="ui attached segment" style={{ backgroundColor: getTheme().palette.themeLighter, padding: '2px' }}>
@@ -39,10 +44,12 @@ class GauntletCrew extends React.Component {
 				)}
 				<p className='gauntletCrew-statline'>Crit chance {this.props.crew.crit_chance}%</p>
 			</div>}
+			{(this.props.crew.debuff > 0 || this.props.crew.disabled) &&
 			<div className="ui bottom attached primary button" onClick={() => this.props.revive(this.props.crew.disabled)}>
 				<i className="money bill alternate outline icon"></i>
-				{this.props.crew.disabled ? 'Revive (30 dil)' : 'Restore (30 dil)'}
+				{this.props.crew.disabled ? 'Revive (' + this.props.reviveCost.amount + ' dil)' : 'Restore (' + this.props.reviveCost.amount + ' dil)'}
 			</div>
+			}
 		</div>;
 	}
 }
@@ -564,14 +571,23 @@ export class GauntletHelper extends React.Component {
 				<div className='tab-panel' data-is-scrollable='true'>
 					<span className='quest-mastery'>Featured skill is <img src={CONFIG.SPRITES['icon_' + this.state.gauntlet.contest_data.featured_skill].url} height={18} /> {CONFIG.SKILLS[this.state.gauntlet.contest_data.featured_skill]}; Featured traits are {this.state.gauntlet.contest_data.traits.map(trait => STTApi.getTraitName(trait)).join(", ")}</span>
 					<div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)' }} >
-						{this.state.gauntlet.contest_data.selected_crew.map((crew) => <GauntletCrew showStats={this.state.showStats} maxwidth={this.state.windowWidth / 6} key={crew.crew_id} crew={crew} revive={(save) => this._payToReviveCrew(crew.crew_id, save)} />)}
+						{this.state.gauntlet.contest_data.selected_crew.map((crew) => <GauntletCrew
+							showStats={this.state.showStats}
+							maxwidth={this.state.windowWidth / 6}
+							key={crew.crew_id}
+							crew={crew}
+							revive={(save) => this._payToReviveCrew(crew.crew_id, save)}
+							reviveCost={this.state.gauntlet.revive_cost}
+							/>)}
 					</div>
 
 					{this.state.lastErrorMessage && <p>Error: '{this.state.lastErrorMessage}'</p>}
 
 					<div className="ui compact segments" style={{ margin: '8px' }}>
 						<h5 className="ui top attached header" style={{ color: getTheme().palette.neutralDark, backgroundColor: getTheme().palette.themeLighter, textAlign: 'center', padding: '2px' }}>
-							The gauntlet ends in {formatTimeSeconds(this.state.gauntlet.seconds_to_end)}
+							The gauntlet ends in {formatTimeSeconds(this.state.gauntlet.seconds_to_end)}{
+								this.state.gauntlet.seconds_to_next_crew_refresh > 0 && <span>&nbsp;&nbsp;(Next crew refresh in {formatTimeSeconds(this.state.gauntlet.seconds_to_next_crew_refresh)})</span>
+							}
 						</h5>
 						<div className="ui attached segment" style={{ backgroundColor: getTheme().palette.themeLighter }}>
 							{this.renderStatistic(formatTimeSeconds(this.state.gauntlet.seconds_to_next_crew_refresh), 'Crew refresh')}
