@@ -98,20 +98,22 @@ class VoyageCrewRankWorker : public Nan::AsyncProgressWorker
 				{
 					ss << (crew.altScores.empty() ? 0 : crew.altScores[iAlt]) << ",";
 				}
-				std::string status;
+				//std::string status;
 				if (crew.crew.traitIds.test(FROZEN_BIT))
 				{
-					status = "F";
+					ss << "F";
 				}
 				else if (crew.crew.ff100)
 				{
-					status = "I?";
+					// status = "I-" + crew.crew.max_rarity;
+					ss << crew.crew.max_rarity << "I";
 				}
 				else
 				{
-					status = '0' + crew.crew.max_rarity;
+					// status = "x/" + crew.crew.max_rarity;
+					ss << crew.crew.rarity << "/" << crew.crew.max_rarity;
 				}
-				ss << status << "," << crew.crew.name << ",";
+				ss << ",\"" << crew.crew.name << "\",";
 				for (auto skills : crew.voySkills)
 				{
 					ss << skillNames[skills.first] << "/" << skillNames[skills.second] << " ";
