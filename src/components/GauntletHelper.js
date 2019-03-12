@@ -128,6 +128,8 @@ class GauntletMatch extends React.Component {
 			"pcrewimage chance chance chance ocrewimage"
 			"pcrewimage button button button ocrewimage"`};
 
+		let oppCrew = STTApi.getCrewAvatarBySymbol(this.props.match.opponent.archetype_symbol);
+
 		return <div className="ui compact segments" style={{ margin: 'unset' }}>
 			<h5 className="ui top attached header" style={{ color: getTheme().palette.neutralDark, backgroundColor: getTheme().palette.themeLighter, textAlign: 'center', padding: '2px' }}>
 				vs {this.props.match.opponent.name} (rank {this.props.match.opponent.rank})
@@ -169,7 +171,7 @@ class GauntletMatch extends React.Component {
 					<CircularLabel percent={this.props.match.opponent.crit_chance} />
 				</div>
 
-				<span style={{ gridArea: 'ocrewname', justifySelf: 'center' }}>{STTApi.getCrewAvatarBySymbol(this.props.match.opponent.archetype_symbol).short_name}</span>
+				<span style={{ gridArea: 'ocrewname', justifySelf: 'center' }}>{oppCrew ? oppCrew.short_name : "<unknown>"}</span>
 			</div>
 			<div className="ui bottom attached primary button" onClick={this._playMatch}>Engage!</div>
 		</div>;

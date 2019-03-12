@@ -40,6 +40,9 @@ export class AssetImageProvider implements ImageProvider {
     }
 
     getCrewImageUrl(crew: any, fullBody: boolean, id: any): Promise<IFoundResult> {
+        if (!crew) {
+            return this.getImageUrl("", id);
+        }
         return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, id);
     }
 
@@ -72,6 +75,9 @@ export class AssetImageProvider implements ImageProvider {
     }
 
     async getImageUrl(iconFile: string, id: any): Promise<IFoundResult> {
+        if (!iconFile) {
+            return {id, url: undefined };
+        }
         let cachedUrl = await this._imageCache.getImage(iconFile)
         if (cachedUrl) {
             return { id, url: cachedUrl };
