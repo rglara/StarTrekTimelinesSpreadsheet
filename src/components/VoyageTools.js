@@ -571,7 +571,22 @@ export class VoyageLog extends React.Component {
 		let voyage = STTApi.playerData.character.voyage[0];
 		if (voyage && voyage.id) {
 			let voyageNarrative = await loadVoyage(voyage.id, false);
-
+			let voyageExport = { 
+				id: voyage.id,
+				skills: voyage.skills,
+				skillAggregates: voyage.skill_aggregates,
+				skillChecks: {},
+				stats: {
+					skillChecks: {
+						times: [],
+					},
+					rewards: {
+						times: [],
+					},
+				},
+				narrative: voyageNarrative,
+			};
+			
 			//<Checkbox checked={this.state.includeFlavor} label="Include flavor entries" onChange={(e, isChecked) => { this.setState({ includeFlavor: isChecked }); }} />
 			if (!this.state.includeFlavor) {
 				// Remove the "flavor" entries (useless text)
@@ -586,6 +601,7 @@ export class VoyageLog extends React.Component {
 					r[a.skill_check.skill][0]++;
 					if (a.skill_check.passed)
 						r[a.skill_check.skill][1]++;
+					voyageExport.stats.skillChecks.times.push(a.event_time);
 				}
 				return r;
 			}, Object.create(null));
@@ -595,6 +611,34 @@ export class VoyageLog extends React.Component {
 					skillChecks[sk] = [0,0];
 				}
 			});
+			
+			voyageNarrative.filter(e => e.encounter_type === "reward").forEach(v => {
+				voyageExport.stats.rewards.times.push(v.event_time);
+			});
+			
+			// at index "index", need to subtract "gap" from all times >=
+			let timeGaps = [];
+			
+			voyageNarrative.forEach((e,i,ee) => {
+				if (i > 1 && ee[i-1].encounter_type === "dilemma" && e.encounter_type !== "dilemma") {
+					let timelost = e.event_time - ee[i-1].event_time;
+					timeGaps.push({gap: timelost, index:e.index})
+					// find the next
+				}
+			});
+			
+			if (voyageExport.stats.skillChecks.times.length > 1) {
+				voyageExport.stats.skillChecks.average = voyageExport.stats.skillChecks.times
+					.map((v,i,vv) => i == 0 ? 0 : v - vv[i-1])
+					.reduce((a,b) => a+b)
+					/ voyageExport.stats.skillChecks.times.length;
+			}
+			if (voyageExport.stats.rewards.times.length > 1) {
+				voyageExport.stats.rewards.average = voyageExport.stats.rewards.times
+					.map((v,i,vv) => i == 0 ? 0 : v - vv[i-1])
+					.reduce((a,b) => a+b)
+					/ voyageExport.stats.rewards.times.length;
+			}
 
 			// Group by index
 			voyageNarrative = voyageNarrative.reduce(function(r, a) {
@@ -631,6 +675,8 @@ export class VoyageLog extends React.Component {
 				let ship = STTApi.ships.find(ship => ship.id === voyage.ship_id);
 				ship_name = ship ? ship.name : '-BUGBUG-';
 			}
+			
+			voyageExport.skillChecks = skillChecks;
 
 			this.setState({
 				showSpinner: false,
@@ -648,7 +694,8 @@ export class VoyageLog extends React.Component {
 				estimatedMinutesLeft: voyage.hp / 21,
 				estimatedMinutesLeftRefill: voyage.hp / 21,
 				nativeEstimate: false,
-				voyageRewards: voyageRewards
+				voyageRewards: voyageRewards,
+				voyageExport: voyageExport
 			});
 
 			// Avoid estimating if voyage is not ongoing
@@ -916,6 +963,10 @@ export class VoyageLog extends React.Component {
 						return <VoyageLogEntry key={key} log={this.state.voyageNarrative[key]} />;
 					})}
 				</CollapsibleSection>
+				<button className='ui mini button blue' onClick={() => download('narrative.'+this.state.voyage.id+'.json', JSON.stringify(this.state.voyageExport), 'Export voyage narrative JSON', 'Export')}>
+					Export Narrative JSON
+				</button>
+
 				<br />
 			</div>
 		);
