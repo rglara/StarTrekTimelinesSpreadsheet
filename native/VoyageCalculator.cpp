@@ -23,12 +23,12 @@ constexpr size_t MIN_SCAN_DEPTH = 2;
 constexpr size_t MAX_SCAN_DEPTH = 10; // sanity
 
 // Various fields used in the duration estimation code
-constexpr unsigned int ticksPerCycle = 28;
-constexpr unsigned int secondsPerTick = 20;
-constexpr unsigned int cycleSeconds = ticksPerCycle * secondsPerTick;
-constexpr float cyclesPerHour = 60 * 60 / (float)cycleSeconds;
-constexpr unsigned int hazPerCycle = 6;
-constexpr float activityPerCycle = 18;
+constexpr unsigned int secondsPerTick = 20; // 3 ticks per minute; a "tick" is a single voyage UI quick progress bar which reduces antimatter by 1 unless it is a hazard or dilemma
+constexpr unsigned int ticksPerCycle = 30; // 
+constexpr unsigned int cycleSeconds = ticksPerCycle * secondsPerTick; // 600 sec/cycle; 10 min/cycle; .0166 cycle/sec;  WAS: = 560 sec/cycle; 9.333 min/cycle; .001785 cycle/sec
+constexpr float cyclesPerHour = 60 * 60 / (float)cycleSeconds; // = 6 cycles/hr;  WAS: = 6.429 cycles/hr
+constexpr unsigned int hazPerCycle = 7.5; // hazard every 80 seconds; WAS = 6
+constexpr float activityPerCycle = 30; // one activity every tick; WAS = 18
 constexpr float dilemmasPerHour = 0.5f;
 constexpr float hazPerHour = hazPerCycle * cyclesPerHour - dilemmasPerHour;
 constexpr unsigned int hazSkillPerHour = 1260;
