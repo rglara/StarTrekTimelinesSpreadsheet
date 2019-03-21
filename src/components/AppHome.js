@@ -99,8 +99,8 @@ export class AppHome extends React.Component {
 				this._onAccessToken();
 			}
 			else {
-                this.setState({ showLoginDialog: true });
-                this.props.onLogout();
+				this.setState({ showLoginDialog: true });
+				this.props.onLogout();
 			}
 		});
 

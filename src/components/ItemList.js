@@ -4,11 +4,61 @@ import { Button } from 'semantic-ui-react';
 
 import { ItemDisplay } from './ItemDisplay';
 import { RarityStars } from './RarityStars';
-import { CONFIG } from '../api';
+import STTApi, { CONFIG } from '../api';
 
 export class ItemList extends React.Component {
 	constructor(props) {
 		super(props);
+
+		let rewardItemIds = new Map();
+		const scanRewards = (name, potential_rewards) => {
+			potential_rewards.forEach(reward => {
+				if (reward.potential_rewards) {
+					scanRewards(name, reward.potential_rewards);
+				} else if (reward.type === 2) {
+					rewardItemIds.get(name).add(reward.id);
+				}
+			});
+		};
+
+		STTApi.playerData.character.factions.forEach(f => {
+			rewardItemIds.set(f.name, new Set());
+			scanRewards(f.name, f.shuttle_mission_rewards);
+		});
+
+		this.props.data.forEach(item => {
+			let val = STTApi.getEquipmentManager().getCadetableItems().get(item.archetype_id);
+			item.cadetable = '';
+			item.factions = '';
+			if (val) {
+				val.forEach(v => {
+					let name = v.mission.episode_title;
+					let mastery = v.masteryLevel;
+
+					let questName = v.quest.action;
+					let questIndex = null;
+					v.mission.quests.forEach((q,i) => {
+						if (q.id === v.quest.id)
+							questIndex = i;
+					});
+
+					if (item.cadetable)
+						item.cadetable += ' | ';
+					item.cadetable += name + ' : ' + questIndex + ' : ' + questName + ' : ' + CONFIG.MASTERY_LEVELS[mastery].name;
+				});
+			}
+
+			let iter = rewardItemIds.entries();
+			for (let n = iter.next(); !n.done; n = iter.next()) {
+				let e = n.value;
+				if (e[1].has(item.archetype_id)) {
+					if (item.factions)
+						item.factions += ' | ';
+					item.factions += e[0] + " ";
+				}
+				n = iter.next();
+			}
+		});
 
 		this.state = {
 			items: this.props.data,
@@ -97,6 +147,22 @@ export class ItemList extends React.Component {
 					maxWidth: 150,
 					resizable: true,
 					accessor: 'flavor'
+				},
+				{
+					id: 'cadet',
+					Header: 'Cadet Details',
+					minWidth: 250,
+					maxWidth: 450,
+					resizable: true,
+					accessor: 'cadetable'
+				},
+				{
+					id: 'faction',
+					Header: 'Faction Details',
+					minWidth: 250,
+					maxWidth: 450,
+					resizable: true,
+					accessor: 'factions'
 				}
 			]
 		};
@@ -145,6 +211,9 @@ export class ItemList extends React.Component {
 			if (item.flavor && item.flavor.toLowerCase().indexOf(text) > -1) {
 				return true;
 			}
+
+			if (item.cadetable && item.cadetable.toLowerCase().indexOf(text) > -1)
+				return true;
 
 			return false;
 		});

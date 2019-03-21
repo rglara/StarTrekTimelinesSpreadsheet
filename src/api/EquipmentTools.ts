@@ -260,6 +260,16 @@ export class NeededEquipmentClass {
 		}
 	}
 
+	public getCadetableItems() {
+		this._getCadetableItems();
+		return this._cadetableItems;
+	}
+
+	public getFactionableItems() {
+		this._getFactionableItems();
+		return this._factionableItems;
+	}
+
 	private _getCadetableItems() {
 		if (this._cadetableItems.size === 0) {
 			//Advanced Cadet Challenges offer the same rewards as Standard ones, so filter them to avoid duplicates

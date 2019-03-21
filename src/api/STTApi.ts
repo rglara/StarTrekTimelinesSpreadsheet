@@ -526,4 +526,8 @@ export class STTApiClass {
 	getNeededEquipment(filters: IEquipNeedFilter, limitCrew: number[]): IEquipNeed[] {
 		return this._neededEquipment.filterNeededEquipment(filters, limitCrew);
 	}
+
+	getEquipmentManager() {
+		return this._neededEquipment;
+	}
 }
