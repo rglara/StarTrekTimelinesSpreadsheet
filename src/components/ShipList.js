@@ -10,13 +10,30 @@ export class ShipList extends React.Component {
 	constructor(props) {
 		super(props);
 
+		let playerSchematics = STTApi.playerData.character.items.filter(item => item.type === 8);
+
 		this.state = {
 			items: STTApi.ships.map(ship => {
-				ship.sort_level = ship.level / ship.max_level;
+				ship.schematic = STTApi.shipSchematics.find(schematic => schematic.ship.archetype_id === ship.archetype_id);
+				if (!ship.schematic) {
+					ship.schematic_count = 0;
+				}
+				else {
+					const playerSchematic = playerSchematics.find(playerSchematic => playerSchematic.archetype_id === ship.schematic.id);
+					ship.schematic_count = playerSchematic ? playerSchematic.quantity : 0;
+				}
+
+				let lev = ship.id > 0 ? (ship.level + 1) / (ship.max_level + 1) : 0;
+				let sc = ship.schematic_count;
+				if (ship.level < ship.max_level)
+					sc = ship.schematic_count / ship.schematic_gain_cost_next_level;
+				if (ship.id == 0)
+					sc = ship.schematic_count / ship.schematic.cost;
+				ship.sort_level = lev * 100 + sc;
 				return ship;
 			}),
 			sorted: [{ id: 'name', desc: false }, { id: 'sort_level' }],
-			playerSchematics: STTApi.playerData.character.items.filter(item => item.type === 8),
+			playerSchematics: playerSchematics,
 			columns: [
 				{
 					id: 'icon',
@@ -43,7 +60,7 @@ export class ShipList extends React.Component {
 					minWidth: 145,
 					maxWidth: 145,
 					resizable: true,
-					Cell: p => <RarityStars min={1} max={p.original.max_level + 1} value={p.original.level > 0 ? p.original.level + 1 : null} />,
+					Cell: p => <RarityStars min={1} max={p.original.max_level + 1} value={p.original.id > 0 ? p.original.level + 1 : null} />,
 					isPadded: true
 				},
 				{
@@ -62,7 +79,7 @@ export class ShipList extends React.Component {
 					minWidth: 50,
 					maxWidth: 80,
 					resizable: true,
-					accessor: ship => this.numberOfSchematics(ship.archetype_id),
+					accessor: 'schematic_count',
 					isPadded: true
 				},
 				{
@@ -135,16 +152,6 @@ export class ShipList extends React.Component {
 				}
 			]
 		};
-	}
-
-	numberOfSchematics(archetype_id) {
-		const schematic = STTApi.shipSchematics.find(schematic => schematic.ship.archetype_id === archetype_id);
-		if (!schematic) {
-			return 0;
-		}
-
-		const playerSchematic = this.state.playerSchematics.find(playerSchematic => playerSchematic.archetype_id === schematic.id);
-		return playerSchematic ? playerSchematic.quantity : 0;
 	}
 
 	render() {
