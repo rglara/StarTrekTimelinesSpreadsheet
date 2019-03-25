@@ -39,7 +39,7 @@ export class ItemList extends React.Component {
 					let questIndex = null;
 					v.mission.quests.forEach((q,i) => {
 						if (q.id === v.quest.id)
-							questIndex = i;
+							questIndex = i + 1;
 					});
 
 					if (item.cadetable)
