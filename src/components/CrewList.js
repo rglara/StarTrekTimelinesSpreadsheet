@@ -515,23 +515,27 @@ export class CrewList extends React.Component {
 	}
 
 	_filterCrew(crew, searchString) {
-		return searchString.split(' ').every(text => {
-			// search the name first
-			if (crew.name.toLowerCase().indexOf(text) > -1) {
-				return true;
-			}
+		return searchString.split(';').some(segment => {
+			if (segment.trim().length == 0) return false;
+			return segment.split(' ').every(text => {
+				if (text.trim().length == 0) return false;
+				// search the name first
+				if (crew.name.toLowerCase().indexOf(text) > -1) {
+					return true;
+				}
 
-			// now search the traits
-			if (crew.traits.toLowerCase().indexOf(text) > -1) {
-				return true;
-			}
+				// now search the traits
+				if (crew.traits.toLowerCase().indexOf(text) > -1) {
+					return true;
+				}
 
-			// now search the raw traits
-			if (crew.rawTraits.find(trait => { trait.toLowerCase().indexOf(text) > -1 })) {
-				return true;
-			}
+				// now search the raw traits
+				if (crew.rawTraits.find(trait => { trait.toLowerCase().indexOf(text) > -1 })) {
+					return true;
+				}
 
-			return false;
+				return false;
+			});
 		});
 	}
 
