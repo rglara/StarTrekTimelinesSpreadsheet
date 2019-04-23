@@ -732,25 +732,20 @@ export class VoyageLog extends React.Component {
 				return chanceDilemma;
 			};
 
+			let moment = require('moment');
+
 			return (
 				<div>
 					<p>
-						Voyage has been ongoing for {formatTimeSeconds(this.state.voyage_duration)} (new dilemma in{' '}
-						{formatTimeSeconds(this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma)}).
+						Voyage has been ongoing for <b>{formatTimeSeconds(this.state.voyage_duration)}</b> (new dilemma in
+						{' '}{formatTimeSeconds(this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma)}
+						{' '}at {moment().add(this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma, 's').format('h:mm:ssa')}).
 					</p>
 
 					<div className='ui blue label'>
-						Estimated time left: {formatTimeSeconds(this.state.estimatedMinutesLeft * 60)}
-						{!this.state.nativeEstimate && <i className='spinner loading icon' />}
-					</div>
-
-					<div className='ui blue label'>
-						Estimated time left (+1 refill): {formatTimeSeconds(this.state.estimatedMinutesLeftRefill * 60)}
-						{!this.state.nativeEstimate && <i className='spinner loading icon' />}
-					</div>
-
-					<div className='ui blue label'>
-						Estimated revival cost: {Math.floor((this.state.voyage.voyage_duration / 60 + this.state.estimatedMinutesLeft) / 5)} dilithium
+						Estimated time left: <b>{formatTimeSeconds(this.state.estimatedMinutesLeft * 60)}</b>
+						{' '}at {moment().add(this.state.estimatedMinutesLeft, 'm').format('h:mm:ssa')}
+						{' '}{!this.state.nativeEstimate && <i className='spinner loading icon' />}
 					</div>
 
 					<button className='ui mini button' onClick={() => this._recall()}>

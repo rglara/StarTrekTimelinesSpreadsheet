@@ -46,6 +46,8 @@ export class HomePage extends React.Component {
 	constructor(props) {
 		super(props);
 
+		let moment = require('moment');
+
 		let recommendations = [];
 
 		let replicator_uses_left = STTApi.playerData.replicator_limit - STTApi.playerData.replicator_uses_today;
@@ -202,7 +204,8 @@ export class HomePage extends React.Component {
 						{shuttles
 							.map(sa => (
 								<span key={sa.id}>
-									{sa.name} - <i>{getShuttleState(sa.state)}</i> ({formatTimeSeconds(sa.expires_in)})
+									{sa.name} - <i>{getShuttleState(sa.state)}</i> ({formatTimeSeconds(sa.expires_in)}
+									{' '}at {moment().add(sa.expires_in, 's').format('h:mm:ssa')})
 								</span>
 							))
 							.reduce((prev, curr) => [prev, ', ', curr])}
@@ -246,11 +249,12 @@ export class HomePage extends React.Component {
 			});
 		} else {
 			loadVoyage(STTApi.playerData.character.voyage[0].id, true).then(narrative => {
+				let newRecommendation = undefined;
 				let voyage = STTApi.playerData.character.voyage[0];
 
 				if (voyage.state === 'recalled') {
 					if (voyage.recall_time_left > 0) {
-						recommendations.push({
+						newRecommendation = {
 							title: `Voyage returning`,
 							icon: Priority.CHECK,
 							content: (
@@ -259,16 +263,16 @@ export class HomePage extends React.Component {
 									{formatTimeSeconds(voyage.recall_time_left)} left).
 								</p>
 							)
-						});
+						};
 					} else {
-						recommendations.push({
+						newRecommendation = {
 							title: 'Voyage has returned',
 							icon: Priority.EXCLAMATION,
 							content: <p style={{ margin: '0' }}>The voyage is back. Claim your rewards in the game.</p>
-						});
+						};
 					}
 				} else if (voyage.state === 'failed') {
-					recommendations.push({
+					newRecommendation = {
 						title: `Voyage failed`,
 						icon: Priority.EXCLAMATIONRED,
 						content: (
@@ -277,25 +281,30 @@ export class HomePage extends React.Component {
 								replenished.
 							</p>
 						)
-					});
+					};
 				} else if (voyage.seconds_between_dilemmas === voyage.seconds_since_last_dilemma) {
-					recommendations.push({
+					newRecommendation = {
 						title: 'Voyage is waiting on your dilemma decision',
 						icon: Priority.EXCLAMATION,
 						content: <p style={{ margin: '0' }}>Resolve the dilemma in the 'Voyage' tab or in the game.</p>
-					});
+					};
 				} else {
 					// TODO: check the chances to reach a dilemma and go red if 0%
-					recommendations.push({
+					newRecommendation ={
 						title: `Voyage ongoing`,
 						icon: Priority.CHECK,
 						content: (
 							<p style={{ margin: '0' }}>
 								Voyage has been ongoing for {formatTimeSeconds(voyage.voyage_duration)} (new dilemma in{' '}
-								{formatTimeSeconds(voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma)}).
+								{formatTimeSeconds(voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma)}
+								{' '}at {moment().add(voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma, 's').format('h:mm:ssa')})
 							</p>
 						)
-					});
+					};
+				}
+
+				if (newRecommendation) {
+					this.setState({ recommendations: [...this.state.recommendations, newRecommendation] });
 				}
 			});
 		}
