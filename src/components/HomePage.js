@@ -205,7 +205,7 @@ export class HomePage extends React.Component {
 							.map(sa => (
 								<span key={sa.id}>
 									{sa.name} - <i>{getShuttleState(sa.state)}</i> ({formatTimeSeconds(sa.expires_in)}
-									{' '}at {moment().add(sa.expires_in, 's').format('h:mm:ssa')})
+									{' '}at {moment().add(sa.expires_in, 's').format('h:mma')})
 								</span>
 							))
 							.reduce((prev, curr) => [prev, ', ', curr])}
@@ -260,7 +260,7 @@ export class HomePage extends React.Component {
 							content: (
 								<p style={{ margin: '0' }}>
 									Voyage has lasted for {formatTimeSeconds(voyage.voyage_duration)} and it's currently returning (
-									{formatTimeSeconds(voyage.recall_time_left)} left).
+									{formatTimeSeconds(voyage.recall_time_left)} at {moment().add(voyage.recall_time_left, 's').format('h:mma')}).
 								</p>
 							)
 						};
@@ -297,7 +297,7 @@ export class HomePage extends React.Component {
 							<p style={{ margin: '0' }}>
 								Voyage has been ongoing for {formatTimeSeconds(voyage.voyage_duration)} (new dilemma in{' '}
 								{formatTimeSeconds(voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma)}
-								{' '}at {moment().add(voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma, 's').format('h:mm:ssa')})
+								{' '}at {moment().add(voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma, 's').format('h:mma')})
 							</p>
 						)
 					};
@@ -336,7 +336,8 @@ export class HomePage extends React.Component {
 					content: (
 						<p style={{ margin: '0' }}>
 							The gauntlet ends in {formatTimeSeconds(gauntlet.seconds_to_end)}, next crew refresh in{' '}
-							{formatTimeSeconds(gauntlet.seconds_to_next_crew_refresh)}.
+							{formatTimeSeconds(gauntlet.seconds_to_next_crew_refresh)}
+							{' '}at {moment().add(gauntlet.seconds_to_next_crew_refresh, 's').format('h:mma')}.
 						</p>
 					)
 				};

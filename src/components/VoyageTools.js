@@ -739,12 +739,12 @@ export class VoyageLog extends React.Component {
 					<p>
 						Voyage has been ongoing for <b>{formatTimeSeconds(this.state.voyage_duration)}</b> (new dilemma in
 						{' '}{formatTimeSeconds(this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma)}
-						{' '}at {moment().add(this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma, 's').format('h:mm:ssa')}).
+						{' '}at {moment().add(this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma, 's').format('h:mma')}).
 					</p>
 
 					<div className='ui blue label'>
 						Estimated time left: <b>{formatTimeSeconds(this.state.estimatedMinutesLeft * 60)}</b>
-						{' '}at {moment().add(this.state.estimatedMinutesLeft, 'm').format('h:mm:ssa')}
+						{' '}at {moment().add(this.state.estimatedMinutesLeft, 'm').format('h:mma')}
 						{' '}{!this.state.nativeEstimate && <i className='spinner loading icon' />}
 					</div>
 
