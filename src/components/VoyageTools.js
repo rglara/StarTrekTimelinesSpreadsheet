@@ -361,6 +361,15 @@ export class VoyageCrew extends React.Component {
 
 	// #!if ENV === 'electron'
 	_generateVoyCrewRank() {
+		function nthIndex(str, pat, n) {
+			let L = str.length, i = -1;
+			while (n-- && i++ < L) {
+				i = str.indexOf(pat, i);
+				if (i < 0) break;
+			}
+			return i;
+		}
+
 		this.setState({ generatingVoyCrewRank: true });
 
 		let dataToExport = exportVoyageData(this._packVoyageOptions());
@@ -369,10 +378,113 @@ export class VoyageCrew extends React.Component {
 		NativeExtension.calculateVoyageCrewRank(
 			JSON.stringify(dataToExport),
 			(rankResult, estimateResult) => {
+				// estimateResult is of the form "Primary,Secondary,Estimate,Crew\nDIP, CMD, 8.2, crew1 | crew2 | crew3 | crew4 | crew5 | ... crew12\nCMD, DIP, 8.2, crew1 | ... "
+				// crew names may have spaces and commas
+				let lines = estimateResult.split('\n');
+				let estimateResultSplit = "";
+				lines.forEach((line,index) => {
+					// skip column headers line
+					if (index <= 0) {
+						estimateResultSplit += line + '\n';
+						return;
+					}
+					if (line.trim().length <= 0) {
+						return;
+					}
+					let posEst = nthIndex(line, ',', 2);
+					let posNames = nthIndex(line, ',', 3);
+					let est = line.substring(posEst+1, posNames);
+					if (est.indexOf('.') >= 0) {
+						let whole = est.substring(0, est.indexOf('.'));
+						let part = est.substring(whole.length); // include decimal
+						if (part.length > 0) {
+							part = 60 * Number(part);
+							if (part < 10)
+								part = '0' + part;
+						}
+						else {
+							part = '00';
+						}
+						est = whole + ':' + part;
+					}
+					else {
+						est = est + ':00';
+					}
+					let crewline = line.substring(posNames+1);
+					let crewlist = crewline.split('|');
+
+					crewlist = crewlist.map(s => s.trim());// don't sort so you can see position assignments //.sort();
+
+					estimateResultSplit += line.substring(0, posEst) + ',' + est + ', "' + crewlist.join(' | ') + '"\n'; // join back with pipe to make easier equations
+				});
+
 				this.setState({ generatingVoyCrewRank: false });
 
-				download('My Voyage Crew.csv', rankResult, 'Export Star Trek Timelines voyage crew ranking', 'Export');
-				download('My Voyage Estimates.csv', estimateResult, 'Export Star Trek Timelines voyage estimates', 'Export');
+				// Now also update rankResult to add crew usage value column
+				// Format is: "Score,Alt 1,Alt 2,Alt 3,Alt 4,Alt 5,Status,Crew,Voyages (Pri),Voyages(alt)"
+				let linesCrew = rankResult.split('\n');
+				let rankResultSplit = "";
+				let includedCrew = {};
+				linesCrew.forEach((line, index) => {
+					let posName = nthIndex(line, ',', 7);
+					let partA = line.substring(0, posName);
+					let partB = line.substring(posName);
+					// If first line of titles
+					if (index <= 0) {
+						rankResultSplit += partA + ",Value" + partB + '\n';
+						return;
+					}
+
+					let posStatus = nthIndex(line, ',', 6);
+					partA = line.substring(0, posStatus);
+					//let partB = line.substring(posName);
+
+
+					let value = "";
+					let status = line.substring(posStatus +1, posName);
+					// Crew name should be in double quotes after a comma within partB
+					let posNameEnd = partB.indexOf('"',2);
+					if (posNameEnd > 0) {
+						let crewName = partB.substring(2, posNameEnd);
+						let crew = STTApi.roster.find(crew => crew.name == crewName);
+						if (crew && crew.usage_value) {
+							value = crew.usage_value;
+						}
+						if (crew) {
+							includedCrew[crew.id] = crew;
+							status = '' + crew.rarity == crew.max_rarity ? crew.max_rarity : (crew.rarity + '/' + crew.max_rarity);
+							if (crew.frozen)
+								status += 'Frz';
+							else if (crew.level == 100 && crew.rarity == crew.max_rarity)
+								status += 'Imm';
+						}
+					}
+
+					rankResultSplit += partA + ',' + status + ',' + value + partB + '\n'; // join back with pipe to make easier equations
+				});
+
+				// Inject any crew with a usage value but no voyage score
+				STTApi.roster.forEach(crew => {
+					if (!includedCrew[crew.id]) {
+						if (crew.buyback || crew.isExternal)
+							return;
+						if (crew.usage_value > 0 || (crew.max_rarity > 3 && !crew.frozen)) {
+							includedCrew[crew.id] = crew;
+							let status = '' + crew.rarity == crew.max_rarity ? crew.max_rarity : (crew.rarity + '/' + crew.max_rarity);
+							if (crew.frozen)
+								status += 'Frz';
+							else if (crew.level == 100 && crew.rarity == crew.max_rarity)
+								status += 'Imm';
+							else if (crew.level < 100)
+								status += ':' + crew.level;
+
+							rankResultSplit += '0,,,,,,'+status+','+crew.usage_value+',"'+crew.name+'",,\n';
+						}
+					}
+				});
+
+				download('My Voyage Crew.csv', rankResultSplit, 'Export Star Trek Timelines voyage crew ranking', 'Export');
+				download('My Voyage Estimates.csv', estimateResultSplit, 'Export Star Trek Timelines voyage estimates', 'Export');
 			},
 			progressResult => {
 				console.log('unexpected progress result!'); // not implemented yet..
@@ -574,11 +686,10 @@ export class VoyageLog extends React.Component {
 		let voyage = STTApi.playerData.character.voyage[0];
 		if (voyage && voyage.id) {
 			let voyageNarrative = await loadVoyage(voyage.id, false);
-			let voyageExport = { 
+			let voyageExport = {
 				id: voyage.id,
 				skills: voyage.skills,
-				skillAggregates: voyage.skill_aggregates,
-				skillChecks: {},
+				skillAggregates: [],
 				stats: {
 					skillChecks: {
 						times: [],
@@ -589,7 +700,7 @@ export class VoyageLog extends React.Component {
 				},
 				narrative: voyageNarrative,
 			};
-			
+
 			//<Checkbox checked={this.state.includeFlavor} label="Include flavor entries" onChange={(e, isChecked) => { this.setState({ includeFlavor: isChecked }); }} />
 			if (!this.state.includeFlavor) {
 				// Remove the "flavor" entries (useless text)
@@ -614,14 +725,14 @@ export class VoyageLog extends React.Component {
 					skillChecks[sk] = [0,0];
 				}
 			});
-			
+
 			voyageNarrative.filter(e => e.encounter_type === "reward").forEach(v => {
 				voyageExport.stats.rewards.times.push(v.event_time);
 			});
-			
+
 			// at index "index", need to subtract "gap" from all times >=
 			let timeGaps = [];
-			
+
 			voyageNarrative.forEach((e,i,ee) => {
 				if (i > 1 && ee[i-1].encounter_type === "dilemma" && e.encounter_type !== "dilemma") {
 					let timelost = e.event_time - ee[i-1].event_time;
@@ -629,7 +740,7 @@ export class VoyageLog extends React.Component {
 					// find the next
 				}
 			});
-			
+
 			if (voyageExport.stats.skillChecks.times.length > 1) {
 				voyageExport.stats.skillChecks.average = voyageExport.stats.skillChecks.times
 					.map((v,i,vv) => i == 0 ? 0 : v - vv[i-1])
@@ -642,6 +753,23 @@ export class VoyageLog extends React.Component {
 					.reduce((a,b) => a+b)
 					/ voyageExport.stats.rewards.times.length;
 			}
+
+			let attemptCount = Object.values(skillChecks).map(v => v[0]).reduce((p,c) => p + c);
+			Object.keys(skillChecks).forEach(k => {
+				let agg = voyage.skill_aggregates[k];
+				voyageExport.skillAggregates.push({
+					skill: k,
+					core: agg.core,
+					min: agg.range_min,
+					max: agg.range_max,
+					// Compute and export the "voyage skill" values displayed in the UI
+					score: agg.core + (agg.range_min + agg.range_max) / 2,
+					attempts: skillChecks[k][0],
+					passed: skillChecks[k][1],
+					passedPercent: skillChecks[k][1] / skillChecks[k][0],
+					attemptsPercent: skillChecks[k][0] / attemptCount
+				});
+			});
 
 			// Group by index
 			voyageNarrative = voyageNarrative.reduce(function(r, a) {
@@ -678,8 +806,6 @@ export class VoyageLog extends React.Component {
 				let ship = STTApi.ships.find(ship => ship.id === voyage.ship_id);
 				ship_name = ship ? ship.name : '-BUGBUG-';
 			}
-			
-			voyageExport.skillChecks = skillChecks;
 
 			this.setState({
 				showSpinner: false,

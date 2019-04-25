@@ -401,7 +401,31 @@ export class NeededEquipment extends React.Component {
 				value: (row) => row.cadetSources.map((mission) => `${mission.quest.name} from ${mission.mission.episode_title} (${CONFIG.MASTERY_LEVELS[mission.masteryLevel].name})`).join(', ')
 			}
 		];
-		let csv = simplejson2csv(this.state.neededEquipment, fields);
+		let toexport = [];
+		this.state.neededEquipment.forEach(eq => {
+			Object.values(eq.counts).forEach(count => {
+				toexport.push({
+					name:eq.equipment.name,
+					rarity: eq.equipment.rarity,
+					have: eq.have,
+					need: count.count,
+					crew: count.crew.name,
+				});
+			});
+			toexport.push({
+				name: eq.equipment.name,
+				rarity: eq.equipment.rarity,
+				have: eq.have,
+				need: eq.needed,
+				crew: "total"
+			});
+		});
+
+		let fields2 = [
+			'name', 'rarity', 'have', 'need', 'crew'
+		];
+
+		let csv = simplejson2csv(toexport, { fields2 });
 
 		let today = new Date();
 		download('Equipment-' + (today.getUTCMonth() + 1) + '-' + (today.getUTCDate()) + '.csv', csv, 'Export needed equipment', 'Export');

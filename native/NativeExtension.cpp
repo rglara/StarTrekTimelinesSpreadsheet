@@ -34,7 +34,7 @@ class VoyageWorker : public Nan::AsyncProgressWorkerBase<PackedResult>
 	void HandleOKCallback() override
 	{
 		Nan::HandleScope scope;
-		
+
 		Nan::MaybeLocal<v8::Object> newBuf = PackBuffer(&result);
 		v8::Local<v8::Value> argv[] = {newBuf.ToLocalChecked()};
 		callback->Call(1, argv, async_resource);
@@ -89,7 +89,7 @@ class VoyageCrewRankWorker : public Nan::AsyncProgressWorker
 			{
 				ss << "Alt " << iAlt + 1 << ",";
 			}
-			ss << "Status,Crew,Voyages\n";
+			ss << "Status,Crew,Voyages (Pri),Voyages(alt)\n";
 
 			for (const RankedCrew &crew : rankedCrew)
 			{
@@ -101,7 +101,7 @@ class VoyageCrewRankWorker : public Nan::AsyncProgressWorker
 				//std::string status;
 				if (crew.crew.traitIds.test(FROZEN_BIT))
 				{
-					ss << "F";
+					ss << crew.crew.max_rarity << "F";
 				}
 				else if (crew.crew.ff100)
 				{
@@ -110,14 +110,16 @@ class VoyageCrewRankWorker : public Nan::AsyncProgressWorker
 				}
 				else
 				{
+					// doesn't know current rarity, only max rarity, so just output "x/"
 					// status = "x/" + crew.crew.max_rarity;
-					ss << crew.crew.rarity << "/" << crew.crew.max_rarity;
+					ss << "x/" << crew.crew.max_rarity;
 				}
 				ss << ",\"" << crew.crew.name << "\",";
 				for (auto skills : crew.voySkills)
 				{
 					ss << skillNames[skills.first] << "/" << skillNames[skills.second] << " ";
 				}
+				ss << ",";
 				for (auto altSkills : crew.altVoySkills)
 				{
 					ss << altSkillNames[altSkills.first] << "/" << altSkillNames[altSkills.second] << " ";
