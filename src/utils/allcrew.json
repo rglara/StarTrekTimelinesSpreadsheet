@@ -1,53 +1,315 @@
+
 [
-   {
-      "id":10001,
-      "name":"Seven in Silver",
-      "short_name":"Seven",
-      "symbol":"seven_in_silver",
-      "rarity":5,
-      "max_rarity":5,
-      "base_skills":{
-         "engineering_skill":{
-            "core": 1249,
-            "range_min": 230,
-            "range_max": 480
-         },
-         "science_skill":{
-            "core": 1031,
-            "range_min": 150,
-            "range_max": 365
-         }
-      },
-      "skills": {
-         "engineering_skill": {
-            "core": 1249,
-            "range_min": 230,
-            "range_max": 480
-         },
-         "science_skill": {
-            "core": 1031,
-            "range_min": 150,
-            "range_max": 365
-         }
-      },
-      "level":100,
-      "max_level":100,
-      "equipment":[],
-      "equipment_slots":[],
-      "flavor":null,
-      "traits":[],
-      "rawTraits":[],
-      "traits_hidden": [],
-      "portrait":{
-         "file":""
-      },
-      "icon": {
-         "file": ""
-      },
-      "full_body": {
-         "file": ""
-      },
-      "action":{},
-      "ship_battle":{}
-   }
+    {
+        "id": 6613,
+        "name": "Sarek",
+        "short_name": "Sarek",
+        "symbol": "dsc_sarek_young_crew",
+        "rarity": 2,
+        "max_rarity": 4,
+        "base_skills":
+        {
+            "diplomacy_skill":
+            {
+                "core": 607,
+                "range_min": 175,
+                "range_max": 354 
+            },
+            "science_skill":
+            {
+                "core": 247,
+                "range_min": 69,
+                "range_max": 207 
+            },
+            "command_skill":
+            {
+                "core": 424,
+                "range_min": 83,
+                "range_max": 208 
+            } 
+        },
+        "skills":
+        {
+            "diplomacy_skill":
+            {
+                "core": 607,
+                "range_min": 175,
+                "range_max": 354 
+            },
+            "science_skill":
+            {
+                "core": 247,
+                "range_min": 69,
+                "range_max": 207 
+            },
+            "command_skill":
+            {
+                "core": 424,
+                "range_min": 83,
+                "range_max": 208 
+            } 
+        },
+        "level": 100,
+        "max_level": 100,
+        "equipment": [],
+        "equipment_slots": [],
+        "flavor": null,
+        "traits": [],
+        "rawTraits": [],
+        "traits_hidden": [],
+        "portrait":
+        {
+            "file": "" 
+        },
+        "icon":
+        {
+            "file": "" 
+        },
+        "full_body":
+        {
+            "file": "" 
+        },
+        "action":
+        {
+            
+        },
+        "ship_battle":
+        {
+            
+        } 
+    },
+    {
+        "id": 5185,
+        "name": "Maquis Ro Laren",
+        "short_name": "Ro",
+        "symbol": "ro_maquis_crew",
+        "rarity": 3,
+        "max_rarity": 4,
+        "base_skills":
+        {
+            "security_skill":
+            {
+                "core": 657,
+                "range_min": 139,
+                "range_max": 372 
+            },
+            "command_skill":
+            {
+                "core": 460,
+                "range_min": 102,
+                "range_max": 264 
+            },
+            "diplomacy_skill":
+            {
+                "core": 217,
+                "range_min": 132,
+                "range_max": 241 
+            } 
+        },
+        "skills":
+        {
+            "security_skill":
+            {
+                "core": 657,
+                "range_min": 139,
+                "range_max": 372 
+            },
+            "command_skill":
+            {
+                "core": 460,
+                "range_min": 102,
+                "range_max": 264 
+            },
+            "diplomacy_skill":
+            {
+                "core": 217,
+                "range_min": 132,
+                "range_max": 241 
+            } 
+        },
+        "level": 100,
+        "max_level": 100,
+        "equipment": [],
+        "equipment_slots": [],
+        "flavor": null,
+        "traits": [],
+        "rawTraits": [],
+        "traits_hidden": [],
+        "portrait":
+        {
+            "file": "" 
+        },
+        "icon":
+        {
+            "file": "" 
+        },
+        "full_body":
+        {
+            "file": "" 
+        },
+        "action":
+        {
+            
+        },
+        "ship_battle":
+        {
+            
+        } 
+    },
+    {
+        "id": 82,
+        "name": "Rakal Troi",
+        "short_name": "Troi",
+        "symbol": "troi_rakal_crew",
+        "rarity": 2,
+        "max_rarity": 4,
+        "base_skills":
+        {
+            "security_skill":
+            {
+                "core": 348,
+                "range_min": 128,
+                "range_max": 331 
+            },
+            "command_skill":
+            {
+                "core": 327,
+                "range_min": 163,
+                "range_max": 354 
+            },
+            "medicine_skill":
+            {
+                "core": 230,
+                "range_min": 163,
+                "range_max": 440 
+            } 
+        },
+        "skills":
+        {
+            "security_skill":
+            {
+                "core": 348,
+                "range_min": 128,
+                "range_max": 331 
+            },
+            "command_skill":
+            {
+                "core": 327,
+                "range_min": 163,
+                "range_max": 354 
+            },
+            "medicine_skill":
+            {
+                "core": 230,
+                "range_min": 163,
+                "range_max": 440 
+            } 
+        },
+        "level": 100,
+        "max_level": 100,
+        "equipment": [],
+        "equipment_slots": [],
+        "flavor": null,
+        "traits": [],
+        "rawTraits": [],
+        "traits_hidden": [],
+        "portrait":
+        {
+            "file": "" 
+        },
+        "icon":
+        {
+            "file": "" 
+        },
+        "full_body":
+        {
+            "file": "" 
+        },
+        "action":
+        {
+            
+        },
+        "ship_battle":
+        {
+            
+        } 
+    },
+    {
+        "id": 5962,
+        "name": "Gabriel Bell",
+        "short_name": "Sisko",
+        "symbol": "sisko_bell_crew",
+        "rarity": 1,
+        "max_rarity": 4,
+        "base_skills":
+        {
+            "command_skill":
+            {
+                "core": 372,
+                "range_min": 152,
+                "range_max": 354 
+            },
+            "security_skill":
+            {
+                "core": 102,
+                "range_min": 181,
+                "range_max": 342 
+            },
+            "diplomacy_skill":
+            {
+                "core": 597,
+                "range_min": 102,
+                "range_max": 267 
+            } 
+        },
+        "skills":
+        {
+            "command_skill":
+            {
+                "core": 372,
+                "range_min": 152,
+                "range_max": 354 
+            },
+            "security_skill":
+            {
+                "core": 102,
+                "range_min": 181,
+                "range_max": 342 
+            },
+            "diplomacy_skill":
+            {
+                "core": 597,
+                "range_min": 102,
+                "range_max": 267 
+            } 
+        },
+        "level": 100,
+        "max_level": 100,
+        "equipment": [],
+        "equipment_slots": [],
+        "flavor": null,
+        "traits": [],
+        "rawTraits": [],
+        "traits_hidden": [],
+        "portrait":
+        {
+            "file": "" 
+        },
+        "icon":
+        {
+            "file": "" 
+        },
+        "full_body":
+        {
+            "file": "" 
+        },
+        "action":
+        {
+            
+        },
+        "ship_battle":
+        {
+            
+        } 
+    }
 ]
