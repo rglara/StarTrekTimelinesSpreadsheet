@@ -57,10 +57,17 @@ function rosterFromCrew(rosterEntry: any, crew: any|ICrew): void {
 	rosterEntry.crew_id = crew.id;
 	rosterEntry.active_id = crew.active_id;
 
+	rosterEntry.voyage_score = 0;
+	rosterEntry.gauntlet_score = 0;
+
 	for (let skill in crew.skills) {
 		rosterEntry[skill].core = crew.skills[skill].core;
 		rosterEntry[skill].min = crew.skills[skill].range_min;
 		rosterEntry[skill].max = crew.skills[skill].range_max;
+		let profAvg = (crew.skills[skill].range_max + crew.skills[skill].range_min) / 2;
+		rosterEntry[skill].voy = (crew.skills[skill].core + profAvg) || 0;
+		rosterEntry.voyage_score += rosterEntry[skill].voy;
+		rosterEntry.gauntlet_score += profAvg;
 	}
 
 	rosterEntry.command_skill_core = rosterEntry.command_skill.core;
@@ -69,6 +76,14 @@ function rosterFromCrew(rosterEntry: any, crew: any|ICrew): void {
 	rosterEntry.engineering_skill_core = rosterEntry.engineering_skill.core;
 	rosterEntry.diplomacy_skill_core = rosterEntry.diplomacy_skill.core;
 	rosterEntry.medicine_skill_core = rosterEntry.medicine_skill.core;
+
+	rosterEntry.command_skill_voy = rosterEntry.command_skill.voy;
+	rosterEntry.science_skill_voy = rosterEntry.science_skill.voy;
+	rosterEntry.security_skill_voy = rosterEntry.security_skill.voy;
+	rosterEntry.engineering_skill_voy = rosterEntry.engineering_skill.voy;
+	rosterEntry.diplomacy_skill_voy = rosterEntry.diplomacy_skill.voy;
+	rosterEntry.medicine_skill_voy = rosterEntry.medicine_skill.voy;
+	rosterEntry.usage_value = 0;
 
 	rosterEntry.ship_battle = crew.ship_battle;
 	rosterEntry.action = crew.action;
@@ -196,6 +211,52 @@ export async function matchCrew(character: any): Promise<any> {
 		crew.iconBodyUrl = STTApi.imageProvider.getCrewCached(crew, true);
 	}
 
+	function collect(skillField: string, extField: string, max:number) {
+		let filtered = roster.filter(c => !c.buyback);
+		if (extField) {
+			filtered = filtered.filter(c => c[skillField][extField] > 0)
+				.sort((a, b) => b[skillField][extField] - a[skillField][extField]);
+		}
+		else {
+			filtered = filtered.filter(c => c[skillField] > 0)
+				.sort((a, b) => b[skillField] - a[skillField]);
+		}
+		for (let i = 0; i < max && i < filtered.length; ++i) {
+			// allow frozen items to be exported but not count towards top-10
+			let c = filtered[i];
+			if (c.frozen)
+				++max;
+			let value = c.usage_value;
+			if (!c.usage_value) {
+				c.usage_value = 1;
+			}
+			else {
+				c.usage_value++;
+			}
+		}
+	}
+
+	collect('command_skill', 'core', 6);
+	collect('diplomacy_skill', 'core', 6);
+	collect('engineering_skill', 'core', 6);
+	collect('medicine_skill', 'core', 6);
+	collect('science_skill', 'core', 6);
+	collect('security_skill', 'core', 6);
+	collect('command_skill', 'max', 3);
+	collect('diplomacy_skill', 'max', 3);
+	collect('engineering_skill', 'max', 3);
+	collect('medicine_skill', 'max', 3);
+	collect('science_skill', 'max', 3);
+	collect('security_skill', 'max', 3);
+	collect('command_skill', 'voy', 9);
+	collect('diplomacy_skill', 'voy', 9);
+	collect('engineering_skill', 'voy', 9);
+	collect('medicine_skill', 'voy', 9);
+	collect('science_skill', 'voy', 9);
+	collect('security_skill', 'voy', 9);
+	collect('voyage_score', '', 9);
+	collect('gauntlet_score', '', 9);
+
 	return roster;
 }
 
@@ -221,7 +282,7 @@ export function formatCrewStats(crew: any): string {
 	let result = '';
 	for (let skillName in CONFIG.SKILLS) {
 		let skill = crew[skillName];
-		
+
 		if (skill.core && (skill.core > 0)) {
 			result += `${CONFIG.SKILLS_SHORT[skillName]} (${Math.floor(skill.core + (skill.min + skill.max) / 2)}) `;
 		}

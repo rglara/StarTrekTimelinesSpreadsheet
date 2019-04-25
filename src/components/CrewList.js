@@ -81,6 +81,7 @@ export class CrewList extends React.Component {
 					<div className="header">{item.name}</div>
 					<div className="meta">{item.flavor}</div>
 					<div className="description">Traits: {item.traits.replace(new RegExp(',', 'g'), ', ')}</div>
+					<span style={{ fontSize: '0.8rem' }}>id: {item.id}, symbol:{item.symbol}</span>
 				</div>
 			</div>
 		</div>;
@@ -236,7 +237,7 @@ export class CrewList extends React.Component {
 						return (<div><Checkbox label='Airlock'
 							checked={this._isSelected(crew.crew_id)}
 							onChange={(ev, isChecked) => this._onSelectionChange(crew.crew_id, isChecked)} />
-							{(crew.buyback && crew.expires_in === null) && 
+							{(crew.buyback && crew.expires_in === null) &&
 							<TooltipHost content={`${crew.short_name} is stuck in the airlock. You need to contact DB support to release them!`} calloutProps={{ gapSpace: 0 }}>
 							<p style={{color:'red'}}>ERROR!</p>
 						</TooltipHost>}
@@ -321,6 +322,17 @@ export class CrewList extends React.Component {
 					}
 				},
 				Aggregated: row => <span />
+			},
+			{
+				id: 'usage_value',
+				Header: 'Value',
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: 'usage_value',
+				Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.usage_value}</div> : <span />,
+				aggregate: vals => vals.reduce((a, b) => (a || 0) + (b || 0), 0) / vals.length,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'level',
@@ -415,7 +427,7 @@ export class CrewList extends React.Component {
 			});
 		}
 
-		if (!compactMode && !isMobile) {
+		if (!isMobile) {
 			_columns.push({
 				id: 'active_id',
 				Header: () => <Icon iconName='Balloons' />,
@@ -426,6 +438,15 @@ export class CrewList extends React.Component {
 				accessor: 'active_id',
 				Cell: (cell) => {
 					if (cell && cell.original && cell.original.active_id) {
+						if (compactMode) {
+							let isShuttle = false;
+							STTApi.playerData.character.shuttle_adventures.forEach((shuttle) => {
+								if (shuttle.shuttles[0].id === cell.original.active_id) {
+									isShuttle = true;
+								}
+							});
+							return isShuttle ? 'S' : 'V';
+						}
 						return <IconButton iconProps={{ iconName: 'Balloons' }} title='Active engagement' onClick={() => this._showActiveDialog(cell.original.active_id, cell.original.name)} />;
 					} else {
 						return <span />;
@@ -436,70 +457,230 @@ export class CrewList extends React.Component {
 			});
 		}
 
+		// Compute an average aggregate, only including nonzero values
+		let aggAvg = vals => {
+			let nonzeros = vals.reduce((a, b) => a + ((b || 0) > 0 ? 1 : 0), 0);
+			return vals.reduce((a, b) => (a || 0) + (b || 0), 0) / nonzeros;
+		}
+
 		_columns.push({
 			id: 'command_skill',
-			Header: 'Command',
-			minWidth: 70,
-			maxWidth: 100,
+			Header: 'COM',
+			minWidth: 50,
+			maxWidth: 70,
 			resizable: true,
 			accessor: 'command_skill_core',
 			Cell: (cell) => cell.original ? <SkillCell skill={cell.original.command_skill} compactMode={compactMode} /> : <span />,
-			aggregate: vals => vals.reduce((a, b) => a + b, 0) / vals.length,
+			aggregate: aggAvg,
 			Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
 		},
 			{
 				id: 'diplomacy_skill',
-				Header: 'Diplomacy',
-				minWidth: 70,
-				maxWidth: 100,
+				Header: 'DIP',
+				minWidth: 50,
+				maxWidth: 70,
 				resizable: true,
 				accessor: 'diplomacy_skill_core',
 				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.diplomacy_skill} compactMode={compactMode} /> : <span />,
-				aggregate: vals => vals.reduce((a, b) => a + b, 0) / vals.length,
+				aggregate: aggAvg,
 				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'engineering_skill',
-				Header: 'Engineering',
-				minWidth: 75,
-				maxWidth: 100,
+				Header: 'ENG',
+				minWidth: 50,
+				maxWidth: 70,
 				resizable: true,
 				accessor: 'engineering_skill_core',
 				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.engineering_skill} compactMode={compactMode} /> : <span />,
-				aggregate: vals => vals.reduce((a, b) => a + b, 0) / vals.length,
+				aggregate: aggAvg,
 				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'medicine_skill',
-				Header: 'Medicine',
-				minWidth: 70,
-				maxWidth: 100,
+				Header: 'MED',
+				minWidth: 50,
+				maxWidth: 70,
 				resizable: true,
 				accessor: 'medicine_skill_core',
 				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.medicine_skill} compactMode={compactMode} /> : <span />,
-				aggregate: vals => vals.reduce((a, b) => a + b, 0) / vals.length,
+				aggregate: aggAvg,
 				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'science_skill',
-				Header: 'Science',
-				minWidth: 70,
-				maxWidth: 100,
+				Header: 'SCI',
+				minWidth: 50,
+				maxWidth: 70,
 				resizable: true,
 				accessor: 'science_skill_core',
 				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.science_skill} compactMode={compactMode} /> : <span />,
-				aggregate: vals => vals.reduce((a, b) => a + b, 0) / vals.length,
+				aggregate: aggAvg,
 				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'security_skill',
-				Header: 'Security',
-				minWidth: 70,
-				maxWidth: 100,
+				Header: 'SEC',
+				minWidth: 50,
+				maxWidth: 70,
 				resizable: true,
 				accessor: 'security_skill_core',
 				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.security_skill} compactMode={compactMode} /> : <span />,
-				aggregate: vals => vals.reduce((a, b) => a + b, 0) / vals.length,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
+			},
+			{
+				id: 'command_skill_prof',
+				Header: 'Com+',
+				minWidth: 70,
+				maxWidth: 100,
+				resizable: true,
+				accessor: 'command_skill.max',
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.command_skill} compactMode={compactMode} proficiency={true} /> : <span />,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg max)</span>
+			},
+			{
+				id: 'diplomacy_skill_prof',
+				Header: 'Dip+',
+				minWidth: 70,
+				maxWidth: 100,
+				resizable: true,
+				accessor: 'diplomacy_skill.max',
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.diplomacy_skill} compactMode={compactMode} proficiency={true} /> : <span />,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg max)</span>
+			},
+			{
+				id: 'engineering_skill_prof',
+				Header: 'Eng+',
+				minWidth: 70,
+				maxWidth: 100,
+				resizable: true,
+				accessor: 'engineering_skill.max',
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.engineering_skill} compactMode={compactMode} proficiency={true} /> : <span />,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg max)</span>
+			},
+			{
+				id: 'medicine_skill_prof',
+				Header: 'Med+',
+				minWidth: 70,
+				maxWidth: 100,
+				resizable: true,
+				accessor: 'medicine_skill.max',
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.medicine_skill} compactMode={compactMode} proficiency={true} /> : <span />,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg max)</span>
+			},
+			{
+				id: 'science_skill_prof',
+				Header: 'Sci+',
+				minWidth: 70,
+				maxWidth: 100,
+				resizable: true,
+				accessor: 'science_skill.max',
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.science_skill} compactMode={compactMode} proficiency={true} /> : <span />,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg max)</span>
+			},
+			{
+				id: 'security_skill_prof',
+				Header: 'Sec+',
+				minWidth: 70,
+				maxWidth: 100,
+				resizable: true,
+				accessor: 'security_skill.max',
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.security_skill} compactMode={compactMode} proficiency={true} /> : <span />,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg max)</span>
+			},
+			{
+				id: 'command_skill_voy',
+				Header: 'Com++',
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: 'command_skill_voy',
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.command_skill} compactMode={compactMode} combined={true} /> : <span />,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
+			},
+			{
+				id: 'diplomacy_skill_voy',
+				Header: 'Dip++',
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: 'diplomacy_skill_voy',
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.diplomacy_skill} compactMode={compactMode} combined={true} /> : <span />,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
+			},
+			{
+				id: 'engineering_skill_voy',
+				Header: 'Eng++',
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: 'engineering_skill_voy',
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.engineering_skill} compactMode={compactMode} combined={true} /> : <span />,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
+			},
+			{
+				id: 'medicine_skill_voy',
+				Header: 'Med++',
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: 'medicine_skill_voy',
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.medicine_skill} compactMode={compactMode} combined={true} /> : <span />,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
+			},
+			{
+				id: 'science_skill_voy',
+				Header: 'Sci++',
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: 'science_skill_voy',
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.science_skill} compactMode={compactMode} combined={true} /> : <span />,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
+			},
+			{
+				id: 'security_skill_voy',
+				Header: 'Sec++',
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: 'security_skill_voy',
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.security_skill} compactMode={compactMode} combined={true} /> : <span />,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
+			},
+			{
+				id: 'voyage_score',
+				Header: 'VOY',
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: 'voyage_score',
+				Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.voyage_score}</div> : <span />,
+				aggregate: aggAvg,
+				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
+			},
+			{
+				id: 'gauntlet_score',
+				Header: 'Gauntlet',
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: 'gauntlet_score',
+				Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.gauntlet_score}</div> : <span />,
+				aggregate: aggAvg,
 				Aggregated: row => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
