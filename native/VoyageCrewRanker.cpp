@@ -17,8 +17,7 @@ RankedResult RankVoyageCrew(const char *jsonInput) noexcept
 		if (primarySkill == secondarySkill)
 			continue;
 
-		VoyageCalculator calculator(jsonInput, true);
-		calculator.SetInput(primarySkill, secondarySkill);
+		VoyageCalculator calculator(jsonInput, true, &primarySkill, &secondarySkill);
 		calculator.DisableTraits();
 
 		result.Estimates.emplace_back(primarySkill, secondarySkill);
@@ -44,7 +43,7 @@ RankedResult RankVoyageCrew(const char *jsonInput) noexcept
 				rCrew.crew = *crew;
 				rCrew.altScores.resize(RankedCrew::altLevels);
 				++rCrew.altScores[altLevel];
-				
+
 				bool hasAltSkills = false;
 				for (auto skillPair : rCrew.altVoySkills) {
 					if (skillPair.first == primarySkill && skillPair.second == secondarySkill) {

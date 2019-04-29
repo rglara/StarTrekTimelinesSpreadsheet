@@ -85,13 +85,8 @@ using CrewArray = std::array<const Crew *, SLOT_COUNT>;
 class VoyageCalculator
 {
 public:
-	VoyageCalculator(const char* jsonInput, bool rankMode = false) noexcept;
+	VoyageCalculator(const char *jsonInput, bool rankMode = false, std::uint8_t *skillPri = nullptr, std::uint8_t *skillSec = nullptr) noexcept;
 
-	void SetInput(std::uint8_t primarySkill, std::uint8_t secondarySkill) noexcept
-	{
-		this->binaryConfig.primarySkill = primarySkill;
-		this->binaryConfig.secondarySkill = secondarySkill;
-	}
 	void DisableTraits()
 	{
 		std::fill(slotTraits.begin(), slotTraits.end(), (size_t)-1);

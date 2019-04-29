@@ -24,10 +24,10 @@ constexpr size_t MAX_SCAN_DEPTH = 10; // sanity
 
 // Various fields used in the duration estimation code
 constexpr unsigned int secondsPerTick = 20; // 3 ticks per minute; a "tick" is a single voyage UI quick progress bar which reduces antimatter by 1 unless it is a hazard or dilemma
-constexpr unsigned int ticksPerCycle = 30; // 
+constexpr unsigned int ticksPerCycle = 30; //
 constexpr unsigned int cycleSeconds = ticksPerCycle * secondsPerTick; // 600 sec/cycle; 10 min/cycle; .0166 cycle/sec;  WAS: = 560 sec/cycle; 9.333 min/cycle; .001785 cycle/sec
 constexpr float cyclesPerHour = 60 * 60 / (float)cycleSeconds; // = 6 cycles/hr;  WAS: = 6.429 cycles/hr
-constexpr unsigned int hazPerCycle = 7.5; // hazard every 80 seconds; WAS = 6
+constexpr float hazPerCycle = 7.5f; // hazard every 80 seconds; WAS = 6
 constexpr float activityPerCycle = 30; // one activity every tick; WAS = 18
 constexpr float dilemmasPerHour = 0.5f;
 constexpr float hazPerHour = hazPerCycle * cyclesPerHour - dilemmasPerHour;
@@ -74,7 +74,7 @@ unsigned int VoyageCalculator::computeScore(const Crew& crew, std::uint8_t skill
 	return score;
 }
 
-VoyageCalculator::VoyageCalculator(const char* jsonInput, bool rankMode) noexcept :
+VoyageCalculator::VoyageCalculator(const char *jsonInput, bool rankMode, std::uint8_t* skillPri, std::uint8_t* skillSec) noexcept :
 	rankMode(rankMode)
 {
 	nlohmann::json j = json::parse(jsonInput);
@@ -95,6 +95,15 @@ VoyageCalculator::VoyageCalculator(const char* jsonInput, bool rankMode) noexcep
 		estimateBinaryConfig.elapsedTimeMinutes = 0;
 		estimateBinaryConfig.remainingAntiMatter = 0;
 		std::fill(estimateBinaryConfig.slotCrewIds, estimateBinaryConfig.slotCrewIds + SLOT_COUNT, 0);
+	}
+
+	if (skillPri != nullptr)
+	{
+		binaryConfig.primarySkill = *skillPri;
+	}
+	if (skillSec != nullptr)
+	{
+		binaryConfig.secondarySkill = *skillSec;
 	}
 
 	for (const auto &crew : j["crew"])
