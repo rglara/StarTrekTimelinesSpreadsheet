@@ -17,6 +17,7 @@ import {
 import { CollapsibleSection } from './CollapsibleSection';
 import { RarityStars } from './RarityStars';
 import ReactTable from 'react-table';
+import Moment from 'moment';
 
 import { download } from '../utils/pal';
 import { calculateVoyage, estimateVoyageRemaining, exportVoyageData } from '../utils/voyageCalc';
@@ -732,19 +733,17 @@ export class VoyageLog extends React.Component {
 				return chanceDilemma;
 			};
 
-			let moment = require('moment');
-
 			return (
 				<div>
 					<p>
 						Voyage has been ongoing for <b>{formatTimeSeconds(this.state.voyage_duration)}</b> (new dilemma in
 						{' '}{formatTimeSeconds(this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma)}
-						{' '}at {moment().add(this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma, 's').format('h:mma')}).
+						{' '}at {Moment().add(this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma, 's').format('h:mma')}).
 					</p>
 
 					<div className='ui blue label'>
 						Estimated time left: <b>{formatTimeSeconds(this.state.estimatedMinutesLeft * 60)}</b>
-						{' '}at {moment().add(this.state.estimatedMinutesLeft, 'm').format('h:mma')}
+						{' '}at {Moment().add(this.state.estimatedMinutesLeft, 'm').format('h:mma')}
 						{' '}{!this.state.nativeEstimate && <i className='spinner loading icon' />}
 					</div>
 

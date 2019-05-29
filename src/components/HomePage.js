@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { ItemDisplay } from './ItemDisplay';
+import Moment from 'moment';
 
 import STTApi from '../api';
 import { CONFIG, getChronitonCount, formatTimeSeconds, loadGauntlet, loadVoyage } from '../api';
@@ -45,8 +46,6 @@ class Recommendation extends React.Component {
 export class HomePage extends React.Component {
 	constructor(props) {
 		super(props);
-
-		let moment = require('moment');
 
 		let recommendations = [];
 
@@ -205,7 +204,7 @@ export class HomePage extends React.Component {
 							.map(sa => (
 								<span key={sa.id}>
 									{sa.name} - <i>{getShuttleState(sa.state)}</i> ({formatTimeSeconds(sa.expires_in)}
-									{' '}at {moment().add(sa.expires_in, 's').format('h:mma')})
+									{' '}at {Moment(STTApi.lastSync).add(sa.expires_in, 's').format('h:mma')})
 								</span>
 							))
 							.reduce((prev, curr) => [prev, ', ', curr])}
@@ -260,7 +259,7 @@ export class HomePage extends React.Component {
 							content: (
 								<p style={{ margin: '0' }}>
 									Voyage has lasted for {formatTimeSeconds(voyage.voyage_duration)} and it's currently returning (
-									{formatTimeSeconds(voyage.recall_time_left)} at {moment().add(voyage.recall_time_left, 's').format('h:mma')}).
+									{formatTimeSeconds(voyage.recall_time_left)} at {Moment(STTApi.lastSync).add(voyage.recall_time_left, 's').format('h:mma')}).
 								</p>
 							)
 						};
@@ -297,7 +296,7 @@ export class HomePage extends React.Component {
 							<p style={{ margin: '0' }}>
 								Voyage has been ongoing for {formatTimeSeconds(voyage.voyage_duration)} (new dilemma in{' '}
 								{formatTimeSeconds(voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma)}
-								{' '}at {moment().add(voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma, 's').format('h:mma')})
+								{' '}at {Moment().add(voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma, 's').format('h:mma')})
 							</p>
 						)
 					};
@@ -330,14 +329,21 @@ export class HomePage extends React.Component {
 					content: <p style={{ margin: '0' }}>Tha gauntlet has ended; claim your rewards in the game or in the 'Gauntlet' tab.</p>
 				};
 			} else if (gauntlet.state === 'STARTED') {
+				const anyEnabled = gauntlet.contest_data.selected_crew.some(c => !c.disabled);
 				newRecommendation = {
 					title: 'Gauntlet is active',
-					icon: Priority.INFO,
+					icon: anyEnabled ? Priority.HOURGLASS : Priority.INFO,
 					content: (
 						<p style={{ margin: '0' }}>
+							{
+								anyEnabled && `Some crew still available to compete. `
+							}
+							{
+								!anyEnabled && `No crew available to compete. `
+							}
 							The gauntlet ends in {formatTimeSeconds(gauntlet.seconds_to_end)}, next crew refresh in{' '}
 							{formatTimeSeconds(gauntlet.seconds_to_next_crew_refresh)}
-							{' '}at {moment().add(gauntlet.seconds_to_next_crew_refresh, 's').format('h:mma')}.
+							{' '}at {Moment(STTApi.lastSync).add(gauntlet.seconds_to_next_crew_refresh, 's').format('h:mma')}.
 						</p>
 					)
 				};

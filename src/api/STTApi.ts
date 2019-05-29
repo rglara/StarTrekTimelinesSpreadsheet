@@ -28,6 +28,7 @@ import { AssetImageProvider } from './AssetImageProvider';
 import { NeededEquipmentClass, IEquipNeedFilter, IEquipNeed } from './EquipmentTools';
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
+import Moment from 'moment';
 
 export class STTApiClass {
 	private _accessToken: string | undefined;
@@ -54,6 +55,8 @@ export class STTApiClass {
 	public allcrew!: any[];
 
 	public serverAddress: string = 'http://localhost/';
+
+	public lastSync: any;
 
 	constructor() {
 		this.refreshEverything(true);
@@ -334,6 +337,8 @@ export class STTApiClass {
 		let data = await this.executeGetRequest('player');
 		if (data.player) {
 			this._playerData = data;
+
+			this.lastSync = Moment();
 
 			// After loading player data, we can calculate the buff config for collections and starbase
 			this._buffConfig = calculateBuffConfig();
