@@ -6,7 +6,10 @@
             "xcode_settings": { "OTHER_CFLAGS": [ "-std=c++17" ] },
             "include_dirs" : [
  	 			"<!(node -e \"require('nan')\")"
-			]
+			],
+            "cflags_cc": [
+                "-std=c++17"
+            ]
         }
     ],
 }
