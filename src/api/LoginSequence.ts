@@ -71,7 +71,7 @@ export async function loginSequence(onProgress: (description: string) => void, l
     if (loadMissions) {
         onProgress('Loading missions and quests...');
 
-        // Filter out missions in a bad state (see https://github.com/IAmPicard/StarTrekTimelinesSpreadsheet/issues/31)
+        // Filter out missions in a bad state
         STTApi.playerData.character.accepted_missions = STTApi.playerData.character.accepted_missions.filter((mission: any) => mission.main_story);
 
         // Not really an "icon", but adding it here because this is what we wait on at the end of this function (so code could run in parallel, especially network loads)
