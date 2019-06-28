@@ -69,8 +69,9 @@ export class AssetImageProvider implements ImageProvider {
             throw new Error('Fail to load image');
         }
 
-        let rawBitmap = await new Promise<any>((resolve, reject) => { this._workerPool.addWorkerTask({ data, resolve, assetName, spriteName }); });
-        let url = await this._imageCache.saveImage(((assetName.length > 0) ? (assetName + '_') : '') + spriteName, rawBitmap);
+        // let rawBitmap = await new Promise<any>((resolve, reject) => { this._workerPool.addWorkerTask({ data, resolve, assetName, spriteName }); });
+        // let url = await this._imageCache.saveImage(((assetName.length > 0) ? (assetName + '_') : '') + spriteName, rawBitmap);
+        let url = undefined;
         return { id, url };
     }
 
@@ -83,16 +84,18 @@ export class AssetImageProvider implements ImageProvider {
             return { id, url: cachedUrl };
         }
 
-        let data: any;
-        try {
-            data = await STTApi.networkHelper.getRaw(this.getAssetUrl(iconFile) + '.sd', undefined);
-        }
-        catch (err) {
-            // Most assets have the .sd extensions, a few have the .ld extension; this is available in asset_bundles but I can't extract that in JavaScript
-            data = await STTApi.networkHelper.getRaw(this.getAssetUrl(iconFile) + '.ld', undefined);
-        }
+        return { id, url: undefined };
 
-        return this.processData(iconFile, id, data);
+        // let data: any;
+        // try {
+        //     data = await STTApi.networkHelper.getRaw(this.getAssetUrl(iconFile) + '.sd', undefined);
+        // }
+        // catch (err) {
+        //     // Most assets have the .sd extensions, a few have the .ld extension; this is available in asset_bundles but I can't extract that in JavaScript
+        //     data = await STTApi.networkHelper.getRaw(this.getAssetUrl(iconFile) + '.ld', undefined);
+        // }
+
+        // return this.processData(iconFile, id, data);
     }
 
     private async processData(iconFile: string, id: any, data: any): Promise<IFoundResult> {

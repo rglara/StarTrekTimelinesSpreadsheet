@@ -1,9 +1,9 @@
-import { parseAssetBundle } from 'unitiyfs-asset-parser';
+import { parseAssetBundle } from './unitiyfs-asset-parser';
 
 function parseFromBundle(data: any): any {
     let assetBundle = parseAssetBundle(new Uint8Array(data.buffer));
     if (!assetBundle || !assetBundle.imageBitmap) {
-        console.error('Fail to parse an image out of this bundle!');
+        console.error('Failed to parse an image out of this bundle!');
         return [];
     }
     else {
@@ -13,7 +13,7 @@ function parseFromBundle(data: any): any {
                 console.error('Sprite not found!');
                 return [];
             }
-            return sprite.spriteBitmap;
+            return sprite['spriteBitmap'];
         }
         else {
             return assetBundle.imageBitmap;
@@ -24,7 +24,7 @@ function parseFromBundle(data: any): any {
 self.addEventListener('message', (message: any) => {
     let result = parseFromBundle(message.data);
 
-    if (result.data.length > 0) {
+    if (result && result.data && result.data.length > 0) {
         (self as any).postMessage(result, [result.data.buffer]);
     }
     else {
