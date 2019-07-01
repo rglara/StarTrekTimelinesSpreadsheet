@@ -26,6 +26,17 @@ export class VoyageCrew extends React.Component {
 	constructor(props) {
 		super(props);
 
+		let peopleList = [];
+		STTApi.roster.forEach(crew => {
+			peopleList.push({
+				key: crew.crew_id || crew.id,
+				value: crew.crew_id || crew.id,
+				image: { avatar: true, src: crew.iconUrl },
+				text: crew.name
+			});
+		});
+		peopleList.sort((a,b) => (a.text < b.text) ? -1 : ((a.text > b.text) ? 1 : 0));
+
 		let bestVoyageShips = bestVoyageShip();
 		this.state = {
 			bestShips: bestVoyageShips,
@@ -37,7 +48,7 @@ export class VoyageCrew extends React.Component {
 			searchDepth: 6,
 			extendsTarget: 0,
 			activeEvent: undefined,
-			peopleList: [],
+			peopleList,
 			currentSelectedItems: [],
 			error: undefined,
 			generatingVoyCrewRank: false
@@ -49,15 +60,6 @@ export class VoyageCrew extends React.Component {
 			this.state.activeEvent = result.eventName;
 			this.state.currentSelectedItems = result.crewIds;
 		}
-
-		STTApi.roster.forEach(crew => {
-			this.state.peopleList.push({
-				key: crew.crew_id || crew.id,
-				value: crew.crew_id || crew.id,
-				image: { avatar: true, src: crew.iconUrl },
-				text: crew.name
-			});
-		});
 
 		this._calcVoyageData = this._calcVoyageData.bind(this);
 		this._startVoyage = this._startVoyage.bind(this);

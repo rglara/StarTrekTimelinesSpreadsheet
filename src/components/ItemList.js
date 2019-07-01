@@ -141,6 +141,14 @@ export class ItemList extends React.Component {
 					}
 				},
 				{
+					id: 'image',
+					Header: 'Image',
+					minWidth: 250,
+					maxWidth: 550,
+					resizable: true,
+					accessor: 'icon.file'
+				},
+				{
 					id: 'details',
 					Header: 'Details',
 					minWidth: 150,
@@ -209,6 +217,10 @@ export class ItemList extends React.Component {
 
 			// now search the raw traits
 			if (item.flavor && item.flavor.toLowerCase().indexOf(text) > -1) {
+				return true;
+			}
+
+			if (item.icon && item.icon.file && item.icon.file.toLowerCase().indexOf(text) > -1) {
 				return true;
 			}
 
