@@ -2,6 +2,7 @@ export class WorkerTask {
     data: ArrayBuffer;
     assetName: string | undefined;
     spriteName: string | undefined;
+    label?: string;
     resolve: (value: any) => void;
 }
 
@@ -22,6 +23,7 @@ export class WorkerThread {
             this.workerDone();
         });
         worker.postMessage({
+            label: workerTask.label,
             buffer: workerTask.data,
             assetName: workerTask.assetName,
             spriteName: workerTask.spriteName

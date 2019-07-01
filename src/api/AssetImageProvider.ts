@@ -10,7 +10,7 @@ export class AssetImageProvider implements ImageProvider {
 
     constructor(imageCache: ImageCache) {
         this._imageCache = imageCache;
-        this._workerPool = new WorkerPool(8); //TODO: can we get the number of cores somehow?
+        this._workerPool = new WorkerPool(1); //TODO: can we get the number of cores somehow?
         this._baseURLAsset = '';
     }
 
@@ -69,9 +69,8 @@ export class AssetImageProvider implements ImageProvider {
             throw new Error('Fail to load image');
         }
 
-        // let rawBitmap = await new Promise<any>((resolve, reject) => { this._workerPool.addWorkerTask({ data, resolve, assetName, spriteName }); });
-        // let url = await this._imageCache.saveImage(((assetName.length > 0) ? (assetName + '_') : '') + spriteName, rawBitmap);
-        let url = undefined;
+        let rawBitmap = await new Promise<any>((resolve, reject) => { this._workerPool.addWorkerTask({ data, label: id, resolve, assetName, spriteName }); });
+        let url = await this._imageCache.saveImage(((assetName.length > 0) ? (assetName + '_') : '') + spriteName, rawBitmap);
         return { id, url };
     }
 
@@ -84,18 +83,21 @@ export class AssetImageProvider implements ImageProvider {
             return { id, url: cachedUrl };
         }
 
-        return { id, url: undefined };
+        let data: any;
+        try {
+            data = await STTApi.networkHelper.getRaw(this.getAssetUrl(iconFile) + '.sd', undefined);
+        }
+        catch (err) {
+            try {
+               // Most assets have the .sd extensions, a few have the .ld extension; this is available in asset_bundles but I can't extract that in JavaScript
+               data = await STTApi.networkHelper.getRaw(this.getAssetUrl(iconFile) + '.ld', undefined);
+            }
+            catch (err2) {
+               return { id, url: undefined };
+            }
+        }
 
-        // let data: any;
-        // try {
-        //     data = await STTApi.networkHelper.getRaw(this.getAssetUrl(iconFile) + '.sd', undefined);
-        // }
-        // catch (err) {
-        //     // Most assets have the .sd extensions, a few have the .ld extension; this is available in asset_bundles but I can't extract that in JavaScript
-        //     data = await STTApi.networkHelper.getRaw(this.getAssetUrl(iconFile) + '.ld', undefined);
-        // }
-
-        // return this.processData(iconFile, id, data);
+        return this.processData(iconFile, id, data);
     }
 
     private async processData(iconFile: string, id: any, data: any): Promise<IFoundResult> {
@@ -104,7 +106,7 @@ export class AssetImageProvider implements ImageProvider {
         }
 
         let rawBitmap = await new Promise<any>((resolve, reject) => {
-            this._workerPool.addWorkerTask({ data, resolve, assetName: undefined, spriteName: undefined });
+            this._workerPool.addWorkerTask({ data, label: iconFile, resolve, assetName: undefined, spriteName: undefined });
         });
 
         let url = await this._imageCache.saveImage(iconFile, rawBitmap);

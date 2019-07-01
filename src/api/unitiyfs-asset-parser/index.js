@@ -9,26 +9,26 @@ var Buffer = self.Buffer;
 
 var assetBundle = new Parser()
 	.endianess('big')
-	.string('signature', {
+	.string('signature', {  // "UnityFS"
 		zeroTerminated: true
 	})
-	.int32('format_version')
-	.string('unity_version', {
+	.int32('format_version') // 6
+	.string('unity_version', { // "5.x.x"
 		zeroTerminated: true
 	})
-	.string('generator_version', {
+	.string('generator_version', { // "2017.4.17f1"
 		zeroTerminated: true
 	})
-	.int32('file_size1')
-	.int32('file_size2')
-	.uint32('ciblock_size')
-	.uint32('uiblock_size')
-	.uint32('flags')
-	.array('compressedBlk', {
+	.int32('file_size1') //0
+	.int32('file_size2') // 528862
+	.uint32('ciblock_size') //64
+	.uint32('uiblock_size') //91
+	.uint32('flags') // 67
+	.array('compressedBlk', { // byte[]
 		type: "uint8",
 		length: 'ciblock_size'
 	})
-	.array('assets', {
+	.array('assets', { // byte[]
 		type: "uint8",
 		readUntil: 'eof'
 	});
@@ -36,23 +36,23 @@ var assetBundle = new Parser()
 var blockList = new Parser()
 	.endianess('big')
 	.skip(16)
-	.int32('num_blocks')
+	.int32('num_blocks') // 1
 	.array('blocks', {
 		type: Parser.start()
-			.int32('busize')
-			.int32('bcsize')
-			.int16('bflags'),
+			.int32('busize') // 528748
+			.int32('bcsize') // 528748
+			.int16('bflags'), // 64
 		length: 'num_blocks'
 	})
-	.int32('num_nodes')
+	.int32('num_nodes') // 1
 	.array('nodes', {
 		type: Parser.start()
-			.int32('ofs1')
-			.int32('ofs2')
-			.int32('size1')
-			.int32('size2')
-			.int32('status')
-			.string('name', {
+			.int32('ofs1') // 0
+			.int32('ofs2') // 0
+			.int32('size1') // 0
+			.int32('size2') // 528748
+			.int32('status') // 4
+			.string('name', { // "CAB-d441eef4839431472fb997a38d8cbd42"
 				zeroTerminated: true
 			}),
 		length: 'num_nodes'
@@ -69,6 +69,9 @@ var typeParser = new Parser()
 	.uint32('index')
 	.int32('flags');
 
+// FIXME: something is messed up here in the latest version. num_nodes is far too large
+//        compared to the size of the buffer available, so the skip or something else
+//        here must have changed; need to find the updated format or no more image parsing!
 var typeTreeParser = new Parser()
 	.endianess('little')
 	.int32('class_id')
@@ -266,7 +269,8 @@ function parseAssetBundle(data) {
 	lz4js.decompressBlock(bundle.compressedBlk, decompressed, 0, bundle.ciblock_size, 0);
 	var bundleBlocks = blockList.parse(decompressed);
 
-	// var asset = assetParser.parse(Buffer.from(bundle.assets));
+	//var asset = assetParser.parse(Buffer.from(bundle.assets));
+	var asset = assetParserGenerated(Buffer.from(bundle.assets));
 
 	const strings = "AABB AnimationClip AnimationCurve AnimationState Array Base BitField bitset bool char ColorRGBA Component data deque double dynamic_array FastPropertyName first float Font GameObject Generic Mono GradientNEW GUID GUIStyle int list long long map Matrix4x4f MdFour MonoBehaviour MonoScript m_ByteSize m_Curve m_EditorClassIdentifier m_EditorHideFlags m_Enabled m_ExtensionPtr m_GameObject m_Index m_IsArray m_IsStatic m_MetaFlag m_Name m_ObjectHideFlags m_PrefabInternal m_PrefabParentObject m_Script m_StaticEditorFlags m_Type m_Version Object pair PPtr<Component> PPtr<GameObject> PPtr<Material> PPtr<MonoBehaviour> PPtr<MonoScript> PPtr<Object> PPtr<Prefab> PPtr<Sprite> PPtr<TextAsset> PPtr<Texture> PPtr<Texture2D> PPtr<Transform> Prefab Quaternionf Rectf RectInt RectOffset second set short size SInt16 SInt32 SInt64 SInt8 staticvector string TextAsset TextMesh Texture Texture2D Transform TypelessData UInt16 UInt32 UInt64 UInt8 unsigned int unsigned long long unsigned short vector Vector2f Vector3f Vector4f m_ScriptingClassIdentifier Gradient ";
 
@@ -309,33 +313,33 @@ function parseAssetBundle(data) {
 		});
 	};
 
-	// asset.typeStruct.types.forEach((type) => { buildTypeTree(type); });
+	asset.typeStruct.types.forEach((type) => { buildTypeTree(type); });
 
 	// Read the standard / built-in typetrees (not really needed for images)
 	/*var standardTypes = typeStructParser.parse(fs.readFileSync('structs.dat'));
 	standardTypes.types.forEach((type) => { buildTypeTree(type); });*/
 
 	let parsedObjects = [];
-	// asset.objects.forEach((object, index) => {
-	// 	var objectBuffer = Buffer.from(bundle.assets.slice(asset.data_offset + object.data_offset, asset.data_offset + object.data_offset + object.size));
+	asset.objects.forEach((object, index) => {
+		var objectBuffer = Buffer.from(bundle.assets.slice(asset.data_offset + object.data_offset, asset.data_offset + object.data_offset + object.size));
 
-	// 	var type_tree = asset.typeStruct.types.find((type) => type.class_id == object.type_id);
-	// 	if (!type_tree) {
-	// 		type_tree = asset.typeStruct.types.find((type) => type.class_id == object.class_id);
-	// 		if (!type_tree) {
-	// 			//type_tree = standardTypes.types.find((type) => type.class_id == object.class_id);
-	// 			if (!type_tree) {
-	// 				console.error("Type tree not found for object " + index + "; class id: " + object.type_id);
-	// 				return undefined;
-	// 			}
-	// 		}
-	// 	}
+		var type_tree = asset.typeStruct.types.find((type) => type.class_id == object.type_id);
+		if (!type_tree) {
+			type_tree = asset.typeStruct.types.find((type) => type.class_id == object.class_id);
+			if (!type_tree) {
+				//type_tree = standardTypes.types.find((type) => type.class_id == object.class_id);
+				if (!type_tree) {
+					console.error("Type tree not found for object " + index + "; class id: " + object.type_id);
+					return undefined;
+				}
+			}
+		}
 
-	// 	let parsedObject = read_value(object, type_tree.node_data[0], objectBuffer, 0).result;
-	// 	parsedObject.type = type_tree.node_data[0].type;
+		let parsedObject = read_value(object, type_tree.node_data[0], objectBuffer, 0).result;
+		parsedObject.type = type_tree.node_data[0].type;
 
-	// 	parsedObjects.push(parsedObject);
-	// });
+		parsedObjects.push(parsedObject);
+	});
 
 	// DONE parsing, now on to images
 
@@ -407,6 +411,104 @@ function parseAssetBundle(data) {
 	}
 
 	return result;
+}
+
+function assetParserGenerated(buffer, callback, constructorFn) {
+	var offset = 0;
+	var vars = {};
+	vars.metadata_size = buffer.readUInt32BE(offset);
+	offset += 4;
+	vars.file_size = buffer.readUInt32BE(offset);
+	offset += 4;
+	vars.format = buffer.readUInt32BE(offset);
+	offset += 4;
+	vars.data_offset = buffer.readUInt32BE(offset);
+	offset += 4;
+	vars.endianness = buffer.readUInt32BE(offset);
+	offset += 4;
+	vars.typeStruct = {};
+	var $tmp0 = offset;
+	while (buffer.readUInt8(offset++) !== 0);
+	vars.typeStruct.generator_version = buffer.toString('utf8', $tmp0, offset - 1);
+	vars.typeStruct.target_platform = buffer.readUInt32LE(offset);
+	offset += 4;
+	vars.typeStruct.has_type_trees = buffer.readUInt8(offset);
+	offset += 1;
+	vars.typeStruct.num_types = buffer.readInt32LE(offset);
+	offset += 4;
+	vars.typeStruct.types = [];
+	for (var $tmp1 = 0; $tmp1 < vars.typeStruct.num_types; $tmp1++) {
+		var $tmp2 = {};
+		$tmp2.class_id = buffer.readInt32LE(offset);
+		offset += 4;
+		offset += (function () {
+			return this.class_id < 0 ? 0x20 : 0x10;
+		}).call($tmp2, vars);
+		$tmp2.num_nodes = buffer.readUInt32LE(offset);
+		offset += 4;
+		$tmp2.buffer_bytes = buffer.readUInt32LE(offset);
+		offset += 4;
+		$tmp2.node_data = [];
+		for (var $tmp3 = 0; $tmp3 < $tmp2.num_nodes; $tmp3++) {
+			var $tmp4 = {};
+			$tmp4.version = buffer.readInt16LE(offset);
+			offset += 2;
+			$tmp4.depth = buffer.readUInt8(offset);
+			offset += 1;
+			$tmp4.is_array = buffer.readUInt8(offset);
+			offset += 1;
+			$tmp4.typeOffset = buffer.readInt32LE(offset);
+			offset += 4;
+			$tmp4.nameOffset = buffer.readInt32LE(offset);
+			offset += 4;
+			$tmp4.size = buffer.readInt32LE(offset);
+			offset += 4;
+			$tmp4.index = buffer.readUInt32LE(offset);
+			offset += 4;
+			$tmp4.flags = buffer.readInt32LE(offset);
+			offset += 4;
+			$tmp2.node_data.push($tmp4);
+		}
+		$tmp2.buffer_data = [];
+		for (var $tmp5 = 0; $tmp5 < $tmp2.buffer_bytes; $tmp5++) {
+			var $tmp6 = buffer.readUInt8(offset);
+			offset += 1;
+			$tmp2.buffer_data.push($tmp6);
+		}
+		vars.typeStruct.types.push($tmp2);
+	}
+	vars.num_objects = buffer.readUInt32LE(offset);
+	offset += 4;
+	vars.objects = [];
+	for (var $tmp7 = 0; $tmp7 < vars.num_objects; $tmp7++) {
+		var $tmp8 = {};
+		offset += 3;
+		$tmp8.path_id1 = buffer.readInt32LE(offset);
+		offset += 4;
+		$tmp8.path_id2 = buffer.readInt32LE(offset);
+		offset += 4;
+		$tmp8.data_offset = buffer.readUInt32LE(offset);
+		offset += 4;
+		$tmp8.size = buffer.readUInt32LE(offset);
+		offset += 4;
+		$tmp8.type_id = buffer.readInt32LE(offset);
+		offset += 4;
+		$tmp8.class_id = buffer.readInt16LE(offset);
+		offset += 2;
+		$tmp8.unk1 = buffer.readInt16LE(offset);
+		offset += 2;
+		$tmp8.unk2 = buffer.readInt8(offset);
+		offset += 1;
+		vars.objects.push($tmp8);
+	}
+	vars.num_adds = buffer.readUInt32LE(offset);
+	offset += 4;
+	vars.num_refs = buffer.readUInt32LE(offset);
+	offset += 4;
+	var $tmp9 = offset;
+	while (buffer.readUInt8(offset++) !== 0);
+	vars.unk_string = buffer.toString('utf8', $tmp9, offset - 1);
+	return vars;
 }
 
 module.exports = { parseAssetBundle };
