@@ -1,6 +1,8 @@
 import React from 'react';
+import { Image, List } from 'semantic-ui-react';
 
 import { ItemDisplay } from './ItemDisplay';
+import { RarityStars } from './RarityStars';
 import Moment from 'moment';
 
 import STTApi from '../api';
@@ -48,6 +50,9 @@ export class HomePage extends React.Component {
 		super(props);
 
 		let recommendations = [];
+
+		// Set initial state so promises for voy and gauntlet have something to expand
+		this.state = { recommendations: [] };
 
 		let replicator_uses_left = STTApi.playerData.replicator_limit - STTApi.playerData.replicator_uses_today;
 		if (replicator_uses_left === 0) {
@@ -326,7 +331,7 @@ export class HomePage extends React.Component {
 				newRecommendation = {
 					title: `Gauntlet has ended (your rank is ${gauntlet.rank})`,
 					icon: Priority.EXCLAMATION,
-					content: <p style={{ margin: '0' }}>Tha gauntlet has ended; claim your rewards in the game or in the 'Gauntlet' tab.</p>
+					content: <p style={{ margin: '0' }}>The gauntlet has ended; claim your rewards in the game or in the 'Gauntlet' tab.</p>
 				};
 			} else if (gauntlet.state === 'STARTED') {
 				const anyEnabled = gauntlet.contest_data.selected_crew.some(c => !c.disabled);
@@ -356,33 +361,96 @@ export class HomePage extends React.Component {
 			}
 		});
 
-		const neededEquipment = STTApi.getNeededEquipment(
-			{ onlyNeeded: true, onlyFaction: false, cadetable: false, allLevels: false, userText: undefined },
-			[]
-		);
-		let factionBuyable = [];
-		for (let equipment of neededEquipment) {
-			factionBuyable = factionBuyable.concat(
-				equipment.factionSources.map(
-					entry =>
-						`${equipment.equipment.name} for ${entry.cost_amount} ${CONFIG.CURRENCIES[entry.cost_currency].name} in the ${
-							entry.faction.name
-						} shop`
-				)
-			);
+		if (STTApi.playerData.character.events && STTApi.playerData.character.events.length > 0) {
+			let newRecommendation = undefined;
+			let eventData = STTApi.playerData.character.events[0];
+
+			//TODO: check event start time and change icon
+			let hasStarted = eventData.seconds_to_start <= 0;
+			// STTApi.playerData.character.events[0].opened
+			if (eventData.content.content_type === 'shuttles') {
+				let crew_bonuses = [];
+				for (let cb in eventData.content.shuttles[0].crew_bonuses) {
+					let avatar = STTApi.getCrewAvatarBySymbol(cb);
+					if (!avatar) {
+						continue;
+					}
+
+					let crew = STTApi.roster.find(c => c.symbol === avatar.symbol);
+					if (!crew) {
+						continue;
+					}
+
+					crew_bonuses.push({
+						crew,
+						bonus: eventData.content.shuttles[0].crew_bonuses[cb],
+						iconUrl: STTApi.imageProvider.getCrewCached(avatar, false)
+					});
+				}
+
+				crew_bonuses.sort((a, b) => {
+					// Sort by bonus DESC then shortname ASC then name ASC
+					if (a.bonus > b.bonus) { return -1; }
+					if (a.bonus < b.bonus) { return 1; }
+					if (a.crew.short_name > b.crew.short_name) { return 1; }
+					if (a.crew.short_name < b.crew.short_name) { return -1; }
+					if (a.crew.name > b.crew.name) { return 1; }
+					if (a.crew.name < b.crew.name) { return -1; }
+					return 0;
+				});
+
+				recommendations.push({
+					title: `Faction/Shuttle Event ` + (hasStarted ?
+						" has started and ends in " + formatTimeSeconds(eventData.seconds_to_end) :
+						"starts in " + formatTimeSeconds(eventData.seconds_to_start)),
+					icon: Priority.INFO,
+					content: <div style={{ margin: '0' }}>
+							Owned bonus crew:
+							<List horizontal>
+								{crew_bonuses.map(cb => (
+									<List.Item key={cb.crew.symbol}>
+										<Image src={cb.iconUrl} width="25" height="25" />
+										<List.Content>
+											<List.Header>{cb.crew.name}</List.Header>
+											<RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
+											{cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
+											Bonus level {cb.bonus}
+										</List.Content>
+									</List.Item>
+								))}
+							</List>
+						</div>
+				});
+			}
 		}
-		if (factionBuyable.length > 0) {
-			recommendations.push({
-				title: 'Needed equipment in the faction shops',
-				icon: Priority.INFO,
-				content: (
-					<p style={{ margin: '0' }}>
-						You can find some needed equipment in the faction shops: <b>{factionBuyable.join(', ')}</b>. Check them out in the 'Factions'
-						tab.
-					</p>
-				)
-			});
-		}
+
+		// const neededEquipment = STTApi.getNeededEquipment(
+		// 	{ onlyNeeded: true, onlyFaction: false, cadetable: false, allLevels: false, userText: undefined },
+		// 	[]
+		// );
+		// let factionBuyable = [];
+		// for (let equipment of neededEquipment) {
+		// 	factionBuyable = factionBuyable.concat(
+		// 		equipment.factionSources.map(
+		// 			entry =>
+		// 				`${equipment.equipment.name} for ${entry.cost_amount} ${CONFIG.CURRENCIES[entry.cost_currency].name} in the ${
+		// 					entry.faction.name
+		// 				} shop`
+		// 		)
+		// 	);
+		// }
+		// if (factionBuyable.length > 0) {
+		// 	recommendations.push({
+		// 		title: 'Needed equipment in the faction shops',
+		// 		icon: Priority.INFO,
+		// 		content: (
+		// 			<p style={{ margin: '0' }}>
+		// 				You can find some needed equipment in the faction shops: <b>{factionBuyable.join(', ')}</b>. Check them out in the 'Factions'
+		// 				tab.
+		// 			</p>
+		// 		)
+		// 	});
+		// }
 
 		this.state = { recommendations };
 	}
