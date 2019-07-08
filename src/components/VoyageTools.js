@@ -959,7 +959,12 @@ export class VoyageLog extends React.Component {
 						return <VoyageLogEntry key={key} log={this.state.voyageNarrative[key]} />;
 					})}
 				</CollapsibleSection>
-				<button className='ui mini button blue' onClick={() => download('narrative.'+this.state.voyage.id+'.json', JSON.stringify(this.state.voyageExport), 'Export voyage narrative JSON', 'Export')}>
+				<button className='ui mini button blue'
+					onClick={() => download('narrative.'+this.state.voyage.id+'.json',
+													JSON.stringify(this.state.voyageExport),
+													'Export voyage narrative JSON',
+													'Export',
+													false)}>
 					Export Narrative JSON
 				</button>
 

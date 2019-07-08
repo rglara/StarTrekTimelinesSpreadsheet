@@ -47,7 +47,7 @@ export function openShellExternal(url) {
 // #!endif
 }
 
-export function download(filename, text, title, buttonLabel) {
+export function download(filename, text, title, buttonLabel, openOnSave = true) {
     let extension = filename.split('.').pop();
 // #!if ENV === 'electron'
     let extName = '';
@@ -73,7 +73,7 @@ export function download(filename, text, title, buttonLabel) {
                 return;
 
             fs.writeFile(fileName, text, (err) => {
-                if (!err) {
+                if (!err && openOnSave) {
                     shell.openItem(fileName);
                 }
             });
