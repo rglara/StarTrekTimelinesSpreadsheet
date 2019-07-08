@@ -585,9 +585,7 @@ export class GauntletHelper extends React.Component {
 
 					<div className="ui compact segments" style={{ margin: '8px' }}>
 						<h5 className="ui top attached header" style={{ color: getTheme().palette.neutralDark, backgroundColor: getTheme().palette.themeLighter, textAlign: 'center', padding: '2px' }}>
-							The gauntlet ends in {formatTimeSeconds(this.state.gauntlet.seconds_to_end)}{
-								this.state.gauntlet.seconds_to_next_crew_refresh > 0 && <span>&nbsp;&nbsp;(Next crew refresh in {formatTimeSeconds(this.state.gauntlet.seconds_to_next_crew_refresh)})</span>
-							}
+							The gauntlet ends in {formatTimeSeconds(this.state.gauntlet.seconds_to_end)}
 						</h5>
 						<div className="ui attached segment" style={{ backgroundColor: getTheme().palette.themeLighter }}>
 							{this.renderStatistic(formatTimeSeconds(this.state.gauntlet.seconds_to_next_crew_refresh), 'Crew refresh')}

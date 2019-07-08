@@ -119,8 +119,8 @@ VoyageCalculator::VoyageCalculator(const char* jsonInput, bool rankMode) noexcep
 			c.skills[i] = skillData[i*3] + (c.skillMaxProfs[i] + c.skillMinProfs[i]) / 2;
 		}
 
-		log << c.name << " " << c.skills[0] << " " << c.skills[1] << " " << c.skills[2] << " "
-			<< c.skills[3] << " " << c.skills[4] << " " << c.skills[5] << " " << std::endl;
+		// log << c.name << " " << c.skills[0] << " " << c.skills[1] << " " << c.skills[2] << " "
+		// 	<< c.skills[3] << " " << c.skills[4] << " " << c.skills[5] << " " << std::endl;
 
 		roster.emplace_back(std::move(c));
 	}
@@ -193,21 +193,21 @@ void VoyageCalculator::calculate() noexcept
 		for (size_t s=0; s < SLOT_COUNT; ++s)
 		{
 			auto cid = estimateBinaryConfig.slotCrewIds[s];
-			log << "  slot " << s << " crewid: " << cid;
+			// log << "  slot " << s << " crewid: " << cid;
 			for_each(roster.begin(), roster.end(), [&](Crew &c) {
 				if (c.id == cid)
 				{
 					assignments[s] = &c;
-					log << " - " << c.name;
+					// log << " - " << c.name;
 				}
 			});
-			log << std::endl;
+			// log << std::endl;
 		}
 
-		float vt = calculateDuration(assignments, true);
+		float vt = calculateDuration(assignments, false);
 		bestconsidered = assignments;
 		bestscore = vt - elapsedHours;
-		log << "final result: " << vt << " - est time remaining:" << bestscore << std::endl;
+		// log << "final result: " << vt << " - est time remaining:" << bestscore << std::endl;
 		progressUpdate(bestconsidered, bestscore);
 
 		return;
@@ -225,7 +225,7 @@ void VoyageCalculator::calculate() noexcept
 		if (bestscore > prevBest) {
 			continue;
 		} else {
-			float vt = calculateDuration(bestconsidered, true);
+			float vt = calculateDuration(bestconsidered, false);
 			log << "final result: " << vt << std::endl;
 			log << "stopping after " << iteration << " iterations" << std::endl;
 			break;
@@ -308,7 +308,7 @@ void VoyageCalculator::findBest() noexcept
 	size_t maxDepth = 0;
 	for (size_t iSlot = 0; iSlot < SLOT_COUNT; ++iSlot)
 	{
-		log << SkillName(binaryConfig.slotSkills[iSlot]) << std::endl;
+		// log << SkillName(binaryConfig.slotSkills[iSlot]) << std::endl;
 		size_t iCrew;
 		for (iCrew = 0; iCrew < sortedSlotRosters[iSlot].size(); ++iCrew)
 		{
@@ -317,9 +317,9 @@ void VoyageCalculator::findBest() noexcept
 			{
 				break;
 			}
-			log << "  " << crew.score << " - " << crew.name  << std::endl;
+			// log << "  " << crew.score << " - " << crew.name  << std::endl;
 		}
-		log << std::endl;
+		// log << std::endl;
 
 		if (iCrew > maxDepth) {
 			deepSlot = iSlot;
@@ -327,14 +327,14 @@ void VoyageCalculator::findBest() noexcept
 		}
 	}
 
-	log << "minScore: " << minScore << std::endl;
-	log << "primary: " << SkillName(binaryConfig.primarySkill) << std::endl;
-	log << "secondary: " << SkillName(binaryConfig.secondarySkill) << std::endl;
+	// log << "minScore: " << minScore << std::endl;
+	// log << "primary: " << SkillName(binaryConfig.primarySkill) << std::endl;
+	// log << "secondary: " << SkillName(binaryConfig.secondarySkill) << std::endl;
 
 	{ Timer::Scope timer(voyageCalcTime);
 		for (size_t iMinDepth = minDepth; iMinDepth < MAX_SCAN_DEPTH; ++iMinDepth)
 		{
-			log << "depth " << iMinDepth << std::endl;
+			// log << "depth " << iMinDepth << std::endl;
 
 			if (maxDepth < iMinDepth)
 				maxDepth = iMinDepth;
@@ -399,7 +399,7 @@ void VoyageCalculator::fillSlot(size_t iSlot, unsigned int minScore, size_t minD
 			{
 				std::lock_guard<std::mutex> guard(calcMutex);
 				if (score > bestscore) { // check again within the lock to resolve race condition
-					log << "new best found: " << score << std::endl;
+					// log << "new best found: " << score << std::endl;
 					// sanity
 					for (size_t i = 0; i < crewToConsider.size(); ++i) {
 						for (size_t j = i+1; j < crewToConsider.size(); ++j) {
@@ -411,7 +411,7 @@ void VoyageCalculator::fillSlot(size_t iSlot, unsigned int minScore, size_t minD
 					bestconsidered = crewToConsider;
 					bestscore = score;
 					progressUpdate(bestconsidered, bestscore);
-					calculateDuration(crewToConsider, true); // debug
+					calculateDuration(crewToConsider, false);
 				}
 			}
 		}
@@ -454,7 +454,7 @@ void VoyageCalculator::refine() noexcept
 			bestconsidered = considered;
 			bestscore = score;
 			progressUpdate(bestconsidered, bestscore);
-			calculateDuration(bestconsidered, true); // log details
+			calculateDuration(bestconsidered, false); // log details?
 		};
 
 		for (size_t iSlot = 0; iSlot < SLOT_COUNT; ++iSlot) {
