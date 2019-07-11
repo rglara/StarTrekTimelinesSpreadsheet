@@ -24,7 +24,7 @@ import { FleetDetails } from './FleetDetails.js';
 import { VoyageTools } from './VoyageTools.js';
 import { NeededEquipment } from './NeededEquipment.js';
 import { CrewDuplicates } from './CrewDuplicates.js';
-import { IncompleteMissions } from './IncompleteMissions.js';
+import { IncompleteMissions } from './IncompleteMissions';
 import { CryoCollections } from './CryoCollections';
 import { FactionDetails } from './FactionDetails';
 import { Shuttles } from './Shuttles';

@@ -20,6 +20,7 @@ export interface IChallengeSuccess
     mission: any;
     quest: any;
     challenge: any;
+    completed: boolean;
     roll: number;
     skill: string;
     cadet: boolean;
@@ -31,14 +32,28 @@ export interface IChallengeSuccess
 
 export function calculateMissionCrewSuccess(): Array<IChallengeSuccess> {
     let log: Array<IChallengeSuccess> = [];
+
     STTApi.missions.forEach((mission: any) => {
+        // short circuit mission complete calculation by determining if all stars have been earned
+        const missionComplete = mission.stars_earned === mission.total_stars;
+
         mission.quests.forEach((quest: any) => {
+            let allFinished = missionComplete;
+            if (!allFinished) {
+                let unfinishedNodes: number[] = (quest.challenges || [])
+                    .filter((ch: any) => ch.critical && !ch.critical.claimed)
+                    .map((ch: any) => ch.id);
+
+                allFinished = unfinishedNodes.length === 0;
+                allFinished = allFinished && (quest.mastery_levels.reduce((accumulator: number, currentValue: any) => (accumulator + currentValue.progress.goals - currentValue.progress.goal_progress), 0) === 0);
+            }
             if (quest.quest_type == 'ConflictQuest') {
                 quest.challenges.forEach((challenge: any) => {
                     let entry: IChallengeSuccess = {
                         mission: mission,
                         quest: quest,
                         challenge: challenge,
+                        completed: allFinished,
                         roll: 0,
                         skill: challenge.skill,
                         cadet: (quest.cadet == true) ? true : false,

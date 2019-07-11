@@ -96,6 +96,7 @@
 		"xlsx-populate": "^1.17.0"
 	},
 	"dependencies": {
+		"@types/react": "^16.8.23",
 		"dexie": "^2.0.4",
 		"electron-settings": "^3.2.0",
 		"fb": "^2.0.0",
