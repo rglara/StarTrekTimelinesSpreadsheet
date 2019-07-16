@@ -264,7 +264,7 @@ export class HomePage extends React.Component {
 							content: (
 								<p style={{ margin: '0' }}>
 									Voyage has lasted for {formatTimeSeconds(voyage.voyage_duration)} and it's currently returning (
-									{formatTimeSeconds(voyage.recall_time_left)} at {Moment(STTApi.lastSync).add(voyage.recall_time_left, 's').format('h:mma')}).
+									{formatTimeSeconds(voyage.recall_time_left)} at {Moment().add(voyage.recall_time_left, 's').format('h:mma')}).
 								</p>
 							)
 						};
@@ -348,7 +348,7 @@ export class HomePage extends React.Component {
 							}
 							The gauntlet ends in {formatTimeSeconds(gauntlet.seconds_to_end)}, next crew refresh in{' '}
 							{formatTimeSeconds(gauntlet.seconds_to_next_crew_refresh)}
-							{' '}at {Moment(STTApi.lastSync).add(gauntlet.seconds_to_next_crew_refresh, 's').format('h:mma')}.
+							{' '}at {Moment().add(gauntlet.seconds_to_next_crew_refresh, 's').format('h:mma')}.
 						</p>
 					)
 				};

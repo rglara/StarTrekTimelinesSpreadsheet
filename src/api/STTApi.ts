@@ -56,6 +56,8 @@ export class STTApiClass {
 
 	public serverAddress: string = 'http://localhost/';
 
+	// Used with Moment when adding an offset. Does not need to be used when
+	// doing a fresh request for data such as for gauntlet or voyage status
 	public lastSync: any;
 
 	constructor() {
