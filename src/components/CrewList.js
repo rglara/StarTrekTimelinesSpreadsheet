@@ -387,7 +387,8 @@ export class CrewList extends React.Component {
 						return <span />;
 					}
 				},
-				Aggregated: row => <span />
+				aggregate: vals => vals.map(v => v ? 1 : 0).reduce((a, b) => a + b, 0),
+				Aggregated: row => <span>{Math.floor(row.value)}</span>
 			});
 		}
 
@@ -430,7 +431,8 @@ export class CrewList extends React.Component {
 						return <span />;
 					}
 				},
-				Aggregated: row => <span />
+				aggregate: vals => vals.map(v => v ? 1 : 0).reduce((a, b) => a + b, 0),
+				Aggregated: row => <span>{Math.floor(row.value)}</span>
 			});
 		}
 

@@ -13,17 +13,17 @@ import STTApi from '../api';
 export class CrewPage extends React.Component {
 	constructor(props) {
         super(props);
-        
+
         this.state = {
             showEveryone: false,
             showBuyback: true,
             showCanTrain: false,
             groupRarity: false,
             compactMode: false,
-            crewData: this.loadCrewData(false, true)
+            crewData: this.loadCrewData(false, false)
         };
     }
-    
+
     componentDidMount() {
         this.refs.crewList.filter('');
 
