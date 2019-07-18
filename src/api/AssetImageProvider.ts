@@ -83,6 +83,11 @@ export class AssetImageProvider implements ImageProvider {
             return { id, url: cachedUrl };
         }
 
+        //HACK; don't bother until the asset bundle can be processed again
+        if (true) {
+            return {id, url: undefined };
+        }
+
         let data: any;
         try {
             data = await STTApi.networkHelper.getRaw(this.getAssetUrl(iconFile) + '.sd', undefined);
