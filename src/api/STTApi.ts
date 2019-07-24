@@ -17,9 +17,9 @@
 */
 import { NetworkInterface } from './NetworkInterface';
 import { NetworkFetch } from './NetworkFetch';
-import { DexieCache, QuestsTable, EquipmentTable, ImmortalsTable, ConfigTable, WikiImageTable } from './Cache';
+import { DexieCache, QuestsTable, EquipmentTable, ImmortalsDB, ConfigTable, WikiImageTable } from './Cache';
 import { IChallengeSuccess } from './MissionCrewSuccess';
-import { matchCrew, calculateBuffConfig, IBuffStat } from './CrewTools';
+import { matchCrew, calculateBuffConfig, BuffStat } from './CrewTools';
 import { MinimalComplement } from './MinimalComplement';
 import { mergeDeep } from './ObjectMerge';
 import { ImageProvider, ImageCache } from './ImageProvider';
@@ -37,22 +37,22 @@ export class STTApiClass {
 	private _starbaseData: any;
 	private _fleetMemberInfo: any;
 	private _cache: DexieCache;
-	private _buffConfig: { [index: string]: IBuffStat };
+	private _buffConfig: { [index: string]: BuffStat };
 	private _neededEquipment: NeededEquipmentClass;
 
 	public platformConfig: any;
-	public crewAvatars: any;
+	public crewAvatars: CrewAvatar[];
 	public serverConfig: any;
 	public shipSchematics: any;
 	public fleetData: any;
-	public roster: any;
+	public roster: CrewData[];
 	public ships: any;
 	public missions: any;
 	public missionSuccess!: IChallengeSuccess[];
 	public minimalComplement?: MinimalComplement;
 	public imageProvider!: ImageProvider;
 	public inWebMode: boolean;
-	public allcrew!: any[];
+	public allcrew!: CrewData[];
 
 	public serverAddress: string = 'http://localhost/';
 
@@ -70,6 +70,7 @@ export class STTApiClass {
 
 		this.inWebMode = false;
 		this._buffConfig = {};
+		this.allcrew = [];
 	}
 
 	setWebMode(webMode: boolean, keepServerAddress: boolean) {
@@ -86,7 +87,7 @@ export class STTApiClass {
 	}
 
 	async refreshEverything(logout: boolean) {
-		this.crewAvatars = null;
+		this.crewAvatars = [];
 		this.serverConfig = null;
 		this._playerData = null;
 		this.platformConfig = null;
@@ -94,7 +95,7 @@ export class STTApiClass {
 		this._starbaseData = null;
 		this.fleetData = null;
 		this._fleetMemberInfo = null;
-		this.roster = null;
+		this.roster = [];
 		this.ships = null;
 		this.missions = null;
 		this.missionSuccess = [];
@@ -140,7 +141,7 @@ export class STTApiClass {
 		return this._cache.equipment;
 	}
 
-	get immortals(): Dexie.Table<ImmortalsTable, string> {
+	get immortals(): Dexie.Table<ImmortalsDB, string> {
 		return this._cache.immortals;
 	}
 
@@ -184,12 +185,12 @@ export class STTApiClass {
 		return this.platformConfig.config.ship_trait_names[trait] ? this.platformConfig.config.ship_trait_names[trait] : trait;
 	}
 
-	getCrewAvatarById(id: number): any {
-		return this.crewAvatars.find((avatar: any) => avatar.id === id);
+	getCrewAvatarById(id: number): CrewAvatar | undefined {
+		return this.crewAvatars.find((avatar: CrewAvatar) => avatar.id === id);
 	}
 
-	getCrewAvatarBySymbol(symbol: string): any {
-		return this.crewAvatars.find((avatar: any) => avatar.symbol === symbol);
+	getCrewAvatarBySymbol(symbol: string): CrewAvatar | undefined {
+		return this.crewAvatars.find((avatar: CrewAvatar) => avatar.symbol === symbol);
 	}
 
 	async login(username: string, password: string, autoLogin: boolean): Promise<any> {
@@ -310,7 +311,7 @@ export class STTApiClass {
 			.then((data: any) => this.applyUpdates(data));
 	}
 
-	async loadServerConfig(): Promise<any> {
+	async loadServerConfig(): Promise<void> {
 		let data = await this.executeGetRequest('config', {
 			platform: 'WebGLPlayer',
 			device_type: 'Desktop',
@@ -321,21 +322,21 @@ export class STTApiClass {
 		this.serverConfig = data;
 	}
 
-	async loadCrewArchetypes(): Promise<any> {
+	async loadCrewArchetypes(): Promise<void> {
 		let data = await this.executeGetRequest('character/get_avatar_crew_archetypes');
 		if (data.crew_avatars) {
-			this.crewAvatars = data.crew_avatars;
+			this.crewAvatars = data.crew_avatars as CrewAvatar[];
 		} else {
 			throw new Error('Invalid data for crew avatars!');
 		}
 	}
 
-	async loadPlatformConfig(): Promise<any> {
+	async loadPlatformConfig(): Promise<void> {
 		let data = await this.executeGetRequest('config/platform');
 		this.platformConfig = data;
 	}
 
-	async loadPlayerData(): Promise<any> {
+	async loadPlayerData(): Promise<void> {
 		let data = await this.executeGetRequest('player');
 		if (data.player) {
 			this._playerData = data;
@@ -349,7 +350,7 @@ export class STTApiClass {
 		}
 	}
 
-	async resyncPlayerCurrencyData(): Promise<any> {
+	async resyncPlayerCurrencyData(): Promise<void> {
 		// this code reloads minimal stuff to update the player information and merge things back in
 		let data = await this.executeGetRequest('player/resync_currency');
 		if (data.player) {
@@ -369,7 +370,7 @@ export class STTApiClass {
 		}
 	}
 
-	async loadShipSchematics(): Promise<any> {
+	async loadShipSchematics(): Promise<void> {
 		let data = await this.executeGetRequest('ship_schematic');
 		if (data.schematics) {
 			this.shipSchematics = data.schematics;
@@ -378,10 +379,10 @@ export class STTApiClass {
 		}
 	}
 
-	async loadFrozenCrew(symbol: string): Promise<any> {
+	async loadFrozenCrew(symbol: string): Promise<CrewDTO> {
 		let data = await this.executePostRequest('stasis_vault/immortal_restore_info', { symbol: symbol });
 		if (data.crew) {
-			return data.crew;
+			return data.crew as CrewDTO;
 		} else {
 			throw new Error('Invalid data for frozen crew!');
 		}
@@ -404,7 +405,7 @@ export class STTApiClass {
 		}
 	}
 
-	async loadFleetMemberInfo(guildId: string): Promise<any> {
+	async loadFleetMemberInfo(guildId: string): Promise<void> {
 		let data = await this.executePostRequest('fleet/complete_member_info', { guild_id: guildId });
 		if (data) {
 			this._fleetMemberInfo = data;
@@ -413,7 +414,7 @@ export class STTApiClass {
 		}
 	}
 
-	async loadFleetData(guildId: string): Promise<any> {
+	async loadFleetData(guildId: string): Promise<void> {
 		let data = await this.executeGetRequest('fleet/' + guildId);
 		if (data.fleet) {
 			this.fleetData = data.fleet;
@@ -422,7 +423,7 @@ export class STTApiClass {
 		}
 	}
 
-	async loadStarbaseData(guildId: string): Promise<any> {
+	async loadStarbaseData(guildId: string): Promise<void> {
 		let data = await this.executeGetRequest('starbase/get');
 		if (data) {
 			this._starbaseData = data;
@@ -444,7 +445,7 @@ export class STTApiClass {
 	// 	return this._net.get(CONFIG.URL_GITHUBRELEASES, {});
 	// }
 
-	async refreshRoster(): Promise<any> {
+	async refreshRoster(): Promise<void> {
 		// TODO: need to reload icon urls as well
 		this.roster = await matchCrew(this._playerData.player.character);
 	}
@@ -518,15 +519,24 @@ export class STTApiClass {
 	}
 
 	/// Takes the raw stats from a crew and applies the current player buff config (useful for imported crew)
-	applyBuffConfig(crew: any): void {
+	applyBuffConfig(crew: CrewDTO): void {
 		const getMultiplier = (skill: string, stat: string) => {
 			return this._buffConfig[`${skill}_${stat}`].multiplier + this._buffConfig[`${skill}_${stat}`].percent_increase;
 		};
 
 		for (let skill in crew.base_skills) {
-			crew.skills[skill].core = Math.round(crew.base_skills[skill].core * getMultiplier(skill, 'core'));
-			crew.skills[skill].range_min = Math.round(crew.base_skills[skill].range_min * getMultiplier(skill, 'range_min'));
-			crew.skills[skill].range_max = Math.round(crew.base_skills[skill].range_max * getMultiplier(skill, 'range_max'));
+			let cs: any = crew.skills;
+			let css: SkillDTO = cs[skill];
+			let cb: any = crew.base_skills;
+			let cbs: SkillDTO = cb[skill];
+
+			if (!cbs) {
+				continue;
+			}
+
+			css.core = Math.round(cbs.core * getMultiplier(skill, 'core'));
+			css.range_min = Math.round(cbs.range_min * getMultiplier(skill, 'range_min'));
+			css.range_max = Math.round(cbs.range_max * getMultiplier(skill, 'range_max'));
 		}
 	}
 
@@ -534,7 +544,196 @@ export class STTApiClass {
 		return this._neededEquipment.filterNeededEquipment(filters, limitCrew);
 	}
 
-	getEquipmentManager() {
+	getEquipmentManager() : NeededEquipmentClass {
 		return this._neededEquipment;
 	}
+}
+
+export interface CrewAvatar {
+	id: number;
+	symbol: string;
+	name: string;
+	short_name: string;
+	max_rarity: number;
+	traits: string[];
+	traits_hidden: string[];
+	skills: string[];
+	default_avatar: boolean;
+	full_body: ImageData;
+	icon: ImageData;
+	portrait: ImageData;
+
+	hide_from_cryo: boolean;
+
+	// These properties are added by the app
+	iconUrl?: string;
+}
+
+export interface ImageData {
+	file: string;
+}
+
+export interface SkillDTO {
+	core: number;
+	range_min: number;
+	range_max: number;
+}
+export interface SkillData {
+	core: number;
+	min: number;
+	max: number;
+	voy?: number;
+}
+
+export interface CrewDTO {
+	action: {
+		ability: {
+			amount: number;
+			condition: number;
+			type: number;
+		};
+		bonus_amount: number;
+		bonus_type: number;
+		cooldown: number;
+		crew: number;
+		duration: number;
+		icon: ImageData;
+		initial_cooldown: number;
+		name: string;
+		special: boolean;
+		symbol: string;
+	};
+
+	active_id: any;
+	active_index: number;
+	active_status: number;
+	archetype_id: number;
+	base_skills: {
+		command_skill?: SkillDTO;
+		diplomacy_skill?: SkillDTO;
+		engineering_skill?: SkillDTO;
+		medicine_skill?: SkillDTO;
+		science_skill?: SkillDTO;
+		security_skill?: SkillDTO;
+	};
+	cap_achiever: {
+		date: number;
+		name: string;
+	};
+
+	cross_fuse_targets: any;
+	default_avatar: boolean;
+	equipment: number[][];
+	equipment_rank: number;
+	equipment_slots: {
+		level: number;
+		archetype: number;
+	} [];
+	expires_in: any;
+	favorite: boolean;
+	flavor: string;
+	full_body: ImageData;
+	icon: ImageData;
+	id: number;
+	in_buy_back_state: boolean;
+	level: number;
+	max_equipment_rank: number;
+	max_level: number;
+	max_rarity: number;
+	max_xp: number;
+	name: string;
+	passive_id: any;
+	passive_index: number;
+	passive_status: number;
+	portrait: ImageData;
+	rarity: number;
+	ship_battle: {
+		accuracy: number;
+		crit_bonus: number;
+		crit_chance: number;
+		evasion: number;
+	};
+	short_name: string;
+	skills: {
+		command_skill?: SkillDTO;
+		diplomacy_skill?: SkillDTO;
+		engineering_skill?: SkillDTO;
+		medicine_skill?: SkillDTO;
+		science_skill?: SkillDTO;
+		security_skill?: SkillDTO;
+	};
+	symbol: string;
+	traits: string[];
+	traits_hidden: string[];
+	voice_over: any;
+	xp: number;
+	xp_for_current_level: number;
+	xp_for_next_level: number;
+
+	// These properties are added by the app
+	//TODO: where is this needed?
+	/** @deprecated */
+	archetypes?: any;
+}
+
+export interface CrewData {
+
+	full_body: ImageData;
+	id: number;
+	crew_id?: number;
+	//TODO: remove if unused
+	active_id?: any;
+	level: number;
+	max_level?: number;
+	max_rarity: number;
+	name: string;
+	portrait: ImageData;
+	rarity: number;
+	short_name: string;
+	command_skill: SkillData;
+	diplomacy_skill: SkillData;
+	engineering_skill: SkillData;
+	medicine_skill: SkillData;
+	science_skill: SkillData;
+	security_skill: SkillData;
+	command_skill_core?: number;
+	diplomacy_skill_core?: number;
+	engineering_skill_core?: number;
+	medicine_skill_core?: number;
+	science_skill_core?: number;
+	security_skill_core?: number;
+	command_skill_voy?: number;
+	diplomacy_skill_voy?: number;
+	engineering_skill_voy?: number;
+	medicine_skill_voy?: number;
+	science_skill_voy?: number;
+	security_skill_voy?: number;
+
+	symbol: string;
+	traits: string;
+	rawTraits: string[];
+
+	isExternal: boolean;
+	frozen: number;
+	buyback: boolean;
+
+	iconUrl?: string;
+	iconBodyUrl?: string;
+	expires_in?: number;
+	favorite?: boolean;
+	usage_value?: number;
+	voyage_score?: number;
+	gauntlet_score?: number;
+
+	ship_battle?: any;
+	action?: any;
+	flavor?: string;
+	equipment_slots: {
+		archetype: number;
+		level: number;
+		symbol?: any;
+		have?: boolean;
+	}[];
+
+	archetypes?: any[];
 }

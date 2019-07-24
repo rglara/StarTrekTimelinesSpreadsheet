@@ -7,6 +7,7 @@ import { loadMissionData } from './MissionTools';
 import { loadFullTree, fixupAllCrewIds } from './EquipmentTools';
 import { refreshAllFactions, loadFactionStore } from './FactionTools';
 import { calculateMissionCrewSuccess, calculateMinimalComplementAsync } from './MissionCrewSuccess';
+import { CrewData, CrewDTO } from "./STTApi";
 
 export async function loginSequence(onProgress: (description: string) => void, loadMissions: boolean = true) {
     let mainResources = [
@@ -65,7 +66,7 @@ export async function loginSequence(onProgress: (description: string) => void, l
     }
 
     onProgress('Analyzing crew...');
-    let roster = await matchCrew(STTApi.playerData.character);
+    let roster: CrewData[] = await matchCrew(STTApi.playerData.character);
     STTApi.roster = roster;
 
     if (loadMissions) {
@@ -92,8 +93,10 @@ export async function loginSequence(onProgress: (description: string) => void, l
         if (crew.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getCrewImageUrl(crew, false, crew.id).then((found: IFoundResult) => {
                 onProgress('Caching crew images... (' + current++ + '/' + total + ')');
-                let crew = STTApi.roster.find((crew: any) => crew.id === found.id);
-                crew.iconUrl = found.url;
+                let crew = STTApi.roster.find(c => c.id === found.id);
+                if (crew) {
+                    crew.iconUrl = found.url;
+                }
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
             // Image is already cached
@@ -106,8 +109,10 @@ export async function loginSequence(onProgress: (description: string) => void, l
         if (crew.iconBodyUrl === '') {
             iconPromises.push(STTApi.imageProvider.getCrewImageUrl(crew, true, crew.id).then((found: IFoundResult) => {
                 onProgress('Caching crew images... (' + current++ + '/' + total + ')');
-                let crew = STTApi.roster.find((crew: any) => crew.id === found.id);
-                crew.iconBodyUrl = found.url;
+                let crew = STTApi.roster.find(c => c.id === found.id);
+                if (crew) {
+                    crew.iconBodyUrl = found.url;
+                }
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
             // Image is already cached
@@ -126,8 +131,10 @@ export async function loginSequence(onProgress: (description: string) => void, l
         if (crew.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getCrewImageUrl(crew, false, crew.id).then((found: IFoundResult) => {
                 onProgress('Caching crew images... (' + current++ + '/' + total + ')');
-                let crew = STTApi.crewAvatars.find((crew: any) => crew.id === found.id);
-                crew.iconUrl = found.url;
+                let crew = STTApi.getCrewAvatarById(found.id);
+                if (crew) {
+                    crew.iconUrl = found.url;
+                }
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
             // Image is already cached
@@ -237,8 +244,9 @@ export async function loginSequence(onProgress: (description: string) => void, l
     onProgress('Loading crew cache...');
 
     try {
-        let allcrew = await STTApi.networkHelper.get(STTApi.serverAddress + 'allcrew.json', undefined);
-        STTApi.allcrew = formatAllCrew(allcrew);
+        let allcrew : CrewDTO[] | undefined = undefined;
+        allcrew = await STTApi.networkHelper.get(STTApi.serverAddress + 'allcrew.json', undefined);
+        STTApi.allcrew = formatAllCrew(allcrew || []);
     }
     catch (e) {
         console.error(e);
@@ -251,8 +259,10 @@ export async function loginSequence(onProgress: (description: string) => void, l
         if (crew.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getCrewImageUrl(crew, false, crew.id).then((found: IFoundResult) => {
                 onProgress('Caching crew images... (' + current++ + '/' + total + ')');
-                let crew = STTApi.allcrew.find((crew: any) => crew.id === found.id);
-                crew.iconUrl = found.url;
+                let crew = STTApi.allcrew.find(crew => crew.id === found.id);
+                if (crew) {
+                    crew.iconUrl = found.url;
+                }
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
             // Image is already cached
@@ -272,7 +282,7 @@ export async function loginSequence(onProgress: (description: string) => void, l
     }
 
     // We no longer need to keep these around
-    STTApi.allcrew.forEach((crew: any) => {
+    STTApi.allcrew.forEach((crew: CrewData) => {
         crew.archetypes = [];
     });
 

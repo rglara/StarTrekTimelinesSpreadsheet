@@ -1,5 +1,6 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
+import { CrewData, SkillData } from "./STTApi";
 
 export interface IChallengeSuccessTrait
 {
@@ -92,7 +93,7 @@ export function calculateMissionCrewSuccess(): Array<IChallengeSuccess> {
                         });
                     }
 
-                    STTApi.roster.forEach((crew: any) => {
+                    STTApi.roster.forEach((crew: CrewData) => {
                         let rawTraits = new Set(crew.rawTraits);
 
                         if (entry.cadet) {
@@ -114,14 +115,17 @@ export function calculateMissionCrewSuccess(): Array<IChallengeSuccess> {
                         }
 
                         // Compute roll for crew
-                        let rollCrew = crew[entry.skill].core;
+                        let cAny :any = crew;
+                        let csk: SkillData = cAny[entry.skill];
+
+                        let rollCrew = csk.core;
 
                         // If crew doesn't have a skill, its default value is lowest_skill / 5
                         if (rollCrew == 0) {
                             let lowestSkill = 99999;
                             for (let skill in CONFIG.SKILLS) {
-                                if ((crew[skill].core > 0) && (lowestSkill > crew[skill].core)) {
-                                    lowestSkill = crew[skill].core
+                                if ((csk.core > 0) && (lowestSkill > csk.core)) {
+                                    lowestSkill = csk.core
                                 }
                             }
 
@@ -133,9 +137,9 @@ export function calculateMissionCrewSuccess(): Array<IChallengeSuccess> {
                             rollCrew += matchingTraits * entry.traits[0].bonus;
                         }
 
-                        if (rollCrew + crew[entry.skill].max > entry.roll) // Does this crew even have a chance?
+                        if (rollCrew + csk.max > entry.roll) // Does this crew even have a chance?
                         {
-                            let successPercentage: number = (rollCrew + crew[entry.skill].max - entry.roll) * 100 / (crew[entry.skill].max - crew[entry.skill].min);
+                            let successPercentage: number = (rollCrew + csk.max - entry.roll) * 100 / (csk.max - csk.min);
                             if (successPercentage > 100) {
                                 successPercentage = 100;
                             }

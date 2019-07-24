@@ -2,6 +2,7 @@ import STTApi from "./index";
 import CONFIG from "./CONFIG";
 import { ImageProvider, ImageCache, IBitmap, IFoundResult } from './ImageProvider';
 import { WorkerPool } from './WorkerPool';
+import { CrewData } from "./STTApi";
 
 export class AssetImageProvider implements ImageProvider {
     private _imageCache: ImageCache;
@@ -31,7 +32,7 @@ export class AssetImageProvider implements ImageProvider {
         return this._imageCache.getCached(withIcon.icon.file);
     }
 
-    getCrewCached(crew: any, fullBody: boolean): string {
+    getCrewCached(crew: CrewData, fullBody: boolean): string {
         return this._imageCache.getCached(fullBody ? crew.full_body.file : crew.portrait.file);
     }
 
@@ -39,7 +40,7 @@ export class AssetImageProvider implements ImageProvider {
         return this._imageCache.getCached(((assetName.length > 0) ? (assetName + '_') : '') + spriteName);
     }
 
-    getCrewImageUrl(crew: any, fullBody: boolean, id: any): Promise<IFoundResult> {
+    getCrewImageUrl(crew: CrewData, fullBody: boolean, id: any): Promise<IFoundResult> {
         if (!crew) {
             return this.getImageUrl("", id);
         }

@@ -1,6 +1,7 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
 import { ImageProvider, IFoundResult } from './ImageProvider';
+import { CrewData } from "./STTApi";
 
 async function getWikiImageUrl(fileName: string, id: any): Promise<IFoundResult> {
 	let entry = await STTApi.wikiImages.where('fileName').equals(fileName).first();
@@ -49,7 +50,7 @@ async function getWikiImageUrl(fileName: string, id: any): Promise<IFoundResult>
 }
 
 export class WikiImageProvider implements ImageProvider {
-	getCrewImageUrl(crew: any, fullBody: boolean, id: any): Promise<IFoundResult> {
+	getCrewImageUrl(crew: CrewData, fullBody: boolean, id: any): Promise<IFoundResult> {
 		let fileName = crew.name.split(' ').join('_') + (fullBody ? '' : '_Head') + '.png';
 		return getWikiImageUrl(fileName, id);
 	}
@@ -83,7 +84,7 @@ export class WikiImageProvider implements ImageProvider {
 		return '';
 	}
 
-	getCrewCached(crew: any, fullBody: boolean): string {
+	getCrewCached(crew: CrewData, fullBody: boolean): string {
 		return '';
 	}
 

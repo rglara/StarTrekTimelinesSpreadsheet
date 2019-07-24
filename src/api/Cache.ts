@@ -1,8 +1,9 @@
 import Dexie from "dexie";
+import { CrewDTO } from "./STTApi";
 
 export class DexieCache extends Dexie {
     private _questsTable!: Dexie.Table<QuestsTable, number>;
-    private _immortalsTable!: Dexie.Table<ImmortalsTable, string>;
+    private _immortalsTable!: Dexie.Table<ImmortalsDB, string>;
     private _equipmentTable!: Dexie.Table<EquipmentTable, string>;
     private _wikiImageTable!: Dexie.Table<WikiImageTable, string>;
     private _config!: Dexie.Table<ConfigTable, string>;
@@ -10,19 +11,19 @@ export class DexieCache extends Dexie {
     get quests(): Dexie.Table<QuestsTable, number> {
 		return this._questsTable;
     }
-    
-    get immortals(): Dexie.Table<ImmortalsTable, string> {
+
+    get immortals(): Dexie.Table<ImmortalsDB, string> {
 		return this._immortalsTable;
     }
 
     get equipment(): Dexie.Table<EquipmentTable, string> {
 		return this._equipmentTable;
     }
-    
+
     get wikiImages(): Dexie.Table<WikiImageTable, string> {
 		return this._wikiImageTable;
     }
-    
+
     get config(): Dexie.Table<ConfigTable, string> {
 		return this._config;
 	}
@@ -60,9 +61,9 @@ export interface EquipmentTable {
     archetypeCache: any
 }
 
-export interface ImmortalsTable {
+export interface ImmortalsDB {
     symbol: string,
-    crew: any
+    crew: CrewDTO
 }
 
 export interface WikiImageTable {

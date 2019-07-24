@@ -16,13 +16,13 @@ export interface ImageCache {
 }
 
 export interface ImageProvider {
-	getCrewImageUrl(crew: any, fullBody: boolean, id: any): Promise<IFoundResult>;
+	getCrewImageUrl(crew: CrewData, fullBody: boolean, id: any): Promise<IFoundResult>;
 	getShipImageUrl(ship: any, id: any): Promise<IFoundResult>;
 	getItemImageUrl(item: any, id: any): Promise<IFoundResult>;
 	getFactionImageUrl(faction: any, id: any): Promise<IFoundResult>;
 	getSprite(assetName: string, spriteName: string, id: any): Promise<IFoundResult>;
 	getImageUrl(iconFile: string, id: any): Promise<IFoundResult>;
 	getCached(withIcon: any): string;
-	getCrewCached(crew: any, fullBody: boolean): string;
+	getCrewCached(crew: CrewData, fullBody: boolean): string;
 	getSpriteCached(assetName: string, spriteName: string): string;
 }

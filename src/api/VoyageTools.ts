@@ -1,5 +1,6 @@
 import STTApi from './index';
 import { mergeDeep } from './ObjectMerge';
+import { CrewData } from './STTApi';
 
 export async function loadVoyage(voyageId: number, newOnly: boolean = true): Promise<any> {
 	let data = await STTApi.executePostRequest('voyage/refresh', { voyage_status_id: voyageId, new_only: newOnly });
@@ -82,11 +83,11 @@ export async function startVoyage(
 	// Validate all selected crew is available and not already active
 	selectedCrewIds.forEach(crewid => {
 		if (!availableCrew.has(crewid)) {
-			let crew = STTApi.roster.find((crew: any) => crew.crew_id === crewid);
+			let crew = STTApi.roster.find((crew: CrewData) => crew.crew_id === crewid);
 			throw new Error(
 				`Cannot send '${
 					crew ? crew.name : crewid
-				}' out on a voyage because it's already active! Please DO NOT use this tool at the same time as the game on any platform. Close all game clients then close and restart the tool to try again!`
+				}' out on a voyage because they are already active! Please DO NOT use this tool at the same time as the game on any platform. Close all game clients then close and restart the tool to try again!`
 			);
 		}
 	});

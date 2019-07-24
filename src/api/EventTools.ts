@@ -45,7 +45,7 @@ export function bonusCrewForCurrentEvent(): BonusCrew | undefined {
         }
 
         for (let symbol in eventCrew) {
-            let foundCrew = STTApi.roster.find((crew: any) => crew.symbol === symbol);
+            let foundCrew = STTApi.roster.find(crew => crew.symbol === symbol);
             if (foundCrew) {
                 result.crewIds.push(foundCrew.crew_id || foundCrew.id);
             }

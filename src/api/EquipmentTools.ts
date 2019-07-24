@@ -1,10 +1,11 @@
 import STTApi from './index';
+import { CrewData } from './STTApi';
 
-export function fixupAllCrewIds() {
+export function fixupAllCrewIds() : void {
 	// Now replace the ids with proper ones
-	STTApi.allcrew.forEach((crew: any) => {
-		crew.equipment_slots.forEach((es: any) => {
-			let acached = crew.archetypes.find((a: any) => a.id === es.archetype);
+	STTApi.allcrew.forEach((crew: CrewData) => {
+		(crew.equipment_slots || []).forEach((es: any) => {
+			let acached = (crew.archetypes || []).find((a: any) => a.id === es.archetype);
 			if (!acached) {
 				console.warn(`Something went wrong looking for equipment '${es.archetype}' of '${crew.name}'`);
 				return;
@@ -90,8 +91,8 @@ export async function loadFullTree(onProgress: (description: string) => void, re
 	});
 
 	// Search for all equipment currently assigned to crew
-	STTApi.roster.forEach((crew: any) => {
-		crew.equipment_slots.forEach((es: any) => {
+	STTApi.roster.forEach((crew: CrewData) => {
+		crew.equipment_slots.forEach(es => {
 			if (!mapEquipment.has(es.archetype)) {
 				missingEquipment.push(es.archetype);
 			}
@@ -192,7 +193,7 @@ export interface IEquipNeed {
 interface IUnparsedEquipment {
 	archetype: number;
 	need: number;
-	crew: any;
+	crew: CrewData;
 }
 
 export class NeededEquipmentClass {
@@ -212,16 +213,16 @@ export class NeededEquipmentClass {
 		return neededEquipment;
 	}
 
-	private _getFilteredCrew(filters: IEquipNeedFilter, limitCrew: number[]): any[] {
+	private _getFilteredCrew(filters: IEquipNeedFilter, limitCrew: number[]): CrewData[] {
 		if (limitCrew.length === 0) {
 			// filter out `crew.buyback` by default
-			return STTApi.roster.filter((c: any) => !c.buyback);
+			return STTApi.roster.filter((c: CrewData) => !c.buyback);
 		} else {
-			let selectedCrew: any[] = [];
-			limitCrew.forEach((id: any) => {
-				let crew = STTApi.roster.find((c: any) => c.id === id);
+			let selectedCrew: CrewData[] = [];
+			limitCrew.forEach((id: number) => {
+				let crew = STTApi.roster.find((c: CrewData) => c.id === id);
 				if (!crew) {
-					crew = STTApi.allcrew.find((c: any) => c.id === id);
+					crew = STTApi.allcrew.find((c: CrewData) => c.id === id);
 				}
 
 				if (crew) {
@@ -441,12 +442,12 @@ export class NeededEquipmentClass {
 		return mapUnowned;
 	}
 
-	private _getNeededEquipment(filteredCrew: any[], filters: IEquipNeedFilter) {
+	private _getNeededEquipment(filteredCrew: CrewData[], filters: IEquipNeedFilter) {
 		let unparsedEquipment: IUnparsedEquipment[] = [];
 		let mapUnowned: Map<number, IEquipNeed> = new Map();
 		for (let crew of filteredCrew) {
 			let lastEquipmentLevel = 1;
-			crew.equipment_slots.forEach((equipment: any) => {
+			crew.equipment_slots.forEach(equipment => {
 				if (!equipment.have) {
 					unparsedEquipment.push({ archetype: equipment.archetype, need: 1, crew: crew });
 				}
@@ -458,7 +459,7 @@ export class NeededEquipmentClass {
 				let feCrew = STTApi.allcrew.find(c => c.symbol === crew.symbol);
 				if (feCrew) {
 					let unparsedEquipmentFE: IUnparsedEquipment[] = [];
-					feCrew.equipment_slots.forEach((equipment: any) => {
+					feCrew.equipment_slots.forEach(equipment => {
 						if (equipment.level > lastEquipmentLevel) {
 							unparsedEquipmentFE.push({ archetype: equipment.archetype, need: 1, crew: crew });
 						}

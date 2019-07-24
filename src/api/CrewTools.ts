@@ -1,16 +1,17 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
+import { CrewAvatar, CrewData, CrewDTO} from './STTApi'
 
-export interface IBuffStat {
+export interface BuffStat {
 	multiplier: number;
 	percent_increase: number;
 };
 
-export function calculateBuffConfig(): { [index: string]: IBuffStat } {
+export function calculateBuffConfig(): { [index: string]: BuffStat } {
 	const skills = ['command_skill', 'science_skill', 'security_skill', 'engineering_skill', 'diplomacy_skill', 'medicine_skill'];
 	const buffs = ['core', 'range_min', 'range_max'];
 
-	const buffConfig: { [index: string]: IBuffStat } = {};
+	const buffConfig: { [index: string]: BuffStat } = {};
 
 	for(let skill of skills) {
 		for(let buff of buffs) {
@@ -36,18 +37,8 @@ export function calculateBuffConfig(): { [index: string]: IBuffStat } {
 	return buffConfig;
 }
 
-// WIP Interface for the Crew data.
-export interface ICrew {
-	level: number;
-	max_level: number;
-	rarity: number;
-	in_buy_back_state: boolean;
-	favorite: boolean;
-	id: number;
-	active_id: number;
-}
 
-function rosterFromCrew(rosterEntry: any, crew: any|ICrew): void {
+function rosterFromCrew(rosterEntry: CrewData, crew: CrewDTO): void {
 	rosterEntry.level = crew.level;
 	rosterEntry.max_level = crew.max_level;
 	rosterEntry.rarity = crew.rarity;
@@ -61,12 +52,14 @@ function rosterFromCrew(rosterEntry: any, crew: any|ICrew): void {
 	rosterEntry.gauntlet_score = 0;
 
 	for (let skill in crew.skills) {
-		rosterEntry[skill].core = crew.skills[skill].core;
-		rosterEntry[skill].min = crew.skills[skill].range_min;
-		rosterEntry[skill].max = crew.skills[skill].range_max;
-		let profAvg = (crew.skills[skill].range_max + crew.skills[skill].range_min) / 2;
-		rosterEntry[skill].voy = (crew.skills[skill].core + profAvg) || 0;
-		rosterEntry.voyage_score += rosterEntry[skill].voy;
+		let re: any = rosterEntry;
+		let cs: any = crew.skills;
+		re[skill].core = cs[skill].core;
+		re[skill].min = cs[skill].range_min;
+		re[skill].max = cs[skill].range_max;
+		let profAvg = (cs[skill].range_max + cs[skill].range_min) / 2;
+		re[skill].voy = (cs[skill].core + profAvg) || 0;
+		rosterEntry.voyage_score += re[skill].voy;
 		rosterEntry.gauntlet_score += profAvg;
 	}
 
@@ -95,7 +88,7 @@ function rosterFromCrew(rosterEntry: any, crew: any|ICrew): void {
 		equipment.have = false;
 	});
 
-	crew.equipment.forEach((equipment: any) => {
+	crew.equipment.forEach(equipment => {
 		rosterEntry.equipment_slots[equipment[0]].have = true;
 	});
 
@@ -111,7 +104,7 @@ function rosterFromCrew(rosterEntry: any, crew: any|ICrew): void {
 	}
 }
 
-function getDefaultsInner(crew: any): any {
+function getDefaultsInner(crew?: CrewAvatar | CrewDTO): CrewData | undefined {
 	if (!crew) {
 		return undefined;
 	}
@@ -121,18 +114,19 @@ function getDefaultsInner(crew: any): any {
 		level: 0, rarity: 0, frozen: 0, buyback: false, traits: '', rawTraits: [], portrait: crew.portrait, full_body: crew.full_body,
 		command_skill: { 'core': 0, 'min': 0, 'max': 0 }, science_skill: { 'core': 0, 'min': 0, 'max': 0 },
 		security_skill: { 'core': 0, 'min': 0, 'max': 0 }, engineering_skill: { 'core': 0, 'min': 0, 'max': 0 },
-		diplomacy_skill: { 'core': 0, 'min': 0, 'max': 0 }, medicine_skill: { 'core': 0, 'min': 0, 'max': 0 }
+		diplomacy_skill: { 'core': 0, 'min': 0, 'max': 0 }, medicine_skill: { 'core': 0, 'min': 0, 'max': 0 },
+		equipment_slots: []
 	};
 }
 
-function getDefaults(id: number): any {
+function getDefaults(id: number): CrewData | undefined {
 	return getDefaultsInner(STTApi.getCrewAvatarById(id));
 }
 
-export function formatAllCrew(allcrew: any[]) {
-	let roster: any[] = [];
+export function formatAllCrew(allcrew: CrewDTO[]): CrewData[] {
+	let roster: CrewData[] = [];
 	let dupeChecker = new Set<string>();
-	allcrew.forEach((crew: any) => {
+	allcrew.forEach((crew: CrewDTO) => {
 		// Sometimes duplicates can sneak into our allcrew list, filter them out
 		let key = crew.symbol + '.' + crew.level + '.' + crew.rarity;
 		if (dupeChecker.has(key)) {
@@ -144,13 +138,16 @@ export function formatAllCrew(allcrew: any[]) {
 		STTApi.applyBuffConfig(crew);
 
 		let rosterEntry = getDefaultsInner(crew);
+		if (!rosterEntry) {
+			return;
+		}
 		rosterEntry.isExternal = true;
 
 		rosterFromCrew(rosterEntry, crew);
 
 		rosterEntry.archetypes = crew.archetypes;
 
-		let avatar = STTApi.crewAvatars.find((av: any) => av.symbol === crew.symbol);
+		let avatar = STTApi.getCrewAvatarBySymbol(crew.symbol);
 		if (avatar) {
 			rosterEntry.id = avatar.id;
 		}
@@ -167,13 +164,12 @@ export function formatAllCrew(allcrew: any[]) {
 	return roster;
 }
 
-export async function matchCrew(character: any): Promise<any> {
-	let roster: any[] = [];
-	let rosterEntry: any = {};
+export async function matchCrew(character: any): Promise<CrewData[]> {
+	let roster: CrewData[] = [];
 
 	// Add all the crew in the active roster
-	character.crew.forEach((crew: any) => {
-		rosterEntry = getDefaults(crew.archetype_id);
+	character.crew.forEach((crew: CrewDTO) => {
+		let rosterEntry = getDefaults(crew.archetype_id);
 		if (!rosterEntry) {
 			console.error(`Could not find the crew avatar for archetype_id ${crew.archetype_id}`);
 			return;
@@ -190,7 +186,7 @@ export async function matchCrew(character: any): Promise<any> {
 		let frozenPromises: Promise<any>[] = [];
 
 		character.stored_immortals.forEach((crew: any) => {
-			rosterEntry = getDefaults(crew.id);
+			let rosterEntry = getDefaults(crew.id);
 			if (!rosterEntry) {
 				console.error(`Could not find the crew avatar for frozen archetype_id ${crew.id}`);
 				return;
@@ -212,15 +208,16 @@ export async function matchCrew(character: any): Promise<any> {
 		crew.iconBodyUrl = STTApi.imageProvider.getCrewCached(crew, true);
 	}
 
-	function collect(skillField: string, extField: string, max:number) {
+	// collects usage_value field for the given skill
+	function collect(skillField: string, extField: string, max:number):void {
 		let filtered = roster.filter(c => !c.buyback);
 		if (extField) {
-			filtered = filtered.filter(c => c[skillField][extField] > 0)
-				.sort((a, b) => b[skillField][extField] - a[skillField][extField]);
+			filtered = filtered.filter((c: any) => c[skillField][extField] > 0)
+				.sort((a: any, b: any) => b[skillField][extField] - a[skillField][extField]);
 		}
 		else {
-			filtered = filtered.filter(c => c[skillField] > 0)
-				.sort((a, b) => b[skillField] - a[skillField]);
+			filtered = filtered.filter((c: any) => c[skillField] > 0)
+				.sort((a: any, b: any) => b[skillField] - a[skillField]);
 		}
 		for (let i = 0; i < max && i < filtered.length; ++i) {
 			// allow frozen items to be exported but not count towards top-10
@@ -261,7 +258,7 @@ export async function matchCrew(character: any): Promise<any> {
 	return roster;
 }
 
-async function loadFrozen(rosterEntry: any): Promise<void> {
+async function loadFrozen(rosterEntry: CrewData): Promise<void> {
 	let entry = await STTApi.immortals.where('symbol').equals(rosterEntry.symbol).first();
 	if (entry) {
 		//console.info('Found ' + rosterEntry.symbol + ' in the immortalized crew cache');
