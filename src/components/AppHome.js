@@ -10,20 +10,20 @@ import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
 import createHistory from 'history/createBrowserHistory';
 
 // #!if ENV === 'electron' || ENV === 'exp'
-import { LoginDialog } from './LoginDialog.js';
+import { LoginDialog } from './LoginDialog';
 // #!endif
 
-import { ShipList } from './ShipList.js';
-import { ItemPage } from './ItemPage.js';
-import { CrewPage } from './CrewPage.js';
-import { GauntletHelper } from './GauntletHelper.js';
-import { MissionExplorer } from './MissionExplorer.js';
-import { AboutAndHelp } from './AboutAndHelp.js';
-import { HomePage } from './HomePage.js';
-import { FleetDetails } from './FleetDetails.js';
-import { VoyageTools } from './VoyageTools.js';
-import { NeededEquipment } from './NeededEquipment.js';
-import { CrewDuplicates } from './CrewDuplicates.js';
+import { ShipList } from './ShipList';
+import { ItemPage } from './ItemPage';
+import { CrewPage } from './CrewPage';
+import { GauntletHelper } from './GauntletHelper';
+import { MissionExplorer } from './MissionExplorer';
+import { AboutAndHelp } from './AboutAndHelp';
+import { HomePage } from './HomePage';
+import { FleetDetails } from './FleetDetails';
+import { VoyageTools } from './VoyageTools';
+import { NeededEquipment } from './NeededEquipment';
+import { CrewDuplicates } from './CrewDuplicates';
 import { IncompleteMissions } from './IncompleteMissions';
 import { CryoCollections } from './CryoCollections';
 import { FactionDetails } from './FactionDetails';

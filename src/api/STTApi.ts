@@ -737,3 +737,86 @@ export interface CrewData {
 
 	archetypes?: any[];
 }
+
+export interface GauntletDTO {
+	bracket_id: string;
+	consecutive_wins: number;
+	contest_data: {
+		featured_skill: string;
+		primary_skill: string;
+		secondary_skill: string;
+		traits: string[];
+		selected_crew: GauntletCrewDTO[];
+
+		contest_rewards: any[];
+		ranked_rewards: any[];
+		crit_chance_per_trait: number;
+	};
+
+	gauntlet_id: number;
+	jackpot_crew: string;
+	opponents: GauntletOpponentDTO[];
+
+	rank: number;
+	score: number;
+	seconds_to_end: number;
+	seconds_to_join?: number; // only if gauntlet has not started
+	seconds_to_next_crew_refresh: number;
+	seconds_to_next_opponent_refresh: number;
+	state: string;
+	refresh_cost: { currency:number; amount:number};
+	revive_and_save_cost: { currency: number; amount: number };
+	revive_cost: {currency: number; amount: number};
+}
+
+export interface GauntletCrewDTO {
+	archetype_symbol: string;
+	crew_id: number;
+	crit_chance: number;
+	debuff: number;
+	disabled: boolean;
+	level: number;
+	max_rarity: number;
+	rarity: any; // huh? came in as boolean
+	selected: boolean;
+	skills: {min: number; max:number; skill:string}[];
+
+	/** @deprecated Added by app, but unused? */
+	iconUrl?: any;
+}
+
+export interface GauntletOpponentDTO {
+	crew_contest_data: { crew: GauntletCrewDTO[]; };
+	icon: ImageData;
+	level: number;
+	name: string;
+	player_id: number;
+	rank: number;
+	value: number;
+}
+
+export interface GauntletContestDTO {
+	player_rolls: number[];
+	player_crit_rolls: boolean[];
+	opponent_rolls: number[];
+	opponent_crit_rolls: boolean[];
+	opponent_score: number;
+	opponent_value: number;
+	value: number;
+	win: boolean;
+	action: string;
+	loot_box_rarity: number;
+}
+
+export interface GauntletContestLootDTO {
+	flavor: string;
+	full_name: string;
+	icon: ImageData;
+	id: number;
+	instance: {bucket:string; id:number;};
+	name: string;
+	quantity: number;
+	rarity: number;
+	symbol: string;
+	type: number;
+}

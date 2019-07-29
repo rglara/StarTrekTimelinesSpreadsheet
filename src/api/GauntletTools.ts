@@ -1,8 +1,15 @@
 import STTApi from './index';
 import CONFIG from './CONFIG';
+import { GauntletDTO, GauntletCrewDTO, CrewData, GauntletContestDTO, GauntletContestLootDTO } from './STTApi';
 
-export async function loadGauntlet(): Promise<any> {
-	let data = await STTApi.executeGetRequest('gauntlet/status', { gauntlet_id: -1 });
+export interface GauntletData {
+	gauntlet: GauntletDTO;
+	lastResult?: GauntletContestDTO;
+	rewards?: { loot: GauntletContestLootDTO[] };
+}
+
+export async function loadGauntlet(): Promise<GauntletDTO> {
+	let data = await STTApi.executeGetRequest('gauntlet/status', { });
 
 	// Clear out old data
 	STTApi.playerData.character.gauntlets = [];
@@ -12,22 +19,8 @@ export async function loadGauntlet(): Promise<any> {
 	return STTApi.playerData.character.gauntlets[0];
 }
 
-export async function claimRankRewards(gauntlet_id: number): Promise<any> {
-	let data = await STTApi.executeGetRequest('gauntlet/claim_rank_rewards', { gauntlet_id: gauntlet_id });
-	let results = { description: undefined, rewards: undefined };
-	data.forEach((item: any) => {
-		if (item.description) {
-			results.description = item.description;
-		} else if (item.rewards) {
-			results.rewards = item.rewards;
-		}
-	});
-
-	return results;
-}
-
-export async function payToGetNewOpponents(gauntlet_id: number): Promise<any> {
-	let data = await STTApi.executePostRequest('gauntlet/refresh_opp_pool_and_revive_crew', { gauntlet_id: gauntlet_id, pay: true });
+export async function payToGetNewOpponents(): Promise<{message?:string; gauntlet?: GauntletDTO; }> {
+	let data = await STTApi.executePostRequest('gauntlet/refresh_opp_pool_and_revive_crew', { pay: true });
 
 	// Clear out old data
 	STTApi.playerData.character.gauntlets = [];
@@ -42,9 +35,8 @@ export async function payToGetNewOpponents(gauntlet_id: number): Promise<any> {
 }
 
 // Save is false if the crew is not disabled yet; true if the crew is disabled already
-export async function payToReviveCrew(gauntlet_id: number, crew_id: number, save: boolean): Promise<any> {
+export async function payToReviveCrew(crew_id: number, save: boolean): Promise<GauntletDTO> {
 	let data = await STTApi.executePostRequest('gauntlet/revive_after_crew_contest_loss', {
-		gauntlet_id: gauntlet_id,
 		save: save,
 		crew_id: crew_id
 	});
@@ -54,22 +46,14 @@ export async function payToReviveCrew(gauntlet_id: number, crew_id: number, save
 
 	await STTApi.applyUpdates(data);
 
-	return { gauntlet: STTApi.playerData.character.gauntlets[0] };
+	return STTApi.playerData.character.gauntlets[0];
 }
 
-export async function playContest(
-	gauntlet_id: number,
-	crew_id: number,
-	opponent_id: number,
-	op_crew_id: number,
-	match: IMatch,
-	consecutive_wins: number
-): Promise<any> {
+export async function playContest(match: Match, consecutive_wins: number): Promise<GauntletData> {
 	let postData: any = {
-		gauntlet_id: gauntlet_id,
-		crew_id: crew_id,
-		opponent_id: opponent_id,
-		op_crew_id: op_crew_id,
+		crew_id: match.crewOdd.crew_id,
+		opponent_id: match.opponent.player_id,
+		op_crew_id: match.opponent.crew_id,
 		boost: false
 	};
 
@@ -85,8 +69,8 @@ export async function playContest(
 
 	let newData = await STTApi.applyUpdates(data);
 
-	let contest = null;
-	let rewards = null;
+	let contest : GauntletContestDTO | undefined = undefined;
+	let rewards : GauntletContestLootDTO | undefined = undefined;
 	newData.forEach((item: any) => {
 		if (item.contest) {
 			contest = item.contest;
@@ -102,7 +86,7 @@ export async function playContest(
 	}
 }
 
-export async function enterGauntlet(gauntletId: number, crewIds: Array<number>): Promise<void> {
+export async function enterGauntlet(gauntletId: number, crewIds: Array<number>): Promise<GauntletDTO> {
 	let data = await STTApi.executePostRequest('gauntlet/enter_crew_contest_gauntlet', {
 		gauntlet_id: gauntletId,
 		crew1_id: crewIds[0],
@@ -120,7 +104,7 @@ export async function enterGauntlet(gauntletId: number, crewIds: Array<number>):
 	return STTApi.playerData.character.gauntlets[0];
 }
 
-export interface ICrewOdd {
+export interface CrewOdd {
 	archetype_symbol: string;
 	crew_id: number;
 	crit_chance: number;
@@ -130,7 +114,7 @@ export interface ICrewOdd {
 	iconUrl: string | undefined;
 }
 
-export interface IOpponentOdd {
+export interface OpponentOdd {
 	name: string;
 	level: number;
 	value: number;
@@ -144,22 +128,22 @@ export interface IOpponentOdd {
 	min: number[];
 }
 
-export interface IMatch {
-	crewOdd: ICrewOdd;
-	opponent: IOpponentOdd;
+export interface Match {
+	crewOdd: CrewOdd;
+	opponent: OpponentOdd;
 	chance: number;
 }
 
-export interface IGauntletRoundOdds {
+export interface GauntletRoundOdds {
 	rank: number;
 	consecutive_wins: number;
-	crewOdds: ICrewOdd[];
-	opponents: IOpponentOdd[];
-	matches: IMatch[];
+	crewOdds: CrewOdd[];
+	opponents: OpponentOdd[];
+	matches: Match[];
 }
 
-export function gauntletRoundOdds(currentGauntlet: any, simulatedRounds: number): IGauntletRoundOdds {
-	let result: IGauntletRoundOdds = {
+export function gauntletRoundOdds(currentGauntlet: GauntletDTO, simulatedRounds: number): GauntletRoundOdds {
+	let result: GauntletRoundOdds = {
 		rank: currentGauntlet.rank,
 		consecutive_wins: currentGauntlet.consecutive_wins,
 		crewOdds: [],
@@ -167,11 +151,11 @@ export function gauntletRoundOdds(currentGauntlet: any, simulatedRounds: number)
 		matches: []
 	};
 
-	currentGauntlet.contest_data.selected_crew.forEach((crew: any) => {
-		crew.iconUrl = '';
+	currentGauntlet.contest_data.selected_crew.forEach((crew: GauntletCrewDTO) => {
+		// crew.iconUrl = '';
 
 		if (!crew.disabled) {
-			let crewOdd: ICrewOdd = {
+			let crewOdd: CrewOdd = {
 				archetype_symbol: crew.archetype_symbol,
 				crew_id: crew.crew_id,
 				crit_chance: crew.crit_chance,
@@ -181,7 +165,7 @@ export function gauntletRoundOdds(currentGauntlet: any, simulatedRounds: number)
 				iconUrl: ''
 			};
 
-			crew.skills.forEach((skillStats: any) => {
+			crew.skills.forEach((skillStats) => {
 				if (skillStats.skill == currentGauntlet.contest_data.primary_skill) {
 					crewOdd.max[0] = skillStats.max;
 					crewOdd.min[0] = skillStats.min;
@@ -195,8 +179,8 @@ export function gauntletRoundOdds(currentGauntlet: any, simulatedRounds: number)
 		}
 	});
 
-	currentGauntlet.opponents.forEach((opponent: any) => {
-		let opponentOdd: IOpponentOdd = {
+	currentGauntlet.opponents.forEach((opponent) => {
+		let opponentOdd: OpponentOdd = {
 			name: opponent.name,
 			level: opponent.level,
 			value: opponent.value,
@@ -210,7 +194,7 @@ export function gauntletRoundOdds(currentGauntlet: any, simulatedRounds: number)
 			min: [0, 0]
 		};
 
-		opponent.crew_contest_data.crew[0].skills.forEach((skillStats: any) => {
+		opponent.crew_contest_data.crew[0].skills.forEach((skillStats) => {
 			if (skillStats.skill == currentGauntlet.contest_data.primary_skill) {
 				opponentOdd.max[0] = skillStats.max;
 				opponentOdd.min[0] = skillStats.min;
@@ -223,7 +207,7 @@ export function gauntletRoundOdds(currentGauntlet: any, simulatedRounds: number)
 		result.opponents.push(opponentOdd);
 	});
 
-	const roll = (data: any, skillIndex: number): number => {
+	const roll = (data: CrewOdd | OpponentOdd, skillIndex: number): number => {
 		let max = Math.random() < 0.5 ? 0 : 1;
 		let min = Math.random() < 0.5 ? 0 : 1;
 		if (data.min[skillIndex] > 0) {
@@ -236,8 +220,8 @@ export function gauntletRoundOdds(currentGauntlet: any, simulatedRounds: number)
 
 	result.matches = [];
 
-	result.crewOdds.forEach((crewOdd: any) => {
-		result.opponents.forEach((opponent: any) => {
+	result.crewOdds.forEach((crewOdd: CrewOdd) => {
+		result.opponents.forEach((opponent: OpponentOdd) => {
 			if ((crewOdd.max[0] + crewOdd.max[1]) * 2 < opponent.min[0] + opponent.min[1]) {
 				// If there is 0 chance of winning, bail early and don't waste time
 				result.matches.push({
@@ -282,63 +266,61 @@ export function gauntletRoundOdds(currentGauntlet: any, simulatedRounds: number)
 		});
 	});
 
-	result.matches.sort((a: any, b: any) => b.chance - a.chance);
+	result.matches.sort((a, b) => b.chance - a.chance);
 
 	return result;
 }
 
-interface ISortedCrew {
+interface SortedCrew {
 	id: number;
 	name: string;
 	score: number;
 }
 
-export interface Dictionary<T> {
-	[key: string]: T;
-}
-
-interface IGauntletCrew {
-	skills: Dictionary<number>;
+interface GauntletCrew {
+	skills: { [key: string]: number;};
 	id: number;
 	name: string;
 	crit: number;
 }
 
-export interface IGauntletCrewSelection {
-	best: Dictionary<string>;
+export interface GauntletCrewSelection {
+	best: { [key: string]: string; };
 	recommendations: Array<number>;
 }
 
 export function gauntletCrewSelection(
-	currentGauntlet: any,
-	roster: any,
+	currentGauntlet: GauntletDTO,
+	roster: CrewData[],
 	featuredSkillBonus: number,
 	critBonusDivider: number,
 	preSortCount: number,
 	includeFrozen: boolean
-): any {
-	let gauntletCrew: any[] = [];
+): GauntletCrewSelection {
+	let gauntletCrew: GauntletCrew[] = [];
 
-	roster.forEach((crew: any) => {
+	roster.forEach((crew) => {
 		if (crew.frozen > 0 && !includeFrozen) {
 			return;
 		}
 
-		let newCrew: IGauntletCrew = {
+		let newCrew: GauntletCrew = {
 			id: crew.crew_id || crew.id,
 			name: crew.name,
 			crit: 5,
 			skills: {}
 		};
 
+		let crw :any = crew;
+
 		for (let skill in CONFIG.SKILLS) {
-			newCrew.skills[skill] = crew[skill].min + crew[skill].max;
+			newCrew.skills[skill] = crw[skill].min + crw[skill].max;
 		}
 
 		newCrew.skills[currentGauntlet.contest_data.featured_skill] =
 			newCrew.skills[currentGauntlet.contest_data.featured_skill] * featuredSkillBonus;
 
-		currentGauntlet.contest_data.traits.forEach((trait: any) => {
+		currentGauntlet.contest_data.traits.forEach((trait) => {
 			if (crew.rawTraits.includes(trait)) newCrew.crit += currentGauntlet.contest_data.crit_chance_per_trait;
 		});
 
@@ -349,9 +331,9 @@ export function gauntletCrewSelection(
 		gauntletCrew.push(newCrew);
 	});
 
-	let sortedCrew: ISortedCrew[] = [];
+	let sortedCrew: SortedCrew[] = [];
 
-	function getScore(gauntletCrewItem: IGauntletCrew, maxSkill: any): number {
+	function getScore(gauntletCrewItem: GauntletCrew, maxSkill: string): number {
 		let score = gauntletCrewItem.skills[maxSkill]; // double account for preferred skill
 
 		for (let skill in CONFIG.SKILLS) {
@@ -361,10 +343,10 @@ export function gauntletCrewSelection(
 		return score;
 	}
 
-	let result: IGauntletCrewSelection = { best: {}, recommendations: [] };
+	let result: GauntletCrewSelection = { best: {}, recommendations: [] };
 
 	for (let skill in CONFIG.SKILLS) {
-		gauntletCrew.sort((a: any, b: any) => {
+		gauntletCrew.sort((a, b) => {
 			return b.skills[skill] - a.skills[skill];
 		});
 		result.best[skill] = gauntletCrew[0].name;
@@ -375,13 +357,11 @@ export function gauntletCrewSelection(
 		}
 	}
 
-	sortedCrew.sort((a: any, b: any) => {
-		return b.score - a.score;
-	});
+	sortedCrew.sort((a, b) => b.score - a.score);
 
 	// Remove duplicates
 	let seen = new Set();
-	sortedCrew = sortedCrew.filter((item: any) => {
+	sortedCrew = sortedCrew.filter((item) => {
 		if (seen.has(item.id)) {
 			return false;
 		} else {

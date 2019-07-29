@@ -6,7 +6,8 @@ import { RarityStars } from './RarityStars';
 import Moment from 'moment';
 
 import STTApi from '../api';
-import { CONFIG, getChronitonCount, formatTimeSeconds, loadGauntlet, loadVoyage } from '../api';
+import { CONFIG, getChronitonCount, formatTimeSeconds, loadVoyage } from '../api';
+import { loadGauntlet } from '../api/GauntletTools';
 
 import { openDevTools } from '../utils/pal';
 

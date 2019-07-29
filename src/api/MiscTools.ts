@@ -1,6 +1,9 @@
 import STTApi from "./index";
 
-export function formatTimeSeconds(seconds: number, showSeconds: boolean = false): string {
+export function formatTimeSeconds(seconds: number | undefined, showSeconds: boolean = false): string {
+    if (!seconds) {
+        return '';
+    }
     let h = Math.floor(seconds / 3600);
     let d = Math.floor(h / 24);
     h = h - d*24;

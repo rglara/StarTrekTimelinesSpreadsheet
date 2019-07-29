@@ -3,7 +3,6 @@ export { mergeDeep } from './ObjectMerge';
 export { loginSequence } from './LoginSequence';
 export { loadFullTree } from './EquipmentTools';
 export { bestVoyageShip, loadVoyage, startVoyage, resolveDilemma, recallVoyage } from './VoyageTools';
-export { loadGauntlet, gauntletCrewSelection, gauntletRoundOdds, payToGetNewOpponents, payToReviveCrew, playContest, claimRankRewards, enterGauntlet } from './GauntletTools';
 export { ImageCache } from './ImageProvider';
 export { formatCrewStats } from './CrewTools';
 export { bonusCrewForCurrentEvent } from './EventTools';
