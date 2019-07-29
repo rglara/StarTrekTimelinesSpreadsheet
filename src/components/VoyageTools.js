@@ -488,8 +488,8 @@ export class VoyageLog extends React.Component {
 					}
 
 					return (
-						<span key={item.id} style={{ color: item.rarity && CONFIG.RARITIES[item.rarity].color }}>
-							<RarityStars min={1} max={item.rarity ? item.rarity : 1} value={item.rarity ? item.rarity : null} />
+						<span key={item.id}>
+							<RarityStars min={1} max={item.rarity ? item.rarity : 1} value={item.rarity ? item.rarity : null} colored='true' />
 						</span>
 					);
 				}
@@ -858,11 +858,13 @@ export class VoyageLog extends React.Component {
 	}
 
 	renderCrewSkills(crew) {
-		return Object.keys(crew.skills).map(s => {
-			return (<span key={s}><img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
-				{crew.skills[s].core} ({crew.skills[s].range_min}-{crew.skills[s].range_max})
-			</span>);
-		})
+		return <span key={crew.id}>
+			<RarityStars min={1} max={crew.max_rarity} value={crew.rarity} asSpan='true' />&nbsp;{Object.keys(crew.skills).map(s => {
+				return (<span key={s}><img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
+					{crew.skills[s].core} ({crew.skills[s].range_min}-{crew.skills[s].range_max})
+				</span>);
+			})}
+		</span>
 	}
 
 	render() {
@@ -918,13 +920,18 @@ export class VoyageLog extends React.Component {
 							<td>
 								<ul>
 									{Object.values(this.state.voyage.skill_aggregates).map(skill => {
+										let isPri = skill.skill == this.state.voyage.skills.primary_skill;
+										let isSec = skill.skill == this.state.voyage.skills.secondary_skill;
 										return (
 											<li key={skill.skill}>
 												<span className='quest-mastery'>
 													<img src={CONFIG.SPRITES['icon_' + skill.skill].url} height={18} /> &nbsp; {skill.core} ({skill.range_min}-
-													{skill.range_max})&nbsp;[{skill.core + (skill.range_min + skill.range_max)/2}]&nbsp;&nbsp;
+													{skill.range_max})&nbsp;[{skill.core + (skill.range_min + skill.range_max)/2}]&nbsp;
+													{isPri ? ' (Pri) ' : ''}
+													{isSec ? ' (Sec) ' : ''}
+													&nbsp;
 													<Popup
-														trigger={<Icon name='thumbs up' />}
+														trigger={<span style={isPri ? { color: CONFIG.RARITIES[5].color } : isSec ? { color: CONFIG.RARITIES[1].color} : {}}><Icon name='thumbs up' /></span>}
 														content="Skill checks passed"
 													/> {this.state.skillChecks[skill.skill][1]}/{this.state.skillChecks[skill.skill][0]}
 												</span>

@@ -96,8 +96,8 @@ export class ItemList extends React.Component {
 					id: 'rarity',
 					Header: 'Rarity',
 					accessor: 'rarity',
-					minWidth: 75,
-					maxWidth: 75,
+					minWidth: 80,
+					maxWidth: 80,
 					resizable: false,
 					Cell: p => {
 						let item = p.original;
@@ -224,8 +224,13 @@ export class ItemList extends React.Component {
 				return true;
 			}
 
-			if (item.cadetable && item.cadetable.toLowerCase().indexOf(text) > -1)
+			if (item.cadetable && item.cadetable.toLowerCase().indexOf(text) > -1) {
 				return true;
+			}
+
+			if (item.factions && item.factions.toLowerCase().indexOf(text) > -1) {
+				return true;
+			}
 
 			return false;
 		});
