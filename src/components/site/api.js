@@ -101,7 +101,7 @@ class STTToolsClass {
     }
 
     async fetchAllCrew() {
-        let response = await window.fetch("file:/home/local/CITD/paul.bilnoski/ws-personal/StarTrekTimelinesSpreadsheet/src/utils/" + 'allcrew.json');
+        let response = await window.fetch(STTApi.serverAddress + 'allcrew.json');
 
         if (!response.ok) {
             let data = await response.text();

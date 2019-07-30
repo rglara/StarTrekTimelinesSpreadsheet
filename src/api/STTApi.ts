@@ -54,7 +54,7 @@ export class STTApiClass {
 	public inWebMode: boolean;
 	public allcrew!: CrewData[];
 
-	public serverAddress: string = 'http://localhost/';
+	public serverAddress: string = 'http://localhost:8060/';
 
 	// Used with Moment when adding an offset. Does not need to be used when
 	// doing a fresh request for data such as for gauntlet or voyage status
@@ -193,7 +193,12 @@ export class STTApiClass {
 		return this.crewAvatars.find((avatar: CrewAvatar) => avatar.symbol === symbol);
 	}
 
-	async login(username: string, password: string, autoLogin: boolean): Promise<any> {
+	async login(username: string, password: string, autoLogin: boolean, forceToken: boolean): Promise<any> {
+		// let x = true;
+		if (forceToken) {
+			let tok = username;
+			return this._loginWithAccessToken(tok, autoLogin);
+		}
 		let data = await this._net.post_proxy(CONFIG.URL_PLATFORM + 'oauth2/token', {
 			username: username,
 			password: password,

@@ -245,7 +245,12 @@ export async function loginSequence(onProgress: (description: string) => void, l
 
     try {
         let allcrew : CrewDTO[] | undefined = undefined;
+        // #!if ENV === 'electron'
         allcrew = await STTApi.networkHelper.get("file:/home/local/CITD/paul.bilnoski/ws-personal/StarTrekTimelinesSpreadsheet/src/utils/" + 'allcrew.json', undefined);
+        // #!else
+        allcrew = await STTApi.networkHelper.get(STTApi.serverAddress + 'allcrew.json', undefined);
+        // #!endif
+
         STTApi.allcrew = formatAllCrew(allcrew || []);
     }
     catch (e) {

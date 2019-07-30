@@ -3,6 +3,7 @@
 node_modules/
 dist/
 builds/
+server/build/
 /.vs
 /notes.txt
 native/bin/

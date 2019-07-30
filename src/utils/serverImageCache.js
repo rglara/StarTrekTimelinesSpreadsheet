@@ -7,7 +7,7 @@ export class ServerImageProvider {
     _serverURL;
 
     constructor(serverURL) {
-        this._serverURL = serverURL;;
+        this._serverURL = serverURL;
         this._baseURLAsset = this._serverURL + 'assets/';
 
         this._cachedAssets = new Set();
@@ -16,7 +16,7 @@ export class ServerImageProvider {
     }
 
     async fillCache() {
-        let assetList = await STTApi.networkHelper.get(this._serverURL + 'asset/list', { dummy: true });
+        let assetList = await STTApi.networkHelper.get(/*this._serverURL +*/ 'asset/list', { dummy: true });
         this._cachedAssets = new Set(assetList);
     }
 
@@ -93,6 +93,9 @@ export class ServerImageProvider {
     }
 
     async getImageUrl(iconFile, id) {
+        if (!iconFile) {
+            return { id: null, url: null};
+        }
         let cachedUrl = this.internalGetCached(iconFile);
         if (cachedUrl) {
             return { id, url: cachedUrl };

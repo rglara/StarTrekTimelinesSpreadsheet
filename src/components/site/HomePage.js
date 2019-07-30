@@ -47,51 +47,6 @@ export class HomePage extends React.Component {
 
             <Divider />
 
-            <Header as='h3'>Crew management desktop application</Header>
-            <Grid>
-                <Grid.Column width={8}>
-                    <a href='https://github.com/IAmPicard/StarTrekTimelinesSpreadsheet' target='_blank'>
-                        <img className="ui large image" src='https://github.com/IAmPicard/StarTrekTimelinesSpreadsheet/raw/master/docs/Screenshot-Tool.png' />
-                    </a>
-                </Grid.Column>
-                <Grid.Column width={8}>
-                    <p>Windows desktop application to help with crew management.</p>
-                    <p>You can sort, filter, group and export your crew roster. The tool also offers recommendations about crew based on which missions and cadet challenges you're yet to complete.</p>
-                    <p>You can also get recommendations and chance calculations for gauntlets, and get basic information about ships and equipment.</p>
-                </Grid.Column>
-                <Grid.Column width={16}>
-                    <Button primary icon labelPosition='right' onClick={() => window.open('https://github.com/IAmPicard/StarTrekTimelinesSpreadsheet/releases', '_blank')}>Download latest release <Icon name='download' /></Button>
-                    <Button icon labelPosition='right' onClick={() => window.open('https://github.com/IAmPicard/StarTrekTimelinesSpreadsheet', '_blank')}>Check it out on GitHub <Icon name='github' /></Button>
-                </Grid.Column>
-            </Grid>
-
-            <Divider />
-
-            <Header as='h3'>Google Sheets add-on for the crew spreadsheet</Header>
-            <Grid>
-                <Grid.Column width={8}>
-                    <a href='https://github.com/IAmPicard/STTGoogleSheetsAddon' target='_blank'>
-                        <img className="ui large image" src='https://raw.githubusercontent.com/IAmPicard/STTGoogleSheetsAddon/master/GoogleSheetsAddon.png' />
-                    </a>
-                </Grid.Column>
-                <Grid.Column width={8}>
-                    <p>A very simple add-on for Google Sheets that lets you load your crew stats directly from the game. From a Google Spreadsheet, click on Get Addons and search for "Star Trek Timelines Crew Spreadsheet". Once loaded, you can click on "Start" from the AddOns menu.</p>
-                    <p>Why would you use this over the other wonderful spreadsheets out there?</p>
-                    <ul>
-                        <li>No manual entry and upkeep</li>
-                        <li>This doesn't assume FFFE or bust (it loads stats for your crew, including starbase bonuses, regardless of their level, stars or equipment slots)</li>
-                    </ul>
-                </Grid.Column>
-                <Grid.Column width={16}>
-                    <Button primary icon labelPosition='right' onClick={() => window.open('https://chrome.google.com/webstore/detail/star-trek-timelines-crew/fhbgadamglhhcelbmidkmkoepekgkocl?utm_source=permalink', '_blank')}>Install here <Icon name='download' /></Button>
-                    <Button icon labelPosition='right' onClick={() => window.open('https://github.com/IAmPicard/STTGoogleSheetsAddon', '_blank')}>Check it out on GitHub <Icon name='github' /></Button>
-                </Grid.Column>
-            </Grid>
-
-            <Divider />
-
-            <a href="https://www.patreon.com/bePatron?u=10555637" target='_blank' data-patreon-widget-type="become-patron-button"><img src='https://c5.patreon.com/external/logo/become_a_patron_button.png' /></a>
-
             <Header as='h3'>Miscellaneous links</Header>
             <List>
                 <List.Item icon='linkify' content={<a href="https://www.disruptorbeam.com/games/star-trek-timelines/" target='_blank'>Official game page</a>} />
@@ -102,7 +57,6 @@ export class HomePage extends React.Component {
             </List>
 
             <br />
-            {/* <p>If you want to get in touch with me please open an issue on <a href='https://github.com/IAmPicard/StarTrekTimelinesSpreadsheet/issues' target='_blank'>GitHub</a> or email me at <a href='mailto:info@iampicard.com'>info@iampicard.com</a>.</p> */}
             <Label size="small"><b>DISCLAIMER</b> This tool is provided "as is", without warranty of any kind. Use at your own risk! It should be understood that Star Trek Timelines content and materials are trademarks and copyrights of <a href='https://www.disruptorbeam.com/tos/' target='_blank'>Disruptor Beam, Inc.</a> or its licensors. All rights reserved. This tool is neither endorsed by nor affiliated with Disruptor Beam, Inc..</Label>
         </Container>;
     }
@@ -110,7 +64,7 @@ export class HomePage extends React.Component {
     _closeDialog() {
         this.setState({ showSpinner: true, errorMessage: null });
 
-        let promiseLogin = STTApi.login(this.state.username, this.state.password, this.state.autoLogin);
+        let promiseLogin = STTApi.login(this.state.username, this.state.password, this.state.autoLogin, true);
 
         promiseLogin.then(() => {
             this.setState({ showSpinner: false });

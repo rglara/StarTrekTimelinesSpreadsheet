@@ -42,7 +42,7 @@
 		"buildweb": "webpack --mode production --config ./webpack/webpack.build.web.config.js",
 		"buildexp": "webpack --mode production --config ./webpack/webpack.build.exp.config.js",
 		"bundlestats": "webpack --mode production --config ./webpack/webpack.build.web.config.js --profile --json > dist/stats.json && webpack-bundle-analyzer dist/stats.json",
-		"serveweb": "webpack-dev-server --mode development --hot --host localhost --port 80 --config=./webpack/webpack.dev.web.config.js",
+		"serveweb": "webpack-dev-server --mode development --hot --host localhost --port 8050 --config=./webpack/webpack.dev.web.config.js",
 		"package": "webpack --mode production --config ./webpack/webpack.build.electron.config.js",
 		"postpackage": "electron-packager ./ --out=./builds --prune --icon=src/assets/icons/ATFleet.ico",
 		"packagedev": "webpack --mode development --config ./webpack/webpack.build.electron.config.js",

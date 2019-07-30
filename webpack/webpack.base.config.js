@@ -20,7 +20,10 @@ module.exports = function(targetEnv, devEnv) {
 		entry: SRC_DIR + '/index.js',
 		output: {
 			path: OUTPUT_DIR,
-			publicPath: devEnv ? '' : './',
+			//publicPath: devEnv ? '' : './',
+			publicPath: devEnv ? '' : '',
+			//publicPath: devEnv ? 'stt' : 'stt',
+			//contentBase: path.join(__dirname, 'stt'),
 			filename: 'bundle.js',
 			globalObject: 'this'
 		},

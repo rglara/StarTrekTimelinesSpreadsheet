@@ -1,4 +1,4 @@
-const wasm = require('stt-native-wasm');
+import wasm from 'stt-native-wasm';
 
 self.addEventListener('message', (message) => {
     wasm().then((mod) => {

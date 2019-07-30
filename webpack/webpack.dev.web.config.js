@@ -14,7 +14,7 @@ module.exports = merge(baseConfig('webtest', true), {
 	plugins: [
 		new WebappWebpackPlugin({
 			logo: SRC_DIR + '/assets/logo.png',
-			prefix: '/img/',
+			prefix: 'img/',
 			emitStats: false,
 			persistentCache: true,
 			inject: true,

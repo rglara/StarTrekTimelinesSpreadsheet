@@ -96,13 +96,7 @@ class App extends React.Component {
 		return (
 			<div>
 				<Portal open={this.state.euUser} onClose={() => this.setState({ euUser: false })}>
-					<Segment style={{ left: '40%', position: 'fixed', top: '5%', zIndex: 1000 }}>
-						<Header>{this.state.helloLang} !</Header>
-						<p>I have an European server that may be faster for you.</p>
-						<p>
-							Check it out at <a href='https://eu.iampicard.com'>eu.iampicard.com</a>.
-						</p>
-					</Segment>
+					content
 				</Portal>
 				{this.renderApp()}
 			</div>
