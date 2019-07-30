@@ -1,7 +1,7 @@
-import STTApi from '../api';
-import { CONFIG } from '../api';
+import STTApi from '../../api';
+import { CONFIG } from '../../api';
 
-function parseResults(result, callback) {
+function parseResults(result: any, callback: any) : any {
     let dv = new DataView(result.buffer);
 
     let score = dv.getFloat32(0, true);
@@ -20,8 +20,8 @@ function parseResults(result, callback) {
     callback(entries, score);
 }
 
-export function exportVoyageData(options) {
-    let dataToExport = {
+export function exportVoyageData(options: any) : any {
+    let dataToExport: any= {
         // These values get filled in the following code
         crew: [],
         binaryConfig: undefined
@@ -49,7 +49,7 @@ export function exportVoyageData(options) {
 
     // Find unique traits used in the voyage slots
     let setTraits = new Set();
-    voyage_description.crew_slots.forEach(slot => {
+    voyage_description.crew_slots.forEach((slot: any) => {
         setTraits.add(slot.trait);
     });
 
@@ -57,7 +57,7 @@ export function exportVoyageData(options) {
     let skills = Object.keys(CONFIG.SKILLS);
 
     // Replace traits and skills with their id
-    let slotTraitIds = [];
+    let slotTraitIds: any[] = [];
     for (let i = 0; i < voyage_description.crew_slots.length; i++) {
         let slot = voyage_description.crew_slots[i];
 
@@ -68,21 +68,24 @@ export function exportVoyageData(options) {
     binaryConfig.setUint8(18, skills.indexOf(voyage_description.skills.primary_skill));
     binaryConfig.setUint8(19, skills.indexOf(voyage_description.skills.secondary_skill));
 
-    options.roster.forEach(crew => {
-        let traitIds = [];
-        crew.rawTraits.forEach(trait => {
+    options.roster.forEach((crew:any) => {
+        let traitIds: any[] = [];
+        crew.rawTraits.forEach((trait: any) => {
             if (arrTraits.indexOf(trait) >= 0) {
                 traitIds.push(arrTraits.indexOf(trait));
             }
         });
 
-        let traitBitMask = 0;
-        for (let nFlag = 0; nFlag < SLOT_COUNT; traitBitMask |= (traitIds.indexOf(slotTraitIds[nFlag]) !== -1) << nFlag++);
+        let traitBitMask: number = 0;
+        for (let nFlag = 0; nFlag < SLOT_COUNT; nFlag++) {
+            let hasTrait : boolean = traitIds.indexOf(slotTraitIds[nFlag]) >= 0;
+            traitBitMask |= (hasTrait ? 1 : 0) << nFlag;
+        }
 
         // We store traits in the first 12 bits, using the next few for flags
-        traitBitMask |= (crew.frozen > 0) << SLOT_COUNT;
-        traitBitMask |= (crew.active_id && (crew.active_id > 0)) << (SLOT_COUNT + 1);
-        traitBitMask |= (crew.level == 100 && crew.rarity == crew.max_rarity) << (SLOT_COUNT + 2); // ff100
+        traitBitMask |= ((crew.frozen > 0) ? 1 : 0) << SLOT_COUNT;
+        traitBitMask |= ((crew.active_id && (crew.active_id > 0)) ? 1 : 0 )<< (SLOT_COUNT + 1);
+        traitBitMask |= ((crew.level == 100 && crew.rarity == crew.max_rarity) ? 1 : 0) << (SLOT_COUNT + 2); // ff100
 
         // Replace skill data with a binary blob
         let buffer = new ArrayBuffer(6 /*number of skills */ * 3 /*values per skill*/ * 2 /*we need 2 bytes per value*/);
@@ -94,7 +97,7 @@ export function exportVoyageData(options) {
         }
 
         // This won't be necessary once we switch away from Json to pure binary for native invocation
-        let newCrew = {
+        let newCrew: any= {
             id: crew.crew_id ? crew.crew_id : crew.id,
             name: crew.name.replace(/[^\x00-\x7F]/g, ""),
             traitBitMask: traitBitMask,
@@ -112,7 +115,7 @@ export function exportVoyageData(options) {
     return dataToExport;
 }
 
-function invokeNative(dataToExport, progressCallback, doneCallback) {
+function invokeNative(dataToExport: any, progressCallback: any, doneCallback: any) : void {
 // #!if ENV === 'electron'
     const NativeExtension = require('electron').remote.require('stt-native');
     NativeExtension.calculateVoyageRecommendations(JSON.stringify(dataToExport), doneCallback, progressCallback);
@@ -120,7 +123,7 @@ function invokeNative(dataToExport, progressCallback, doneCallback) {
     let ComputeWorker = require("worker-loader?name=wasmWorker.js!../components/wasmWorker");
 
     const worker = new ComputeWorker();
-    worker.addEventListener('message', (message) => {
+    worker.addEventListener('message', (message: any) => {
         if (message.data.progressResult) {
             progressCallback(Uint8Array.from(message.data.progressResult));
         } else if (message.data.result) {
@@ -132,16 +135,16 @@ function invokeNative(dataToExport, progressCallback, doneCallback) {
 // #!endif
 }
 
-export function calculateVoyage(options, progressCallback, doneCallback) {
+export function calculateVoyage(options: any, progressCallback: any, doneCallback: any) : void {
     let dataToExport = exportVoyageData(options);
-    invokeNative(dataToExport, progressResult => {
+    invokeNative(dataToExport, (progressResult: any) => {
         parseResults(progressResult, progressCallback);
-    }, result => {
+    }, (result: any) => {
         parseResults(result, doneCallback);
     });
 }
 
-export function estimateVoyageRemaining(options, callback) {
+export function estimateVoyageRemaining(options: any, callback: any) : void {
     let dataToExport = exportVoyageData(options);
 
     let binaryConfigBuffer = new ArrayBuffer(52);
@@ -164,9 +167,9 @@ export function estimateVoyageRemaining(options, callback) {
 
     dataToExport.estimateBinaryConfig = Array.from(new Uint8Array(binaryConfigBuffer));
 
-    invokeNative(dataToExport, progressResult => {
+    invokeNative(dataToExport, (progressResult: any) => {
         // Don't care
-    }, result => {
+    }, (result: any) => {
         let dv = new DataView(result.buffer);
         let scoreInHours = dv.getFloat32(0, true);
         callback(scoreInHours * 60);

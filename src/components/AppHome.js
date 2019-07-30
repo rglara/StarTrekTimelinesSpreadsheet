@@ -21,7 +21,7 @@ import { MissionExplorer } from './MissionExplorer';
 import { AboutAndHelp } from './AboutAndHelp';
 import { HomePage } from './HomePage';
 import { FleetDetails } from './FleetDetails';
-import { VoyageTools } from './VoyageTools';
+import { VoyagePage } from './voyage/VoyagePage';
 import { NeededEquipment } from './NeededEquipment';
 import { CrewDuplicates } from './CrewDuplicates';
 import { IncompleteMissions } from './IncompleteMissions';
@@ -245,7 +245,7 @@ export class AppHome extends React.Component {
 				return <MissionExplorer onCommandItemsUpdate={commandItemsUpdater} />;
 
 			case 'Voyage':
-				return <VoyageTools onCommandItemsUpdate={commandItemsUpdater} />;
+				return <VoyagePage onCommandItemsUpdate={commandItemsUpdater} />;
 
 			case 'Gauntlet':
 				return <GauntletHelper onCommandItemsUpdate={commandItemsUpdater} />;
