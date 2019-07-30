@@ -367,6 +367,15 @@ export class HomePage extends React.Component {
 
 			//TODO: check event start time and change icon
 			let hasStarted = eventData.seconds_to_start <= 0;
+			let hasEnded = eventData.seconds_to_end <= 0;
+			let msg = '';
+			if (hasEnded) {
+				msg = ' has ended and has rewards to collect in-game';
+			} else if (hasStarted) {
+				msg = ' has started and ends in ' + formatTimeSeconds(eventData.seconds_to_end);
+			} else {
+				msg = ' starts in ' + formatTimeSeconds(eventData.seconds_to_start);
+			}
 			// STTApi.playerData.character.events[0].opened
 			if (eventData.content.content_type === 'shuttles') {
 				let crew_bonuses = [];
@@ -389,6 +398,8 @@ export class HomePage extends React.Component {
 				}
 
 				crew_bonuses.sort((a, b) => {
+					if (a.crew.frozen > b.crew.frozen) { return 1; }
+					if (a.crew.frozen < b.crew.frozen) { return -1; }
 					// Sort by bonus DESC then shortname ASC then name ASC
 					if (a.bonus > b.bonus) { return -1; }
 					if (a.bonus < b.bonus) { return 1; }
@@ -400,11 +411,10 @@ export class HomePage extends React.Component {
 				});
 
 				recommendations.push({
-					title: `Faction/Shuttle Event ` + (hasStarted ?
-						" has started and ends in " + formatTimeSeconds(eventData.seconds_to_end) :
-						"starts in " + formatTimeSeconds(eventData.seconds_to_start)),
+					title: `Faction/Shuttle Event ` + msg,
 					icon: Priority.INFO,
 					content: <div style={{ margin: '0' }}>
+						{!hasEnded && <span>
 							Owned bonus crew:
 							<List horizontal>
 								{crew_bonuses.map(cb => (
@@ -413,13 +423,124 @@ export class HomePage extends React.Component {
 										<List.Content>
 											<List.Header>{cb.crew.name}</List.Header>
 											<RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
+											{cb.crew.frozen == 1 && <div>Frozen</div>}
 											{cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
 											Bonus level {cb.bonus}
 										</List.Content>
 									</List.Item>
 								))}
 							</List>
+						</span>}
 						</div>
+				});
+			}
+			else if (eventData.content.content_type === 'gather') {
+				let crew_bonuses = [];
+				for (let cb in eventData.content.crew_bonuses) {
+					let avatar = STTApi.getCrewAvatarBySymbol(cb);
+					if (!avatar) {
+						continue;
+					}
+
+					let crew = STTApi.roster.find(c => c.symbol === avatar.symbol);
+					if (!crew) {
+						continue;
+					}
+
+					crew_bonuses.push({
+						crew,
+						bonus: eventData.content.crew_bonuses[cb],
+						iconUrl: STTApi.imageProvider.getCrewCached(avatar, false)
+					});
+				}
+
+				crew_bonuses.sort((a, b) => {
+					if (a.crew.frozen > b.crew.frozen) { return 1; }
+					if (a.crew.frozen < b.crew.frozen) { return -1; }
+					// Sort by bonus DESC then shortname ASC then name ASC
+					if (a.bonus > b.bonus) { return -1; }
+					if (a.bonus < b.bonus) { return 1; }
+					if (a.crew.short_name > b.crew.short_name) { return 1; }
+					if (a.crew.short_name < b.crew.short_name) { return -1; }
+					if (a.crew.name > b.crew.name) { return 1; }
+					if (a.crew.name < b.crew.name) { return -1; }
+					return 0;
+				});
+
+				recommendations.push({
+					title: `Galaxy Event ` + msg,
+					icon: Priority.INFO,
+					content: <div style={{ margin: '0' }}>
+						{!hasEnded && <span>
+							<div>{eventData.bonus_text}</div>
+							Owned bonus crew:
+								<List horizontal>
+								{crew_bonuses.map(cb => (
+									<List.Item key={cb.crew.symbol}>
+										<Image src={cb.iconUrl} width="25" height="25" />
+										<List.Content>
+											<List.Header>{cb.crew.name}</List.Header>
+											<RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
+											{cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
+											{cb.crew.frozen == 1 && <div>Frozen</div>}
+											Bonus level {cb.bonus}x
+										</List.Content>
+									</List.Item>
+								))}
+							</List>
+						</span>}
+					</div>
+				});
+			}
+			else if (eventData.content.content_type === 'skirmish') {
+				let crew_bonuses = [];
+				for (let fc in eventData.featured_crew) {
+					let avatar = STTApi.getCrewAvatarBySymbol(fc.symbol);
+					if (!avatar) {
+						continue;
+					}
+
+					let crew = STTApi.roster.find(c => c.symbol === avatar.symbol);
+					if (!crew) {
+						continue;
+					}
+
+					crew_bonuses.push({
+						crew,
+						iconUrl: STTApi.imageProvider.getCrewCached(avatar, false)
+					});
+				}
+
+				recommendations.push({
+					title: `Skirmish Event ` + msg,
+					icon: Priority.INFO,
+					content: <div style={{ margin: '0' }}>
+						{!hasEnded && <span>
+						<div>{eventData.bonus_text}</div>
+						Owned Event Bonus Crew: { !crew_bonuses.length && "None" }
+							<List horizontal>
+							{crew_bonuses.map(cb => (
+								<List.Item key={cb.crew.symbol}>
+									<Image src={cb.iconUrl} width="25" height="25" />
+									<List.Content>
+										<List.Header>{cb.crew.name}</List.Header>
+										<RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
+										{cb.crew.frozen == 1 && <div>Frozen</div>}
+										{cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
+									</List.Content>
+								</List.Item>
+							))}
+						</List>
+						</span>}
+					</div>
+				});
+			}
+			else{
+				recommendations.push({
+					title: `Event ` + msg,
+					icon: Priority.INFO,
+					content: <div style={{ margin: '0' }}>
+					</div>
 				});
 			}
 		}
