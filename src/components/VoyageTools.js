@@ -563,11 +563,11 @@ export class VoyageLog extends React.Component {
 		// Every 5 minutes refresh
 		// TODO: this should be configurable
 		const refreshInterval = 5 * 60;
-		this.intervalLogRefresh = setInterval(() => this.reloadVoyageState(), refreshInterval * 1000);
+		// this.intervalLogRefresh = setInterval(() => this.reloadVoyageState(), refreshInterval * 1000);
 	}
 
 	componentWillUnmount() {
-		clearInterval(this.intervalLogRefresh);
+		// clearInterval(this.intervalLogRefresh);
 	}
 
 	async reloadVoyageState() {

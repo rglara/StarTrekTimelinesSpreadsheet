@@ -16,10 +16,10 @@ export class CrewPage extends React.Component {
 
         this.state = {
             showEveryone: false,
-            showBuyback: true,
+            showBuyback: false,
             showCanTrain: false,
             groupRarity: false,
-            compactMode: false,
+            compactMode: true,
             crewData: this.loadCrewData(false, false)
         };
     }

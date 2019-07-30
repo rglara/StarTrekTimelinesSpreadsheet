@@ -134,11 +134,12 @@ export function formatAllCrew(allcrew: any[]) {
 	let dupeChecker = new Set<string>();
 	allcrew.forEach((crew: any) => {
 		// Sometimes duplicates can sneak into our allcrew list, filter them out
-		if (dupeChecker.has(crew.symbol)) {
+		let key = crew.symbol + '.' + crew.level + '.' + crew.rarity;
+		if (dupeChecker.has(key)) {
 			return;
 		}
 
-		dupeChecker.add(crew.symbol);
+		dupeChecker.add(key);
 
 		STTApi.applyBuffConfig(crew);
 

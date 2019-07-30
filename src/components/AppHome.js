@@ -136,12 +136,12 @@ export class AppHome extends React.Component {
 	}
 
 	componentDidMount() {
-		this.intervalPlayerResync = setInterval(this._playerResync, 5 * 60 * 1000);
+		// this.intervalPlayerResync = setInterval(this._playerResync, 5 * 60 * 1000);
 		this._switchTab('HomePage');
 	}
 
 	componentWillUnmount() {
-		clearInterval(this.intervalPlayerResync);
+		// clearInterval(this.intervalPlayerResync);
 	}
 
 	_playerResync() {
