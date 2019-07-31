@@ -301,8 +301,10 @@ export async function loginSequence(onProgress: (description: string) => void, l
         if (equipment.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getItemImageUrl(equipment, equipment.id).then((found: IFoundResult) => {
                 onProgress('Caching equipment images... (' + current++ + '/' + total + ')');
-                let item = STTApi.itemArchetypeCache.archetypes.find((item: any) => item.id === found.id);
-                item.iconUrl = found.url;
+                let item = STTApi.itemArchetypeCache.archetypes.find((item) => item.id === found.id);
+                if (item) {
+                    item.iconUrl = found.url;
+                }
             }).catch((error) => { }));
         } else {
             // Image is already cached

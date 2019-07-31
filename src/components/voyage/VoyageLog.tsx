@@ -294,10 +294,11 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
          let iconPromises : any[] = [];
          voyageRewards.forEach((reward) => {
             reward.iconUrl = '';
-            if (reward.icon.atlas_info) {
-               // This is not fool-proof, but covers currently known sprites
-               reward.iconUrl = CONFIG.SPRITES[reward.icon.file].url;
-            } else {
+            //TODO: why did this case come up?
+            // if (reward.icon.atlas_info) {
+            //    // This is not fool-proof, but covers currently known sprites
+            //    reward.iconUrl = CONFIG.SPRITES[reward.icon.file].url;
+            // } else {
                iconPromises.push(
                   STTApi.imageProvider
                      .getItemImageUrl(reward, reward)
@@ -308,7 +309,7 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
                         /*console.warn(error);*/
                      })
                );
-            }
+            // }
          });
 
          await Promise.all(iconPromises);
@@ -633,8 +634,7 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
             {this.state.indexedNarrative &&
                <CollapsibleSection title={"Complete Captain's Log (" + Object.keys(this.state.indexedNarrative).length + ')'}>
                {Object.keys(this.state.indexedNarrative).map(key => {
-                  if (!this.state.indexedNarrative) { return <span/>; }
-                  let v = this.state.indexedNarrative[+key];
+                  let v = this.state.indexedNarrative![+key];
                   return <VoyageLogEntry key={key} log={v} />;
                })}
                </CollapsibleSection>

@@ -33,7 +33,7 @@ import Moment from 'moment';
 export class STTApiClass {
 	private _accessToken: string | undefined;
 	private _net: NetworkInterface;
-	private _playerData: any;
+	private _playerData?: { player: PlayerDTO; item_archetype_cache: { archetypes: ItemArchetypeDTO[]; id: number; }; };
 	private _starbaseData: any;
 	private _fleetMemberInfo: any;
 	private _cache: DexieCache;
@@ -89,7 +89,7 @@ export class STTApiClass {
 	async refreshEverything(logout: boolean) {
 		this.crewAvatars = [];
 		this.serverConfig = null;
-		this._playerData = null;
+		this._playerData = undefined;
 		this.platformConfig = null;
 		this.shipSchematics = null;
 		this._starbaseData = null;
@@ -157,12 +157,12 @@ export class STTApiClass {
 		return this._accessToken != null;
 	}
 
-	get playerData(): any {
-		return this._playerData.player;
+	get playerData(): PlayerDTO {
+		return this._playerData!.player;
 	}
 
-	get itemArchetypeCache(): any {
-		return this._playerData.item_archetype_cache;
+	get itemArchetypeCache(): { archetypes: ItemArchetypeDTO[]; } {
+		return this._playerData!.item_archetype_cache;
 	}
 
 	get fleetMembers(): any {
@@ -354,7 +354,7 @@ export class STTApiClass {
 		// this code reloads minimal stuff to update the player information and merge things back in
 		let data = await this.executeGetRequest('player/resync_currency');
 		if (data.player) {
-			this._playerData.player = mergeDeep(this._playerData.player, data.player);
+			this._playerData!.player = mergeDeep(this._playerData!.player, data.player);
 		} else {
 			throw new Error('Invalid data for player!');
 		}
@@ -447,7 +447,7 @@ export class STTApiClass {
 
 	async refreshRoster(): Promise<void> {
 		// TODO: need to reload icon urls as well
-		this.roster = await matchCrew(this._playerData.player.character);
+		this.roster = await matchCrew(this._playerData!.player.character);
 	}
 
 	async applyUpdates(data: any): Promise<any[]> {
@@ -471,16 +471,16 @@ export class STTApiClass {
 
 			if (data.action === 'update') {
 				if (data.player) {
-					this._playerData.player = mergeDeep(this._playerData.player, data.player);
+					this._playerData!.player = mergeDeep(this._playerData!.player, data.player);
 				}
 
 				if (data.character) {
-					this._playerData.player.character = mergeDeep(this._playerData.player.character, data.character);
+					this._playerData!.player.character = mergeDeep(this._playerData!.player.character, data.character);
 				}
 
 				if (data.event) {
-					if(this._playerData.player.character.events && this._playerData.player.character.events.length === 1) {
-						this._playerData.player.character.events[0] = mergeDeep(this._playerData.player.character.events[0], data.event);
+					if(this._playerData!.player.character.events && this._playerData!.player.character.events.length === 1) {
+						this._playerData!.player.character.events[0] = mergeDeep(this._playerData!.player.character.events[0], data.event);
 					}
 				}
 			} else if (data.action === 'delete') {
@@ -488,10 +488,11 @@ export class STTApiClass {
 				// For example, data.character.items, array with objects with just the id property in them
 
 				if (data.character) {
+					let pc :any = this._playerData!.player.character; // remove type info to allow object indexing
 					for (let prop in data.character) {
-						if (Array.isArray(data.character[prop]) && Array.isArray(this._playerData.player.character[prop])) {
+						if (Array.isArray(data.character[prop]) && Array.isArray(pc[prop])) {
 							for (let item of data.character[prop]) {
-								this._playerData.player.character[prop] = this._playerData.player.character[prop].filter((itm: any) => itm.id !== item.id);
+								pc[prop] = pc[prop].filter((itm: any) => itm.id !== item.id);
 							}
 						}
 					}
@@ -502,7 +503,7 @@ export class STTApiClass {
 					data.event.content.gather_pools[0].adventures &&
 					data.event.content.gather_pools[0].adventures.length === 1
 				) {
-					this._playerData.player.character.events[0].content.gather_pools[0].adventures = this._playerData.player.character.events[0].content.gather_pools[0].adventures.filter(
+					this._playerData!.player.character.events[0].content.gather_pools[0].adventures = this._playerData!.player.character.events[0].content.gather_pools[0].adventures.filter(
 						(itm: any) => itm.id !== data.event.content.gather_pools[0].adventures[0].id
 					);
 				} else {
@@ -856,7 +857,7 @@ export interface VoyageLootDTO {
 }
 
 export interface VoyagePendingLootDTO {
-	icon: { atlas_info: any; file: string; }; // TODO: should be ImageData, but atlas_info field was added
+	icon: ImageData;
 	flavor: string;
 	full_name: string;
 	id: number;
@@ -885,32 +886,170 @@ export interface VoyagePendingLootDTO {
 }
 
 export interface VoyageDTO {
-	id: number;
-	ship_name: string;
-	ship_id: number;
-	skills: { primary_skill: string; secondary_skill: string; };
-	skill_aggregates: { [sk: string]: { skill: string; core: number; range_min: number; range_max: number; } };
-	pending_rewards: { loot: VoyagePendingLootDTO[] };
-	created_at: string;
-	voyage_duration: number;
-	seconds_since_last_dilemma: number;
-	seconds_between_dilemmas: number;
-	crew_slots: { crew: any; name: string; skill: string; symbol: string; trait: string; }[];
-	hp: number;
-	max_hp: number;
-	state: string;
-	recall_time_left: number;
-	recalled_at: string;
-	dilemma: any;
 	completed_at: any; // was null; probably a string
+	created_at: string;
+	crew_slots: { crew: any; name: string; skill: string; symbol: string; trait: string; }[];
 	description: string; // seems to be unused
+	dilemma?: any;
 	first_leave: boolean;
 	granted_rewards: any; // was null
+	hp: number;
 	icon: string;
+	id: number;
 	log_index: number;
+	max_hp: number;
 	name: string; // seems to be unused
+	pending_rewards: { loot: VoyagePendingLootDTO[] };
+	recalled_at: string;
+	recall_time_left?: number;
+	seconds_between_dilemmas: number;
+	seconds_since_last_dilemma: number;
 	seed: number;
+	ship_id: number;
+	ship_name: string;
 	ship_trait: string;
-	speedup_cost: { currency: number; amount: number; };
+	skill_aggregates: { [sk: string]: { skill: string; core: number; range_min: number; range_max: number; } };
+	skills: { primary_skill: string; secondary_skill: string; };
+	speedup_cost?: { currency: number; amount: number; };
+	state: string;
 	time_to_next_event: number;
+	voyage_duration: number;
+}
+
+export interface PlayerDTO {
+	character: PlayerCharacterDTO;
+	chats: any;
+	commerce: any;
+	community_links: any;
+	currency_exchanges: any;
+	dbid: number;
+	display_name: string;
+	entitlements: any;
+	environment: any;
+	fleet: any;
+	fleet_invite: any;
+	honor: number;
+	id: number;
+	lang: string;
+	locale: string;
+	mailbox: any;
+	money: number;
+	motd: any;
+	npe_complete: boolean;
+	premium_earnable: number;
+	premium_purchasable: number;
+	replicator_limit: number;
+	replicator_uses_today: number;
+	shuttle_rental_tokens: number;
+	squad: { id: number; rank: string; };
+	timezone: string;
+	vip_level: number;
+	vip_points: number;
+}
+
+export interface PlayerCharacterDTO {
+	accepted_missions: any[];
+	active_conflict: any; // null
+	boost_windows: any[];
+	cadet_schedule: any;
+	cadet_tickets: any;
+	can_purchase_crew_limit_increase: boolean;
+	can_purchase_shuttle_bay: boolean;
+	crew: CrewDTO[];
+	crew_avatar: any;
+	crew_borrows: any[];
+	crew_collection_buffs: any[];
+	crew_limit: number;
+	crew_limit_increase_per_purchase: number;
+	crew_shares: any[];
+	cryo_collections: CryoCollectionDTO[];
+	current_ship_id: number;
+	daily_activities: any[];
+	daily_rewards_state: any;
+	destination: any;
+	display_name: string;
+	dispute_histories: any[];
+	disputes: any[];
+	event_tickets: any;
+	events: any[];
+	factions: any[];
+	fleet_activities: any[];
+	freestanding_quests: any[];
+	gauntlets?: GauntletDTO[]; // Does not come with initial fetch, but gauntlet update is within character
+	honor_reward_by_rarity: number[];
+	id: number;
+	item_limit: number;
+	items: any[];
+	level: number;
+	location: { place:string; setup: string; system: string; x: number; y:number; };
+	location_channel_prefix: string;
+	max_level: number;
+	navmap: any;
+	next_crew_limit_increase_cost: {currency:number; amount: number; };
+	next_daily_activity_reset: number;
+	next_fleet_activity_reset: number;
+	next_shuttle_bay_cost: any;
+	next_starbase_donation_reset: number;
+	open_packs: any[];
+	pvp_divisions: any[];
+	pvp_tickets: any;
+	pvp_timer: any;
+	replay_energy_max: number;
+	replay_energy_overflow: number;
+	replay_energy_rate: number;
+	reroll_descriptions: any[];
+	scan_speedups_today: number;
+	seasons: any;
+	seconds_from_last_boost_claim: number;
+	seconds_from_replay_energy_basis: number;
+	seconds_to_scan_cooldown: number;
+	ships: any[];
+	shuttle_adventures: any[];
+	shuttle_bayse: number;
+	starbase_buffs: any[];
+	stimpack: any; // null
+	stored_immortals: { id: number; quantity: number; }[];
+	tng_the_game_level: number;
+	tutorials: any[];
+	using_default_name: boolean;
+	video_ad_chroniton_boost_reward: any;
+	voyage: VoyageDTO[];
+	voyage_descriptions: any[];
+	voyage_summaries: any;
+	xp: number;
+	xp_for_current_level: number;
+	xp_for_next_level: number;
+}
+
+interface ItemArchetypeDTO {
+	bonuses?: {[key:number] : number};
+	flavor: string;
+	icon: ImageData;
+	id: number;
+	item_sources: any[];
+	name: string;
+	rarity: number;
+	recipe: any;
+	short_name?: string;
+	symbol: string;
+	type: number;
+
+	//HACK: added by the app
+	iconUrl?: string;
+}
+
+export interface CryoCollectionDTO {
+	claimable_milestone_index: number;
+	description: string;
+	extra_crew: number[];
+	id: number;
+	image: string;
+	milestone: { rewards: any[]; goal: number; buffs: any[]; };
+	name: string;
+	progress: number;
+	traits: string[];
+	type_id: number;
+
+	//HACK: added by the app
+	iconUrl?: string;
 }

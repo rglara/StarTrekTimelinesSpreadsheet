@@ -1,7 +1,7 @@
 import React from 'react';
 
 import STTApi, { CONFIG } from '../api';
-import { CrewAvatar, CrewData } from '../api/STTApi';
+import { CrewAvatar, CrewData, CryoCollectionDTO } from '../api/STTApi';
 
 interface CryoCollectionsProps {
     onCommandItemsUpdate: (ary:any[]) => void;
@@ -12,18 +12,7 @@ interface CryoCollectionsState {
 }
 
 interface CryoCollectionProps {
-    collection: {
-        iconUrl?: string;
-        image: string;
-        progress: number;
-        description: string;
-        name: string;
-        traits: string[];
-        extra_crew: number[];
-        milestone: {
-            goal: number;
-        };
-    }
+    collection: CryoCollectionDTO;
 }
 
 interface CryoCollectionState {
@@ -46,7 +35,7 @@ class CryoCollection extends React.Component<CryoCollectionProps, CryoCollection
         }
 
         let archetypes = STTApi.crewAvatars.filter((crew: CrewAvatar) =>
-            (crew.traits.concat(crew.traits_hidden).filter((trait:any) =>
+            (crew.traits.concat(crew.traits_hidden).filter((trait:string) =>
                 this.props.collection.traits.includes(trait)).length > 0) || this.props.collection.extra_crew.includes(crew.id));
         let unowned: CrewAvatar[] = [];
         let owned: CrewData[] = [];
@@ -174,11 +163,11 @@ export class CryoCollections extends React.Component<CryoCollectionsProps, CryoC
         let collections = STTApi.playerData.character.cryo_collections;
 
         if (!this.state.showComplete) {
-            collections = collections.filter((c:any) => c.milestone.goal !== 0);
+            collections = collections.filter((c:CryoCollectionDTO) => c.milestone.goal !== 0);
         }
 
         return <div className='tab-panel' data-is-scrollable='true'>
-            {collections.map((collection:any) => <CryoCollection key={collection.id} collection={collection} />)}
+            {collections.map((c: CryoCollectionDTO) => <CryoCollection key={c.id} collection={c} />)}
         </div>;
     }
 }

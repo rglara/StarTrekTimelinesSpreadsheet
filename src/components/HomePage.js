@@ -416,7 +416,8 @@ export class HomePage extends React.Component {
 					icon: Priority.INFO,
 					content: <div style={{ margin: '0' }}>
 						{!hasEnded && <span>
-							Owned bonus crew:
+							<div>{eventData.bonus_text}</div>
+							Owned Event Bonus Crew: {!crew_bonuses.length && "None"}
 							<List horizontal>
 								{crew_bonuses.map(cb => (
 									<List.Item key={cb.crew.symbol}>
@@ -474,7 +475,7 @@ export class HomePage extends React.Component {
 					content: <div style={{ margin: '0' }}>
 						{!hasEnded && <span>
 							<div>{eventData.bonus_text}</div>
-							Owned bonus crew:
+							Owned Event Bonus Crew: {!crew_bonuses.length && "None"}
 								<List horizontal>
 								{crew_bonuses.map(cb => (
 									<List.Item key={cb.crew.symbol}>

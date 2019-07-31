@@ -1,6 +1,6 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
-import { CrewAvatar, CrewData, CrewDTO} from './STTApi'
+import { CrewAvatar, CrewData, CrewDTO, PlayerCharacterDTO} from './STTApi'
 
 export interface BuffStat {
 	multiplier: number;
@@ -164,11 +164,11 @@ export function formatAllCrew(allcrew: CrewDTO[]): CrewData[] {
 	return roster;
 }
 
-export async function matchCrew(character: any): Promise<CrewData[]> {
+export async function matchCrew(character: PlayerCharacterDTO): Promise<CrewData[]> {
 	let roster: CrewData[] = [];
 
 	// Add all the crew in the active roster
-	character.crew.forEach((crew: CrewDTO) => {
+	character.crew.forEach((crew) => {
 		let rosterEntry = getDefaults(crew.archetype_id);
 		if (!rosterEntry) {
 			console.error(`Could not find the crew avatar for archetype_id ${crew.archetype_id}`);
@@ -183,15 +183,15 @@ export async function matchCrew(character: any): Promise<CrewData[]> {
 	if (character.stored_immortals && character.stored_immortals.length > 0) {
 		// Use the cache wherever possible
 		// TODO: does DB ever change the stats of crew? If yes, we may need to ocasionally clear the cache - perhaps based on record's age
-		let frozenPromises: Promise<any>[] = [];
+		let frozenPromises: Promise<void>[] = [];
 
-		character.stored_immortals.forEach((crew: any) => {
-			let rosterEntry = getDefaults(crew.id);
+		character.stored_immortals.forEach((imm) => {
+			let rosterEntry = getDefaults(imm.id);
 			if (!rosterEntry) {
-				console.error(`Could not find the crew avatar for frozen archetype_id ${crew.id}`);
+				console.error(`Could not find the crew avatar for frozen archetype_id ${imm.id}`);
 				return;
 			}
-			rosterEntry.frozen = crew.quantity;
+			rosterEntry.frozen = imm.quantity;
 			rosterEntry.level = 100;
 			rosterEntry.rarity = rosterEntry.max_rarity;
 			roster.push(rosterEntry);
