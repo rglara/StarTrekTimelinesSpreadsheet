@@ -7,9 +7,53 @@ import STTApi, { CONFIG, RarityStars, formatTimeSeconds, CollapsibleSection, dow
 import { loadVoyage, recallVoyage, resolveDilemma } from './VoyageTools';
 import { estimateVoyageRemaining } from './voyageCalc';
 import { VoyageLogEntry } from './VoyageLogEntry';
+import { VoyageNarrativeDTO, VoyageDTO } from '../../api/STTApi';
 
-export class VoyageLog extends React.Component<any,any> {
-   constructor(props:any) {
+interface VoyageExportData {
+   id: number;
+   skills: any;
+   skillAggregates: any[];
+   stats: {
+      skillChecks: {
+         times: number[];
+         average: number;
+      };
+      rewards: {
+         times: number[];
+         average: number;
+      };
+   };
+   narrative: VoyageNarrativeDTO[],
+}
+
+interface VoyageLogProps {
+
+}
+interface VoyageLogState {
+   includeFlavor: boolean;
+   showSpinner: boolean,
+   rewardTableColumns: any[],
+   sorted: { id: string, desc: boolean }[];
+   ship_name?: string;
+   ship_id?: number;
+   created_at?: string;
+   voyage_duration?: number;
+   seconds_since_last_dilemma?: number;
+   seconds_between_dilemmas?: number;
+   skill_aggregates?: any;
+   crew_slots?: any[];
+   voyage?: VoyageDTO;
+   indexedNarrative?: { [index:number] : VoyageNarrativeDTO[] };
+   skillChecks?: any;
+   estimatedMinutesLeft?: number;
+   estimatedMinutesLeftRefill?: number;
+   nativeEstimate?: boolean;
+   voyageRewards?: any[];
+   voyageExport?: VoyageExportData;
+}
+
+export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
+   constructor(props: VoyageLogProps) {
       super(props);
 
       let _columns = [
@@ -149,19 +193,21 @@ export class VoyageLog extends React.Component<any,any> {
    }
 
    async reloadVoyageState() {
-      let voyage = STTApi.playerData.character.voyage[0];
+      let voyage : VoyageDTO = STTApi.playerData.character.voyage[0];
       if (voyage && voyage.id) {
          let voyageNarrative = await loadVoyage(voyage.id, false);
-         let voyageExport : any = {
+         let voyageExport: VoyageExportData = {
             id: voyage.id,
             skills: voyage.skills,
             skillAggregates: [],
             stats: {
                skillChecks: {
                   times: [],
+                  average: 0
                },
                rewards: {
                   times: [],
+                  average: 0,
                },
             },
             narrative: voyageNarrative,
@@ -170,11 +216,11 @@ export class VoyageLog extends React.Component<any,any> {
          //<Checkbox checked={this.state.includeFlavor} label="Include flavor entries" onChange={(e, isChecked) => { this.setState({ includeFlavor: isChecked }); }} />
          if (!this.state.includeFlavor) {
             // Remove the "flavor" entries (useless text)
-            voyageNarrative = voyageNarrative.filter((e: any) => e.encounter_type !== 'flavor');
+            voyageNarrative = voyageNarrative.filter(e => e.encounter_type !== 'flavor');
          }
 
          // compute skill check counts
-         let skillChecks = voyageNarrative.reduce((r: any, a: any) => {
+         let skillChecks : {[k:string] : number[] } = voyageNarrative.reduce((r, a) => {
             if (a.skill_check && a.skill_check.skill && a.encounter_type === "hazard") {
                if (!r[a.skill_check.skill])
                   r[a.skill_check.skill] = [0, 0];
@@ -192,14 +238,14 @@ export class VoyageLog extends React.Component<any,any> {
             }
          });
 
-         voyageNarrative.filter((e: any) => e.encounter_type === "reward").forEach((v: any) => {
+         voyageNarrative.filter(e => e.encounter_type === "reward").forEach(v => {
             voyageExport.stats.rewards.times.push(v.event_time);
          });
 
          // at index "index", need to subtract "gap" from all times >=
-         let timeGaps = [];
+         let timeGaps : { gap: number; index: number; }[] = [];
 
-         voyageNarrative.forEach((e: any, i:number, ee:any[]) => {
+         voyageNarrative.forEach((e, i:number, ee) => {
             if (i > 1 && ee[i - 1].encounter_type === "dilemma" && e.encounter_type !== "dilemma") {
                let timelost = e.event_time - ee[i - 1].event_time;
                timeGaps.push({ gap: timelost, index: e.index })
@@ -209,14 +255,14 @@ export class VoyageLog extends React.Component<any,any> {
 
          if (voyageExport.stats.skillChecks.times.length > 1) {
             voyageExport.stats.skillChecks.average = voyageExport.stats.skillChecks.times
-               .map((v: any, i:number, vv:any[]) => i == 0 ? 0 : v - vv[i - 1])
-               .reduce((a: any, b: any) => a + b)
+               .map((v, i:number, vv) => i == 0 ? 0 : v - vv[i - 1])
+               .reduce((a, b) => a + b)
                / voyageExport.stats.skillChecks.times.length;
          }
          if (voyageExport.stats.rewards.times.length > 1) {
             voyageExport.stats.rewards.average = voyageExport.stats.rewards.times
-               .map((v: any, i:number, vv:any[]) => i == 0 ? 0 : v - vv[i - 1])
-               .reduce((a: any, b: any) => a + b)
+               .map((v, i:number, vv) => i == 0 ? 0 : v - vv[i - 1])
+               .reduce((a, b) => a + b)
                / voyageExport.stats.rewards.times.length;
          }
 
@@ -238,7 +284,7 @@ export class VoyageLog extends React.Component<any,any> {
          });
 
          // Group by index
-         voyageNarrative = voyageNarrative.reduce((r: any, a: any) => {
+         let indexedNarrative = voyageNarrative.reduce((r, a) => {
             r[a.index] = r[a.index] || [];
             r[a.index].push(a);
             return r;
@@ -246,7 +292,7 @@ export class VoyageLog extends React.Component<any,any> {
 
          let voyageRewards = voyage.pending_rewards.loot;
          let iconPromises : any[] = [];
-         voyageRewards.forEach((reward: any) => {
+         voyageRewards.forEach((reward) => {
             reward.iconUrl = '';
             if (reward.icon.atlas_info) {
                // This is not fool-proof, but covers currently known sprites
@@ -284,7 +330,7 @@ export class VoyageLog extends React.Component<any,any> {
             skill_aggregates: voyage.skill_aggregates,
             crew_slots: voyage.crew_slots,
             voyage: voyage,
-            voyageNarrative: voyageNarrative,
+            indexedNarrative: indexedNarrative,
             skillChecks: skillChecks,
             estimatedMinutesLeft: voyage.hp / 21,
             estimatedMinutesLeftRefill: voyage.hp / 21,
@@ -301,6 +347,9 @@ export class VoyageLog extends React.Component<any,any> {
    }
 
    renderVoyageState() {
+      if (!this.state.voyage) {
+         return <div/>;
+      }
       if (this.state.voyage.state === 'recalled') {
          return (
             <p>
@@ -316,15 +365,21 @@ export class VoyageLog extends React.Component<any,any> {
 				</p>
          );
       } else {
+         if (!this.state.seconds_between_dilemmas || !this.state.seconds_since_last_dilemma || !this.state.estimatedMinutesLeft) {
+            return <div/>;
+         }
          const getDilemmaChance = (estimatedMinutesLeft: number) => {
             let minEstimate = (estimatedMinutesLeft * 0.75 - 1) * 60;
             let maxEstimate = estimatedMinutesLeft * 60;
 
-            let chanceDilemma: any =
-               (100 * (this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma - minEstimate)) / (maxEstimate - minEstimate);
-            chanceDilemma = (100 - Math.min(Math.max(chanceDilemma, 0), 100)).toFixed();
+            if (!this.state.seconds_between_dilemmas || !this.state.seconds_since_last_dilemma) {
+               return '0';
+            }
 
-            return chanceDilemma;
+            let chanceDilemma = (100 * (this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma - minEstimate))
+               / (maxEstimate - minEstimate);
+
+            return (100 - Math.min(Math.max(chanceDilemma, 0), 100)).toFixed();
          };
 
          return (
@@ -353,6 +408,9 @@ export class VoyageLog extends React.Component<any,any> {
    }
 
    async _betterEstimate() {
+      if (!this.state.voyage) {
+         return;
+      }
       const assignedCrew = this.state.voyage.crew_slots.map((slot: any) => slot.crew.id);
       const assignedRoster = STTApi.roster.filter(crew => assignedCrew.includes(crew.crew_id));
 
@@ -375,6 +433,10 @@ export class VoyageLog extends React.Component<any,any> {
 
       estimateVoyageRemaining(options, (estimate:any) => {
          this.setState({ estimatedMinutesLeft: estimate });
+
+         if (!this.state.voyage || !this.state.voyage.max_hp){
+            return;
+         }
 
          options.remainingAntiMatter += this.state.voyage.max_hp;
          estimateVoyageRemaining(options, (estimate: any) => {
@@ -401,19 +463,24 @@ export class VoyageLog extends React.Component<any,any> {
    }
 
    renderDilemma() {
-      if (this.state.voyage.dilemma && this.state.voyage.dilemma.id) {
+      if (!this.state.voyage) {
+         return <div/>;
+      }
+      let voy = this.state.voyage;
+
+      if (voy.dilemma && voy.dilemma.id) {
          return (
             <div>
                <h3 key={0} className='ui top attached header'>
-                  Dilemma - <span dangerouslySetInnerHTML={{ __html: this.state.voyage.dilemma.title }} />
+                  Dilemma - <span dangerouslySetInnerHTML={{ __html: voy.dilemma.title }} />
                </h3>
                ,
-					<div key={1} className='ui center aligned inverted attached segment'>
+               <div key={1} className='ui center aligned inverted attached segment'>
                   <div>
-                     <span dangerouslySetInnerHTML={{ __html: this.state.voyage.dilemma.intro }} />
+                     <span dangerouslySetInnerHTML={{ __html: voy.dilemma.intro }} />
                   </div>
                   <div className='ui middle aligned selection list inverted'>
-                     {this.state.voyage.dilemma.resolutions.map((resolution: any, index:number) => {
+                     {voy.dilemma.resolutions.map((resolution: any, index:number) => {
                         if (resolution.locked) {
                            return (
                               <div className='item' key={index}>
@@ -429,7 +496,7 @@ export class VoyageLog extends React.Component<any,any> {
                               <div
                                  className='item'
                                  key={index}
-                                 onClick={() => this._chooseDilemma(this.state.voyage.id, this.state.voyage.dilemma.id, index)}>
+                                 onClick={() => this._chooseDilemma(voy.id, voy.dilemma.id, index)}>
                                  <img src={CONFIG.SPRITES['icon_' + resolution.skill].url} height={18} />
                                  <div className='content'>
                                     <div className='header'>
@@ -474,13 +541,19 @@ export class VoyageLog extends React.Component<any,any> {
          </Button>
       );
 
+      if (!this.state.voyage || !this.state.crew_slots) {
+         return <div/>;
+      }
+
+      let voy = this.state.voyage;
+
       return (
          <div style={{ userSelect: 'initial' }}>
             <h3>Voyage on the {this.state.ship_name}</h3>
             {this.renderVoyageState()}
             {this.renderDilemma()}
             <p>
-               Antimatter remaining: {this.state.voyage.hp} / {this.state.voyage.max_hp}.
+               Antimatter remaining: {voy.hp} / {voy.max_hp}.
             </p>
             <table style={{ borderSpacing: '0' }}>
                <tbody>
@@ -512,9 +585,9 @@ export class VoyageLog extends React.Component<any,any> {
                      </td>
                      <td>
                         <ul>
-                           {Object.keys(this.state.voyage.skill_aggregates).map(k => this.state.voyage.skill_aggregates[k]).map(skill => {
-                              let isPri = skill.skill == this.state.voyage.skills.primary_skill;
-                              let isSec = skill.skill == this.state.voyage.skills.secondary_skill;
+                           {Object.keys(voy.skill_aggregates).map(k => voy.skill_aggregates[k]).map(skill => {
+                              let isPri = skill.skill == voy.skills.primary_skill;
+                              let isSec = skill.skill == voy.skills.secondary_skill;
                               return (
                                  <li key={skill.skill}>
                                     <span className='quest-mastery'>
@@ -537,30 +610,37 @@ export class VoyageLog extends React.Component<any,any> {
                </tbody>
             </table>
 
-            <h3>{'Pending rewards (' + this.state.voyageRewards.length + ')'}</h3>
-            <div className='voyage-rewards-grid'>
-               <ReactTable
-                  data={this.state.voyageRewards}
-                  columns={this.state.rewardTableColumns}
-                  sorted={this.state.sorted}
-                  onSortedChange={sorted => this.setState({ sorted })}
-                  className='-striped -highlight'
-                  defaultPageSize={10}
-                  pageSize={10}
-                  showPagination={this.state.voyageRewards.length > 10}
-                  showPageSizeOptions={false}
-                  NextComponent={defaultButton}
-                  PreviousComponent={defaultButton}
-               />
-            </div>
-            <br />
-            <CollapsibleSection title={"Complete Captain's Log (" + Object.keys(this.state.voyageNarrative).length + ')'}>
-               {Object.keys(this.state.voyageNarrative).map(key => {
-                  return <VoyageLogEntry key={key} log={this.state.voyageNarrative[key]} />;
+            {this.state.voyageRewards && <span>
+               <h3>{'Pending rewards (' + this.state.voyageRewards.length + ')'}</h3>
+               <div className='voyage-rewards-grid'>
+                  <ReactTable
+                     data={this.state.voyageRewards}
+                     columns={this.state.rewardTableColumns}
+                     sorted={this.state.sorted}
+                     onSortedChange={sorted => this.setState({ sorted })}
+                     className='-striped -highlight'
+                     defaultPageSize={10}
+                     pageSize={10}
+                     showPagination={this.state.voyageRewards.length > 10}
+                     showPageSizeOptions={false}
+                     NextComponent={defaultButton}
+                     PreviousComponent={defaultButton}
+                  />
+               </div>
+               <br />
+               </span>
+            }
+            {this.state.indexedNarrative &&
+               <CollapsibleSection title={"Complete Captain's Log (" + Object.keys(this.state.indexedNarrative).length + ')'}>
+               {Object.keys(this.state.indexedNarrative).map(key => {
+                  if (!this.state.indexedNarrative) { return <span/>; }
+                  let v = this.state.indexedNarrative[+key];
+                  return <VoyageLogEntry key={key} log={v} />;
                })}
-            </CollapsibleSection>
+               </CollapsibleSection>
+            }
             <button className='ui mini button blue'
-               onClick={() => download('narrative.' + this.state.voyage.id + '.json',
+               onClick={() => download('narrative.' + voy.id + '.json',
                   JSON.stringify(this.state.voyageExport),
                   'Export voyage narrative JSON',
                   'Export',

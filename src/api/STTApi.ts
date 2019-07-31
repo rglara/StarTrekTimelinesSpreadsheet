@@ -585,25 +585,27 @@ export interface SkillData {
 	voy?: number;
 }
 
-export interface CrewDTO {
-	action: {
-		ability: {
-			amount: number;
-			condition: number;
-			type: number;
-		};
-		bonus_amount: number;
-		bonus_type: number;
-		cooldown: number;
-		crew: number;
-		duration: number;
-		icon: ImageData;
-		initial_cooldown: number;
-		name: string;
-		special: boolean;
-		symbol: string;
+export interface CrewActionDTO {
+	ability: {
+		amount: number;
+		condition: number;
+		type: number;
 	};
+	bonus_amount: number;
+	bonus_type: number;
+	charge_phases?: { charge_time: number; ability_amount: number; }[];
+	cooldown: number;
+	crew: number;
+	duration: number;
+	icon: ImageData;
+	initial_cooldown: number;
+	name: string;
+	special: boolean;
+	symbol: string;
+}
 
+export interface CrewDTO {
+	action: CrewActionDTO;
 	active_id: any;
 	active_index: number;
 	active_status: number;
@@ -819,4 +821,96 @@ export interface GauntletContestLootDTO {
 	rarity: number;
 	symbol: string;
 	type: number;
+}
+
+export interface VoyageUpdateDTO {
+	hp: number;
+	id: number;
+	seconds_since_last_dilemma: number;
+	state: string;
+	time_to_next_event: number;
+	voyage_duration: number;
+}
+
+export interface VoyageNarrativeDTO {
+	index: number;
+	text: string;
+	encounter_type: string;
+	event_time: number
+	crew?: string[];
+	skill_check?: { skill: string; passed: boolean; };
+	rewards?: { loot: VoyageLootDTO[] };
+}
+
+export interface VoyageLootDTO {
+	flavor: string;
+	full_name: string;
+	icon: ImageData;
+	id: number;
+	item_type?: number;
+	name: string;
+	quantity: number;
+	rarity: number;
+	symbol: string;
+	type: number;
+}
+
+export interface VoyagePendingLootDTO {
+	icon: { atlas_info: any; file: string; }; // TODO: should be ImageData, but atlas_info field was added
+	flavor: string;
+	full_name: string;
+	id: number;
+	item_type?: number;
+	name: string;
+	quantity: number;
+	rarity: number;
+	symbol: string;
+	type: number;
+	action?: CrewActionDTO;
+	full_body?: ImageData;
+	portrait?: ImageData;
+	skills?: {
+		command_skill ?: SkillDTO;
+		diplomacy_skill ?: SkillDTO;
+		engineering_skill ?: SkillDTO;
+		medicine_skill ?: SkillDTO;
+		science_skill ?: SkillDTO;
+		security_skill ?: SkillDTO;
+	};
+
+	traits?: string[];
+
+	//TODO: added by the app?
+	iconUrl?: string;
+}
+
+export interface VoyageDTO {
+	id: number;
+	ship_name: string;
+	ship_id: number;
+	skills: { primary_skill: string; secondary_skill: string; };
+	skill_aggregates: { [sk: string]: { skill: string; core: number; range_min: number; range_max: number; } };
+	pending_rewards: { loot: VoyagePendingLootDTO[] };
+	created_at: string;
+	voyage_duration: number;
+	seconds_since_last_dilemma: number;
+	seconds_between_dilemmas: number;
+	crew_slots: { crew: any; name: string; skill: string; symbol: string; trait: string; }[];
+	hp: number;
+	max_hp: number;
+	state: string;
+	recall_time_left: number;
+	recalled_at: string;
+	dilemma: any;
+	completed_at: any; // was null; probably a string
+	description: string; // seems to be unused
+	first_leave: boolean;
+	granted_rewards: any; // was null
+	icon: string;
+	log_index: number;
+	name: string; // seems to be unused
+	seed: number;
+	ship_trait: string;
+	speedup_cost: { currency: number; amount: number; };
+	time_to_next_event: number;
 }

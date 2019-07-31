@@ -1,21 +1,22 @@
 import STTApi from '../../api/index';
 import { mergeDeep } from '../../api/ObjectMerge';
-import { CrewData } from '../../api/STTApi';
+import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO } from '../../api/STTApi';
 
-export async function loadVoyage(voyageId: number, newOnly: boolean = true): Promise<any> {
+export async function loadVoyage(voyageId: number, newOnly: boolean = true): Promise<VoyageNarrativeDTO[]> {
 	let data = await STTApi.executePostRequest('voyage/refresh', { voyage_status_id: voyageId, new_only: newOnly });
 	if (data) {
-		let voyageNarrative: any[] = [];
+		let voyageNarrative: VoyageNarrativeDTO[] = [];
 
 		data.forEach((action: any) => {
-			if (action.character) {
+			if (action.character && action.character.voyage) {
 				// TODO: if DB adds support for more than one voyage at a time this hack won't work
+				let voy: VoyageUpdateDTO = action.character.voyage[0];
 
 				// Clear out the dilemma resolutions before load to avoid duplicates
 				if (STTApi.playerData.character.voyage[0] && STTApi.playerData.character.voyage[0].dilemma) {
 					STTApi.playerData.character.voyage[0].dilemma.resolutions = [];
 				}
-				STTApi.playerData.character.voyage[0] = mergeDeep(STTApi.playerData.character.voyage[0], action.character.voyage[0]);
+				STTApi.playerData.character.voyage[0] = mergeDeep(STTApi.playerData.character.voyage[0], voy);
 			} else if (action.voyage_narrative) {
 				voyageNarrative = action.voyage_narrative;
 			}
