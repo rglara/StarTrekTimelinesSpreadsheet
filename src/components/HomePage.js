@@ -425,7 +425,7 @@ export class HomePage extends React.Component {
 										<List.Content>
 											<List.Header>{cb.crew.name}</List.Header>
 											<RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
-											{cb.crew.frozen == 1 && <div>Frozen</div>}
+											{cb.crew.frozen > 0 && <div>Frozen</div>}
 											{cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
 											Bonus level {cb.bonus}
 										</List.Content>
@@ -484,7 +484,7 @@ export class HomePage extends React.Component {
 											<List.Header>{cb.crew.name}</List.Header>
 											<RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
 											{cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
-											{cb.crew.frozen == 1 && <div>Frozen</div>}
+											{cb.crew.frozen > 0 && <div>Frozen</div>}
 											Bonus level {cb.bonus}x
 										</List.Content>
 									</List.Item>
@@ -527,7 +527,7 @@ export class HomePage extends React.Component {
 									<List.Content>
 										<List.Header>{cb.crew.name}</List.Header>
 										<RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
-										{cb.crew.frozen == 1 && <div>Frozen</div>}
+										{cb.crew.frozen > 0 && <div>Frozen</div>}
 										{cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
 									</List.Content>
 								</List.Item>

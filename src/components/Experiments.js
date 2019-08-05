@@ -116,7 +116,7 @@ function getRosterWithBonuses(crew_bonuses) {
 	// TODO: share some of this code with Shuttles
 	let sortedRoster = [];
 	STTApi.roster.forEach(crew => {
-		if (crew.buyback || crew.frozen || crew.active_id) {
+		if (crew.buyback || crew.frozen > 0 || crew.active_id) {
 			return;
 		}
 

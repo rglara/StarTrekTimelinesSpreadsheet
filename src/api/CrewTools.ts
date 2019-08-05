@@ -222,7 +222,7 @@ export async function matchCrew(character: PlayerCharacterDTO): Promise<CrewData
 		for (let i = 0; i < max && i < filtered.length; ++i) {
 			// allow frozen items to be exported but not count towards top-10
 			let c = filtered[i];
-			if (c.frozen)
+			if (c.frozen > 0)
 				++max;
 			let value = c.usage_value;
 			if (!c.usage_value) {

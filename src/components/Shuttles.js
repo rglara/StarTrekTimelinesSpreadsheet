@@ -149,7 +149,7 @@ export class Shuttles extends React.Component {
 
 		let sortedRoster = [];
 		STTApi.roster.forEach(crew => {
-			if (crew.buyback || crew.frozen) {
+			if (crew.buyback || crew.frozen > 0) {
 				return;
 			}
 

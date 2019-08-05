@@ -134,7 +134,7 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
                   // For crew, check if it's useful or not
                   let have = STTApi.roster.filter(crew => crew.symbol === item.symbol);
                   if (have.length > 0) {
-                     if (have.some(c => c.frozen === 1)) {
+                     if (have.some(c => c.frozen > 0)) {
                         return <span>Duplicate of frozen crew (airlock-able)</span>;
                      }
                      if (have.some(c => c.max_rarity === c.rarity)) {

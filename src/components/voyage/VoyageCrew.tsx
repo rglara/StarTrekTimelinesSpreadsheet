@@ -442,7 +442,7 @@ export class VoyageCrew extends React.Component<any,any> {
 						if (crew) {
 							includedCrew[crew.id] = crew;
 							status = crew.rarity == crew.max_rarity ? crew.max_rarity : (crew.rarity + '/' + crew.max_rarity);
-							if (crew.frozen)
+							if (crew.frozen > 0)
 								status += 'Frz';
 							else if (crew.level == 100 && crew.rarity == crew.max_rarity)
 								status += 'Imm';
@@ -455,12 +455,12 @@ export class VoyageCrew extends React.Component<any,any> {
 				// Inject any crew with a usage value but no voyage score
 				STTApi.roster.forEach(crew => {
 					if (!includedCrew[crew.id]) {
-						if (crew.buyback || crew.isExternal)
+						if (crew.buyback || crew.isExternal || crew.usage_value === undefined)
 							return;
-						if (crew.usage_value && (crew.usage_value > 0 || (crew.max_rarity > 3 && !crew.frozen))) {
+						if (crew.usage_value > 0 || (crew.max_rarity > 3 && crew.frozen < 1)) {
 							includedCrew[crew.id] = crew;
 							let status : string | number = crew.rarity == crew.max_rarity ? crew.max_rarity : (crew.rarity + '/' + crew.max_rarity);
-							if (crew.frozen)
+							if (crew.frozen > 0)
 								status += 'Frz';
 							else if (crew.level == 100 && crew.rarity == crew.max_rarity)
 								status += 'Imm';

@@ -45,7 +45,7 @@ class CryoCollection extends React.Component<CryoCollectionProps, CryoCollection
             let crew = allOwnedCrew.find((crew:CrewData) => crew.id === a.id);
             if (!crew) {
                 unowned.push(a);
-            } else if (crew.frozen) {
+            } else if (crew.frozen > 0) {
                 ownedFrozen.push(crew);
             } else {
                 owned.push(crew);
