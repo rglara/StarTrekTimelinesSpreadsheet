@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Message, Dropdown, Button, Header, Select, Checkbox, Form, List, Image, Icon, Card, Popup } from 'semantic-ui-react';
+import { Message, Dropdown, Header, Select, Checkbox, Form, Image, Card } from 'semantic-ui-react';
 
 import STTApi from '../../api';
 import {
@@ -9,12 +9,10 @@ import {
 	bonusCrewForCurrentEvent,
 	formatTimeSeconds
 } from '../../api';
-import { CollapsibleSection } from '../CollapsibleSection';
-import { RarityStars } from '../RarityStars';
 
 import { bestVoyageShip, startVoyage } from './VoyageTools';
 import { download } from '../../utils/pal';
-import { calculateVoyage, estimateVoyageRemaining, exportVoyageData } from './voyageCalc';
+import { calculateVoyage, exportVoyageData } from './voyageCalc';
 
 export class VoyageCrew extends React.Component<any,any> {
 	constructor(props:any) {
@@ -436,7 +434,7 @@ export class VoyageCrew extends React.Component<any,any> {
 					if (posNameEnd > 0) {
 						let crewName = partB.substring(2, posNameEnd);
 						let crew = STTApi.roster.find(crew => crew.name == crewName);
-						if (crew && crew.usage_value) {
+						if (crew && crew.usage_value !== undefined) {
 							value = crew.usage_value;
 						}
 						if (crew) {

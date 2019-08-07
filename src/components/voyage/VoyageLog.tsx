@@ -1,6 +1,6 @@
 import React from 'react';
 import Moment from 'moment';
-import { Message, Dropdown, Button, Header, Select, Checkbox, Form, List, Image, Icon, Card, Popup } from 'semantic-ui-react';
+import { Button, Icon, Popup } from 'semantic-ui-react';
 import ReactTable from 'react-table';
 
 import STTApi, { CONFIG, RarityStars, formatTimeSeconds, CollapsibleSection, download } from '../../api';
@@ -111,7 +111,7 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
 
                return (
                   <span key={item.id}>
-                     <RarityStars min={1} max={item.rarity ? item.rarity : 1} value={item.rarity ? item.rarity : null} colored={true} />
+                     <RarityStars max={item.rarity ? item.rarity : 1} value={item.rarity ? item.rarity : null} colored={true} />
                   </span>
                );
             }
@@ -355,25 +355,27 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
          return (
             <p>
                Voyage has lasted for {formatTimeSeconds(this.state.voyage_duration)} and it's currently returning (
-					{formatTimeSeconds(this.state.voyage.recall_time_left)} left).
-				</p>
+               {formatTimeSeconds(this.state.voyage.recall_time_left)} left).
+            </p>
          );
       } else if (this.state.voyage.state === 'failed') {
          return (
             <p>
                Voyage has run out of antimatter after {formatTimeSeconds(this.state.voyage_duration)} and it's waiting to be abandoned or
-					replenished.
-				</p>
+               replenished.
+            </p>
          );
       } else {
-         if (!this.state.seconds_between_dilemmas || !this.state.seconds_since_last_dilemma || !this.state.estimatedMinutesLeft) {
+         if (this.state.seconds_between_dilemmas === undefined ||
+             this.state.seconds_since_last_dilemma === undefined ||
+             this.state.estimatedMinutesLeft === undefined) {
             return <div/>;
          }
          const getDilemmaChance = (estimatedMinutesLeft: number) => {
             let minEstimate = (estimatedMinutesLeft * 0.75 - 1) * 60;
             let maxEstimate = estimatedMinutesLeft * 60;
 
-            if (!this.state.seconds_between_dilemmas || !this.state.seconds_since_last_dilemma) {
+            if (this.state.seconds_between_dilemmas === undefined || this.state.seconds_since_last_dilemma === undefined ) {
                return '0';
             }
 
@@ -387,9 +389,9 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
             <div>
                <p>
                   Voyage has been ongoing for <b>{formatTimeSeconds(this.state.voyage_duration)}</b> (new dilemma in
-						{' '}{formatTimeSeconds(this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma)}
+                  {' '}{formatTimeSeconds(this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma)}
                   {' '}at {Moment().add(this.state.seconds_between_dilemmas - this.state.seconds_since_last_dilemma, 's').format('h:mma')}).
-					</p>
+               </p>
 
                <div className='ui blue label'>
                   Estimated time left: <b>{formatTimeSeconds(this.state.estimatedMinutesLeft * 60)}</b>
@@ -400,7 +402,7 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
                <button className='ui mini button' onClick={() => this._recall()}>
                   <i className='icon undo' />
                   Recall now
-					</button>
+               </button>
 
                <p>There is an estimated {getDilemmaChance(this.state.estimatedMinutesLeft)}% chance for the voyage to reach next dilemma.</p>
             </div>
@@ -519,7 +521,9 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
 
    renderCrewSkills(crew: any) {
       return <span key={crew.id}>
-         <RarityStars min={1} max={crew.max_rarity} value={crew.rarity} asSpan={true} />&nbsp;{Object.keys(crew.skills).map(s => {
+         <RarityStars max={crew.max_rarity} value={crew.rarity} asSpan={true} colored={true} />
+         &nbsp;
+         {Object.keys(crew.skills).map(s => {
             return (<span key={s}><img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
                {crew.skills[s].core} ({crew.skills[s].range_min}-{crew.skills[s].range_max})
             </span>);

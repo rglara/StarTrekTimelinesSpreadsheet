@@ -1,6 +1,6 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
-import { CrewAvatar, CrewData, CrewDTO, PlayerCharacterDTO} from './STTApi'
+import { CrewAvatar, CrewData, CrewDTO, PlayerCharacterDTO, SkillData} from './STTApi'
 
 export interface BuffStat {
 	multiplier: number;
@@ -8,7 +8,7 @@ export interface BuffStat {
 };
 
 export function calculateBuffConfig(): { [index: string]: BuffStat } {
-	const skills = ['command_skill', 'science_skill', 'security_skill', 'engineering_skill', 'diplomacy_skill', 'medicine_skill'];
+	const skills = Object.keys(CONFIG.SKILLS);
 	const buffs = ['core', 'range_min', 'range_max'];
 
 	const buffConfig: { [index: string]: BuffStat } = {};
@@ -51,14 +51,20 @@ function rosterFromCrew(rosterEntry: CrewData, crew: CrewDTO): void {
 	rosterEntry.voyage_score = 0;
 	rosterEntry.gauntlet_score = 0;
 
+	rosterEntry.skills = {};
+
 	for (let skill in crew.skills) {
 		let re: any = rosterEntry;
 		let cs: any = crew.skills;
-		re[skill].core = cs[skill].core;
-		re[skill].min = cs[skill].range_min;
-		re[skill].max = cs[skill].range_max;
+		let sd: SkillData = {
+			core: cs[skill].core,
+			min: cs[skill].range_min,
+			max: cs[skill].range_max,
+		};
+		re[skill] = sd;
+		rosterEntry.skills[skill] = sd;
 		let profAvg = (cs[skill].range_max + cs[skill].range_min) / 2;
-		re[skill].voy = (cs[skill].core + profAvg) || 0;
+		sd.voy = (cs[skill].core + profAvg) || 0;
 		rosterEntry.voyage_score += re[skill].voy;
 		rosterEntry.gauntlet_score += profAvg;
 	}
@@ -115,7 +121,7 @@ function getDefaultsInner(crew?: CrewAvatar | CrewDTO): CrewData | undefined {
 		command_skill: { 'core': 0, 'min': 0, 'max': 0 }, science_skill: { 'core': 0, 'min': 0, 'max': 0 },
 		security_skill: { 'core': 0, 'min': 0, 'max': 0 }, engineering_skill: { 'core': 0, 'min': 0, 'max': 0 },
 		diplomacy_skill: { 'core': 0, 'min': 0, 'max': 0 }, medicine_skill: { 'core': 0, 'min': 0, 'max': 0 },
-		equipment_slots: []
+		equipment_slots: [], skills: {}
 	};
 }
 
@@ -225,7 +231,7 @@ export async function matchCrew(character: PlayerCharacterDTO): Promise<CrewData
 			if (c.frozen > 0)
 				++max;
 			let value = c.usage_value;
-			if (!c.usage_value) {
+			if (c.usage_value === undefined) {
 				c.usage_value = 1;
 			}
 			else {
@@ -276,10 +282,10 @@ async function loadFrozen(rosterEntry: CrewData): Promise<void> {
 	}
 }
 
-export function formatCrewStats(crew: any): string {
+export function formatCrewStats(crew: CrewData): string {
 	let result = '';
 	for (let skillName in CONFIG.SKILLS) {
-		let skill = crew[skillName];
+		let skill = crew.skills[skillName];
 
 		if (skill.core && (skill.core > 0)) {
 			result += `${CONFIG.SKILLS_SHORT[skillName]} (${Math.floor(skill.core + (skill.min + skill.max) / 2)}) `;

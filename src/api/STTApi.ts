@@ -611,14 +611,7 @@ export interface CrewDTO {
 	active_index: number;
 	active_status: number;
 	archetype_id: number;
-	base_skills: {
-		command_skill?: SkillDTO;
-		diplomacy_skill?: SkillDTO;
-		engineering_skill?: SkillDTO;
-		medicine_skill?: SkillDTO;
-		science_skill?: SkillDTO;
-		security_skill?: SkillDTO;
-	};
+	base_skills: { [sk: string] : SkillDTO; };
 	cap_achiever: {
 		date: number;
 		name: string;
@@ -657,14 +650,7 @@ export interface CrewDTO {
 		evasion: number;
 	};
 	short_name: string;
-	skills: {
-		command_skill?: SkillDTO;
-		diplomacy_skill?: SkillDTO;
-		engineering_skill?: SkillDTO;
-		medicine_skill?: SkillDTO;
-		science_skill?: SkillDTO;
-		security_skill?: SkillDTO;
-	};
+	skills: { [sk: string]: SkillDTO; };
 	symbol: string;
 	traits: string[];
 	traits_hidden: string[];
@@ -693,6 +679,8 @@ export interface CrewData {
 	portrait: ImageData;
 	rarity: number;
 	short_name: string;
+	skills: { [sk:string] : SkillData; };
+	//TODO: deprecate these raw fields and use the indexed 'skills' structure
 	command_skill: SkillData;
 	diplomacy_skill: SkillData;
 	engineering_skill: SkillData;

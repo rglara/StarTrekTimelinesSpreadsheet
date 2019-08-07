@@ -8,7 +8,7 @@ export interface RarityStarsProps {
 	colored?: boolean;
 
 	/** @deprecated don't actually need a min, it is always 1 */
-	min: number;
+	min?: number;
 }
 
 export let RarityStars = (props: RarityStarsProps) => {
@@ -25,11 +25,13 @@ export let RarityStars = (props: RarityStarsProps) => {
 		return (<div className='rarity-stars'>{stars}</div>);
 	}
 
-	if (props.colored && props.value) {
+	let color = props.max || props.value;
+
+	if (props.colored && color) {
 		if (props.asSpan) {
-			return <span style={{color: CONFIG.RARITIES[props.value].color}}>{inner()}</span>;
+			return <span style={{ color: CONFIG.RARITIES[color].color}}>{inner()}</span>;
 		}
-		return <div style={{ color: CONFIG.RARITIES[props.value].color }}>{inner()}</div>;
+		return <div style={{ color: CONFIG.RARITIES[color].color }}>{inner()}</div>;
 	}
 	return inner();
 }
