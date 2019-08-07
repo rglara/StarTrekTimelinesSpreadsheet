@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, List } from 'semantic-ui-react';
+import { Image, List, Popup } from 'semantic-ui-react';
 
 import { ItemDisplay } from './ItemDisplay';
 import { RarityStars } from './RarityStars';
@@ -418,20 +418,7 @@ export class HomePage extends React.Component {
 						{!hasEnded && <span>
 							<div>{eventData.bonus_text}</div>
 							Owned Event Bonus Crew: {!crew_bonuses.length && "None"}
-							<List horizontal>
-								{crew_bonuses.map(cb => (
-									<List.Item key={cb.crew.symbol}>
-										<Image src={cb.iconUrl} width="25" height="25" />
-										<List.Content>
-											<List.Header>{cb.crew.name}</List.Header>
-											<RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
-											{cb.crew.frozen > 0 && <div>Frozen</div>}
-											{cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
-											Bonus level {cb.bonus}
-										</List.Content>
-									</List.Item>
-								))}
-							</List>
+							<List horizontal>{crew_bonuses.map(cb => this.renderCrewBonus(cb))}</List>
 						</span>}
 						</div>
 				});
@@ -476,20 +463,7 @@ export class HomePage extends React.Component {
 						{!hasEnded && <span>
 							<div>{eventData.bonus_text}</div>
 							Owned Event Bonus Crew: {!crew_bonuses.length && "None"}
-								<List horizontal>
-								{crew_bonuses.map(cb => (
-									<List.Item key={cb.crew.symbol}>
-										<Image src={cb.iconUrl} width="25" height="25" />
-										<List.Content>
-											<List.Header>{cb.crew.name}</List.Header>
-											<RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
-											{cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
-											{cb.crew.frozen > 0 && <div>Frozen</div>}
-											Bonus level {cb.bonus}x
-										</List.Content>
-									</List.Item>
-								))}
-							</List>
+							<List horizontal>{crew_bonuses.map(cb => this.renderCrewBonus(cb))}</List>
 						</span>}
 					</div>
 				});
@@ -520,19 +494,7 @@ export class HomePage extends React.Component {
 						{!hasEnded && <span>
 						<div>{eventData.bonus_text}</div>
 						Owned Event Bonus Crew: { !crew_bonuses.length && "None" }
-							<List horizontal>
-							{crew_bonuses.map(cb => (
-								<List.Item key={cb.crew.symbol}>
-									<Image src={cb.iconUrl} width="25" height="25" />
-									<List.Content>
-										<List.Header>{cb.crew.name}</List.Header>
-										<RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
-										{cb.crew.frozen > 0 && <div>Frozen</div>}
-										{cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
-									</List.Content>
-								</List.Item>
-							))}
-						</List>
+						<List horizontal>{crew_bonuses.map(cb => this.renderCrewBonus(cb))}</List>
 						</span>}
 					</div>
 				});
@@ -576,6 +538,35 @@ export class HomePage extends React.Component {
 		// }
 
 		this.state = { recommendations };
+	}
+
+	renderCrewBonus(cb) {
+		return <Popup flowing key={cb.crew.symbol}
+			trigger={
+				<List.Item >
+					<Image src={cb.iconUrl} width="25" height="25" />
+					<List.Content>
+						<List.Header>{cb.crew.name}</List.Header>
+						<RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
+						{cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
+						{cb.crew.frozen > 0 && <div>Frozen</div>}
+						Bonus level {cb.bonus}x
+												</List.Content>
+				</List.Item>
+			}
+			content={<span key={cb.crew.id}>
+				Base: {Object.keys(cb.crew.skills).map(s => {
+					return (<span key={s}><img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
+						{cb.crew.skills[s].core} ({cb.crew.skills[s].min}-{cb.crew.skills[s].max})
+													</span>);
+				})}
+				<br />
+				Bonus ({cb.bonus}x): {Object.keys(cb.crew.skills).map(s => {
+					return (<span key={s}><img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
+						{cb.crew.skills[s].core * cb.bonus} </span>);
+				})}
+			</span>}
+		/>
 	}
 
 	render() {
