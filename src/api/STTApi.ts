@@ -43,10 +43,10 @@ export class STTApiClass {
 	public platformConfig: any;
 	public crewAvatars: CrewAvatar[];
 	public serverConfig: any;
-	public shipSchematics: any;
+	public shipSchematics: ShipSchematicDTO[];
 	public fleetData: any;
 	public roster: CrewData[];
-	public ships: any;
+	public ships: ShipDTO[];
 	public missions: any;
 	public missionSuccess!: IChallengeSuccess[];
 	public minimalComplement?: MinimalComplement;
@@ -91,12 +91,12 @@ export class STTApiClass {
 		this.serverConfig = null;
 		this._playerData = undefined;
 		this.platformConfig = null;
-		this.shipSchematics = null;
+		this.shipSchematics = [];
 		this._starbaseData = null;
 		this.fleetData = null;
 		this._fleetMemberInfo = null;
 		this.roster = [];
-		this.ships = null;
+		this.ships = [];
 		this.missions = null;
 		this.missionSuccess = [];
 		this.minimalComplement = undefined;
@@ -360,7 +360,7 @@ export class STTApiClass {
 		}
 	}
 
-	async resyncInventory(): Promise<any> {
+	async resyncInventory(): Promise<{ player: PlayerDTO }> {
 		// TODO: we should sync this data back into _playerData.player somehow (but we're adding too much stuff onto it now to work, like iconUrls, immortals, etc.)
 		let data = await this.executeGetRequest('player/resync_inventory');
 		if (data.player) {
@@ -876,7 +876,13 @@ export interface VoyagePendingLootDTO {
 export interface VoyageDTO {
 	completed_at: any; // was null; probably a string
 	created_at: string;
-	crew_slots: { crew: any; name: string; skill: string; symbol: string; trait: string; }[];
+	crew_slots: {
+		crew: CrewDTO;
+		name: string;
+		skill: string;
+		symbol: string;
+		trait: string;
+	}[];
 	description: string; // seems to be unused
 	dilemma?: any;
 	first_leave: boolean;
@@ -902,6 +908,23 @@ export interface VoyageDTO {
 	state: string;
 	time_to_next_event: number;
 	voyage_duration: number;
+}
+
+export interface VoyageDescriptionDTO {
+	crew_slots: {
+		name: string;
+		skill: string;
+		symbol: string;
+		trait: string;
+	}[];
+	description: string;
+	icon: string; // unused?
+	id: number; // unused?
+	name: string; // unused?
+	potential_rewards: any[];
+	ship_trait: string;
+	skills: { primary_skill: string; secondary_skill: string; };
+	symbol: string; // unused?
 }
 
 export interface PlayerDTO {
@@ -991,7 +1014,7 @@ export interface PlayerCharacterDTO {
 	seconds_from_last_boost_claim: number;
 	seconds_from_replay_energy_basis: number;
 	seconds_to_scan_cooldown: number;
-	ships: any[];
+	ships: ShipDTO[];
 	shuttle_adventures: any[];
 	shuttle_bayse: number;
 	starbase_buffs: any[];
@@ -1002,14 +1025,80 @@ export interface PlayerCharacterDTO {
 	using_default_name: boolean;
 	video_ad_chroniton_boost_reward: any;
 	voyage: VoyageDTO[];
-	voyage_descriptions: any[];
+	voyage_descriptions: VoyageDescriptionDTO[];
 	voyage_summaries: any;
 	xp: number;
 	xp_for_current_level: number;
 	xp_for_next_level: number;
 }
 
-interface ItemArchetypeDTO {
+export interface ShipDTO {
+	accuracy: number;
+	actions: any[];
+	antimatter: number;
+	archetype_id: number;
+	attack: number;
+	attacks_per_second: number;
+	battle_stations: any[];
+	crit_bonus: number;
+	crit_chance: number;
+	evasion: number;
+	flavor: string;
+	hull: number;
+	icon: ImageData;
+	id: number;
+	level: number;
+	max_level: number;
+	model: string;
+	name: string;
+	rarity: number;
+	schematic_gain_cost_next_level: number;
+	schematic_icon: ImageData;
+	schematic_id: number;
+	shield_regen: number;
+	shields: number;
+	symbol: string;
+	traits: string[];
+	traits_hidden: string;
+
+	//Added by app
+	traitNames?: string;
+	iconUrl?: string;
+}
+
+export interface ShipSchematicDTO {
+	cost: number;
+	icon: ImageData;
+	id: number;
+	rarity: number;
+
+	//HACK: using fields of ship DTO, but some fields are not provided by the schematic version
+	ship: ShipDTO;
+	// {
+	// 	accuracy: number;
+	// 	actions: any[];
+	// 	antimatter: number;
+	// 	archetype_id: number;
+	// 	attack: number;
+	// 	attacks_per_second: number;
+	// 	crit_bonus: number;
+	// 	crit_chance: number;
+	// 	evasion: number;
+	// 	flavor: string;
+	// 	hull: number;
+	// 	icon: ImageData;
+	// 	max_level: number;
+	// 	name: string;
+	// 	rarity: number;
+	// 	shield_regen: number;
+	// 	shields: number;
+	// 	symbol: string;
+	// 	traits: string[];
+	// 	traits_hidden: string;
+	// };
+}
+
+export interface ItemArchetypeDTO {
 	bonuses?: {[key:number] : number};
 	flavor: string;
 	icon: ImageData;

@@ -287,7 +287,7 @@ export function formatCrewStats(crew: CrewData): string {
 	for (let skillName in CONFIG.SKILLS) {
 		let skill = crew.skills[skillName];
 
-		if (skill.core && (skill.core > 0)) {
+		if (skill && skill.core && (skill.core > 0)) {
 			result += `${CONFIG.SKILLS_SHORT[skillName]} (${Math.floor(skill.core + (skill.min + skill.max) / 2)}) `;
 		}
 	}

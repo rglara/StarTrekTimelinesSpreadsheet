@@ -5,9 +5,9 @@ import ReactTable from 'react-table';
 
 import STTApi, { CONFIG, RarityStars, formatTimeSeconds, CollapsibleSection, download } from '../../api';
 import { loadVoyage, recallVoyage, resolveDilemma } from './VoyageTools';
-import { estimateVoyageRemaining } from './voyageCalc';
+import { estimateVoyageRemaining, CalcRemainingOptions } from './voyageCalc';
 import { VoyageLogEntry } from './VoyageLogEntry';
-import { VoyageNarrativeDTO, VoyageDTO } from '../../api/STTApi';
+import { VoyageNarrativeDTO, VoyageDTO, CrewData } from '../../api/STTApi';
 
 interface VoyageExportData {
    id: number;
@@ -316,7 +316,7 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
 
          let ship_name = voyage.ship_name;
          if (!ship_name) {
-            let ship = STTApi.ships.find((ship: any) => ship.id === voyage.ship_id);
+            let ship = STTApi.ships.find((ship) => ship.id === voyage.ship_id);
             ship_name = ship ? ship.name : '-BUGBUG-';
          }
 
@@ -414,10 +414,16 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
       if (!this.state.voyage) {
          return;
       }
-      const assignedCrew = this.state.voyage.crew_slots.map((slot: any) => slot.crew.id);
-      const assignedRoster = STTApi.roster.filter(crew => assignedCrew.includes(crew.crew_id));
+      const assignedCrew : number[] = this.state.voyage.crew_slots.map((slot) => slot.crew.id);
+      const assignedRoster : CrewData[] = STTApi.roster.filter(crew => assignedCrew.includes(crew.crew_id || crew.id));
 
-      let options = {
+      //TODO: need to do any validation here to prevent the native code from crashing
+      if (assignedRoster.length == 0) {
+         console.log('Unable to estimate; roster is empty');
+         return;
+      }
+
+      let options : CalcRemainingOptions = {
          // first three not needed for estimate calculation
          searchDepth: 0,
          extendsTarget: 0,

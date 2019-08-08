@@ -75,7 +75,7 @@ export async function startVoyage(
 	let currentPlayer = await STTApi.resyncInventory();
 
 	let availableCrew = new Set<number>();
-	currentPlayer.player.character.crew.forEach((crew: any) => {
+	currentPlayer.player.character.crew.forEach((crew) => {
 		if (!crew.active_id) {
 			availableCrew.add(crew.id);
 		}
@@ -122,14 +122,14 @@ export function bestVoyageShip(): any[] {
 	let voyage = STTApi.playerData.character.voyage_descriptions[0];
 
 	let consideredShips: any[] = [];
-	STTApi.ships.forEach((ship: any) => {
+	STTApi.ships.forEach((ship) => {
 		if (ship.id > 0) {
 			let entry = {
 				ship: ship,
 				score: ship.antimatter
 			};
 
-			if (ship.traits.find((trait: any) => trait == voyage.ship_trait)) {
+			if (ship.traits.find((trait) => trait == voyage.ship_trait)) {
 				entry.score += 150; // TODO: where is this constant coming from (Config)?
 			}
 

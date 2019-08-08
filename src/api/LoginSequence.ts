@@ -163,8 +163,10 @@ export async function loginSequence(onProgress: (description: string) => void, l
         if (ship.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getShipImageUrl(ship, ship.name).then((found: IFoundResult) => {
                 onProgress('Caching ship images... (' + current++ + '/' + total + ')');
-                let ship = STTApi.ships.find((ship: any) => ship.name === found.id);
-                ship.iconUrl = found.url;
+                let ship = STTApi.ships.find((ship) => ship.name === found.id);
+                if (ship) {
+                    ship.iconUrl = found.url;
+                }
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
             // Image is already cached

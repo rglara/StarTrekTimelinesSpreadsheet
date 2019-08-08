@@ -12,13 +12,42 @@ import {
 
 import { bestVoyageShip, startVoyage } from './VoyageTools';
 import { download } from '../../utils/pal';
-import { calculateVoyage, exportVoyageData } from './voyageCalc';
+import { calculateVoyage, exportVoyageData, CalcChoice } from './voyageCalc';
 
-export class VoyageCrew extends React.Component<any,any> {
-	constructor(props:any) {
+export interface VoyageCrewProps {
+	onRefreshNeeded: () => void;
+}
+
+export interface VoyageCrewState {
+	bestShips: any[];
+	selectedShip?: number;
+	includeFrozen: boolean;
+	includeActive: boolean;
+	shipName?: string;
+	state?: any;
+	searchDepth: number;
+	extendsTarget: number;
+	peopleList: VoyageCrewEntry[];
+	error?: any;
+	generatingVoyCrewRank: boolean;
+	activeEvent?: string;
+	currentSelectedItems: number[];
+	crewSelection: CalcChoice[];
+	estimatedDuration?: number;
+}
+
+interface VoyageCrewEntry {
+	key: number;
+	value: number;
+	image: { avatar: boolean; src: string | undefined; };
+	text: string;
+}
+
+export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState> {
+	constructor(props: VoyageCrewProps) {
 		super(props);
 
-		let peopleList: any= [];
+		let peopleList: VoyageCrewEntry[] = [];
 		STTApi.roster.forEach(crew => {
 			peopleList.push({
 				key: crew.crew_id || crew.id,
@@ -27,7 +56,7 @@ export class VoyageCrew extends React.Component<any,any> {
 				text: crew.name
 			});
 		});
-		peopleList.sort((a: any, b: any) => (a.text < b.text) ? -1 : ((a.text > b.text) ? 1 : 0));
+		peopleList.sort((a, b) => (a.text < b.text) ? -1 : ((a.text > b.text) ? 1 : 0));
 
 		let bestVoyageShips = bestVoyageShip();
 		// See which crew is needed in the event to give the user a chance to remove them from consideration
@@ -46,13 +75,14 @@ export class VoyageCrew extends React.Component<any,any> {
 			generatingVoyCrewRank: false,
 			activeEvent : result ? result.eventName : undefined,
 			currentSelectedItems : result ? result.crewIds : [],
+			crewSelection: [],
 		};
 
 		this._calcVoyageData = this._calcVoyageData.bind(this);
 		this._startVoyage = this._startVoyage.bind(this);
 	}
 
-	getIndexBySlotName(slotName: any) {
+	getIndexBySlotName(slotName: any) : number | undefined {
 		const crewSlots = STTApi.playerData.character.voyage_descriptions[0].crew_slots;
 		for (let slotIndex = 0; slotIndex < crewSlots.length; slotIndex++) {
 			if (crewSlots[slotIndex].name === slotName) {
@@ -64,7 +94,7 @@ export class VoyageCrew extends React.Component<any,any> {
 	renderBestCrew() {
 		if (this.state.state === 'inprogress' || this.state.state === 'done') {
 			let crewSpans: any= [];
-			this.state.crewSelection.forEach((entry: any) => {
+			this.state.crewSelection.forEach((entry) => {
 				if (entry.choice) {
 					let status = entry.choice.frozen > 0 ? 'frozen' : entry.choice.active_id > 0 ? 'active' : 'available';
 					let statusColor = status === 'frozen' ? 'red' : status === 'active' ? 'yellow' : 'green';
@@ -172,7 +202,7 @@ export class VoyageCrew extends React.Component<any,any> {
 								options={shipSpans}
 								placeholder='Choose a ship for your voyage'
 								value={this.state.selectedShip}
-								onChange={(ev, { value }) => this.setState({ selectedShip: value })}
+								onChange={(ev, { value }) => this.setState({ selectedShip: value !== undefined ? +value : undefined })}
 							/>
 						</Form.Field>
 
@@ -221,7 +251,7 @@ export class VoyageCrew extends React.Component<any,any> {
 
 					{(this.state.state === 'inprogress' || this.state.state === 'done') && (
 						<h3>
-							Estimated duration: <b>{formatTimeSeconds(this.state.estimatedDuration * 60 * 60)}</b>
+							Estimated duration: <b>{formatTimeSeconds(this.state.estimatedDuration! * 60 * 60)}</b>
 						</h3>
 					)}
 
@@ -252,7 +282,11 @@ export class VoyageCrew extends React.Component<any,any> {
 	_startVoyage() {
 		let selectedCrewIds = [];
 		for (let i = 0; i < STTApi.playerData.character.voyage_descriptions[0].crew_slots.length; i++) {
-			let entry = this.state.crewSelection.find((entry: any) => entry.slotId === i);
+			let entry = this.state.crewSelection.find((entry) => entry.slotId === i);
+			if (!entry) {
+				this.setState({ error: `Cannot start voyage with unknown crew slot '${i}'` });
+				return;
+			}
 
 			if (!entry.choice.crew_id || entry.choice.active_id > 0) {
 				this.setState({ error: `Cannot start voyage with frozen or active crew '${entry.choice.name}'` });
@@ -329,14 +363,14 @@ export class VoyageCrew extends React.Component<any,any> {
 
 		calculateVoyage(
 			options,
-			(entries: any, score: any) => {
+			(entries: CalcChoice[], score: number) => {
 				this.setState({
 					crewSelection: entries,
 					estimatedDuration: score,
 					state: 'inprogress'
 				});
 			},
-			(entries: any, score: any) => {
+			(entries: CalcChoice[], score: number) => {
 				this.setState({
 					crewSelection: entries,
 					estimatedDuration: score,
