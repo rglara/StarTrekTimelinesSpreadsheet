@@ -74,6 +74,12 @@ function parseResults(result: { buffer: ArrayBuffer }, callback: (choices: CalcC
     callback(entries, score);
 }
 
+// remove non-ascii and replace double-quotes in names with single quotes. Must be done when transmitting
+// to native code to prevent JSON/CSV parse errors, and then again on the app to match against names sent
+export function cleanCrewName(name: string) : string {
+    return name.replace(/[^\x00-\x7F]/g, "").replace(/"/g, "'")
+}
+
 export function exportVoyageData(options: CalcOptions): CalcExportData {
     let dataToExport: CalcExportData = {
         // These values get filled in the following code
@@ -154,7 +160,7 @@ export function exportVoyageData(options: CalcOptions): CalcExportData {
         // This won't be necessary once we switch away from Json to pure binary for native invocation
         let newCrew: CalcCrewData = {
             id: crew.crew_id ? crew.crew_id : crew.id,
-            name: crew.name.replace(/[^\x00-\x7F]/g, "").replace(/"/g, "'"), // remove non-ascii and replace double-quotes in names with single
+            name: cleanCrewName(crew.name),
             traitBitMask: traitBitMask,
             max_rarity: crew.max_rarity,
             skillData: Array.from(skillData)

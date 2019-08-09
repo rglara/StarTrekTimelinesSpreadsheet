@@ -12,7 +12,7 @@ import {
 
 import { bestVoyageShip, startVoyage } from './VoyageTools';
 import { download } from '../../utils/pal';
-import { calculateVoyage, exportVoyageData, CalcChoice } from './voyageCalc';
+import { calculateVoyage, exportVoyageData, CalcChoice, cleanCrewName } from './voyageCalc';
 
 export interface VoyageCrewProps {
 	onRefreshNeeded: () => void;
@@ -467,7 +467,7 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 					let posNameEnd = partB.indexOf('"',2);
 					if (posNameEnd > 0) {
 						let crewName = partB.substring(2, posNameEnd);
-						let crew = STTApi.roster.find(crew => crew.name == crewName);
+						let crew = STTApi.roster.find(crew => cleanCrewName(crew.name) == crewName);
 						if (crew && crew.usage_value !== undefined) {
 							value = crew.usage_value;
 						}
@@ -499,7 +499,7 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 							else if (crew.level < 100)
 								status += ':' + crew.level;
 
-							rankResultSplit += '0,,,,,,'+status+','+crew.usage_value+',"'+crew.name+'",,\n';
+							rankResultSplit += '0,,,,,,' + status + ',' + crew.usage_value + ',"' +cleanCrewName(crew.name)+'",,\n';
 						}
 					}
 				});
