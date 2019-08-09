@@ -129,7 +129,7 @@ export function calculateMissionCrewSuccess(): Array<IChallengeSuccess> {
                                 }
                             }
 
-                            rollCrew = lowestSkill * STTApi.serverConfig.config.conflict.untrained_skill_coefficient;
+                            rollCrew = lowestSkill * STTApi.serverConfig!.config.conflict.untrained_skill_coefficient;
                         }
 
                         if (entry.traits && (entry.traits.length > 0)) {
@@ -286,7 +286,7 @@ export function calculateQuestRecommendations(questId: number, loadEvenFinishedN
                 if (crewSelection[i].crew.id == crewSelection[i - 1].crew.id) {
                     // If crew is used on consecutive nodes, it gets -20% to skill rating
                     let skill = nodeElem[path[i]].skill;
-                    let tiredSuccess = ((crewSelection[i].rollCrew + crewSelection[i].crew[skill].max) * STTApi.serverConfig.config.conflict.tired_crew_coefficient - crewSelection[i].rollRequired) * 100 /
+                    let tiredSuccess = ((crewSelection[i].rollCrew + crewSelection[i].crew[skill].max) * STTApi.serverConfig!.config.conflict.tired_crew_coefficient - crewSelection[i].rollRequired) * 100 /
                         (crewSelection[i].crew[skill].max - crewSelection[i].crew[skill].min);
                     if (tiredSuccess > 100) tiredSuccess = 100;
 

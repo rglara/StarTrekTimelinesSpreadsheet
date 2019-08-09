@@ -13,10 +13,10 @@ export function shareCrew(options) {
 	if (options.shareMissions) {
 		var allChallenges = [];
 
-		STTApi.missions.forEach(function (mission) {
-			mission.quests.forEach(function (quest) {
+		STTApi.missions.forEach((mission) => {
+			mission.quests.forEach((quest) => {
 				if (quest.quest_type == 'ConflictQuest') {
-					quest.challenges.forEach(function (challenge) {
+					quest.challenges.forEach((challenge) => {
 						var entry = {
 							missionname: mission.episode_title,
 							questname: quest.name,
@@ -40,27 +40,23 @@ export function shareCrew(options) {
 						}
 
 						if (challenge.trait_bonuses && (challenge.trait_bonuses.length > 0)) {
-							challenge.trait_bonuses.forEach(function (traitBonus) {
+							challenge.trait_bonuses.forEach((traitBonus) => {
 								entry.traits.push(traitBonus.trait);
 								entry.traitBonus = traitBonus.bonuses[2];
 							});
 						}
 
-						entry.traits = entry.traits.map(function (trait) {
-							return STTApi.getTraitName(trait);
-						}).join(', ');
+						entry.traits = entry.traits.map((trait) => STTApi.getTraitName(trait)).join(', ');
 
 						if (challenge.locks && (challenge.locks.length > 0)) {
-							challenge.locks.forEach(function (lock) {
+							challenge.locks.forEach((lock) => {
 								if (lock.trait) {
 									entry.lockedTraits.push(lock.trait);
 								}
 							});
 						}
 
-						entry.lockedTraits = entry.lockedTraits.map(function (trait) {
-							return STTApi.getTraitName(trait);
-						}).join(', ');
+						entry.lockedTraits = entry.lockedTraits.map((trait) => STTApi.getTraitName(trait)).join(', ');
 
 						allChallenges.push(entry);
 					});

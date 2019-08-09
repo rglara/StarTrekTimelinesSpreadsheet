@@ -1,5 +1,5 @@
 import STTApi from './index';
-import { CrewData } from './STTApi';
+import { CrewData, MissionQuestRewardDTO } from './STTApi';
 
 export function fixupAllCrewIds() : void {
 	// Now replace the ids with proper ones
@@ -49,7 +49,7 @@ export async function loadFullTree(onProgress: (description: string) => void, re
 	// Have we already cached equipment details for the current digest (since the last recipe update)?
 	let entry = await STTApi.equipmentCache
 		.where('digest')
-		.equals(STTApi.serverConfig.config.craft_config.recipe_tree.digest)
+		.equals(STTApi.serverConfig!.config.craft_config.recipe_tree.digest)
 		.first();
 
 	if (entry) {
@@ -103,7 +103,7 @@ export async function loadFullTree(onProgress: (description: string) => void, re
 	if (missingEquipment.length === 0) {
 		// We're done loading, let's cache the current list, to save on future loading time
 		/*await*/ STTApi.equipmentCache.put({
-			digest: STTApi.serverConfig.config.craft_config.recipe_tree.digest,
+			digest: STTApi.serverConfig!.config.craft_config.recipe_tree.digest,
 			archetypeCache: STTApi.itemArchetypeCache.archetypes
 		});
 
@@ -121,7 +121,7 @@ export async function loadFullTree(onProgress: (description: string) => void, re
 
 	// We're done loading, let's cache the current list, to save on future loading time
 	/*await*/ STTApi.equipmentCache.put({
-		digest: STTApi.serverConfig.config.craft_config.recipe_tree.digest,
+		digest: STTApi.serverConfig!.config.craft_config.recipe_tree.digest,
 		archetypeCache: STTApi.itemArchetypeCache.archetypes
 	});
 }
@@ -275,16 +275,16 @@ export class NeededEquipmentClass {
 		if (this._cadetableItems.size === 0) {
 			//Advanced Cadet Challenges offer the same rewards as Standard ones, so filter them to avoid duplicates
 			let cadetMissions = STTApi.missions
-				.filter((mission: any) => mission.quests.some((quest: any) => quest.cadet))
-				.filter((mission: any) => mission.episode_title.indexOf('Adv') === -1);
+				.filter((mission) => mission.quests.some((quest) => quest.cadet))
+				.filter((mission) => mission.episode_title.indexOf('Adv') === -1);
 
 			for (let cadetMission of cadetMissions) {
 				for (let quest of cadetMission.quests) {
 					for (let masteryLevel of quest.mastery_levels) {
 						masteryLevel.rewards
-							.filter((r: any) => r.type === 0)
-							.forEach((reward: any) => {
-								reward.potential_rewards.forEach((item: any) => {
+							.filter((r) => r.type === 0)
+							.forEach((reward) => {
+								(reward as MissionQuestRewardDTO).potential_rewards.forEach((item) => {
 									let info: ICadetItemSource = {
 										quest: quest,
 										mission: cadetMission,

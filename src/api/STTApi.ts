@@ -40,14 +40,14 @@ export class STTApiClass {
 	private _buffConfig: { [index: string]: BuffStat };
 	private _neededEquipment: NeededEquipmentClass;
 
-	public platformConfig: any;
+	public platformConfig?: { config: PlatformConfigDTO; };
 	public crewAvatars: CrewAvatar[];
-	public serverConfig: any;
+	public serverConfig?: { config: ServerConfigDTO; };;
 	public shipSchematics: ShipSchematicDTO[];
 	public fleetData: any;
 	public roster: CrewData[];
 	public ships: ShipDTO[];
-	public missions: any;
+	public missions: MissionDTO[];
 	public missionSuccess!: IChallengeSuccess[];
 	public minimalComplement?: MinimalComplement;
 	public imageProvider!: ImageProvider;
@@ -58,7 +58,7 @@ export class STTApiClass {
 
 	// Used with Moment when adding an offset. Does not need to be used when
 	// doing a fresh request for data such as for gauntlet or voyage status
-	public lastSync: any;
+	public lastSync: Moment.Moment = Moment();
 
 	constructor() {
 		this.refreshEverything(true);
@@ -88,16 +88,16 @@ export class STTApiClass {
 
 	async refreshEverything(logout: boolean) {
 		this.crewAvatars = [];
-		this.serverConfig = null;
+		this.serverConfig = undefined;
 		this._playerData = undefined;
-		this.platformConfig = null;
+		this.platformConfig = undefined;
 		this.shipSchematics = [];
 		this._starbaseData = null;
 		this.fleetData = null;
 		this._fleetMemberInfo = null;
 		this.roster = [];
 		this.ships = [];
-		this.missions = null;
+		this.missions = [];
 		this.missionSuccess = [];
 		this.minimalComplement = undefined;
 
@@ -178,11 +178,11 @@ export class STTApiClass {
 	}
 
 	getTraitName(trait: string): string {
-		return this.platformConfig.config.trait_names[trait] ? this.platformConfig.config.trait_names[trait] : trait;
+		return this.platformConfig!.config.trait_names[trait] ? this.platformConfig!.config.trait_names[trait] : trait;
 	}
 
 	getShipTraitName(trait: string): string {
-		return this.platformConfig.config.ship_trait_names[trait] ? this.platformConfig.config.ship_trait_names[trait] : trait;
+		return this.platformConfig!.config.ship_trait_names[trait] ? this.platformConfig!.config.ship_trait_names[trait] : trait;
 	}
 
 	getCrewAvatarById(id: number): CrewAvatar | undefined {
@@ -828,10 +828,11 @@ export interface VoyageNarrativeDTO {
 	event_time: number
 	crew?: string[];
 	skill_check?: { skill: string; passed: boolean; };
-	rewards?: { loot: VoyageLootDTO[] };
+	rewards?: { loot: RewardDTO[] };
 }
 
-export interface VoyageLootDTO {
+export interface RewardDTO {
+	bonuses?: { [key:number]: number };
 	flavor: string;
 	full_name: string;
 	icon: ImageData;
@@ -858,15 +859,7 @@ export interface VoyagePendingLootDTO {
 	action?: CrewActionDTO;
 	full_body?: ImageData;
 	portrait?: ImageData;
-	skills?: {
-		command_skill ?: SkillDTO;
-		diplomacy_skill ?: SkillDTO;
-		engineering_skill ?: SkillDTO;
-		medicine_skill ?: SkillDTO;
-		science_skill ?: SkillDTO;
-		security_skill ?: SkillDTO;
-	};
-
+	skills?: { [skill: string]: SkillDTO; };
 	traits?: string[];
 
 	//TODO: added by the app?
@@ -1129,4 +1122,155 @@ export interface CryoCollectionDTO {
 
 	//HACK: added by the app
 	iconUrl?: string;
+}
+
+export interface PlatformConfigDTO {
+	crew_exp_trainings: any[];
+	faction_config: {
+		reputation_buckets: {
+			name: string;
+			upper_bound?: number;
+			status: string;
+		}[];
+	};
+	honorable_citations: any[];
+	id: number;
+	platform: any;
+	replicator_config: {
+		currency_costs: { amount:number; currency:number;}[];
+		fuel_blacklist: number[];
+		fuel_costs: { item_type: number; rarity: number; fuel: number; }[];
+		fuel_values: { item_type: number; rarity: number; fuel: number; }[];
+		target_blacklist: number[];
+	};
+	ship_trait_names: { [trait: string]: string };
+	trait_names: { [trait: string]: string };
+	vip: any;
+}
+
+export interface ServerConfigDTO {
+	asset_bundle_version: string;
+	asset_force_cache_clean: any; // number/bool? came as 0
+	asset_server: string;
+	conflict: { tired_crew_coefficient: number; untrained_skill_coefficient: number; };
+	craft_config: {
+		cost_by_rarity_for_component: { currency: number; amount: number; }[];
+		cost_by_rarity_for_equipment: { currency: number; amount: number; }[];
+		recipe_tree: {
+			digest: string;
+			recipes: {
+				id: number;
+				recipe: {
+					archetype_id: number;
+					count: number;
+				}[];
+			}[];
+		};
+		specialist_challenge_rating: number;
+		specialist_chance_formula: any;
+		specialist_failure_bonus: number;
+		specialist_maximum_success_chance: number;
+	};
+	crew_config: { fusion_cost_by_rarity: any[] };
+	custom_event_batch_batch_limit: number;
+	custom_event_batch_delay_period: number;
+	default_galaxy_map_position: number[];
+	default_galaxy_map_zoom: number;
+	features_unlock_config: any;
+	flag_for_voyage_death: number;
+	fusion_costs: any;
+	hazard_countdown_max: number;
+	hazard_countdown_min: number;
+	id: number;
+	min_fleet_hours_for_activity: number;
+	minimal_crew_count: number;
+	performance_profile: any;
+	platform: any;
+	pvp: any;
+	scans: any;
+	server_environment: any;
+	ship: any;
+	shuttle_adventures: {
+		secondary_skill_percentage: number;
+		//unlisted: shuttle_speedup_formula_v2_dil_cost_1 through _5
+		//unlisted: shuttle_speedup_formula_v2_time_1 through _5
+		sigmoid_midpoint: number;
+		sigmoid_steepness: number;
+		speedup_formula_coefficient_1: number;
+		speedup_formula_coefficient_2: number;
+		speedup_formula_coefficient_3: number;
+		speedup_seconds_per_currency_unit: number;
+	};
+	stats_config: any;
+	tokens: { id: number; symbol: string; faction_id: number; }[];
+	voyage_dying_indicator: number;
+	voyages_matched_crew_trait_bonus: number;
+	voyages_matched_ship_trait_bonus: number;
+	voyages_seconds_per_narrative_event: number;
+}
+
+export interface MissionDTO {
+	description: string;
+	episode_title: string;
+	id: number;
+	quests: MissionQuestDTO[];
+	stars_earned: number;
+	total_stars: number;
+}
+
+export interface MissionQuestDTO {
+	action: string;
+	cadet: boolean;
+	challenges: {
+		children: number[];
+		critical: {
+			claimed: boolean;
+			reward: RewardDTO[];
+			standard_loot: MissionQuestRewardDTO[];
+			threshold: number;
+		};
+		difficulty: number;
+		difficulty_by_mastery: number[];
+		grid_x: number;
+		grid_y: number;
+		id: number;
+		image: ImageData;
+		locks: any[];
+		name: string;
+		skill: string;
+		trait_bonuses: {trait: string; bonuses: number[] }[];
+	}[];
+	crew_requirement: {
+		description: string;
+		max_stars: number;
+		min_stars: number;
+		traits: string[];
+	};
+	description: string;
+	id: number;
+	locked: boolean;
+	mastery_levels: {
+		energy_cost: number;
+		id: number;
+		jackpots: any[];
+		locked: boolean;
+		progress: { goal_progress: number; goals: number; };
+		rewards: (MissionQuestRewardDTO | RewardDTO)[]; // first item is MissionQuestRewardDTO with type=0, second is RewardDTO
+	}[];
+	material_bundle: string;
+	name: string;
+	place: string;
+	quest_type: string;
+	star_background: boolean;
+	symbol: string;
+	timeline_action: ImageData;
+	unlock_text: any;
+}
+
+export interface MissionQuestRewardDTO {
+	icon: ImageData;
+	potential_rewards: RewardDTO[];
+	quantity: number;
+	rarity: number;
+	type: number;
 }

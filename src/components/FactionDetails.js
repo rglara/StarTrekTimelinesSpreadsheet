@@ -154,7 +154,8 @@ class FactionDisplay extends React.Component {
 
 	_getReputationName(reputation) {
 		for (let repBucket of STTApi.platformConfig.config.faction_config.reputation_buckets) {
-			if (reputation < repBucket.upper_bound || !repBucket.upper_bound) {
+			// top bucket has null upper bound
+			if (repBucket.upper_bound === undefined || repBucket.upper_bound == null || reputation < repBucket.upper_bound) {
 				return repBucket.name;
 			}
 		}
