@@ -154,7 +154,7 @@ export function exportVoyageData(options: CalcOptions): CalcExportData {
         // This won't be necessary once we switch away from Json to pure binary for native invocation
         let newCrew: CalcCrewData = {
             id: crew.crew_id ? crew.crew_id : crew.id,
-            name: crew.name.replace(/[^\x00-\x7F]/g, ""),
+            name: crew.name.replace(/[^\x00-\x7F]/g, "").replace(/"/g, "'"), // remove non-ascii and replace double-quotes in names with single
             traitBitMask: traitBitMask,
             max_rarity: crew.max_rarity,
             skillData: Array.from(skillData)
