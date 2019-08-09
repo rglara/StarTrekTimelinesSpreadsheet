@@ -1,15 +1,15 @@
 // #!if ENV === 'electron'
-const electron = require('electron');
+import electron from 'electron';
+import fs from 'fs';
+import os from 'os';
 const app = electron.app || electron.remote.app;
 const shell = electron.shell || electron.remote.shell;
 const dialog = electron.dialog || electron.remote.dialog;
-const fs = require('fs');
-const os = require('os');
 
 import { ipcRenderer } from 'electron';
 // #!endif
 
-export function getAppVersion() {
+export function getAppVersion(): string {
 // #!if ENV === 'electron'
     return app.getVersion();
 // #!else
@@ -18,12 +18,12 @@ export function getAppVersion() {
 }
 
 // #!if ENV === 'electron'
-export function getAppPath(name) {
+export function getAppPath(name: string): string {
     return app.getPath(name);
 }
 // #!endif
 
-export function getOSDetails() {
+export function getOSDetails(): string {
 // #!if ENV === 'electron'
     return `${os.platform()} ${os.arch()} (${os.release()})`;
 // #!else
@@ -31,7 +31,7 @@ export function getOSDetails() {
 // #!endif
 }
 
-export function openDevTools() {
+export function openDevTools(): void {
 // #!if ENV === 'electron'
     ipcRenderer.send("open-dev-tools", "");
 // #!else
@@ -39,7 +39,7 @@ export function openDevTools() {
 // #!endif
 }
 
-export function openShellExternal(url) {
+export function openShellExternal(url: string):void {
 // #!if ENV === 'electron'
     shell.openExternal(url);
 // #!else
@@ -47,8 +47,8 @@ export function openShellExternal(url) {
 // #!endif
 }
 
-export function download(filename, text, title, buttonLabel, openOnSave = true) {
-    let extension = filename.split('.').pop();
+export function download(filename: string, text: any, title: string, buttonLabel: string, openOnSave = true) {
+    let extension :string = filename.split('.').pop()!;
 // #!if ENV === 'electron'
     let extName = '';
     if (extension === 'csv') {
@@ -68,7 +68,7 @@ export function download(filename, text, title, buttonLabel, openOnSave = true) 
             defaultPath: filename,
             buttonLabel: buttonLabel
         },
-        (fileName) => {
+        (fileName: string) => {
             if (fileName === undefined)
                 return;
 
@@ -93,10 +93,10 @@ export function download(filename, text, title, buttonLabel, openOnSave = true) 
         mimeType = 'text/html;charset=utf-8';
     }
 
-    function downloadData(dataUrl) {
+    function downloadData(dataUrl: string, fn: string) {
         let pom = document.createElement('a');
         pom.setAttribute('href', dataUrl);
-        pom.setAttribute('download', filename);
+        pom.setAttribute('download', fn);
 
         if (document.createEvent) {
             let event = document.createEvent('MouseEvents');
@@ -112,8 +112,8 @@ export function download(filename, text, title, buttonLabel, openOnSave = true) 
         downloadData(`data:${mimeType},${encodeURIComponent(text)}`, filename);
     } else {
         var a = new FileReader();
-        a.onload = (e) => {
-            downloadData(e.target.result);
+        a.onload = (e:any) => {
+            downloadData(e.target.result, filename);
         };
         a.readAsDataURL(text);
     }

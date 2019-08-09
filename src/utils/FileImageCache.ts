@@ -1,10 +1,10 @@
-const fs = require('fs');
+import fs from 'fs';
 
 import { getAppPath } from './pal';
 
 export class FileImageCache {
-	basePath;
-	allImages;
+	basePath : string;
+	allImages: Set<string>;
 
 	constructor() {
 		this.basePath = getAppPath('userData') + '/imagecache/';
@@ -13,16 +13,16 @@ export class FileImageCache {
 			fs.mkdirSync(this.basePath);
 		}
 
-		this.allImages = fs.readdirSync(this.basePath);
+		let dirEntries : string[] = fs.readdirSync(this.basePath);
 
 		// Filter to images
-		this.allImages = this.allImages.filter(item => item.endsWith('.png'));
+		dirEntries = dirEntries.filter(item => item.endsWith('.png'));
 
 		// Remove the .png extension
-		this.allImages = new Set(this.allImages.map(item => this.basePath + item));
+		this.allImages = new Set(dirEntries.map(item => this.basePath + item));
 	}
 
-	getCached(url) {
+	getCached(url:string): string {
 		if (this.allImages.has(this.formatUrl(url))) {
 			return 'file://' + this.formatUrl(url);
 		} else {
@@ -30,11 +30,11 @@ export class FileImageCache {
 		}
 	}
 
-	formatUrl(url) {
+	formatUrl(url: string): string {
 		return this.basePath + url.substr(1).replace(new RegExp('/', 'g'), '_') + '.png';
 	}
 
-	getImage(url) {
+	getImage(url: string) : Promise<string | undefined> {
 		return new Promise((resolve, reject) => {
 			fs.exists(this.formatUrl(url), (exists) => {
 				if (exists) {
@@ -47,25 +47,27 @@ export class FileImageCache {
 		});
 	}
 
-	bitmapToPng(data, callback) {
-		var canvas = document.createElement('canvas');
+	bitmapToPng(data : {height:number, width:number, data:number[] }, callback: (bytes:Uint8Array) => void) : void {
+		let canvas = document.createElement('canvas');
 		canvas.height = data.height;
 		canvas.width = data.width;
 
-		var ctx = canvas.getContext('2d');
-		var myImageData = new ImageData(new Uint8ClampedArray(data.data), data.width, data.height);
-		ctx.putImageData(myImageData, 0, 0);
+		let ctx = canvas.getContext('2d');
+		if (ctx) {
+			let myImageData = new ImageData(new Uint8ClampedArray(data.data), data.width, data.height);
+			ctx.putImageData(myImageData, 0, 0);
+		}
 
 		canvas.toBlob((blob) => {
 			let fileReader = new FileReader();
-			fileReader.onload = function (progressEvent) {
+			fileReader.onload = (progressEvent:any) => { // Use 'any' because result is not found on 'target' for some reason
 				callback(new Uint8Array(progressEvent.target.result));
 			};
-			fileReader.readAsArrayBuffer(blob);
+			fileReader.readAsArrayBuffer(blob!);
 		});
 	}
 
-	saveImage(url, data) {
+	saveImage(url: string, data: { height: number, width: number, data: number[] }) : Promise<string> {
 		return new Promise((resolve, reject) => {
 			if (data.data.length > 0) {
 				this.bitmapToPng(data, (pngData) => {

@@ -21,9 +21,9 @@ import React from 'react';
 import { Header, Segment, Portal } from 'semantic-ui-react';
 
 // #!if ENV === 'electron'
-import { FileImageCache } from '../utils/fileImageCache.js';
+import { FileImageCache } from '../utils/FileImageCache';
 // #!else
-import { ServerImageProvider } from '../utils/serverImageCache.js';
+import { ServerImageProvider } from '../utils/serverImageCache';
 import { SiteHome } from './site/SiteHome';
 // #!endif
 
