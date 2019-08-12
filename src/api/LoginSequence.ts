@@ -1,8 +1,7 @@
-import STTApi from "./index";
+import STTApi, { IFoundResult } from "./index";
 import CONFIG from "./CONFIG";
 import { matchCrew, formatAllCrew } from './CrewTools';
 import { matchShips } from './ShipTools';
-import { IFoundResult } from './ImageProvider';
 import { loadMissionData } from './MissionTools';
 import { loadFullTree, fixupAllCrewIds } from './EquipmentTools';
 import { refreshAllFactions, loadFactionStore } from './FactionTools';
@@ -196,7 +195,9 @@ export async function loginSequence(onProgress: (description: string) => void, l
             iconPromises.push(STTApi.imageProvider.getItemImageUrl(item, item.id).then((found: IFoundResult) => {
                 onProgress('Caching item images... (' + current++ + '/' + total + ')');
                 let item = STTApi.playerData.character.items.find((item: any) => item.id === found.id);
-                item.iconUrl = found.url;
+                if (item) {
+                    item.iconUrl = found.url;
+                }
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
             // Image is already cached

@@ -1,8 +1,8 @@
-import STTApi from "./index";
-import CONFIG from "./CONFIG";
+import STTApi from "../../api/index";
+import CONFIG from "../../api/CONFIG";
 import { ImageProvider, ImageCache, IBitmap, IFoundResult } from './ImageProvider';
-import { WorkerPool } from './WorkerPool';
-import { CrewData } from "./STTApi";
+import { WorkerPool } from '../../api/WorkerPool';
+import { CrewData, ShipDTO } from "../../api/STTApi";
 
 export class AssetImageProvider implements ImageProvider {
     private _imageCache: ImageCache;
@@ -11,7 +11,7 @@ export class AssetImageProvider implements ImageProvider {
 
     constructor(imageCache: ImageCache) {
         this._imageCache = imageCache;
-        this._workerPool = new WorkerPool(1); //TODO: can we get the number of cores somehow?
+        this._workerPool = new WorkerPool(5); //TODO: can we get the number of cores somehow?
         this._baseURLAsset = '';
     }
 
@@ -40,18 +40,18 @@ export class AssetImageProvider implements ImageProvider {
         return this._imageCache.getCached(((assetName.length > 0) ? (assetName + '_') : '') + spriteName);
     }
 
-    getCrewImageUrl(crew: CrewData, fullBody: boolean, id: any): Promise<IFoundResult> {
+    getCrewImageUrl(crew: CrewData, fullBody: boolean, id: number = 0): Promise<IFoundResult> {
         if (!crew) {
             return this.getImageUrl("", id);
         }
         return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, id);
     }
 
-    getShipImageUrl(ship: any, id: any): Promise<IFoundResult> {
+    getShipImageUrl(ship: { name: string; icon: { file: string } }, id: any): Promise<IFoundResult> {
         return this.getImageUrl(ship.icon.file, id); //schematic_icon
     }
 
-    getItemImageUrl(item: any, id: any): Promise<IFoundResult> {
+    getItemImageUrl(item: any, id: number): Promise<IFoundResult> {
         return this.getImageUrl(item.icon.file, id);
     }
 

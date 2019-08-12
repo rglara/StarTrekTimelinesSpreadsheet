@@ -22,9 +22,7 @@ import { IChallengeSuccess } from './MissionCrewSuccess';
 import { matchCrew, calculateBuffConfig, BuffStat } from './CrewTools';
 import { MinimalComplement } from './MinimalComplement';
 import { mergeDeep } from './ObjectMerge';
-import { ImageProvider, ImageCache } from './ImageProvider';
-import { WikiImageProvider } from './WikiImageTools';
-import { AssetImageProvider } from './AssetImageProvider';
+import { ImageCache, ImageProvider, WikiImageProvider, AssetImageProvider, ServerImageProvider, ImageProviderChain, FileImageCache } from './';
 import { NeededEquipmentClass, IEquipNeedFilter, IEquipNeed } from './EquipmentTools';
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
@@ -83,6 +81,11 @@ export class STTApiClass {
 			}
 
 			this._net.setProxy(this.serverAddress + 'proxy');
+			this.imageProvider = new ServerImageProvider(this.serverAddress);
+		}
+		else {
+			let cache : ImageCache = new FileImageCache();
+			this.imageProvider = new ImageProviderChain(new AssetImageProvider(cache), new WikiImageProvider());
 		}
 	}
 
@@ -115,18 +118,6 @@ export class STTApiClass {
 					.delete();
 			}
 		}
-	}
-
-	setImageProvider(useAssets: boolean, imageCache: ImageCache) {
-		if (useAssets) {
-			this.imageProvider = new AssetImageProvider(imageCache);
-		} else {
-			this.imageProvider = new WikiImageProvider();
-		}
-	}
-
-	setImageProviderOverride(iProvider: ImageProvider) {
-		this.imageProvider = iProvider;
 	}
 
 	get networkHelper(): NetworkInterface {
@@ -976,6 +967,7 @@ export interface PlayerCharacterDTO {
 	disputes: any[];
 	event_tickets: any;
 	events: any[];
+	//TODO: type details
 	factions: any[];
 	fleet_activities: any[];
 	freestanding_quests: any[];
@@ -983,6 +975,8 @@ export interface PlayerCharacterDTO {
 	honor_reward_by_rarity: number[];
 	id: number;
 	item_limit: number;
+
+	//TODO: type details
 	items: any[];
 	level: number;
 	location: { place:string; setup: string; system: string; x: number; y:number; };

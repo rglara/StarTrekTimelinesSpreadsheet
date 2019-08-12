@@ -1,8 +1,9 @@
 import fs from 'fs';
 
-import { getAppPath } from './pal';
+import { getAppPath } from '../../utils/pal';
+import { IBitmap, ImageCache } from './ImageProvider';
 
-export class FileImageCache {
+export class FileImageCache implements ImageCache {
 	basePath : string;
 	allImages: Set<string>;
 
@@ -47,7 +48,7 @@ export class FileImageCache {
 		});
 	}
 
-	bitmapToPng(data : {height:number, width:number, data:number[] }, callback: (bytes:Uint8Array) => void) : void {
+	bitmapToPng(data: IBitmap, callback: (bytes:Uint8Array) => void) : void {
 		let canvas = document.createElement('canvas');
 		canvas.height = data.height;
 		canvas.width = data.width;
@@ -67,7 +68,7 @@ export class FileImageCache {
 		});
 	}
 
-	saveImage(url: string, data: { height: number, width: number, data: number[] }) : Promise<string> {
+	saveImage(url: string, data: IBitmap) : Promise<string> {
 		return new Promise((resolve, reject) => {
 			if (data.data.length > 0) {
 				this.bitmapToPng(data, (pngData) => {

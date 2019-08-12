@@ -21,9 +21,7 @@ import React from 'react';
 import { Header, Segment, Portal } from 'semantic-ui-react';
 
 // #!if ENV === 'electron'
-import { FileImageCache } from '../utils/FileImageCache';
 // #!else
-import { ServerImageProvider } from '../utils/serverImageCache';
 import { SiteHome } from './site/SiteHome';
 // #!endif
 
@@ -50,12 +48,6 @@ class App extends React.Component {
 		STTApi.setWebMode(true, true);
 		// #!else
 		STTApi.setWebMode(true);
-		// #!endif
-
-		// #!if ENV === 'electron'
-		STTApi.setImageProvider(true, new FileImageCache());
-		// #!else
-		STTApi.setImageProviderOverride(new ServerImageProvider(STTApi.serverAddress));
 		// #!endif
 
 		STTApi.loginWithCachedAccessToken().then(success => {

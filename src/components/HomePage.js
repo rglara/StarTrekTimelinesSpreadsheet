@@ -391,10 +391,14 @@ export class HomePage extends React.Component {
 						continue;
 					}
 
+					let iconUrl = avatar.iconUrl;
+					if (!iconUrl || iconUrl == '') {
+						iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
+					}
 					crew_bonuses.push({
 						crew,
 						bonus: eventData.content.shuttles[0].crew_bonuses[cb],
-						iconUrl: STTApi.imageProvider.getCrewCached(avatar, false)
+						iconUrl
 					});
 				}
 
@@ -436,10 +440,15 @@ export class HomePage extends React.Component {
 						continue;
 					}
 
+					let iconUrl = avatar.iconUrl;
+					if (!iconUrl || iconUrl == '') {
+						iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
+					}
+
 					crew_bonuses.push({
 						crew,
 						bonus: eventData.content.crew_bonuses[cb],
-						iconUrl: STTApi.imageProvider.getCrewCached(avatar, false)
+						iconUrl
 					});
 				}
 
@@ -481,9 +490,14 @@ export class HomePage extends React.Component {
 						continue;
 					}
 
+					let iconUrl = avatar.iconUrl;
+					if (!iconUrl || iconUrl == '') {
+						iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
+					}
+
 					crew_bonuses.push({
 						crew,
-						iconUrl: STTApi.imageProvider.getCrewCached(avatar, false)
+						iconUrl
 					});
 				}
 

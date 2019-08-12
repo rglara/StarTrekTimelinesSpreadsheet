@@ -301,9 +301,9 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
             // } else {
                iconPromises.push(
                   STTApi.imageProvider
-                     .getItemImageUrl(reward, reward)
+                     .getItemImageUrl(reward, reward.id)
                      .then(found => {
-                        found.id.iconUrl = found.url;
+                        reward.iconUrl = found.url;
                      })
                      .catch(error => {
                         /*console.warn(error);*/
