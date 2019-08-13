@@ -23,7 +23,7 @@ import { matchCrew, calculateBuffConfig, BuffStat } from './CrewTools';
 import { MinimalComplement } from './MinimalComplement';
 import { mergeDeep } from './ObjectMerge';
 import { ImageCache, ImageProvider, WikiImageProvider, AssetImageProvider, ServerImageProvider, ImageProviderChain, FileImageCache } from './';
-import { NeededEquipmentClass, IEquipNeedFilter, IEquipNeed } from './EquipmentTools';
+import { NeededEquipmentClass, EquipNeedFilter, EquipNeed } from './EquipmentTools';
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
@@ -84,6 +84,7 @@ export class STTApiClass {
 			this.imageProvider = new ServerImageProvider(this.serverAddress);
 		}
 		else {
+			//TODO: cache images coming from the wiki to prevent hammering their website with requests
 			let cache : ImageCache = new FileImageCache();
 			this.imageProvider = new ImageProviderChain(new AssetImageProvider(cache), new WikiImageProvider());
 		}
@@ -532,7 +533,7 @@ export class STTApiClass {
 		}
 	}
 
-	getNeededEquipment(filters: IEquipNeedFilter, limitCrew: number[]): IEquipNeed[] {
+	getNeededEquipment(filters: EquipNeedFilter, limitCrew: number[]): EquipNeed[] {
 		return this._neededEquipment.filterNeededEquipment(filters, limitCrew);
 	}
 
@@ -551,9 +552,9 @@ export interface CrewAvatar {
 	traits_hidden: string[];
 	skills: string[];
 	default_avatar: boolean;
-	full_body: ImageData;
-	icon: ImageData;
-	portrait: ImageData;
+	full_body: ImageDataDTO;
+	icon: ImageDataDTO;
+	portrait: ImageDataDTO;
 
 	hide_from_cryo: boolean;
 
@@ -561,7 +562,7 @@ export interface CrewAvatar {
 	iconUrl?: string;
 }
 
-export interface ImageData {
+export interface ImageDataDTO {
 	file: string;
 }
 
@@ -589,7 +590,7 @@ export interface CrewActionDTO {
 	cooldown: number;
 	crew: number;
 	duration: number;
-	icon: ImageData;
+	icon: ImageDataDTO;
 	initial_cooldown: number;
 	name: string;
 	special: boolean;
@@ -619,8 +620,8 @@ export interface CrewDTO {
 	expires_in: any;
 	favorite: boolean;
 	flavor: string;
-	full_body: ImageData;
-	icon: ImageData;
+	full_body: ImageDataDTO;
+	icon: ImageDataDTO;
 	id: number;
 	in_buy_back_state: boolean;
 	level: number;
@@ -632,7 +633,7 @@ export interface CrewDTO {
 	passive_id: any;
 	passive_index: number;
 	passive_status: number;
-	portrait: ImageData;
+	portrait: ImageDataDTO;
 	rarity: number;
 	ship_battle: {
 		accuracy: number;
@@ -658,7 +659,7 @@ export interface CrewDTO {
 
 export interface CrewData {
 
-	full_body: ImageData;
+	full_body: ImageDataDTO;
 	id: number;
 	crew_id?: number;
 	//TODO: remove if unused
@@ -667,7 +668,7 @@ export interface CrewData {
 	max_level?: number;
 	max_rarity: number;
 	name: string;
-	portrait: ImageData;
+	portrait: ImageDataDTO;
 	rarity: number;
 	short_name: string;
 	skills: { [sk:string] : SkillData; };
@@ -769,7 +770,7 @@ export interface GauntletCrewDTO {
 
 export interface GauntletOpponentDTO {
 	crew_contest_data: { crew: GauntletCrewDTO[]; };
-	icon: ImageData;
+	icon: ImageDataDTO;
 	level: number;
 	name: string;
 	player_id: number;
@@ -793,7 +794,7 @@ export interface GauntletContestDTO {
 export interface GauntletContestLootDTO {
 	flavor: string;
 	full_name: string;
-	icon: ImageData;
+	icon: ImageDataDTO;
 	id: number;
 	instance: {bucket:string; id:number;};
 	name: string;
@@ -826,9 +827,9 @@ export interface RewardDTO {
 	bonuses?: { [key:number]: number };
 	flavor: string;
 	full_name: string;
-	icon: ImageData;
+	icon: ImageDataDTO;
 	id: number;
-	item_type?: number;
+	item_type?: number; // defined if type == 2
 	name: string;
 	quantity: number;
 	rarity: number;
@@ -837,9 +838,9 @@ export interface RewardDTO {
 }
 
 export interface VoyagePendingLootDTO {
-	icon: ImageData;
 	flavor: string;
 	full_name: string;
+	icon: ImageDataDTO;
 	id: number;
 	item_type?: number;
 	name: string;
@@ -848,8 +849,8 @@ export interface VoyagePendingLootDTO {
 	symbol: string;
 	type: number;
 	action?: CrewActionDTO;
-	full_body?: ImageData;
-	portrait?: ImageData;
+	full_body?: ImageDataDTO;
+	portrait?: ImageDataDTO;
 	skills?: { [skill: string]: SkillDTO; };
 	traits?: string[];
 
@@ -967,17 +968,14 @@ export interface PlayerCharacterDTO {
 	disputes: any[];
 	event_tickets: any;
 	events: any[];
-	//TODO: type details
-	factions: any[];
+	factions: FactionDTO[];
 	fleet_activities: any[];
 	freestanding_quests: any[];
 	gauntlets?: GauntletDTO[]; // Does not come with initial fetch, but gauntlet update is within character
 	honor_reward_by_rarity: number[];
 	id: number;
 	item_limit: number;
-
-	//TODO: type details
-	items: any[];
+	items: ItemDTO[];
 	level: number;
 	location: { place:string; setup: string; system: string; x: number; y:number; };
 	location_channel_prefix: string;
@@ -1019,6 +1017,47 @@ export interface PlayerCharacterDTO {
 	xp_for_next_level: number;
 }
 
+export interface FactionDTO {
+	completed_shuttle_adventures: number;
+	discovered: any; // number/bool
+	event_winner_rewards: any[];
+	home_system:string;
+	icon: ImageDataDTO;
+	id: number;
+	name: string;
+	representative_full_body: ImageDataDTO;
+	representative_icon: ImageDataDTO;
+	reputation: number;
+	reputation_icon: ImageDataDTO;
+	reputation_item_icon: ImageDataDTO;
+	shop_layout: string;
+	shuttle_mission_rewards: (PotentialRewardDTO | RewardDTO)[];
+	shuttle_token_id: number;
+	shuttle_token_preview_item: any;
+
+	//HACK: added by app
+	iconUrl?: string;
+	storeItems?: FactionStoreItemDTO[];
+}
+
+export interface FactionStoreItemDTO {
+	cost: { amount: number; currency: string; };
+	count: number;
+	info: string;
+	lock_prereq: any;
+	locked: boolean;
+	offer: {
+		cost: { amount: number; currency: string; };
+		currency_bundle: string;
+		game_item: RewardDTO;
+		obtain: any;
+		purchase_avail: number;
+		purchase_limit: number;
+	};
+	symbol: string;
+	type: string;
+}
+
 export interface ShipDTO {
 	accuracy: number;
 	actions: any[];
@@ -1032,7 +1071,7 @@ export interface ShipDTO {
 	evasion: number;
 	flavor: string;
 	hull: number;
-	icon: ImageData;
+	icon: ImageDataDTO;
 	id: number;
 	level: number;
 	max_level: number;
@@ -1040,7 +1079,7 @@ export interface ShipDTO {
 	name: string;
 	rarity: number;
 	schematic_gain_cost_next_level: number;
-	schematic_icon: ImageData;
+	schematic_icon: ImageDataDTO;
 	schematic_id: number;
 	shield_regen: number;
 	shields: number;
@@ -1055,7 +1094,7 @@ export interface ShipDTO {
 
 export interface ShipSchematicDTO {
 	cost: number;
-	icon: ImageData;
+	icon: ImageDataDTO;
 	id: number;
 	rarity: number;
 
@@ -1073,7 +1112,7 @@ export interface ShipSchematicDTO {
 	// 	evasion: number;
 	// 	flavor: string;
 	// 	hull: number;
-	// 	icon: ImageData;
+	// 	icon: ImageDataDTO;
 	// 	max_level: number;
 	// 	name: string;
 	// 	rarity: number;
@@ -1088,11 +1127,13 @@ export interface ShipSchematicDTO {
 export interface ItemArchetypeDTO {
 	bonuses?: {[key:number] : number};
 	flavor: string;
-	icon: ImageData;
+	icon: ImageDataDTO;
 	id: number;
+	//TODO: type details
 	item_sources: any[];
 	name: string;
 	rarity: number;
+	//TODO: type details
 	recipe: any;
 	short_name?: string;
 	symbol: string;
@@ -1100,6 +1141,25 @@ export interface ItemArchetypeDTO {
 
 	//HACK: added by the app
 	iconUrl?: string;
+}
+
+export interface ItemDTO {
+	archetype_id: number;
+	expires_in: any;
+	flavor: string;
+	icon: ImageDataDTO;
+	id: number;
+	name: string;
+	quantity: number;
+	rarity: number;
+	symbol: string;
+	type: number;
+
+	//HACK: added by app
+	iconUrl?: string;
+	//typeName?: string;
+	cadetable?: string;
+	factions?: string;
 }
 
 export interface CryoCollectionDTO {
@@ -1220,7 +1280,7 @@ export interface MissionQuestDTO {
 		critical: {
 			claimed: boolean;
 			reward: RewardDTO[];
-			standard_loot: MissionQuestRewardDTO[];
+			standard_loot: PotentialRewardDTO[];
 			threshold: number;
 		};
 		difficulty: number;
@@ -1228,7 +1288,7 @@ export interface MissionQuestDTO {
 		grid_x: number;
 		grid_y: number;
 		id: number;
-		image: ImageData;
+		image: ImageDataDTO;
 		locks: any[];
 		name: string;
 		skill: string;
@@ -1249,7 +1309,7 @@ export interface MissionQuestDTO {
 		jackpots: any[];
 		locked: boolean;
 		progress: { goal_progress: number; goals: number; };
-		rewards: (MissionQuestRewardDTO | RewardDTO)[]; // first item is MissionQuestRewardDTO with type=0, second is RewardDTO
+		rewards: (PotentialRewardDTO | RewardDTO)[]; // first item is PotentialRewardDTO with type=0, second is RewardDTO
 	}[];
 	material_bundle: string;
 	name: string;
@@ -1257,14 +1317,14 @@ export interface MissionQuestDTO {
 	quest_type: string;
 	star_background: boolean;
 	symbol: string;
-	timeline_action: ImageData;
+	timeline_action: ImageDataDTO;
 	unlock_text: any;
 }
 
-export interface MissionQuestRewardDTO {
-	icon: ImageData;
+export interface PotentialRewardDTO {
+	icon: ImageDataDTO;
 	potential_rewards: RewardDTO[];
 	quantity: number;
 	rarity: number;
-	type: number;
+	type: number; // =0
 }

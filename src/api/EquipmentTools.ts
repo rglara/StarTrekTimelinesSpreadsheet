@@ -1,5 +1,5 @@
 import STTApi from './index';
-import { CrewData, MissionQuestRewardDTO } from './STTApi';
+import { CrewData, PotentialRewardDTO, ItemArchetypeDTO, MissionDTO, MissionQuestDTO, FactionDTO } from './STTApi';
 
 export function fixupAllCrewIds() : void {
 	// Now replace the ids with proper ones
@@ -152,19 +152,19 @@ async function loadItemsDescription(ids: number[] | string[]): Promise<any[]> {
 	return archetypes;
 }
 
-export interface ICadetItemSource {
-	quest: any;
-	mission: any;
+export interface CadetItemSource {
+	quest: MissionQuestDTO;
+	mission: MissionDTO;
 	masteryLevel: number;
 }
 
-export interface IFactionStoreItemSource {
+export interface FactionStoreItemSource {
 	cost_currency: string;
 	cost_amount: number;
-	faction: any;
+	faction: FactionDTO;
 }
 
-export interface IEquipNeedFilter {
+export interface EquipNeedFilter {
 	onlyNeeded: boolean;
 	onlyFaction: boolean;
 	cadetable: boolean;
@@ -172,40 +172,40 @@ export interface IEquipNeedFilter {
 	userText: string | undefined;
 }
 
-export interface IEquipNeedCount {
-	crew: any;
+export interface EquipNeedCount {
+	crew: CrewData;
 	count: number;
 }
 
-export interface IEquipNeed {
-	equipment: any;
+export interface EquipNeed {
+	equipment: ItemArchetypeDTO;
 	needed: number;
 	have: number;
-	cadetSources: ICadetItemSource[];
-	factionSources: IFactionStoreItemSource[];
-	counts: Map<number, IEquipNeedCount>;
+	cadetSources: CadetItemSource[];
+	factionSources: FactionStoreItemSource[];
+	counts: Map<number, EquipNeedCount>;
 	isDisputeMissionObtainable: boolean;
 	isShipBattleObtainable: boolean;
 	isFactionObtainable: boolean;
 	isCadetable: boolean;
 }
 
-interface IUnparsedEquipment {
+interface UnparsedEquipment {
 	archetype: number;
 	need: number;
 	crew: CrewData;
 }
 
 export class NeededEquipmentClass {
-	private _cadetableItems: Map<number, ICadetItemSource[]>;
-	private _factionableItems: Map<number, IFactionStoreItemSource[]>;
+	private _cadetableItems: Map<number, CadetItemSource[]>;
+	private _factionableItems: Map<number, FactionStoreItemSource[]>;
 
 	constructor() {
-		this._cadetableItems = new Map<number, ICadetItemSource[]>();
-		this._factionableItems = new Map<number, IFactionStoreItemSource[]>();
+		this._cadetableItems = new Map<number, CadetItemSource[]>();
+		this._factionableItems = new Map<number, FactionStoreItemSource[]>();
 	}
 
-	filterNeededEquipment(filters: IEquipNeedFilter, limitCrew: number[]): IEquipNeed[] {
+	filterNeededEquipment(filters: EquipNeedFilter, limitCrew: number[]): EquipNeed[] {
 		this._getCadetableItems();
 		this._getFactionableItems();
 		const filteredCrew = this._getFilteredCrew(filters, limitCrew);
@@ -213,7 +213,7 @@ export class NeededEquipmentClass {
 		return neededEquipment;
 	}
 
-	private _getFilteredCrew(filters: IEquipNeedFilter, limitCrew: number[]): CrewData[] {
+	private _getFilteredCrew(filters: EquipNeedFilter, limitCrew: number[]): CrewData[] {
 		if (limitCrew.length === 0) {
 			// filter out `crew.buyback` by default
 			return STTApi.roster.filter((c: CrewData) => !c.buyback);
@@ -237,14 +237,14 @@ export class NeededEquipmentClass {
 	private _getFactionableItems() {
 		if (this._factionableItems.size === 0) {
 			for (let faction of STTApi.playerData.character.factions) {
-				for (let storeItem of faction.storeItems) {
+				for (let storeItem of (faction.storeItems || [])) {
 					if (
 						storeItem.offer.game_item.type === 2 &&
 						(storeItem.offer.game_item.item_type === 2 || storeItem.offer.game_item.item_type === 3)
 					) {
 						let item_id = storeItem.offer.game_item.id;
 
-						let info: IFactionStoreItemSource = {
+						let info: FactionStoreItemSource = {
 							cost_currency: storeItem.offer.cost.currency,
 							cost_amount: storeItem.offer.cost.amount,
 							faction: faction
@@ -284,8 +284,8 @@ export class NeededEquipmentClass {
 						masteryLevel.rewards
 							.filter((r) => r.type === 0)
 							.forEach((reward) => {
-								(reward as MissionQuestRewardDTO).potential_rewards.forEach((item) => {
-									let info: ICadetItemSource = {
+								(reward as PotentialRewardDTO).potential_rewards.forEach((item) => {
+									let info: CadetItemSource = {
 										quest: quest,
 										mission: cadetMission,
 										masteryLevel: masteryLevel.id
@@ -304,7 +304,7 @@ export class NeededEquipmentClass {
 		}
 	}
 
-	private _mergeMapUnowned(target: Map<number, IEquipNeed>, source: Map<number, IEquipNeed>) {
+	private _mergeMapUnowned(target: Map<number, EquipNeed>, source: Map<number, EquipNeed>) {
 		for (let archetype of source.keys()) {
 			if (target.has(archetype)) {
 				target.get(archetype)!.needed += source.get(archetype)!.needed;
@@ -324,9 +324,9 @@ export class NeededEquipmentClass {
 		return target;
 	}
 
-	private _calculateNeeds(unparsedEquipment: IUnparsedEquipment[], archetypes: any[]) {
-		let mapUnowned: Map<number, IEquipNeed> = new Map();
-		let mapIncompleteUsed: Map<number, IEquipNeed> = new Map();
+	private _calculateNeeds(unparsedEquipment: UnparsedEquipment[], archetypes: ItemArchetypeDTO[]) {
+		let mapUnowned: Map<number, EquipNeed> = new Map();
+		let mapIncompleteUsed: Map<number, EquipNeed> = new Map();
 		// TODO: infinite loop detection, for bad data
 
 		let loopCount = 0;
@@ -341,7 +341,7 @@ export class NeededEquipmentClass {
 			if (!equipment) {
 				console.warn(`This equipment has no recipe and no sources: '${eq.archetype}'`);
 			} else if (equipment.recipe && equipment.recipe.demands && equipment.recipe.demands.length > 0) {
-				let have = STTApi.playerData.character.items.find((item: any) => item.archetype_id === eq.archetype);
+				let have = STTApi.playerData.character.items.find((item) => item.archetype_id === eq.archetype);
 				// don't have any partially built, queue up to break into pieces
 				if (!have || have.quantity <= 0) {
 					// Add all children in the recipe to parse on the next loop iteration
@@ -413,12 +413,12 @@ export class NeededEquipmentClass {
 						found.counts.set(eq.crew.id, { crew: eq.crew, count: eq.need });
 					}
 				} else {
-					let have = STTApi.playerData.character.items.find((item: any) => item.archetype_id === eq.archetype);
+					let have = STTApi.playerData.character.items.find((item) => item.archetype_id === eq.archetype);
 					let isDisputeMissionObtainable = equipment.item_sources.filter((e: any) => e.type === 0).length > 0;
 					let isShipBattleObtainable = equipment.item_sources.filter((e: any) => e.type === 2).length > 0;
 					let isFactionObtainable = equipment.item_sources.filter((e: any) => e.type === 1).length > 0;
 					let isCadetable = this._cadetableItems.has(equipment.id);
-					let counts: Map<number, IEquipNeedCount> = new Map();
+					let counts: Map<number, EquipNeedCount> = new Map();
 					counts.set(eq.crew.id, { crew: eq.crew, count: eq.need });
 
 					equipment.item_sources.sort((a: any, b: any) => b.energy_quotient - a.energy_quotient);
@@ -442,9 +442,9 @@ export class NeededEquipmentClass {
 		return mapUnowned;
 	}
 
-	private _getNeededEquipment(filteredCrew: CrewData[], filters: IEquipNeedFilter) {
-		let unparsedEquipment: IUnparsedEquipment[] = [];
-		let mapUnowned: Map<number, IEquipNeed> = new Map();
+	private _getNeededEquipment(filteredCrew: CrewData[], filters: EquipNeedFilter) {
+		let unparsedEquipment: UnparsedEquipment[] = [];
+		let mapUnowned: Map<number, EquipNeed> = new Map();
 		for (let crew of filteredCrew) {
 			let lastEquipmentLevel = 1;
 			crew.equipment_slots.forEach(equipment => {
@@ -458,7 +458,7 @@ export class NeededEquipmentClass {
 			if (filters.allLevels && !crew.isExternal) {
 				let feCrew = STTApi.allcrew.find(c => c.symbol === crew.symbol);
 				if (feCrew) {
-					let unparsedEquipmentFE: IUnparsedEquipment[] = [];
+					let unparsedEquipmentFE: UnparsedEquipment[] = [];
 					feCrew.equipment_slots.forEach(equipment => {
 						if (equipment.level > lastEquipmentLevel) {
 							unparsedEquipmentFE.push({ archetype: equipment.archetype, need: 1, crew: crew });
@@ -477,23 +477,23 @@ export class NeededEquipmentClass {
 		arr.sort((a, b) => b.needed - a.needed);
 
 		if (filters.onlyNeeded) {
-			arr = arr.filter((entry: IEquipNeed) => entry.have < entry.needed);
+			arr = arr.filter((entry: EquipNeed) => entry.have < entry.needed);
 		}
 
 		if (filters.onlyFaction) {
 			arr = arr.filter(
-				(entry: IEquipNeed) => !entry.isDisputeMissionObtainable && !entry.isShipBattleObtainable && entry.isFactionObtainable
+				(entry: EquipNeed) => !entry.isDisputeMissionObtainable && !entry.isShipBattleObtainable && entry.isFactionObtainable
 			);
 		}
 
 		if (filters.cadetable) {
-			arr = arr.filter((entry: IEquipNeed) => entry.isCadetable);
+			arr = arr.filter((entry: EquipNeed) => entry.isCadetable);
 		}
 
 		if (filters.userText && filters.userText.trim().length > 0) {
 			let filterString = filters.userText.toLowerCase();
 
-			arr = arr.filter((entry: IEquipNeed) => {
+			arr = arr.filter((entry: EquipNeed) => {
 				// if value is (parsed into) a number, filter by entry.equipment.rarity, entry.needed, entry.have, entry.counts{}.count
 				let filterInt = parseInt(filterString);
 				if (!isNaN(filterInt)) {
@@ -506,7 +506,7 @@ export class NeededEquipmentClass {
 					if (entry.have === filterInt) {
 						return true;
 					}
-					if (Array.from(entry.counts.values()).some((c: IEquipNeedCount) => c.count === filterInt)) {
+					if (Array.from(entry.counts.values()).some((c: EquipNeedCount) => c.count === filterInt)) {
 						return true;
 					}
 					return false;
@@ -516,7 +516,7 @@ export class NeededEquipmentClass {
 				if (entry.equipment.name.toLowerCase().includes(filterString)) {
 					return true;
 				}
-				if (Array.from(entry.counts.values()).some((c: IEquipNeedCount) => c.crew.name.toLowerCase().includes(filterString))) {
+				if (Array.from(entry.counts.values()).some((c: EquipNeedCount) => c.crew.name.toLowerCase().includes(filterString))) {
 					return true;
 				}
 				if (entry.equipment.item_sources.some((s: any) => s.name.toLowerCase().includes(filterString))) {

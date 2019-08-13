@@ -1,22 +1,33 @@
 import React from 'react';
-import ReactTable from 'react-table';
-import { Button } from 'semantic-ui-react';
+import ReactTable, { SortingRule, Column } from 'react-table';
 
 import { ItemDisplay } from './ItemDisplay';
 import { RarityStars } from './RarityStars';
 import STTApi, { CONFIG } from '../api';
+import { PotentialRewardDTO, RewardDTO, ItemDTO } from '../api/STTApi';
 
-export class ItemList extends React.Component {
-	constructor(props) {
+export interface ItemListProps {
+	data: ItemDTO[];
+	filterText?: string;
+}
+
+export interface ItemListState {
+	columns: Column<ItemDTO>[];
+	items: ItemDTO[];
+	sorted: SortingRule[];
+}
+
+export class ItemList extends React.Component<ItemListProps, ItemListState> {
+	constructor(props: ItemListProps) {
 		super(props);
 
-		let rewardItemIds = new Map();
-		const scanRewards = (name, potential_rewards) => {
+		let rewardItemIds = new Map<string, Set<number>>();
+		const scanRewards = (name: string, potential_rewards: (PotentialRewardDTO | RewardDTO)[]) => {
 			potential_rewards.forEach(reward => {
-				if (reward.potential_rewards) {
-					scanRewards(name, reward.potential_rewards);
+				if ((reward as PotentialRewardDTO).potential_rewards) {
+					scanRewards(name, (reward as PotentialRewardDTO).potential_rewards);
 				} else if (reward.type === 2) {
-					rewardItemIds.get(name).add(reward.id);
+					rewardItemIds.get(name)!.add((reward as RewardDTO).id);
 				}
 			});
 		};
@@ -26,6 +37,7 @@ export class ItemList extends React.Component {
 			scanRewards(f.name, f.shuttle_mission_rewards);
 		});
 
+		//FIXME: this should be done on init, not here on list render
 		this.props.data.forEach(item => {
 			let val = STTApi.getEquipmentManager().getCadetableItems().get(item.archetype_id);
 			item.cadetable = '';
@@ -62,7 +74,7 @@ export class ItemList extends React.Component {
 
 		this.state = {
 			items: this.props.data,
-			sorted: [{ id: 'name', desc: false }, { id: 'rarity' }],
+			sorted: [{ id: 'name', desc: false }, { id: 'rarity', desc: false }],
 			columns: [
 				{
 					id: 'icon',
@@ -71,8 +83,8 @@ export class ItemList extends React.Component {
 					maxWidth: 50,
 					resizable: false,
 					accessor: 'name',
-					Cell: p => {
-						let item = p.original;
+					Cell: (cell) => {
+						let item = cell.original;
 						return <ItemDisplay src={item.iconUrl} size={50} maxRarity={item.rarity} rarity={item.rarity} />;
 					}
 				},
@@ -83,8 +95,8 @@ export class ItemList extends React.Component {
 					maxWidth: 180,
 					resizable: true,
 					accessor: 'name',
-					Cell: p => {
-						let item = p.original;
+					Cell: (cell) => {
+						let item = cell.original;
 						return (
 							<a href={'https://stt.wiki/wiki/' + item.name.split(' ').join('_')} target='_blank'>
 								{item.name}
@@ -99,8 +111,8 @@ export class ItemList extends React.Component {
 					minWidth: 80,
 					maxWidth: 80,
 					resizable: false,
-					Cell: p => {
-						let item = p.original;
+					Cell: (cell) => {
+						let item = cell.original;
 						return <RarityStars min={1} max={item.rarity} value={item.rarity ? item.rarity : null} />;
 					}
 				},
@@ -119,8 +131,8 @@ export class ItemList extends React.Component {
 					maxWidth: 120,
 					resizable: true,
 					accessor: 'typeName',
-					Cell: p => {
-						let item = p.original;
+					Cell: (cell) => {
+						let item = cell.original;
 
 						let typeName = CONFIG.REWARDS_ITEM_TYPE[item.type];
 						if (typeName) {
@@ -178,11 +190,10 @@ export class ItemList extends React.Component {
 
 	render() {
 		let { columns, items, sorted } = this.state;
-		const defaultButton = props => (
-			<Button {...props} style={{ width: '100%' }}>
-				{props.children}
-			</Button>
-		);
+		if (this.props.filterText) {
+			items = items.filter(i => this._filterItem(i, this.props.filterText!.toLowerCase()))
+		}
+
 		return (
 			<div className='data-grid' data-is-scrollable='true'>
 				<ReactTable
@@ -195,15 +206,13 @@ export class ItemList extends React.Component {
 					showPagination={items.length > 50}
 					showPageSizeOptions={false}
 					className='-striped -highlight'
-					NextComponent={defaultButton}
-					PreviousComponent={defaultButton}
 					style={items.length > 50 ? { height: 'calc(100vh - 88px)' } : {}}
 				/>
 			</div>
 		);
 	}
 
-	_filterItem(item, searchString) {
+	_filterItem(item: ItemDTO, searchString: string): boolean {
 		return searchString.split(' ').every(text => {
 			// search the name first
 			if (item.name.toLowerCase().indexOf(text) > -1) {
@@ -236,9 +245,9 @@ export class ItemList extends React.Component {
 		});
 	}
 
-	filter(newValue) {
-		this.setState({
-			items: newValue ? this.props.data.filter(i => this._filterItem(i, newValue.toLowerCase())) : this.props.data
-		});
-	}
+	// filter(newValue: string): void {
+	// 	this.setState({
+	// 		items: newValue ? this.props.data.filter(i => this._filterItem(i, newValue.toLowerCase())) : this.props.data
+	// 	});
+	// }
 }

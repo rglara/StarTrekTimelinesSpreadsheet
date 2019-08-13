@@ -188,7 +188,7 @@ export async function loginSequence(onProgress: (description: string) => void, l
     //iconPromises = [];
     for (let item of STTApi.playerData.character.items) {
         item.iconUrl = STTApi.imageProvider.getCached(item);
-        item.typeName = item.icon.file.replace("/items", "").split("/")[1];
+        //item.typeName = item.icon.file.replace("/items", "").split("/")[1];
         item.symbol = item.icon.file.replace("/items", "").split("/")[2];
 
         if (item.iconUrl === '') {
@@ -223,11 +223,13 @@ export async function loginSequence(onProgress: (description: string) => void, l
     for (let faction of STTApi.playerData.character.factions) {
         faction.iconUrl = STTApi.imageProvider.getCached(faction);
 
-        if (faction.iconUrl === '') {
+        if (!faction.iconUrl || faction.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getFactionImageUrl(faction, faction.id).then((found: IFoundResult) => {
                 onProgress('Caching faction images... (' + current++ + '/' + total + ')');
-                let faction = STTApi.playerData.character.factions.find((faction: any) => faction.id === found.id);
-                faction.iconUrl = found.url;
+                let faction = STTApi.playerData.character.factions.find((faction) => faction.id === found.id);
+                if (faction) {
+                    faction.iconUrl = found.url;
+                }
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
             // Image is already cached
