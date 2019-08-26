@@ -612,7 +612,8 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 									<span>Rewards: </span>
 									{rewards.loot.map((loot:any, index:number) =>
 										<span key={index} style={{ color: loot.rarity && CONFIG.RARITIES[loot.rarity].color }}
-										>{loot.quantity} {(loot.rarity == null) ? '' : CONFIG.RARITIES[loot.rarity].name} {loot.full_name}{index < rewards.loot.length ? ', ':''}</span>
+										>{loot.quantity} {(loot.rarity == null) ? '' : CONFIG.RARITIES[loot.rarity].name} {loot.full_name}
+										{index < rewards.loot.length-1 ? ', ':''}</span>
 									)}
 								</p>
 							}
