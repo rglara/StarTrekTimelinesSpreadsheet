@@ -14,10 +14,9 @@ import { isMobile } from 'react-device-detect';
 
 import { SkillCell } from './SkillCell';
 import { ActiveCrewDialog } from './ActiveCrewDialog';
-import { RarityStars } from './RarityStars';
 import { ItemDisplay } from './ItemDisplay';
 
-import STTApi, { CONFIG } from '../api';
+import STTApi, { CONFIG, RarityStars } from '../api';
 
 export class CrewList extends React.Component {
 
@@ -185,7 +184,9 @@ export class CrewList extends React.Component {
 
 		let columns = this._getColumns(this.props.duplicatelist, this.props.showBuyback, this.props.compactMode, pivotBy.length > 0);
 
-		const defaultButton = props => <DefaultButton {...props} text={props.children} style={{ width: '100%' }} />;
+		if (this.props.filterText) {
+			items = items.filter(i => this._filterCrew(i, this.props.filterText/*!*/.toLowerCase()))
+		}
 
 		return (
 			<div className={this.props.embedded ? 'embedded-crew-grid' : 'data-grid'} data-is-scrollable='true'>
@@ -199,8 +200,6 @@ export class CrewList extends React.Component {
 					showPagination={(items.length > 50)}
 					showPageSizeOptions={false}
 					className="-striped -highlight"
-					NextComponent={defaultButton}
-					PreviousComponent={defaultButton}
 					style={(!this.props.embedded && (items.length > 50)) ? { height: 'calc(100vh - 88px)' } : {}}
 					pivotBy={pivotBy}
 					getTrProps={(s, r) => {
@@ -719,14 +718,6 @@ export class CrewList extends React.Component {
 
 				return false;
 			});
-		});
-	}
-
-	filter(newValue) {
-		this.setState({
-			items: (newValue ?
-				this.props.data.filter(i => this._filterCrew(i, newValue.toLowerCase())) :
-				this.props.data)
 		});
 	}
 

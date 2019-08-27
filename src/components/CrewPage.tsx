@@ -1,40 +1,38 @@
 import React from 'react';
 import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
 
-import { CrewList } from './CrewList.js';
+import { CrewList } from './CrewList';
 
-import { exportExcel } from '../utils/excelExporter.js';
-import { exportCsv } from '../utils/csvExporter.js';
+import { exportExcel } from '../utils/excelExporter';
+import { exportCsv } from '../utils/csvExporter';
 
-import { download } from '../utils/pal';
+import STTApi, { download } from '../api';
+import { CrewData } from '../api/STTApi';
+import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 
-import STTApi from '../api';
+export interface CrewPageProps {
+    onCommandItemsUpdate?: (items: ICommandBarItemProps[]) => void;
 
-export class CrewPage extends React.Component {
-	constructor(props) {
-        super(props);
+}
 
-        this.state = {
-            showEveryone: false,
-            showBuyback: false,
-            showCanTrain: false,
-            groupRarity: false,
-            compactMode: true,
-            crewData: this.loadCrewData(false, false)
-        };
-    }
+export const CrewPage = (props: CrewPageProps) => {
+    const [filterText, setFilterText] = React.useState('');
+    const [showEveryone, setShowEveryone] = React.useState(false);
+    const [showBuyback, setShowBuyback] = React.useState(false);
+    const [showCanTrain, setShowCanTrain] = React.useState(false);
+    const [groupRarity, setGroupRarity] = React.useState(false);
+    const [compactMode, setCompactMode] = React.useState(true);
+    const [crewData, setCrewData] = React.useState(loadCrewData(false,false,false));
 
-    componentDidMount() {
-        this.refs.crewList.filter('');
+    React.useEffect(() => {
+        _updateCommandItems();
+    }, [showEveryone, showBuyback, showCanTrain, groupRarity, compactMode]);
 
-        this._updateCommandItems();
-    }
-
-    loadCrewData(showEveryone, showBuyback, showCanTrain) {
-        let crewData= STTApi.roster;
+    function loadCrewData(showEveryone: boolean, showBuyback: boolean, showCanTrain: boolean) : CrewData[] {
+        let crewData = STTApi.roster;
         if (showEveryone) {
-            const isFFFE = (crew) => (crew.frozen > 0) || ((crew.rarity === crew.max_rarity) && (crew.level === 100));
-            const notOwned = (crew) => {
+            const isFFFE = (crew:CrewData) => (crew.frozen > 0) || ((crew.rarity === crew.max_rarity) && (crew.level === 100));
+            const notOwned = (crew: CrewData) => {
                 let rc = STTApi.roster.find((rosterCrew) => !rosterCrew.buyback && (rosterCrew.symbol === crew.symbol));
 
                 return !(rc) || !isFFFE(rc);
@@ -48,16 +46,16 @@ export class CrewPage extends React.Component {
             crewData = crewData.filter(crew => !crew.buyback);
         }
 
-        if(showCanTrain) {
+        if (showCanTrain) {
             crewData = crewData.filter(crew => crew.level !== crew.max_level);
         }
 
         return crewData;
     }
 
-    _updateCommandItems() {
-        if (this.props.onCommandItemsUpdate) {
-            this.props.onCommandItemsUpdate([
+    function _updateCommandItems() {
+        if (props.onCommandItemsUpdate) {
+            props.onCommandItemsUpdate([
                 {
                     key: 'export',
                     text: 'Export',
@@ -93,63 +91,53 @@ export class CrewPage extends React.Component {
                             key: 'groupRarity',
                             text: 'Group by rarity',
                             canCheck: true,
-                            isChecked: this.state.groupRarity,
+                            isChecked: groupRarity,
                             onClick: () => {
-                                let isChecked = !this.state.groupRarity;
-                                this.setState({
-                                    groupRarity: isChecked
-                                }, () => { this._updateCommandItems(); });
+                                let isChecked = !groupRarity;
+                                setGroupRarity(isChecked);
                             }
                         },
                         {
                             key: 'showBuyback',
                             text: 'Show buyback (dismissed) crew',
                             canCheck: true,
-                            isChecked: this.state.showBuyback,
+                            isChecked: showBuyback,
                             onClick: () => {
-                                let isChecked = !this.state.showBuyback;
-                                this.setState({
-                                    crewData: this.loadCrewData(this.state.showEveryone, isChecked, this.state.showCanTrain),
-                                    showBuyback: isChecked
-                                }, () => { this._updateCommandItems(); });
+                                let isChecked = !showBuyback;
+                                setCrewData(loadCrewData(showEveryone, isChecked, showCanTrain));
+                                setShowBuyback(isChecked);
                             }
                         },
                           {
                             key: 'showCanTrain',
                             text: 'Show crew that can receive training',
                             canCheck: true,
-                            isChecked: this.state.showCanTrain,
+                            isChecked: showCanTrain,
                             onClick: () => {
-                              let isChecked = !this.state.showCanTrain;
-                              this.setState({
-                                crewData: this.loadCrewData(this.state.showEveryone, this.state.showBuyback, isChecked),
-                                showCanTrain: isChecked
-                              }, () => { this._updateCommandItems(); });
+                              let isChecked = !showCanTrain;
+                              setCrewData(loadCrewData(showEveryone, showBuyback, isChecked));
+                              setShowCanTrain(isChecked);
                             }
                           },
                         {
                             key: 'compactMode',
                             text: 'Compact mode',
                             canCheck: true,
-                            isChecked: this.state.compactMode,
+                            isChecked: compactMode,
                             onClick: () => {
-                                let isChecked = !this.state.compactMode;
-                                this.setState({
-                                    compactMode: isChecked
-                                }, () => { this._updateCommandItems(); });
+                                let isChecked = !compactMode;
+                                setCompactMode(isChecked);
                             }
                         },
                         {
                             key: 'showEveryone',
                             text: '(EXPERIMENTAL) Show stats for all crew',
                             canCheck: true,
-                            isChecked: this.state.showEveryone,
+                            isChecked: showEveryone,
                             onClick: () => {
-                                let isChecked = !this.state.showEveryone;
-                                this.setState({
-                                    crewData: this.loadCrewData(isChecked, this.state.showBuyback, this.state.showCanTrain),
-                                    showEveryone: isChecked
-                                }, () => { this._updateCommandItems(); });
+                                let isChecked = !showEveryone;
+                                setCrewData(loadCrewData(isChecked, showBuyback, showCanTrain));
+                                setShowEveryone(isChecked);
                             }
                         }]
                     }
@@ -158,13 +146,15 @@ export class CrewPage extends React.Component {
         }
     }
 
-	render() {
-		return <div>
-            <SearchBox placeholder='Search by name or trait...'
-                onChange={(newValue) => this.refs.crewList.filter(newValue)}
-                onSearch={(newValue) => this.refs.crewList.filter(newValue)}
-            />
-            <CrewList data={this.state.crewData} ref='crewList' groupRarity={this.state.groupRarity} showBuyback={this.state.showBuyback} compactMode={this.state.compactMode} />
-        </div>;
-	}
+    return <div>
+        <SearchBox placeholder='Search by name or trait...'
+            onChange={(newValue) => setFilterText(newValue)}
+            onSearch={(newValue) => setFilterText(newValue)}
+        />
+        <CrewList data={crewData}
+            groupRarity={groupRarity}
+            showBuyback={showBuyback}
+            compactMode={compactMode}
+            filterText={filterText} />
+    </div>;
 }
