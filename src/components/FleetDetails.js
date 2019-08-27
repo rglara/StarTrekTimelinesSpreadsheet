@@ -2,16 +2,12 @@ import React from 'react';
 import ReactTable from "react-table";
 import { Button } from 'semantic-ui-react';
 
-import { CollapsibleSection } from './CollapsibleSection';
-import { RarityStars } from './RarityStars';
-
 // #!if ENV === 'electron'
 import { loginPubNub } from '../utils/chat';
 // #!endif
 import { download } from '../utils/pal';
 
-import STTApi from '../api';
-import { formatTimeSeconds } from '../api';
+import STTApi, { CollapsibleSection, RarityStars, formatTimeSeconds }  from '../api';
 
 import { simplejson2csv } from '../utils/simplejson2csv';
 

@@ -2,11 +2,9 @@ import React from 'react';
 
 import { Dialog, DialogType } from 'office-ui-fabric-react/lib/Dialog';
 
-import { CollapsibleSection } from './CollapsibleSection.js';
 import UserStore from './Styles';
 
-import STTApi from '../api';
-import { CONFIG, loadVoyage, formatTimeSeconds } from '../api';
+import STTApi, { CONFIG, CollapsibleSection, loadVoyage, formatTimeSeconds } from '../api';
 
 export class ShuttleAdventure extends React.Component {
     constructor(props) {
@@ -57,9 +55,9 @@ export class ShuttleAdventure extends React.Component {
 export class VoyageLogEntry extends React.Component {
 	constructor(props) {
         super(props);
-        
+
         this.props.log.forEach(entry=> {
-            // TODO: some log entries have 2 crew 
+            // TODO: some log entries have 2 crew
             if (entry.crew) {
                 let rc = STTApi.roster.find((rosterCrew) => rosterCrew.symbol == entry.crew[0]);
                 if (rc) entry.crewIconUrl = rc.iconUrl;

@@ -2,10 +2,9 @@ import React from 'react';
 import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
 import { PrimaryButton, DefaultButton } from 'office-ui-fabric-react/lib/Button';
 import UserStore from './Styles';
-import NumberPicker from './NumberPicker';
 
 import STTApi from '../api';
-import { CONFIG, getChronitonCount } from '../api';
+import { CONFIG, NumberPicker, getChronitonCount } from '../api';
 
 export class WarpDialog extends React.Component {
     constructor(props) {
@@ -38,7 +37,7 @@ export class WarpDialog extends React.Component {
                     mastery,
                     mastery_level
                 });
-    
+
                 break;
             }
 		}

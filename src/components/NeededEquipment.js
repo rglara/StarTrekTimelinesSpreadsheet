@@ -6,12 +6,8 @@ import { Input, Dropdown, Grid } from 'semantic-ui-react';
 import { ItemDisplay } from './ItemDisplay';
 import { ReplicatorDialog } from './ReplicatorDialog';
 import { WarpDialog } from './WarpDialog';
-import { CollapsibleSection } from './CollapsibleSection.js';
 
-import STTApi from '../api';
-import { CONFIG } from '../api';
-
-import { download } from '../utils/pal';
+import STTApi, { CONFIG, CollapsibleSection, download } from '../api';
 
 import { simplejson2csv } from '../utils/simplejson2csv';
 
@@ -178,7 +174,7 @@ export class NeededEquipment extends React.Component {
                 dupeChecker.add(crew.id);
             }
 		});
-		
+
 		this.setState({ currentSelectedItems: Array.from(dupeChecker.values()) });
 	}
 

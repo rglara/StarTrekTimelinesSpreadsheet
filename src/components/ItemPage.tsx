@@ -4,25 +4,18 @@ import { exportItemsCsv } from '../utils/csvExporter';
 import { download } from '../utils/pal';
 import STTApi from '../api';
 import { ItemList } from './ItemList';
+import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 
 export interface ItemPageProps {
-    onCommandItemsUpdate?: (items: any[]) => void;
+    onCommandItemsUpdate?: (items: ICommandBarItemProps[]) => void;
 }
 
-interface ItemPageState {
-    filterText: string;
-}
+export const ItemPage = (props: ItemPageProps) => {
+    const [filterText, setFilterText] = React.useState('');
 
-export class ItemPage extends React.Component<ItemPageProps, ItemPageState> {
-
-	constructor(props: ItemPageProps) {
-        super(props);
-        this.state = { filterText: '' };
-    }
-
-    componentDidMount() {
-        if (this.props.onCommandItemsUpdate) {
-            this.props.onCommandItemsUpdate([
+    React.useEffect(() => {
+        if (props.onCommandItemsUpdate) {
+            props.onCommandItemsUpdate([
                 {
                     key: 'exportCsv',
                     name: 'Export CSV...',
@@ -34,15 +27,13 @@ export class ItemPage extends React.Component<ItemPageProps, ItemPageState> {
                 }
             ]);
         }
-    }
+    }, []);
 
-	render() {
-		return <div>
-            <SearchBox placeholder='Search by name or description...'
-                onChange={(newValue) => this.setState({filterText : newValue})}
-                onSearch={(newValue) => this.setState({ filterText: newValue })}
-            />
-            <ItemList data={STTApi.playerData.character.items} filterText={this.state.filterText} />
-        </div>;
-	}
+    return <div>
+        <SearchBox placeholder='Search by name or description...'
+            onChange={(newValue) => setFilterText(newValue)}
+            onSearch={(newValue) => setFilterText(newValue)}
+        />
+        <ItemList data={STTApi.playerData.character.items} filterText={filterText} />
+    </div>;
 }
