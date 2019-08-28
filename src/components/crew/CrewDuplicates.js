@@ -2,9 +2,9 @@ import React from 'react';
 import { PrimaryButton, DefaultButton } from 'office-ui-fabric-react/lib/Button';
 import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
 
-import { CrewList } from './CrewList.js';
+import { CrewList } from './CrewList';
 
-import STTApi from '../api';
+import STTApi from '../../api';
 
 export class CrewDuplicates extends React.Component {
     constructor(props) {

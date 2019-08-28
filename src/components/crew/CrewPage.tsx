@@ -3,11 +3,11 @@ import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
 
 import { CrewList } from './CrewList';
 
-import { exportExcel } from '../utils/excelExporter';
-import { exportCsv } from '../utils/csvExporter';
+import { exportExcel } from '../../utils/excelExporter';
+import { exportCsv } from '../../utils/csvExporter';
 
-import STTApi, { download } from '../api';
-import { CrewData } from '../api/STTApi';
+import STTApi, { download } from '../../api';
+import { CrewData } from '../../api/STTApi';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 
 export interface CrewPageProps {

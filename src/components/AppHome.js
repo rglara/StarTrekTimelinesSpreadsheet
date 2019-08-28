@@ -15,7 +15,7 @@ import { LoginDialog } from './LoginDialog';
 
 import { ShipList } from './ShipList';
 import { ItemPage } from './ItemPage';
-import { CrewPage } from './CrewPage';
+import { CrewPage } from './crew/CrewPage';
 import { GauntletHelper } from './GauntletHelper';
 import { MissionExplorer } from './MissionExplorer';
 import { AboutAndHelp } from './AboutAndHelp';
@@ -23,7 +23,7 @@ import { HomePage } from './HomePage';
 import { FleetDetails } from './FleetDetails';
 import { VoyagePage } from './voyage/VoyagePage';
 import { NeededEquipment } from './NeededEquipment';
-import { CrewDuplicates } from './CrewDuplicates';
+import { CrewDuplicates } from './crew/CrewDuplicates';
 import { IncompleteMissions } from './IncompleteMissions';
 import { CryoCollections } from './CryoCollections';
 import { FactionDetails } from './FactionDetails';
