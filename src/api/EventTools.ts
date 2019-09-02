@@ -1,18 +1,21 @@
 import STTApi from "./index";
 
-export class BonusCrew {
-    eventName: string = '';
-    crewIds: number[] = [];
+export interface BonusCrew {
+    eventName: string;
+    crewIds: number[];
 };
 
 export function bonusCrewForCurrentEvent(): BonusCrew | undefined {
-    let result = new BonusCrew();
+    let result : BonusCrew = {
+        eventName : '',
+        crewIds: []
+    }
 
     if (STTApi.playerData.character.events && STTApi.playerData.character.events.length > 0) {
         let activeEvent = STTApi.playerData.character.events[0];
         result.eventName = activeEvent.name;
 
-        let eventCrew: { [index: string]: any } = {};
+        let eventCrew: { [index: string]: number | string } = {};
         if (activeEvent.content) {
             if (activeEvent.content.crew_bonuses) {
                 for (let symbol in activeEvent.content.crew_bonuses) {

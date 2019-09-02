@@ -496,7 +496,7 @@ export class STTApiClass {
 					data.event.content.gather_pools[0].adventures.length === 1
 				) {
 					this._playerData!.player.character.events[0].content.gather_pools[0].adventures = this._playerData!.player.character.events[0].content.gather_pools[0].adventures.filter(
-						(itm: any) => itm.id !== data.event.content.gather_pools[0].adventures[0].id
+						(itm) => itm.id !== data.event.content.gather_pools[0].adventures[0].id
 					);
 				} else {
 					console.warn('Delete not applied; data is most likely stale; user should refresh');
@@ -579,7 +579,7 @@ export interface SkillData {
 }
 
 export interface CrewActionDTO {
-	ability: {
+	ability?: {
 		amount: number;
 		condition: number;
 		type: number;
@@ -592,6 +592,7 @@ export interface CrewActionDTO {
 	duration: number;
 	icon: ImageDataDTO;
 	initial_cooldown: number;
+	limit?: number;
 	name: string;
 	special: boolean;
 	symbol: string;
@@ -967,7 +968,7 @@ export interface PlayerCharacterDTO {
 	dispute_histories: any[];
 	disputes: any[];
 	event_tickets: any;
-	events: any[];
+	events: EventDTO[];
 	factions: FactionDTO[];
 	fleet_activities: any[];
 	freestanding_quests: any[];
@@ -1327,4 +1328,89 @@ export interface PotentialRewardDTO {
 	quantity: number;
 	rarity: number;
 	type: number; // =0
+}
+
+export interface EventDTO {
+	bonus_text: string;
+	bonus_victory_points: number;
+	content: {
+		// skirmish events
+		bonus_crew?: {
+			[crew_symbol: string]: number;
+		};
+		content_type: string; // "gather" | "shuttles" | "skirmish" | ?
+		craft_bonus: number;
+		// Galaxy/gather events
+		crew_bonuses?: {
+			[crew_symbol: string] : number;
+		};
+		gather_pools: EventGatherPoolDTO[];
+		refresh_cost: { amount: number; currency: number; };
+		// faction events
+		shuttles?: any[];
+		// expedetion events
+		special_crew?: string[];
+		supports_boosts: boolean;
+	};
+	description: string;
+	featured_crew: {
+		action: CrewActionDTO;
+		flavor: string;
+		full_body: ImageDataDTO;
+		full_name: string;
+		icon: ImageDataDTO;
+		id: number;
+		name: string;
+		portrait: ImageDataDTO;
+		quantity: number;
+		rarity: number;
+		skills: { [sk: string]: SkillDTO; };
+		symbol: string;
+		traits: string[];
+		type: number;
+	}[];
+	id: number;
+	instance_id: number;
+	last_threshold_points: number;
+	name: string;
+	next_threshold_points: number;
+	next_threshold_rewards: any[];
+	opened: boolean;
+	opened_phase: number;
+	phases: any[];
+	ranked_brackets: any[];
+	rewards_teaser: string;
+	rules: string;
+	seconds_to_end: number;
+	seconds_to_start: number;
+	shop_layout: string;
+	squadron_ranked_brackets: any[];
+	status: number;
+	threshold_rewards: any[];
+	unclaimed_threshold_rewards: any[];
+	victory_points: number;
+}
+
+export interface EventGatherPoolAdventureDTO {
+	demands: { archetype_id: number; count: number; }[];
+	description: string;
+	golden_octopus: boolean;
+	id: number;
+	name: string;
+}
+
+export interface EventGatherPoolDTO {
+	adventures: EventGatherPoolAdventureDTO[];
+	goal_index: number;
+	golden_octopus_rewards: {
+		faction_id: number;
+		flavor: string;
+		icon: ImageDataDTO;
+		name: string;
+		quantity: number;
+		symbol: string;
+		type: number;
+	}[];
+	id : number;
+	rewards: any[];
 }
