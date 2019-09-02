@@ -3,7 +3,7 @@ import React from 'react';
 import { Button, Image, Item, List, Dropdown } from 'semantic-ui-react';
 
 import STTApi from '../api';
-import { CONFIG, shuttleComplete, shuttleRedeemToken, shuttleStart, formatTimeSeconds } from '../api';
+import { CONFIG, formatTimeSeconds } from '../api';
 
 export class Shuttles extends React.Component {
 	constructor(props) {

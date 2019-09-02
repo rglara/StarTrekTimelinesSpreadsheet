@@ -28,6 +28,7 @@ import { IncompleteMissions } from './IncompleteMissions';
 import { CryoCollections } from './CryoCollections';
 import { FactionDetails } from './FactionDetails';
 import { Shuttles } from './Shuttles';
+import { EventHelperPage } from './events/EventHelperPage';
 import { Experiments } from './Experiments';
 import { ModalNotification } from './ModalNotification';
 import { loadUITheme } from './Styles';
@@ -274,6 +275,9 @@ export class AppHome extends React.Component {
 			case 'FactionDetails':
 				return <FactionDetails />;
 
+			case 'Events':
+				return <EventHelperPage />;
+
 			case 'Shuttles':
 				return <Shuttles />;
 
@@ -428,6 +432,11 @@ export class AppHome extends React.Component {
 
 		navItems = navItems.concat([
 			this._tabMenuItem({ key: 'Crew', itemIcon: 'Teamwork' }),
+			this._tabMenuItem({ key: 'Voyage', itemIcon: 'Rocket' }),
+			this._tabMenuItem({ key: 'Gauntlet', itemIcon: 'ConnectContacts' }),
+			this._tabMenuItem({ key: 'Events', itemIcon: 'Sections' }),
+			this._tabMenuItem({ key: 'Items', itemIcon: 'Boards' }),
+			this._tabMenuItem({ key: 'Ships', itemIcon: 'Airplane' }),
 			{
 				key: 'tools',
 				text: 'Tools and recommendations',
@@ -460,10 +469,6 @@ export class AppHome extends React.Component {
 					}]
 				}
 			},
-			this._tabMenuItem({ key: 'Voyage', itemIcon: 'Rocket' }),
-			this._tabMenuItem({ key: 'Gauntlet', itemIcon: 'ConnectContacts' }),
-			this._tabMenuItem({ key: 'Items', itemIcon: 'Boards' }),
-			this._tabMenuItem({ key: 'Ships', itemIcon: 'Airplane' })
 		]);
 
 		return navItems;

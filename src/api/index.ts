@@ -19,7 +19,6 @@ export { calculateQuestRecommendations } from './MissionCrewSuccess';
 export { formatTimeSeconds, getChronitonCount } from './MiscTools';
 export { refreshAllFactions, loadFactionStore } from './FactionTools';
 export { replicatorCurrencyCost, replicatorFuelCost, canReplicate, replicatorFuelValue, canUseAsFuel, replicate } from './ReplicatorTools';
-export { shuttleComplete, shuttleRedeemToken, shuttleStart } from './ShuttleTools';
 import CONFIG from "./CONFIG";
 export { CONFIG }
 
