@@ -9,7 +9,7 @@ import { HoverCard } from 'office-ui-fabric-react/lib/HoverCard';
 import { TooltipHost } from 'office-ui-fabric-react/lib/Tooltip';
 import { Checkbox } from 'office-ui-fabric-react/lib/Checkbox';
 
-import ReactTable, { SortingRule } from 'react-table';
+import ReactTable, { SortingRule, Column } from 'react-table';
 import { isMobile } from 'react-device-detect';
 
 import { SkillCell } from './SkillCell';
@@ -244,7 +244,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 	}
 
 	_getColumns(duplicatelist?: boolean, showBuyBack?: boolean, compactMode?: boolean, pivotRarity?: boolean) {
-		let _columns = [];
+		let _columns : Column<CrewData>[] = [];
 
 		if (duplicatelist) {
 			_columns.push({
@@ -254,7 +254,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 100,
 				resizable: false,
 				style: { marginTop: 15 },
-				Cell: (cell:any) => {
+				Cell: (cell) => {
 					let crew:CrewData = cell.original;
 
 					if (crew.crew_id)
@@ -276,11 +276,11 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 			_columns.push({
 				id: 'max_rarity',
 				Header: 'Rarity',
-				accessor: (obj:any) => CONFIG.RARITIES[obj.max_rarity].name,
+				accessor: (obj) => CONFIG.RARITIES[obj.max_rarity].name,
 				minWidth: 150,
 				maxWidth: 150,
 				resizable: false,
-				Cell: (cell: any) => <span />
+				Cell: (cell) => <span />
 			});
 		}
 
@@ -291,14 +291,14 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 			maxWidth: compactMode ? 28 : 60,
 			resizable: false,
 			accessor: 'name',
-			Cell: (cell: any) => {
+			Cell: (cell) => {
 				if (cell && cell.original) {
 					return <Image src={cell.original.iconUrl} width={compactMode ? 22 : 50} height={compactMode ? 22 : 50} imageFit={ImageFit.contain} shouldStartVisible={true} />;
 				} else {
 					return <span />;
 				}
 			},
-			Aggregated: (row:any) => <span />
+			Aggregated: (row) => <span />
 		});
 
 		if (!isMobile) {
@@ -309,14 +309,14 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 110,
 				resizable: true,
 				accessor: 'short_name',
-				Cell: (cell: any) => {
+				Cell: (cell) => {
 					if (cell && cell.original) {
 						return <a href={'https://stt.wiki/wiki/' + cell.original.name.split(' ').join('_')} target='_blank'>{cell.original.short_name}</a>;
 					} else {
 						return <span />;
 					}
 				},
-				Aggregated: (row:any) => <span />
+				Aggregated: (row) => <span />
 			});
 		}
 
@@ -327,7 +327,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 190,
 				resizable: true,
 				accessor: 'name',
-			Cell: (cell: any) => {
+			Cell: (cell) => {
 					if (cell && cell.original) {
 						return <HoverCard id="nameHoverCard"
 							expandingCardProps={{
@@ -345,7 +345,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 						return <span />;
 					}
 				},
-				Aggregated: (row:any) => <span />
+				Aggregated: (row) => <span />
 			},
 			{
 				id: 'usage_value',
@@ -354,9 +354,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'usage_value',
-				Cell: (cell: any) => cell.original ? <div className='skill-stats-div'>{cell.original.usage_value}</div> : <span />,
-				aggregate: (vals:any) => vals.reduce((a:any, b:any) => (a || 0) + (b || 0), 0) / vals.length,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.usage_value}</div> : <span />,
+				aggregate: (vals) => vals.reduce((a:any, b:any) => (a || 0) + (b || 0), 0) / vals.length,
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'level',
@@ -365,25 +365,25 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 45,
 				resizable: false,
 				accessor: 'level',
-				aggregate: (vals: any) => vals.reduce((a:any, b:any) => a + b, 0) / vals.length,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)}</span>
+				aggregate: (vals) => vals.reduce((a:any, b:any) => a + b, 0) / vals.length,
+				Aggregated: (row) => <span>{Math.floor(row.value)}</span>
 			},
 			{
 				id: 'rarity',
 				Header: 'Rarity',
 				// Sort all by max fusion level, then fractional part by current fusion level
-				accessor: (obj:any) => obj.max_rarity + (obj.rarity / obj.max_rarity),
+				accessor: (obj) => obj.max_rarity + (obj.rarity / obj.max_rarity),
 				minWidth: 75,
 				maxWidth: 85,
 				resizable: false,
-				Cell: (cell: any) => {
+				Cell: (cell) => {
 					if (cell && cell.original) {
 						return <RarityStars min={1} max={cell.original.max_rarity} value={cell.original.rarity ? cell.original.rarity : null} />;
 					} else {
 						return <span />;
 					}
 				},
-				Aggregated: (row:any) => <span />
+				Aggregated: (row) => <span />
 			});
 
 		if (!isMobile) {
@@ -395,7 +395,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
 				resizable: false,
 				accessor: 'favorite',
-				Cell: (cell: any) => {
+				Cell: (cell) => {
 					if (cell && cell.original && cell.value) {
 						return <TooltipHost content={`You marked ${cell.original.short_name} as favorite in the game`} calloutProps={{ gapSpace: 0 }}>
 							<Icon iconName='FavoriteStar' />
@@ -404,7 +404,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 						return <span />;
 					}
 				},
-				Aggregated: (row:any) => <span />
+				Aggregated: (row) => <span />
 			},
 			{
 				id: 'frozen',
@@ -417,14 +417,14 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				Cell: (cell: any) => {
 					if (cell && cell.value && cell.original) {
 						return <TooltipHost content={`You have ${(cell.value === 1) ? 'one copy' : `${cell.value} copies`} of ${cell.original.short_name} frozen (cryo-d)`} calloutProps={{ gapSpace: 0 }}>
-							<Icon iconName='Snowflake' />
+							{cell.value > 1 ? cell.value : ''}<Icon iconName='Snowflake' />
 						</TooltipHost>;
 					} else {
 						return <span />;
 					}
 				},
-				aggregate: (vals: any) => vals.map((v:any) => v ? 1 : 0).reduce((a:any, b:any) => a + b, 0),
-				Aggregated: (row:any) => <span>{Math.floor(row.value)}</span>
+				aggregate: (vals) => vals.map((v:any) => v ? 1 : 0).reduce((a:any, b:any) => a + b, 0),
+				Aggregated: (row) => <span>{Math.floor(row.value)}</span>
 			});
 		}
 
@@ -438,7 +438,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
 				resizable: false,
 				accessor: 'buyback',
-				Cell: (cell: any) => {
+				Cell: (cell) => {
 					if (cell && cell.value && cell.original) {
 						return <TooltipHost content={`This copy of ${cell.original.short_name} was dismissed and is available for buyback for a limited time`} calloutProps={{ gapSpace: 0 }}>
 							<Icon iconName='EmptyRecycleBin' />
@@ -447,7 +447,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 						return <span />;
 					}
 				},
-				Aggregated: (row:any) => <span />
+				Aggregated: (row) => <span />
 			});
 		}
 
@@ -460,7 +460,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
 				resizable: false,
 				accessor: 'active_id',
-				Cell: (cell: any) => {
+				Cell: (cell) => {
 					if (cell && cell.original && cell.original.active_id) {
 						if (compactMode) {
 							let isShuttle = false;
@@ -476,8 +476,8 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 						return <span />;
 					}
 				},
-				aggregate: (vals: any) => vals.map((v:any) => v ? 1 : 0).reduce((a:any, b:any) => a + b, 0),
-				Aggregated: (row:any) => <span>{Math.floor(row.value)}</span>
+				aggregate: (vals) => vals.map((v:any) => v ? 1 : 0).reduce((a:any, b:any) => a + b, 0),
+				Aggregated: (row) => <span>{Math.floor(row.value)}</span>
 			});
 		}
 
@@ -494,9 +494,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 			maxWidth: 70,
 			resizable: true,
 			accessor: 'command_skill_core',
-			Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.command_skill} compactMode={compactMode} /> : <span />,
+			Cell: (cell) => cell.original ? <SkillCell skill={cell.original.command_skill} compactMode={compactMode} /> : <span />,
 			aggregate: aggAvg,
-			Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+			Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 		},
 			{
 				id: 'diplomacy_skill',
@@ -505,9 +505,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'diplomacy_skill_core',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.diplomacy_skill} compactMode={compactMode} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.diplomacy_skill} compactMode={compactMode} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'engineering_skill',
@@ -516,9 +516,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'engineering_skill_core',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.engineering_skill} compactMode={compactMode} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.engineering_skill} compactMode={compactMode} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'medicine_skill',
@@ -527,9 +527,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'medicine_skill_core',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.medicine_skill} compactMode={compactMode} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.medicine_skill} compactMode={compactMode} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'science_skill',
@@ -538,9 +538,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'science_skill_core',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.science_skill} compactMode={compactMode} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.science_skill} compactMode={compactMode} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'security_skill',
@@ -549,9 +549,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'security_skill_core',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.security_skill} compactMode={compactMode} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.security_skill} compactMode={compactMode} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'command_skill_prof',
@@ -560,9 +560,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 100,
 				resizable: true,
 				accessor: 'command_skill.max',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.command_skill} compactMode={compactMode} proficiency={true} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.command_skill} compactMode={compactMode} proficiency={true} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg max)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg max)</span>
 			},
 			{
 				id: 'diplomacy_skill_prof',
@@ -571,9 +571,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 100,
 				resizable: true,
 				accessor: 'diplomacy_skill.max',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.diplomacy_skill} compactMode={compactMode} proficiency={true} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.diplomacy_skill} compactMode={compactMode} proficiency={true} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg max)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg max)</span>
 			},
 			{
 				id: 'engineering_skill_prof',
@@ -582,9 +582,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 100,
 				resizable: true,
 				accessor: 'engineering_skill.max',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.engineering_skill} compactMode={compactMode} proficiency={true} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.engineering_skill} compactMode={compactMode} proficiency={true} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg max)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg max)</span>
 			},
 			{
 				id: 'medicine_skill_prof',
@@ -593,9 +593,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 100,
 				resizable: true,
 				accessor: 'medicine_skill.max',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.medicine_skill} compactMode={compactMode} proficiency={true} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.medicine_skill} compactMode={compactMode} proficiency={true} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg max)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg max)</span>
 			},
 			{
 				id: 'science_skill_prof',
@@ -604,9 +604,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 100,
 				resizable: true,
 				accessor: 'science_skill.max',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.science_skill} compactMode={compactMode} proficiency={true} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.science_skill} compactMode={compactMode} proficiency={true} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg max)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg max)</span>
 			},
 			{
 				id: 'security_skill_prof',
@@ -615,9 +615,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 100,
 				resizable: true,
 				accessor: 'security_skill.max',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.security_skill} compactMode={compactMode} proficiency={true} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.security_skill} compactMode={compactMode} proficiency={true} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg max)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg max)</span>
 			},
 			{
 				id: 'command_skill_voy',
@@ -626,9 +626,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'command_skill_voy',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.command_skill} compactMode={compactMode} combined={true} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.command_skill} compactMode={compactMode} combined={true} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'diplomacy_skill_voy',
@@ -637,9 +637,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'diplomacy_skill_voy',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.diplomacy_skill} compactMode={compactMode} combined={true} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.diplomacy_skill} compactMode={compactMode} combined={true} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'engineering_skill_voy',
@@ -648,9 +648,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'engineering_skill_voy',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.engineering_skill} compactMode={compactMode} combined={true} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.engineering_skill} compactMode={compactMode} combined={true} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'medicine_skill_voy',
@@ -659,9 +659,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'medicine_skill_voy',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.medicine_skill} compactMode={compactMode} combined={true} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.medicine_skill} compactMode={compactMode} combined={true} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'science_skill_voy',
@@ -670,9 +670,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'science_skill_voy',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.science_skill} compactMode={compactMode} combined={true} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.science_skill} compactMode={compactMode} combined={true} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'security_skill_voy',
@@ -681,9 +681,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'security_skill_voy',
-				Cell: (cell: any) => cell.original ? <SkillCell skill={cell.original.security_skill} compactMode={compactMode} combined={true} /> : <span />,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.security_skill} compactMode={compactMode} combined={true} /> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'voyage_score',
@@ -692,9 +692,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'voyage_score',
-				Cell: (cell: any) => cell.original ? <div className='skill-stats-div'>{cell.original.voyage_score}</div> : <span />,
+				Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.voyage_score}</div> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'gauntlet_score',
@@ -703,19 +703,19 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				maxWidth: 70,
 				resizable: true,
 				accessor: 'gauntlet_score',
-				Cell: (cell: any) => cell.original ? <div className='skill-stats-div'>{cell.original.gauntlet_score}</div> : <span />,
+				Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.gauntlet_score}</div> : <span />,
 				aggregate: aggAvg,
-				Aggregated: (row:any) => <span>{Math.floor(row.value)} (avg)</span>
+				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
-				key: 'traits',
+				id: 'traits',
 				Header: 'Traits',
 				minWidth: 140,
-				isResizable: true,
+				resizable: true,
 				accessor: 'traits',
-				Cell: (cell: any) => cell.original ? <div style={compactMode ? { overflow: 'hidden', textOverflow: 'ellipsis', height: '22px' } : { whiteSpace: 'normal', height: '50px' }}>{cell.original.traits.replace(/,/g, ', ')}</div> : <span />,
-				aggregate: (vals: any) => 0,
-				Aggregated: (row:any) => <span />
+				Cell: (cell) => cell.original ? <div style={compactMode ? { overflow: 'hidden', textOverflow: 'ellipsis', height: '22px' } : { whiteSpace: 'normal', height: '50px' }}>{cell.original.traits.replace(/,/g, ', ')}</div> : <span />,
+				aggregate: (vals) => 0,
+				Aggregated: (row) => <span />
 			});
 
 		return _columns;
