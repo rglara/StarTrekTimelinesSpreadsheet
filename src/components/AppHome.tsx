@@ -1,13 +1,13 @@
 import React from 'react';
 import { Fabric } from 'office-ui-fabric-react/lib/Fabric';
-import { CommandBar } from 'office-ui-fabric-react/lib/CommandBar';
+import { CommandBar, ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
 import { Image } from 'office-ui-fabric-react/lib/Image';
 import { PrimaryButton, DefaultButton } from 'office-ui-fabric-react/lib/Button';
 import { Checkbox } from 'office-ui-fabric-react/lib/Checkbox';
 import { TooltipHost, TooltipDelay, DirectionalHint } from 'office-ui-fabric-react/lib/Tooltip';
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
-import createHistory from 'history/createBrowserHistory';
+import { History, createBrowserHistory } from 'history';
 
 // #!if ENV === 'electron' || ENV === 'exp'
 import { LoginDialog } from './LoginDialog';
@@ -35,38 +35,46 @@ import { loadUITheme } from './Styles';
 
 import STTApi from '../api';
 import { loginSequence } from '../api';
-import { createIssue } from '../utils/githubUtils';
+// import { createIssue } from '../utils/githubUtils';
 import { openShellExternal, getAppVersion } from '../utils/pal';
 
-import { ColorClassNames } from '@uifabric/styling';
+import { ColorClassNames, ITheme } from '@uifabric/styling';
 
 // #!if ENV === 'electron'
-import { rcompare } from 'semver';
+// import { rcompare } from 'semver';
 // #!endif
 
-export class AppHome extends React.Component {
-	constructor(props) {
+export interface AppHomeProps {
+	onLogout: () => void;
+}
+
+interface AppHomeState {
+	showSpinner: boolean,
+	dataLoaded: boolean,
+	showLoginDialog: boolean,
+	captainName: string,
+	captainAvatarUrl: string,
+	captainAvatarBodyUrl: string,
+	spinnerLabel: string,
+	hideErrorDialog: boolean,
+	hideBootMessage: boolean,
+	showBootMessage: boolean,
+	errorMessage: any,
+	updateUrl?: string,
+	theme?: any,
+	motd?: { show: boolean; contents: string; title: string },
+	darkTheme: boolean,
+	extraCommandItems?: ICommandBarItemProps[],
+	currentTab?: string
+}
+
+export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
+	history: History<any>;
+
+	constructor(props: AppHomeProps) {
 		super(props);
 
-		this.state = {
-			showSpinner: false,
-			dataLoaded: false,
-			showLoginDialog: false,
-			captainName: 'Welcome!',
-			captainAvatarUrl: '',
-			captainAvatarBodyUrl: '',
-			spinnerLabel: 'Loading...',
-			hideErrorDialog: true,
-			hideBootMessage: true,
-			showBootMessage: false,
-			errorMessage: '',
-			updateUrl: undefined,
-			theme: undefined,
-			motd: undefined,
-			darkTheme: false
-		};
-
-		this.history = createHistory();
+		this.history = createBrowserHistory();
 		this.history.listen(location => {
 			this._switchTab(location.hash.substr(1));
 		});
@@ -88,6 +96,26 @@ export class AppHome extends React.Component {
 
 		initializeIcons(/* optional base url */);
 
+		let theme = this._onSwitchTheme(false, false);
+
+		this.state = {
+			showSpinner: false,
+			dataLoaded: false,
+			showLoginDialog: false,
+			captainName: 'Welcome!',
+			captainAvatarUrl: '',
+			captainAvatarBodyUrl: '',
+			spinnerLabel: 'Loading...',
+			hideErrorDialog: true,
+			hideBootMessage: true,
+			showBootMessage: false,
+			errorMessage: '',
+			updateUrl: undefined,
+			theme: theme,
+			motd: undefined,
+			darkTheme: false
+		};
+
 		STTApi.config.where('key').equals('ui.darkThemeMode').first().then((entry) => {
 			this.setState({ darkTheme: entry && entry.value }, () => {
 				this._onSwitchTheme(true);
@@ -104,14 +132,12 @@ export class AppHome extends React.Component {
 				this.props.onLogout();
 			}
 		});
-
-		this._onSwitchTheme(false);
 	}
 
-	_onSwitchTheme(shouldForceUpdate) {
-		let finalTheme = loadUITheme(this.state.darkTheme);
+	_onSwitchTheme(shouldForceUpdate: boolean, darkTheme?: false) : ITheme {
+		let finalTheme = loadUITheme(darkTheme !== undefined ? darkTheme : this.state.darkTheme);
 
-		const root = document.querySelector('.App-content');
+		const root : any = document.querySelector('.App-content');
 		if (root) {
 			root.style.backgroundColor = finalTheme.semanticColors.bodyBackground;
 			root.style.color = finalTheme.semanticColors.bodyText;
@@ -123,11 +149,10 @@ export class AppHome extends React.Component {
 		if (shouldForceUpdate) {
 			this.setState({ theme: finalTheme });
 			STTApi.config.put({ key: 'ui.darkThemeMode', value: this.state.darkTheme });
-			window.setThemeCss(this.state.darkTheme);
+			(window as any).setThemeCss(this.state.darkTheme); //HACK: how to access setThemeCss?
 			this.forceUpdate();
-		} else {
-			this.state.theme = finalTheme;
 		}
+		return finalTheme;
 	}
 
 	_onDismissBootMessage() {
@@ -181,7 +206,7 @@ export class AppHome extends React.Component {
 					modalProps={{ isBlocking: true }}
 				>
 					<DialogFooter>
-						<PrimaryButton onClick={() => { createIssue(false, this.state.errorMessage); }} text='Create bug report' />
+						{/* <PrimaryButton onClick={() => { createIssue(false, this.state.errorMessage); }} text='Create bug report' /> */}
 						<DefaultButton onClick={() => { this.setState({ hideErrorDialog: true }); }} text='Cancel' />
 					</DialogFooter>
 				</Dialog>
@@ -226,7 +251,7 @@ export class AppHome extends React.Component {
 			return <span />;
 		}
 
-		let commandItemsUpdater = extraItems => {
+		let commandItemsUpdater = (extraItems: ICommandBarItemProps[]) => {
 			this.setState({
 				extraCommandItems: this._getNavFarItems(extraItems)
 			});
@@ -289,7 +314,7 @@ export class AppHome extends React.Component {
 		}
 	}
 
-	_tabMenuItem(tab) {
+	_tabMenuItem(tab: ICommandBarItemProps): ICommandBarItemProps {
 		return {
 			key: tab.key,
 			name: tab.name || tab.key,
@@ -302,7 +327,7 @@ export class AppHome extends React.Component {
 		}
 	}
 
-	_switchTab(newTab) {
+	_switchTab(newTab: string) {
 		if (this.state.currentTab === newTab) {
 			// From the history listener, nothing to do here
 			return;
@@ -318,7 +343,7 @@ export class AppHome extends React.Component {
 		});
 	}
 
-	_getNavFarItems(extraItems) {
+	_getNavFarItems(extraItems?: ICommandBarItemProps[]) {
 		let staticItems = [
 			{
 				key: 'SwitchTheme',
@@ -377,12 +402,12 @@ export class AppHome extends React.Component {
 	}
 
 	renderMotd() {
-		if (this.state.motd.show) {
+		if (this.state.motd && this.state.motd.show) {
 			return <div style={{ cursor: 'pointer', display: 'flex', padding: '5px', height: '100%', flexWrap: 'nowrap', justifyContent: 'center', alignItems: 'center' }}>
 				<TooltipHost calloutProps={{ gapSpace: 20 }} delay={TooltipDelay.zero} directionalHint={DirectionalHint.bottomCenter}
 					tooltipProps={{
 						onRenderContent: () => {
-							return (<div dangerouslySetInnerHTML={{ __html: this.state.motd.contents }} />);
+							return (<div dangerouslySetInnerHTML={{ __html: this.state.motd!.contents }} />);
 						}
 					}} >
 					<span className={ColorClassNames.orangeLighter} dangerouslySetInnerHTML={{ __html: this.state.motd.title }} />
@@ -393,7 +418,7 @@ export class AppHome extends React.Component {
 		}
 	}
 
-	_getNavOverflowItems() {
+	_getNavOverflowItems() : ICommandBarItemProps[] {
 		return [
 			this._tabMenuItem({ key: 'Fleet', itemIcon: 'WindDirection' }),
 			this._tabMenuItem({ key: 'FactionDetails', name: 'Factions', itemIcon: 'Teamwork' }),
@@ -403,12 +428,13 @@ export class AppHome extends React.Component {
 	}
 
 	_getNavItems() {
-		let navItems = [
-			{
-				key: 'custom',
-				text: 'Captain name',
-				onRender: () => { return this.renderCaptainName(); }
-			}];
+		let navItems : ICommandBarItemProps[] = [];
+
+		navItems.push({
+			key: 'custom',
+			text: 'Captain name',
+			onRender: () => { return this.renderCaptainName(); }
+		});
 
 		if (this.state.motd) {
 			navItems.push({
@@ -424,9 +450,7 @@ export class AppHome extends React.Component {
 				name: 'New version available!',
 				iconProps: { iconName: 'FlameSolid', styles: { root: { color: 'red' } } },
 				iconOnly: true,
-				onClick: () => {
-					openShellExternal(this.state.updateUrl);
-				}
+				onClick: () => { openShellExternal(this.state.updateUrl!); }
 			});
 		}
 
@@ -501,18 +525,19 @@ export class AppHome extends React.Component {
 		this._onAccessToken();
 	}
 
-	_onDataError(reason) {
+	_onDataError(reason: any) {
 		this.setState({ errorMessage: reason, hideErrorDialog: false });
 	}
 
 	async _onDataFinished() {
+		let shouldShowBootMessage = false;
 		// #!if ENV === 'electron'
 		// This resets with every new version, in case the message is updated or folks forget
 		let entry = await STTApi.config.where('key').equals('ui.showBootMessage' + getAppVersion()).first();
-		let shouldShowBootMessage = !entry || entry.value;
+		shouldShowBootMessage = !entry || entry.value;
 		// #!else
 		// TODO: This ifdef should be the same on web, but Safari crashes and burns with dexie indexeddb transactions (potentially Promise-related)
-		let shouldShowBootMessage = false;
+		shouldShowBootMessage = false;
 		// #!endif
 		this.setState({
 			showSpinner: false,
@@ -547,11 +572,15 @@ export class AppHome extends React.Component {
 
 		if (STTApi.playerData.character.crew_avatar) {
 			STTApi.imageProvider.getCrewImageUrl(STTApi.playerData.character.crew_avatar, false, 0).then(({ id, url }) => {
-				this.setState({ captainAvatarUrl: url });
+				if (url) {
+					this.setState({ captainAvatarUrl: url });
+				}
 			}).catch((error) => { this.setState({ captainAvatarUrl: '' }); });
 
 			STTApi.imageProvider.getCrewImageUrl(STTApi.playerData.character.crew_avatar, true, 0).then(({ id, url }) => {
-				this.setState({ captainAvatarBodyUrl: url });
+				if (url) {
+					this.setState({ captainAvatarBodyUrl: url });
+				}
 			}).catch((error) => { this.setState({ captainAvatarBodyUrl: '' }); });
 		}
 	}
