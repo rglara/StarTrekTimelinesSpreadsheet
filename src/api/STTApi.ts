@@ -1334,23 +1334,27 @@ export interface EventDTO {
 	bonus_text: string;
 	bonus_victory_points: number;
 	content: {
-		// skirmish events
-		bonus_crew?: {
-			[crew_symbol: string]: number;
-		};
 		content_type: string; // "gather" | "shuttles" | "skirmish" | ?
-		craft_bonus: number;
+
 		// Galaxy/gather events
+		craft_bonus: number;
 		crew_bonuses?: {
 			[crew_symbol: string] : number;
 		};
 		gather_pools: EventGatherPoolDTO[];
 		refresh_cost: { amount: number; currency: number; };
+		supports_boosts: boolean;
+
+		// skirmish events
+		bonus_crew?: {
+			[crew_symbol: string]: number;
+		};
+
 		// faction events
-		shuttles?: any[];
+		shuttles?: EventShuttleDTO[];
+
 		// expedetion events
 		special_crew?: string[];
-		supports_boosts: boolean;
 	};
 	description: string;
 	featured_crew: {
@@ -1389,6 +1393,23 @@ export interface EventDTO {
 	threshold_rewards: any[];
 	unclaimed_threshold_rewards: any[];
 	victory_points: number;
+}
+
+export interface EventShuttleDTO {
+	allow_borrow: boolean;
+	crew_bonuses: { [crew_symbol: string] : number; };
+	shuttle_mission_rewards: {
+		flavor?: string;
+		icon: ImageDataDTO;
+		id?: number;
+		name?: string;
+		potential_rewards?: any[];
+		quantity: number;
+		rarity?: number;
+		symbol?: string;
+		type: number; // == 0 (rewards), 11 (VP), 12 (faction rep)
+	}[];
+	token: number;
 }
 
 export interface EventGatherPoolAdventureDTO {

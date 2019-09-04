@@ -255,9 +255,7 @@ export const GalaxyEvent = (props: GalaxyEventProps) => {
       return <span />;
    }
 
-   currEvent = STTApi.playerData.character.events[0]
-
-   for (let cb in STTApi.playerData.character.events[0].content.crew_bonuses) {
+   for (let cb in currEvent.content.crew_bonuses) {
       let avatar = STTApi.getCrewAvatarBySymbol(cb);
       if (!avatar) {
          continue;
@@ -265,7 +263,7 @@ export const GalaxyEvent = (props: GalaxyEventProps) => {
 
       crew_bonuses.push({
          avatar,
-         bonus: STTApi.playerData.character.events[0].content.crew_bonuses[cb],
+         bonus: currEvent.content.crew_bonuses[cb],
          iconUrl: STTApi.imageProvider.getCrewCached(avatar, false)
       });
    }
@@ -317,7 +315,7 @@ export const GalaxyEvent = (props: GalaxyEventProps) => {
    let toSave = farmList.map(fl => ({ equipment_id: fl.equipment.id, equipment_symbol: fl.equipment.symbol, count: fl.count }));
    console.log(toSave);
 
-   // this.state = { event: STTApi.playerData.character.events[0], crew_bonuses, activeIndex: -1, eventEquip, farmList };
+   // this.state = { event: currEvent, crew_bonuses, activeIndex: -1, eventEquip, farmList };
    // } else {
    // 	this.state = { event: undefined };
 

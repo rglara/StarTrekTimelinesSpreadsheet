@@ -1,8 +1,8 @@
 import React from 'react';
-import { Image, List, Popup } from 'semantic-ui-react';
+import { Image, List, Popup, Label } from 'semantic-ui-react';
 
 import { ItemDisplay } from './ItemDisplay';
-import { RarityStars } from './RarityStars';
+import { renderCrewBonus } from './events/EventHelperPage';
 import Moment from 'moment';
 
 import STTApi from '../api';
@@ -45,6 +45,13 @@ class Recommendation extends React.Component {
 		);
 	}
 }
+
+// export interface HomePageProps {
+// 	captainAvatarBodyUrl? : string;
+// 	onLogout : () => void;
+// 	onRefresh : () => void;
+// 	onTabSwitch? : (newTab:string) => void;
+// }
 
 export class HomePage extends React.Component {
 	constructor(props) {
@@ -363,7 +370,6 @@ export class HomePage extends React.Component {
 		});
 
 		if (STTApi.playerData.character.events && STTApi.playerData.character.events.length > 0) {
-			let newRecommendation = undefined;
 			let eventData = STTApi.playerData.character.events[0];
 
 			//TODO: check event start time and change icon
@@ -377,103 +383,25 @@ export class HomePage extends React.Component {
 			} else {
 				msg = ' starts in ' + formatTimeSeconds(eventData.seconds_to_start);
 			}
-			// STTApi.playerData.character.events[0].opened
 			if (eventData.content.content_type === 'shuttles') {
-				let crew_bonuses = [];
-				for (let cb in eventData.content.shuttles[0].crew_bonuses) {
-					let avatar = STTApi.getCrewAvatarBySymbol(cb);
-					if (!avatar) {
-						continue;
-					}
-
-					let crew = STTApi.roster.find(c => c.symbol === avatar.symbol);
-					if (!crew) {
-						continue;
-					}
-
-					let iconUrl = avatar.iconUrl;
-					if (!iconUrl || iconUrl == '') {
-						iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
-					}
-					crew_bonuses.push({
-						crew,
-						bonus: eventData.content.shuttles[0].crew_bonuses[cb],
-						iconUrl
-					});
-				}
-
-				crew_bonuses.sort((a, b) => {
-					if (a.crew.frozen > b.crew.frozen) { return 1; }
-					if (a.crew.frozen < b.crew.frozen) { return -1; }
-					// Sort by bonus DESC then shortname ASC then name ASC
-					if (a.bonus > b.bonus) { return -1; }
-					if (a.bonus < b.bonus) { return 1; }
-					if (a.crew.short_name > b.crew.short_name) { return 1; }
-					if (a.crew.short_name < b.crew.short_name) { return -1; }
-					if (a.crew.name > b.crew.name) { return 1; }
-					if (a.crew.name < b.crew.name) { return -1; }
-					return 0;
-				});
-
 				recommendations.push({
 					title: `Faction/Shuttle Event ` + msg,
 					icon: Priority.INFO,
 					content: <div style={{ margin: '0' }}>
-						{!hasEnded && <span>
-							<div>{eventData.bonus_text}</div>
-							Owned Event Bonus Crew: {!crew_bonuses.length && "None"}
-							<List horizontal>{crew_bonuses.map(cb => this.renderCrewBonus(cb))}</List>
-						</span>}
+						{!hasEnded &&
+							<Label as='a' onClick={() => this.props.onTabSwitch && this.props.onTabSwitch('Events')}>Event Details</Label>
+						}
 						</div>
 				});
 			}
 			else if (eventData.content.content_type === 'gather') {
-				let crew_bonuses = [];
-				for (let cb in eventData.content.crew_bonuses) {
-					let avatar = STTApi.getCrewAvatarBySymbol(cb);
-					if (!avatar) {
-						continue;
-					}
-
-					let crew = STTApi.roster.find(c => c.symbol === avatar.symbol);
-					if (!crew) {
-						continue;
-					}
-
-					let iconUrl = avatar.iconUrl;
-					if (!iconUrl || iconUrl == '') {
-						iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
-					}
-
-					crew_bonuses.push({
-						crew,
-						bonus: eventData.content.crew_bonuses[cb],
-						iconUrl
-					});
-				}
-
-				crew_bonuses.sort((a, b) => {
-					if (a.crew.frozen > b.crew.frozen) { return 1; }
-					if (a.crew.frozen < b.crew.frozen) { return -1; }
-					// Sort by bonus DESC then shortname ASC then name ASC
-					if (a.bonus > b.bonus) { return -1; }
-					if (a.bonus < b.bonus) { return 1; }
-					if (a.crew.short_name > b.crew.short_name) { return 1; }
-					if (a.crew.short_name < b.crew.short_name) { return -1; }
-					if (a.crew.name > b.crew.name) { return 1; }
-					if (a.crew.name < b.crew.name) { return -1; }
-					return 0;
-				});
-
 				recommendations.push({
 					title: `Galaxy Event ` + msg,
 					icon: Priority.INFO,
 					content: <div style={{ margin: '0' }}>
-						{!hasEnded && <span>
-							<div>{eventData.bonus_text}</div>
-							Owned Event Bonus Crew: {!crew_bonuses.length && "None"}
-							<List horizontal>{crew_bonuses.map(cb => this.renderCrewBonus(cb))}</List>
-						</span>}
+						{!hasEnded  &&
+							<Label as='a' onClick={() => this.props.onTabSwitch && this.props.onTabSwitch('Events')}>Event Details</Label>
+						}
 					</div>
 				});
 			}
@@ -508,7 +436,7 @@ export class HomePage extends React.Component {
 						{!hasEnded && <span>
 						<div>{eventData.bonus_text}</div>
 						Owned Event Bonus Crew: { !crew_bonuses.length && "None" }
-						<List horizontal>{crew_bonuses.map(cb => this.renderCrewBonus(cb))}</List>
+						<List horizontal>{crew_bonuses.map(cb => renderCrewBonus(cb))}</List>
 						</span>}
 					</div>
 				});
@@ -552,35 +480,6 @@ export class HomePage extends React.Component {
 		// }
 
 		this.state = { recommendations };
-	}
-
-	renderCrewBonus(cb) {
-		return <Popup flowing key={cb.crew.symbol}
-			trigger={
-				<List.Item >
-					<Image src={cb.iconUrl} width="25" height="25" />
-					<List.Content>
-						<List.Header>{cb.crew.name}</List.Header>
-						<RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
-						{cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
-						{cb.crew.frozen > 0 && <div>Frozen</div>}
-						Bonus level {cb.bonus}x
-												</List.Content>
-				</List.Item>
-			}
-			content={<span key={cb.crew.id}>
-				Base: {Object.keys(cb.crew.skills).map(s => {
-					return (<span key={s}><img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
-						{cb.crew.skills[s].core} ({cb.crew.skills[s].min}-{cb.crew.skills[s].max})
-													</span>);
-				})}
-				<br />
-				Bonus ({cb.bonus}x): {Object.keys(cb.crew.skills).map(s => {
-					return (<span key={s}><img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
-						{cb.crew.skills[s].core * cb.bonus} </span>);
-				})}
-			</span>}
-		/>
 	}
 
 	render() {

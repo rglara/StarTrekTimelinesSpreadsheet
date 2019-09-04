@@ -283,7 +283,11 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 				return <AboutAndHelp />;
 
 			case 'HomePage':
-				return <HomePage captainAvatarBodyUrl={this.state.captainAvatarBodyUrl} onLogout={this._onLogout} onRefresh={this._onRefresh} />;
+				return <HomePage
+					captainAvatarBodyUrl={this.state.captainAvatarBodyUrl}
+					onLogout={this._onLogout}
+					onRefresh={this._onRefresh}
+					onTabSwitch={this._switchTab} />;
 
 			case 'NeededEquipment':
 				return <NeededEquipment onCommandItemsUpdate={commandItemsUpdater} />;
