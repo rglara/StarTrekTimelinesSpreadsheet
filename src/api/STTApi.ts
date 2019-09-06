@@ -1001,7 +1001,7 @@ export interface PlayerCharacterDTO {
 	seconds_from_replay_energy_basis: number;
 	seconds_to_scan_cooldown: number;
 	ships: ShipDTO[];
-	shuttle_adventures: any[];
+	shuttle_adventures: PlayerShuttleAdventureDTO[];
 	shuttle_bayse: number;
 	starbase_buffs: any[];
 	stimpack: any; // null
@@ -1016,6 +1016,36 @@ export interface PlayerCharacterDTO {
 	xp: number;
 	xp_for_current_level: number;
 	xp_for_next_level: number;
+}
+
+export interface PlayerShuttleAdventureDTO {
+	challenge_rating: number;
+	completes_in_seconds:number;
+	faction_id: number;
+	id:number;
+	name: string;
+	shuttles: PlayerShuttleDTO[];
+	symbol: string;
+	token_archetype_id: any; // null
+	x: number;
+	y: number;
+}
+
+export interface PlayerShuttleDTO {
+	description: string;
+	expires_in: number;
+	faction_id: number
+	id: number;
+	is_rental: boolean;
+	name: string;
+	rewards: ShuttleRewardDTO[];
+	slots: {
+		level: any;
+		required_trait: any;
+		skills: string[];
+		trait_bonuses: any;
+	}[];
+	state: number;
 }
 
 export interface FactionDTO {
@@ -1398,18 +1428,20 @@ export interface EventDTO {
 export interface EventShuttleDTO {
 	allow_borrow: boolean;
 	crew_bonuses: { [crew_symbol: string] : number; };
-	shuttle_mission_rewards: {
-		flavor?: string;
-		icon: ImageDataDTO;
-		id?: number;
-		name?: string;
-		potential_rewards?: any[];
-		quantity: number;
-		rarity?: number;
-		symbol?: string;
-		type: number; // == 0 (rewards), 11 (VP), 12 (faction rep)
-	}[];
+	shuttle_mission_rewards: ShuttleRewardDTO[];
 	token: number;
+}
+
+export interface ShuttleRewardDTO {
+	flavor?: string;
+	icon: ImageDataDTO;
+	id?: number;
+	name?: string;
+	potential_rewards?: any[];
+	quantity: number;
+	rarity?: number;
+	symbol?: string;
+	type: number; // == 0 (rewards), 11 (VP), 12 (faction rep)
 }
 
 export interface EventGatherPoolAdventureDTO {

@@ -81,12 +81,12 @@ export const ShuttleEvent = (props: ShuttleEventProps) => {
          items = items.filter(i => filterCrew(i, filterText!.toLowerCase()))
       }
 
-      return (
+      return (<span>
+         <SearchBox placeholder='Search by name or trait...'
+            onChange={(newValue) => setFilterText(newValue)}
+            onSearch={(newValue) => setFilterText(newValue)}
+         />
          <div className='data-grid' data-is-scrollable='true'>
-            <SearchBox placeholder='Search by name or trait...'
-               onChange={(newValue) => setFilterText(newValue)}
-               onSearch={(newValue) => setFilterText(newValue)}
-            />
             <ReactTable
                data={items}
                columns={columns}
@@ -97,7 +97,7 @@ export const ShuttleEvent = (props: ShuttleEventProps) => {
                showPagination={(items.length > 50)}
                showPageSizeOptions={false}
                className="-striped -highlight"
-               style={(items.length > 50) ? { height: 'calc(100vh - 88px)' } : {}}
+               style={(items.length > 50) ? { height: 'calc(100vh - 230px)' } : {}}
                getTrProps={(s: any, r: any) => {
                   return {
                      style: {
@@ -108,8 +108,9 @@ export const ShuttleEvent = (props: ShuttleEventProps) => {
                getTdProps={(s: any, r: any) => {
                   return { style: { padding: "2px 3px" }};
                }}
-            />
+               />
          </div>
+      </span>
       );
    }
 
@@ -231,6 +232,28 @@ export const ShuttleEvent = (props: ShuttleEventProps) => {
             resizable: true,
             accessor: 'bonus',
             style: {'textAlign': 'center'}
+         },
+         {
+            id: 'active_id',
+            Header: () => <Icon iconName='Balloons' />,
+            minWidth: 30,
+            maxWidth: 30,
+            style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
+            resizable: false,
+            accessor: 'active_id',
+            Cell: (cell) => {
+               if (cell && cell.original && cell.original.active_id) {
+                  let isShuttle = false;
+                  STTApi.playerData.character.shuttle_adventures.forEach((shuttle) => {
+                     if (shuttle.shuttles[0].id === cell.original.active_id) {
+                        isShuttle = true;
+                     }
+                  });
+                  return isShuttle ? 'S' : 'V';
+               } else {
+                  return <span />;
+               }
+            },
          },
          {
             id: 'command_skill',
