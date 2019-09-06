@@ -97,7 +97,7 @@ export const ShuttleEvent = (props: ShuttleEventProps) => {
                showPagination={(items.length > 50)}
                showPageSizeOptions={false}
                className="-striped -highlight"
-               style={(items.length > 50) ? { height: 'calc(100vh - 230px)' } : {}}
+               style={(items.length > 50) ? { height: 'calc(100vh - 200px)' } : {}}
                getTrProps={(s: any, r: any) => {
                   return {
                      style: {

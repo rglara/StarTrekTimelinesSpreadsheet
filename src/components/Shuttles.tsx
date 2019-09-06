@@ -7,7 +7,7 @@ import { CONFIG, formatTimeSeconds } from '../api';
 import { CrewAvatar, CrewData, PlayerShuttleDTO, EventDTO } from '../api/STTApi';
 
 export interface ShuttlesProps {
-
+	onTabSwitch?: (newTab: string) => void;
 }
 
 interface CalcSlot {
@@ -39,7 +39,6 @@ interface CrewItem {
 
 export const Shuttles = (props:ShuttlesProps) => {
 	let [calcSlots, setCalcSlots] = React.useState({} as { [shuttle_id: number]: CalcSlot[] });
-	const [eventImageUrl, setEventImageUrl] = React.useState();
 	let shuttlesToRender : PlayerShuttleDTO[] = [];
 	let currentEvent: {
 		name: string;
@@ -66,15 +65,6 @@ export const Shuttles = (props:ShuttlesProps) => {
 
 	let crew_bonuses : {avatar: CrewAvatar; bonus: number; iconUrl: string }[] = [];
 	if (event) {
-		STTApi.imageProvider
-			.getImageUrl(event.phases[event.opened_phase].splash_image.file, event.id)
-			.then(found => {
-				setEventImageUrl(found.url);
-			})
-			.catch(error => {
-				console.warn(error);
-			});
-
 		for (let cb in event.content.shuttles![0].crew_bonuses) {
 			let avatar = STTApi.getCrewAvatarBySymbol(cb);
 			if (!avatar) {
@@ -378,22 +368,8 @@ export const Shuttles = (props:ShuttlesProps) => {
 		return (
 			<div>
 				<h2>Current event: {currentEvent.name}</h2>
-				<Image src={eventImageUrl} />
-				<p>{currentEvent.description}</p>
-				<h3>Crew bonuses:</h3>
-				<List horizontal>
-					{currentEvent.crew_bonuses.map(cb => (
-						<List.Item key={cb.avatar.symbol}>
-							<Image avatar src={cb.iconUrl} />
-							<List.Content>
-								<List.Header>{cb.avatar.name}</List.Header>
-								Bonus level {cb.bonus}
-							</List.Content>
-						</List.Item>
-					))}
-				</List>
+				Click to see bonus crew and other event details: <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Events')}>Event Details</Label>
 				<h4>Next shuttle VP: {currentEvent.nextVP}</h4>
-				<h3>Active shuttles</h3>
 			</div>
 		);
 	}
@@ -402,6 +378,7 @@ export const Shuttles = (props:ShuttlesProps) => {
 		<div className='tab-panel' data-is-scrollable='true'>
 			<div style={{ padding: '10px' }}>
 				{currentEvent && renderEvent()}
+				<h3>Active shuttles</h3>
 				<Item.Group divided>{shuttlesToRender.map(shuttle => renderShuttle(shuttle))}</Item.Group>
 			</div>
 		</div>

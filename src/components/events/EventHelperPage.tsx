@@ -36,6 +36,8 @@ export function renderCrewBonus(cb: any) {
 }
 
 export const EventHelperPage = () => {
+   const [eventImageUrl, setEventImageUrl] = React.useState();
+
    let currEvent : EventDTO | undefined = undefined;
    if (
       STTApi.playerData.character.events &&
@@ -43,6 +45,12 @@ export const EventHelperPage = () => {
       STTApi.playerData.character.events[0].content
    ) {
       currEvent = STTApi.playerData.character.events[0];
+      STTApi.imageProvider
+         .getImageUrl(currEvent.phases[currEvent.opened_phase].splash_image.file, currEvent.id)
+         .then(found => setEventImageUrl(found.url))
+         .catch(error => {
+            console.warn(error);
+         });
    }
 
    if (!currEvent) {
@@ -65,6 +73,10 @@ export const EventHelperPage = () => {
    return (
       <div className='tab-panel' data-is-scrollable='true'>
          <h2>Event {msg}</h2>
+         <h2>{currEvent.name}</h2>
+         <Image height='200px' src={eventImageUrl} />
+         <p>{currEvent.description}</p>
+
          <GalaxyEvent event={currEvent} />
          <ShuttleEvent event={currEvent} />
       </div>
