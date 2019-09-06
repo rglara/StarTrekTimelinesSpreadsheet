@@ -368,7 +368,9 @@ export const Shuttles = (props:ShuttlesProps) => {
 		return (
 			<div>
 				<h2>Current event: {currentEvent.name}</h2>
-				Click to see bonus crew and other event details: <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Events')}>Event Details</Label>
+				{props.onTabSwitch &&
+					<span>Click to see bonus crew and other event details: <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Events')}>Event Details</Label></span>
+				}
 				<h4>Next shuttle VP: {currentEvent.nextVP}</h4>
 			</div>
 		);

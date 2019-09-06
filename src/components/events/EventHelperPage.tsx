@@ -6,6 +6,10 @@ import { GalaxyEvent } from './EventHelperGalaxy';
 import { ShuttleEvent } from './EventHelperShuttle';
 import { Image, Popup, List } from 'semantic-ui-react';
 
+export interface EventHelperPageProps {
+   onTabSwitch?: (newTab: string) => void;
+}
+
 export function renderCrewBonus(cb: any) {
    return <Popup flowing key={cb.crew.symbol}
       trigger={
@@ -35,7 +39,7 @@ export function renderCrewBonus(cb: any) {
    />
 }
 
-export const EventHelperPage = () => {
+export const EventHelperPage = (props:EventHelperPageProps) => {
    const [eventImageUrl, setEventImageUrl] = React.useState();
 
    let currEvent : EventDTO | undefined = undefined;
@@ -78,7 +82,7 @@ export const EventHelperPage = () => {
          <p>{currEvent.description}</p>
 
          <GalaxyEvent event={currEvent} />
-         <ShuttleEvent event={currEvent} />
+         <ShuttleEvent event={currEvent} onTabSwitch={props.onTabSwitch} />
       </div>
    );
 }

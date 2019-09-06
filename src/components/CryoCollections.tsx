@@ -2,9 +2,10 @@ import React from 'react';
 
 import STTApi, { CONFIG } from '../api';
 import { CrewAvatar, CrewData, CryoCollectionDTO } from '../api/STTApi';
+import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 
 interface CryoCollectionsProps {
-    onCommandItemsUpdate: (ary:any[]) => void;
+    onCommandItemsUpdate?: (items: ICommandBarItemProps[]) => void;
 }
 
 interface CryoCollectionsState {

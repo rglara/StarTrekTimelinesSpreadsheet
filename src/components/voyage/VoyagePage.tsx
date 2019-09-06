@@ -2,55 +2,50 @@ import React from 'react';
 import STTApi from '../../api';
 import { VoyageCrew } from './VoyageCrew';
 import { VoyageLog } from './VoyageLog';
+import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 
-export class VoyagePage extends React.Component<any,any> {
-   constructor(props:any) {
-      super(props);
+export interface VoyagePageProps {
+   onCommandItemsUpdate?: (items: ICommandBarItemProps[]) => void;
+}
 
-      this.state = {
-         showCalcAnyway: false
-      };
+export const VoyagePage = (props: VoyagePageProps) => {
+   const [showCalcAnyway, setShowCalcAnyway] = React.useState(false);
+
+   React.useEffect(() => _updateCommandItems(), [showCalcAnyway]);
+
+   function _onRefreshNeeded() {
+      setShowCalcAnyway(showCalcAnyway);
+      //forceUpdate();
    }
 
-   _onRefreshNeeded() {
-      this.forceUpdate();
-   }
-
-   componentDidMount() {
-      this._updateCommandItems();
-   }
-
-   _updateCommandItems() {
-      if (this.props.onCommandItemsUpdate) {
+   function _updateCommandItems() {
+      if (props.onCommandItemsUpdate) {
          const activeVoyage = STTApi.playerData.character.voyage.length > 0;
 
          if (activeVoyage) {
-            this.props.onCommandItemsUpdate([
+            props.onCommandItemsUpdate([
                {
                   key: 'exportExcel',
-                  name: this.state.showCalcAnyway ? 'Switch to log' : 'Switch to recommendations',
+                  name: showCalcAnyway ? 'Switch to log' : 'Switch to recommendations',
                   iconProps: { iconName: 'Switch' },
                   onClick: () => {
-                     this.setState({ showCalcAnyway: !this.state.showCalcAnyway }, () => {
-                        this._updateCommandItems();
-                     });
+                     setShowCalcAnyway(!showCalcAnyway);
+                     //_updateCommandItems();
                   }
                }
             ]);
          } else {
-            this.props.onCommandItemsUpdate([]);
+            props.onCommandItemsUpdate([]);
          }
       }
    }
 
-   render() {
-      const activeVoyage = STTApi.playerData.character.voyage.length > 0;
+   const activeVoyage = STTApi.playerData.character.voyage.length > 0;
 
-      return (
-         <div className='tab-panel' data-is-scrollable='true'>
-            {(!activeVoyage || this.state.showCalcAnyway) && <VoyageCrew onRefreshNeeded={() => this._onRefreshNeeded()} />}
-            {activeVoyage && !this.state.showCalcAnyway && <VoyageLog />}
-         </div>
-      );
-   }
+   return (
+      <div className='tab-panel' data-is-scrollable='true'>
+         {(!activeVoyage || showCalcAnyway) && <VoyageCrew onRefreshNeeded={() => _onRefreshNeeded()} />}
+         {activeVoyage && !showCalcAnyway && <VoyageLog />}
+      </div>
+   );
 }

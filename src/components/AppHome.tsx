@@ -305,7 +305,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 				return <FactionDetails />;
 
 			case 'Events':
-				return <EventHelperPage />;
+				return <EventHelperPage onTabSwitch={this._switchTab} />;
 
 			case 'Shuttles':
 				return <Shuttles onTabSwitch={this._switchTab} />;

@@ -9,9 +9,11 @@ import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
 import { EventDTO, CrewData } from "../../api/STTApi";
 import STTApi, { RarityStars } from '../../api';
 import { SkillCell } from '../crew/SkillCell';
+import { Label } from 'semantic-ui-react';
 
 export interface ShuttleEventProps {
    event: EventDTO;
+   onTabSwitch?: (newTab: string) => void;
 }
 
 export const ShuttleEvent = (props: ShuttleEventProps) => {
@@ -353,6 +355,9 @@ export const ShuttleEvent = (props: ShuttleEventProps) => {
    return <div><h2>Shuttle Event Details</h2>
       <div style={{ margin: '0' }}>
          <span>
+            {props.onTabSwitch &&
+               <span>Click to see shuttle details: <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Shuttles')}>Event Details</Label></span>
+            }
             <div>{props.event.bonus_text}</div>
             Owned Event Bonus Crew: {crew_bonuses.length}
             { renderCrewBonusTable() }

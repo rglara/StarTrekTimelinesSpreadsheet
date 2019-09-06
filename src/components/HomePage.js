@@ -196,15 +196,15 @@ export class HomePage extends React.Component {
 			const getShuttleState = state => {
 				switch (state) {
 					case 0:
-						return 'Opened';
+						return <b>Opened</b>;
 					case 1:
-						return 'In progress';
+						return <i>In progress</i>;
 					case 2:
-						return 'Complete';
+						return <i>Complete</i>;
 					case 3:
-						return 'Expired';
+						return <b>Expired</b>;
 					default:
-						return 'UNKNOWN';
+						return <b>UNKNOWN</b>;
 				}
 			};
 
@@ -213,10 +213,10 @@ export class HomePage extends React.Component {
 				icon: Priority.CHECK,
 				content: (
 					<p style={{ margin: '0' }}>
-						{shuttles
+						{shuttles.sort((a,b) => a.expires_in - b.expires_in)
 							.map(sa => (
 								<span key={sa.id}>
-									{sa.name} - <i>{getShuttleState(sa.state)}</i> ({formatTimeSeconds(sa.expires_in)}
+									{sa.name} - {getShuttleState(sa.state)} ({formatTimeSeconds(sa.expires_in)}
 									{' '}at {Moment(STTApi.lastSync).add(sa.expires_in, 's').format('h:mma')})
 								</span>
 							))
