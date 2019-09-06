@@ -96,7 +96,7 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 			let crewSpans: any= [];
 			this.state.crewSelection.forEach((entry) => {
 				if (entry.choice) {
-					let status = entry.choice.frozen > 0 ? 'frozen' : entry.choice.active_id > 0 ? 'active' : 'available';
+					let status = entry.choice.frozen > 0 ? 'frozen' : entry.choice.active_id ? 'active' : 'available';
 					let statusColor = status === 'frozen' ? 'red' : status === 'active' ? 'yellow' : 'green';
 					let crew = (
 						<Card key={entry.choice.crew_id || entry.choice.id} color={status === 'frozen' ? 'red' : status === 'active' ? 'yellow' : 'green'}>
@@ -288,7 +288,7 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 				return;
 			}
 
-			if (!entry.choice.crew_id || entry.choice.active_id > 0) {
+			if (!entry.choice.crew_id || entry.choice.active_id) {
 				this.setState({ error: `Cannot start voyage with frozen or active crew '${entry.choice.name}'` });
 				return;
 			}
@@ -323,7 +323,7 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 				return false;
 			}
 
-			if (!this.state.includeActive && crew.active_id > 0) {
+			if (!this.state.includeActive && crew.active_id) {
 				return false;
 			}
 

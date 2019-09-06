@@ -663,8 +663,7 @@ export interface CrewData {
 	full_body: ImageDataDTO;
 	id: number;
 	crew_id?: number;
-	//TODO: remove if unused
-	active_id?: any;
+	active_id?: number;
 	level: number;
 	max_level?: number;
 	max_rarity: number;
