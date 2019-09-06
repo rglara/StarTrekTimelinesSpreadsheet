@@ -4,7 +4,7 @@ import { Button, Image, Item, List, Dropdown, Label } from 'semantic-ui-react';
 
 import STTApi from '../api';
 import { CONFIG, formatTimeSeconds } from '../api';
-import { CrewAvatar, CrewData, PlayerShuttleDTO } from '../api/STTApi';
+import { CrewAvatar, CrewData, PlayerShuttleDTO, EventDTO } from '../api/STTApi';
 
 export interface ShuttlesProps {
 
@@ -15,7 +15,7 @@ interface CalcSlot {
 	bestCrew: CrewItem[];
 	skills?: string[];
 	type?: string;
-	selection?: string;
+	selection?: number;
 	userSelect?: boolean;
 	activeSelect?: boolean;
 }
@@ -33,22 +33,13 @@ interface CrewItem {
 	//[key:string] : number;
 	crew?: CrewData;
 	text?: string;
-	value?: string;
+	value?: number;
 	image?: string;
 }
 
 export const Shuttles = (props:ShuttlesProps) => {
-	if (
-		!STTApi.playerData.character.events ||
-		STTApi.playerData.character.events.length == 0 ||
-		STTApi.playerData.character.events[0].content.content_type !== 'shuttles' ||
-		!STTApi.playerData.character.events[0].opened
-	) {
-		return <span>Not in an active shuttle event</span>;
-	}
-
-	const [eventImageUrl, setEventImageUrl] = React.useState();
 	let [calcSlots, setCalcSlots] = React.useState({} as { [shuttle_id: number]: CalcSlot[] });
+	const [eventImageUrl, setEventImageUrl] = React.useState();
 	let shuttlesToRender : PlayerShuttleDTO[] = [];
 	let currentEvent: {
 		name: string;
@@ -60,50 +51,61 @@ export const Shuttles = (props:ShuttlesProps) => {
 		}[],
 		tokens: number[];
 		nextVP: number;
-	};
+	} | undefined = undefined;
 
-	let event = STTApi.playerData.character.events[0];
-
-	STTApi.imageProvider
-		.getImageUrl(event.phases[event.opened_phase].splash_image.file, event.id)
-		.then(found => {
-			setEventImageUrl(found.url);
-		})
-		.catch(error => {
-			console.warn(error);
-		});
+	let event : EventDTO | undefined = undefined;
+	if (
+		STTApi.playerData.character.events &&
+		STTApi.playerData.character.events.length > 0 &&
+		STTApi.playerData.character.events[0].content.content_type === 'shuttles' &&
+		STTApi.playerData.character.events[0].opened
+	) {
+		//return <span>Not in an active shuttle event</span>;
+		event = STTApi.playerData.character.events[0];
+	}
 
 	let crew_bonuses : {avatar: CrewAvatar; bonus: number; iconUrl: string }[] = [];
-	for (let cb in event.content.shuttles![0].crew_bonuses) {
-		let avatar = STTApi.getCrewAvatarBySymbol(cb);
-		if (!avatar) {
-			continue;
+	if (event) {
+		STTApi.imageProvider
+			.getImageUrl(event.phases[event.opened_phase].splash_image.file, event.id)
+			.then(found => {
+				setEventImageUrl(found.url);
+			})
+			.catch(error => {
+				console.warn(error);
+			});
+
+		for (let cb in event.content.shuttles![0].crew_bonuses) {
+			let avatar = STTApi.getCrewAvatarBySymbol(cb);
+			if (!avatar) {
+				continue;
+			}
+
+			crew_bonuses.push({
+				avatar,
+				bonus: event.content.shuttles![0].crew_bonuses[cb],
+				iconUrl: STTApi.imageProvider.getCrewCached(avatar, false)
+			});
 		}
 
-		crew_bonuses.push({
-			avatar,
-			bonus: event.content.shuttles![0].crew_bonuses[cb],
-			iconUrl: STTApi.imageProvider.getCrewCached(avatar, false)
-		});
+		let eventVP = event.content.shuttles![0].shuttle_mission_rewards.find(r => r.type === 11);
+		currentEvent = {
+			name: event.name,
+			description: event.description,
+			crew_bonuses: crew_bonuses,
+			tokens: event.content.shuttles!.map(s => s.token),
+			nextVP: eventVP ? eventVP.quantity : 0
+		};
 	}
-
-	let eventVP = event.content.shuttles![0].shuttle_mission_rewards.find(r => r.type === 11);
-	currentEvent = {
-		name: event.name,
-		description: event.description,
-		crew_bonuses: crew_bonuses,
-		tokens: event.content.shuttles!.map(s => s.token),
-		nextVP: eventVP ? eventVP.quantity : 0
-	};
 
 	let challengeRatings : {[shuttle_id:number] : number} = {};
-	slotCalculator();
 
-	if (!shuttlesToRender) {
-		return <p>Calculating...</p>;
-	}
+	// if (!shuttlesToRender) {
+	// 	return <p>Calculating...</p>;
+	// }
 
 	shuttlesToRender = STTApi.playerData.character.shuttle_adventures.map(adventure => adventure.shuttles[0]);
+	slotCalculator();
 
 	function _shuttleChance(challenge_rating: number, numberofSlots: number, skillSum: number): number {
 		return Math.floor(
@@ -117,17 +119,18 @@ export const Shuttles = (props:ShuttlesProps) => {
 	}
 
 	function slotCalculator() {
-		let crew_bonuses = event.content.shuttles![0].crew_bonuses;
-
 		let sortedRoster : CrewItem[] = [];
+
+		//TODO: account for shared crew
 		STTApi.roster.forEach(crew => {
 			if (crew.buyback || crew.frozen > 0) {
 				return;
 			}
 
 			let bonus = 1;
-			if (crew_bonuses[crew.symbol]) {
-				bonus = crew_bonuses[crew.symbol];
+			const foundBonus = crew_bonuses.find(cb => cb.avatar.symbol === crew.symbol);
+			if (foundBonus) {
+				bonus = foundBonus.bonus;
 			}
 
 			sortedRoster.push({
@@ -145,9 +148,6 @@ export const Shuttles = (props:ShuttlesProps) => {
 
 		STTApi.playerData.character.shuttle_adventures.forEach(adventure => {
 			let shuttle = adventure.shuttles[0];
-			// if (shuttle.state != 0) {
-			// 	return;
-			// }
 			challengeRatings[shuttle.id] = adventure.challenge_rating;
 
 			// TODO: this assumes there are at most 2 skills in each slot
@@ -189,11 +189,22 @@ export const Shuttles = (props:ShuttlesProps) => {
 					});
 				}
 
+				let userSelected : number[] = [];
+				shuttlesToRender.map(sh => calcSlots[sh.id]).filter(cs => cs !== undefined)
+					.forEach(cslots => {
+						let csf = cslots.filter(cslot => cslot.userSelect && cslot.selection);
+						csf.forEach(cslot => userSelected.push(cslot.selection!))
+					}
+				);
+
 				let seen = new Set();
+				// First, match active crew that are on an in-progress shuttle
 				let bestCrew = calcSlot.bestCrew.filter(c => shuttle.id === c.active_id);
+				// If none match, find other candidates that are not active
 				if (bestCrew.length == 0) {
 					bestCrew = calcSlot.bestCrew
 						.filter(c => c.total > 0 && !c.active_id)
+						.filter(c => !userSelected.find(us => us === c.crew_id))
 						.filter(c => (seen.has(c.crew_id) ? false : seen.add(c.crew_id)));
 				}
 				bestCrew.sort((a, b) => a.total - b.total);
@@ -202,7 +213,7 @@ export const Shuttles = (props:ShuttlesProps) => {
 				calcSlot.bestCrew.forEach((c) => {
 					c.crew = STTApi.roster.find(cr => cr.id === c.crew_id);
 					c.text = `${c.crew!.name} (${c.total})`;
-					c.value = c.crew!.symbol;
+					c.value = c.crew_id;
 					c.image = c.crew!.iconUrl;
 				});
 
@@ -222,7 +233,7 @@ export const Shuttles = (props:ShuttlesProps) => {
 		_reconcileCalc();
 	}
 
-	function _chooseSlot(calcSlot:CalcSlot, value:any) {
+	function _chooseSlot(calcSlot:CalcSlot, value: number) {
 		let cs = { ... calcSlot, selection: value};
 
 		_reconcileCalc(cs);
@@ -332,7 +343,7 @@ export const Shuttles = (props:ShuttlesProps) => {
 									selection
 									disabled={shuttle.state > 0}
 									options={calcSlot.bestCrew}
-									onChange={(e, { value }) => _chooseSlot(calcSlot, value)}
+									onChange={(e, { value }) => _chooseSlot(calcSlot, value as number)}
 									value={calcSlot.selection}
 								/>
 							</div>
@@ -361,6 +372,9 @@ export const Shuttles = (props:ShuttlesProps) => {
 	}
 
 	function renderEvent() {
+		if (!currentEvent) {
+			return <span/>;
+		}
 		return (
 			<div>
 				<h2>Current event: {currentEvent.name}</h2>
@@ -387,7 +401,7 @@ export const Shuttles = (props:ShuttlesProps) => {
 	return (
 		<div className='tab-panel' data-is-scrollable='true'>
 			<div style={{ padding: '10px' }}>
-				{renderEvent()}
+				{currentEvent && renderEvent()}
 				<Item.Group divided>{shuttlesToRender.map(shuttle => renderShuttle(shuttle))}</Item.Group>
 			</div>
 		</div>
