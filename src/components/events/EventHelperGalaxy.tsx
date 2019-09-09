@@ -6,6 +6,7 @@ import { ItemDisplay } from '../ItemDisplay';
 
 import STTApi from '../../api';
 import { EventDTO, EventGatherPoolAdventureDTO } from '../../api/STTApi';
+import { EventCrewBonusTable } from './EventHelperPage';
 
 function parseAdventure(adventure: any, crew_bonuses: { [crew_symbol: string]: number }): any[] {
    let demands: any[] = [];
@@ -199,21 +200,21 @@ const GalaxyAdventure = (props: GalaxyAdventureProps) => {
          adventure_demands = parseAdventure(props.adventure, props.crew_bonuses)
    }
 
-   function _completeAdventure() {
-      let activeEvent = STTApi.playerData.character.events[0];
+   // function _completeAdventure() {
+   //    let activeEvent = STTApi.playerData.character.events[0];
 
-      let pool = activeEvent.content.gather_pools[0].id;
-      let event_instance_id = activeEvent.instance_id;
-      let phase = activeEvent.opened_phase;
-      let adventure = activeEvent.content.gather_pools[0].adventures[0].id;
+   //    let pool = activeEvent.content.gather_pools[0].id;
+   //    let event_instance_id = activeEvent.instance_id;
+   //    let phase = activeEvent.opened_phase;
+   //    let adventure = activeEvent.content.gather_pools[0].adventures[0].id;
 
-      STTApi.executePostRequestWithUpdates('gather/complete', {
-         event_instance_id: 134,
-         phase: 0,
-         pool: 142,
-         adventure: 807
-      });
-   }
+   //    STTApi.executePostRequestWithUpdates('gather/complete', {
+   //       event_instance_id: 134,
+   //       phase: 0,
+   //       pool: 142,
+   //       adventure: 807
+   //    });
+   // }
 
    if (props.adventure.golden_octopus) {
       return <p>VP adventure TODO</p>;
@@ -384,6 +385,13 @@ export const GalaxyEvent = (props: GalaxyEventProps) => {
                      </List.Item>
                   ))}
                </List>
+            </Accordion.Content>
+            <Accordion.Title active={activeIndex === 3} index={3} onClick={(e, titleProps) => _handleClick(titleProps)}>
+               <Icon name='dropdown' />
+               Owned Crew Bonus Table
+				</Accordion.Title>
+            <Accordion.Content active={activeIndex === 3}>
+               <EventCrewBonusTable bonuses={currEvent.content.crew_bonuses!} />
             </Accordion.Content>
          </Accordion>
 

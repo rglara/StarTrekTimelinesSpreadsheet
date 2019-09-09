@@ -9,13 +9,14 @@ export interface VoyagePageProps {
 }
 
 export const VoyagePage = (props: VoyagePageProps) => {
+   const [, updateState] = React.useState();
+   const forceUpdate = React.useCallback(() => updateState({}), []);
    const [showCalcAnyway, setShowCalcAnyway] = React.useState(false);
 
    React.useEffect(() => _updateCommandItems(), [showCalcAnyway]);
 
    function _onRefreshNeeded() {
-      setShowCalcAnyway(showCalcAnyway);
-      //forceUpdate();
+      forceUpdate();
    }
 
    function _updateCommandItems() {
