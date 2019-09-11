@@ -315,7 +315,7 @@ export const Shuttles = (props:ShuttlesProps) => {
 
 		return (
 			<Item key={shuttle.id}>
-				<Item.Image size='small' src={faction!.iconUrl} />
+				<Item.Image size='small' src={faction!.iconUrl} style={{ 'backgroundColor': '#aaa' }} />
 
 				<Item.Content verticalAlign='middle'>
 					<Item.Header>
@@ -381,7 +381,7 @@ export const Shuttles = (props:ShuttlesProps) => {
 			<div style={{ padding: '10px' }}>
 				{currentEvent && renderEvent()}
 				<h3>Active shuttles</h3>
-				<Item.Group divided>{shuttlesToRender.map(shuttle => renderShuttle(shuttle))}</Item.Group>
+				<Item.Group divided>{shuttlesToRender.sort((a, b) => a.expires_in - b.expires_in).map(shuttle => renderShuttle(shuttle))}</Item.Group>
 			</div>
 		</div>
 	);
