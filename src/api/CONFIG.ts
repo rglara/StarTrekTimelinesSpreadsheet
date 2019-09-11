@@ -122,7 +122,7 @@ export default class CONFIG {
 		13: 'Useful loot' // ?
 	};
 
-	static readonly CURRENCIES = {
+	static readonly CURRENCIES: { [type: string]: { name: string, icon: string } } = {
 		premium_earnable: {
 			name: 'merits',
 			icon: 'images_currency_pe_currency_0'

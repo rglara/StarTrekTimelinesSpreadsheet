@@ -824,16 +824,22 @@ export interface VoyageNarrativeDTO {
 }
 
 export interface RewardDTO {
+	action?: CrewActionDTO;
 	bonuses?: { [key:number]: number };
 	flavor: string;
+	full_body?: ImageDataDTO;
 	full_name: string;
+	hash_key?: string;
 	icon: ImageDataDTO;
 	id: number;
 	item_type?: number; // defined if type == 2
 	name: string;
+	portrait?: ImageDataDTO;
 	quantity: number;
 	rarity: number;
+	skills?: { [skill: string]: SkillDTO; };
 	symbol: string;
+	traits?: string[];
 	type: number;
 }
 
