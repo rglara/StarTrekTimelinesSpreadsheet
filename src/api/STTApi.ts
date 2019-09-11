@@ -1367,7 +1367,7 @@ export interface PotentialRewardDTO {
 
 export interface EventDTO {
 	bonus_text: string;
-	bonus_victory_points: number;
+	bonus_victory_points?: number;
 	content: {
 		content_type: string; // "gather" | "shuttles" | "skirmish" | ?
 
@@ -1410,13 +1410,18 @@ export interface EventDTO {
 	}[];
 	id: number;
 	instance_id: number;
-	last_threshold_points: number;
+	last_threshold_points?: number;
 	name: string;
-	next_threshold_points: number;
-	next_threshold_rewards: any[];
-	opened: boolean;
-	opened_phase: number;
-	phases: any[];
+	next_threshold_points?: number;
+	next_threshold_rewards?: any[];
+	opened?: boolean;
+	opened_phase?: number;
+	phases: {
+		goals: any[];
+		id: number;
+		seconds_to_end: number;
+		splash_image: ImageDataDTO;
+	}[];
 	ranked_brackets: any[];
 	rewards_teaser: string;
 	rules: string;
@@ -1426,8 +1431,8 @@ export interface EventDTO {
 	squadron_ranked_brackets: any[];
 	status: number;
 	threshold_rewards: any[];
-	unclaimed_threshold_rewards: any[];
-	victory_points: number;
+	unclaimed_threshold_rewards?: any[];
+	victory_points?: number;
 }
 
 export interface EventShuttleDTO {

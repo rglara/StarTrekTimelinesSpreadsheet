@@ -1,7 +1,7 @@
 import React from 'react';
 
-import { Image, Popup, List } from 'semantic-ui-react';
-import { ImageFit } from 'office-ui-fabric-react/lib/Image';
+import { Popup, List } from 'semantic-ui-react';
+import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
 import ReactTable, { Column, SortingRule } from 'react-table';
 import STTApi, { formatTimeSeconds, CONFIG, RarityStars } from '../../api';
 import { EventDTO, CrewData } from "../../api/STTApi";
@@ -57,12 +57,21 @@ export const EventHelperPage = (props:EventHelperPageProps) => {
       STTApi.playerData.character.events[0].content
    ) {
       currEvent = STTApi.playerData.character.events[0];
-      STTApi.imageProvider
-         .getImageUrl(currEvent.phases[currEvent.opened_phase].splash_image.file, currEvent.id)
-         .then(found => setEventImageUrl(found.url))
-         .catch(error => {
-            console.warn(error);
-         });
+      let url : string | undefined = undefined;
+
+      if (currEvent.opened && currEvent.opened_phase !== undefined) {
+         url = currEvent.phases[currEvent.opened_phase].splash_image.file;
+      }
+      else if (currEvent.phases && currEvent.phases.length > 0) {
+         url = currEvent.phases[0].splash_image.file;
+      }
+      if (url) {
+         STTApi.imageProvider.getImageUrl(url, currEvent.id)
+            .then(found => setEventImageUrl(found.url))
+            .catch(error => {
+               console.warn(error);
+            });
+      }
    }
 
    if (!currEvent) {
