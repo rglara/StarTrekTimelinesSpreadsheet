@@ -6,7 +6,7 @@ async function loadQuestData(completed: boolean, quest: any) {
 		if (quest.mastery_levels) {
 			let goals = quest.mastery_levels[0].progress.goals + quest.mastery_levels[1].progress.goals + quest.mastery_levels[2].progress.goals;
 			let goal_progress = quest.mastery_levels[0].progress.goal_progress + quest.mastery_levels[1].progress.goal_progress + quest.mastery_levels[2].progress.goal_progress;
-			
+
 			completed = goals === goal_progress;
 		}
 	}

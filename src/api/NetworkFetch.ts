@@ -109,13 +109,13 @@ export class NetworkFetch implements NetworkInterface {
 		let headers: any = {
 			"Content-type": "application/json"
 		};
-	
+
 		let response = await window.fetch(uri, {
 			method: "post",
 			headers: headers,
 			body: JSON.stringify(form)
 		});
-	
+
 		return response;
 	}
 

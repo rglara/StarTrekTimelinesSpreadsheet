@@ -24,7 +24,7 @@ function loadChannels() {
 export function publishChatMessage(token)
 {
 	//https://stt.disruptorbeam.com/notification/publish_chat
-	//POST 
+	//POST
 
 	//channel: subscribedChannels.fleet
 	//message: string
