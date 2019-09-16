@@ -414,6 +414,7 @@ export interface PlayerCharacterDTO {
    accepted_missions: any[];
    active_conflict: any; // null
    boost_windows: any[];
+   //TODO: type details
    cadet_schedule: any;
    cadet_tickets: any;
    can_purchase_crew_limit_increase: boolean;
@@ -447,6 +448,7 @@ export interface PlayerCharacterDTO {
    location: { place: string; setup: string; system: string; x: number; y: number; };
    location_channel_prefix: string;
    max_level: number;
+   //TODO: type info
    navmap: any;
    next_crew_limit_increase_cost: { currency: number; amount: number; };
    next_daily_activity_reset: number;
@@ -468,7 +470,7 @@ export interface PlayerCharacterDTO {
    seconds_to_scan_cooldown: number;
    ships: ShipDTO[];
    shuttle_adventures: PlayerShuttleAdventureDTO[];
-   shuttle_bayse: number;
+   shuttle_bays: number;
    starbase_buffs: any[];
    stimpack: any; // null
    stored_immortals: { id: number; quantity: number; }[];
