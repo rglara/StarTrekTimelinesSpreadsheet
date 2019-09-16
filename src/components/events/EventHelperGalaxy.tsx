@@ -5,7 +5,7 @@ import { Button, Item, Image, List, Accordion, Icon, AccordionTitleProps } from 
 import { ItemDisplay } from '../ItemDisplay';
 
 import STTApi from '../../api';
-import { EventDTO, EventGatherPoolAdventureDTO } from '../../api/STTApi';
+import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES } from '../../api/STTApi';
 import { EventCrewBonusTable } from './EventHelperPage';
 
 function parseAdventure(adventure: any, crew_bonuses: { [crew_symbol: string]: number }): any[] {
@@ -250,7 +250,7 @@ export const GalaxyEvent = (props: GalaxyEventProps) => {
 
    if (!props.event ||
       !props.event.content ||
-      props.event.content.content_type !== 'gather' ||
+      props.event.content.content_type !== EVENT_TYPES.GATHER ||
       !props.event.content.gather_pools
    ) {
       return <span />;

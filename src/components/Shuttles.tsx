@@ -4,7 +4,7 @@ import { Button, Image, Item, List, Dropdown, Label } from 'semantic-ui-react';
 
 import STTApi from '../api';
 import { CONFIG, formatTimeSeconds } from '../api';
-import { CrewAvatar, CrewData, PlayerShuttleDTO, EventDTO } from '../api/STTApi';
+import { CrewAvatar, CrewData, PlayerShuttleDTO, EventDTO, EVENT_TYPES } from '../api/STTApi';
 
 export interface ShuttlesProps {
 	onTabSwitch?: (newTab: string) => void;
@@ -56,10 +56,8 @@ export const Shuttles = (props:ShuttlesProps) => {
 	if (
 		STTApi.playerData.character.events &&
 		STTApi.playerData.character.events.length > 0 &&
-		STTApi.playerData.character.events[0].content.content_type === 'shuttles' &&
-		STTApi.playerData.character.events[0].opened
+		STTApi.playerData.character.events[0].content.content_type === EVENT_TYPES.SHUTTLES
 	) {
-		//return <span>Not in an active shuttle event</span>;
 		event = STTApi.playerData.character.events[0];
 	}
 
@@ -89,10 +87,6 @@ export const Shuttles = (props:ShuttlesProps) => {
 	}
 
 	let challengeRatings : {[shuttle_id:number] : number} = {};
-
-	// if (!shuttlesToRender) {
-	// 	return <p>Calculating...</p>;
-	// }
 
 	shuttlesToRender = STTApi.playerData.character.shuttle_adventures.map(adventure => adventure.shuttles[0]);
 	slotCalculator();

@@ -826,11 +826,18 @@ export interface PotentialRewardDTO {
    type: number; // =0
 }
 
+// Can be used for equality comparison to EventDTO.content.content_type
+export const EVENT_TYPES = {
+   GATHER: 'gather',
+   SHUTTLES: 'shuttles',
+   SKIRMISH: 'skirmish'
+}
+
 export interface EventDTO {
    bonus_text: string;
    bonus_victory_points?: number;
    content: {
-      content_type: string; // "gather" | "shuttles" | "skirmish" | ?
+      content_type: 'gather' | 'shuttles' | 'skirmish';
 
       // Galaxy/gather events
       craft_bonus: number;

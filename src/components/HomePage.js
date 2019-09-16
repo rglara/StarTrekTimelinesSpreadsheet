@@ -10,6 +10,7 @@ import { CONFIG, getChronitonCount, formatTimeSeconds, loadVoyage } from '../api
 import { loadGauntlet } from '../api/GauntletTools';
 
 import { openDevTools } from '../utils/pal';
+import { EVENT_TYPES } from '../api/DTO';
 
 const Priority = Object.freeze({
 	INFO: 'info circle green',
@@ -383,7 +384,7 @@ export class HomePage extends React.Component {
 			} else {
 				msg = ' starts in ' + formatTimeSeconds(eventData.seconds_to_start);
 			}
-			if (eventData.content.content_type === 'shuttles') {
+			if (eventData.content.content_type === EVENT_TYPES.SHUTTLES) {
 				recommendations.push({
 					title: `Faction/Shuttle Event ` + msg,
 					icon: Priority.INFO,
@@ -394,7 +395,7 @@ export class HomePage extends React.Component {
 						</div>
 				});
 			}
-			else if (eventData.content.content_type === 'gather') {
+			else if (eventData.content.content_type === EVENT_TYPES.GATHER) {
 				recommendations.push({
 					title: `Galaxy Event ` + msg,
 					icon: Priority.INFO,
@@ -405,7 +406,7 @@ export class HomePage extends React.Component {
 					</div>
 				});
 			}
-			else if (eventData.content.content_type === 'skirmish') {
+			else if (eventData.content.content_type === EVENT_TYPES.SKIRMISH) {
 				let crew_bonuses = [];
 				for (let fc in eventData.featured_crew) {
 					let avatar = STTApi.getCrewAvatarBySymbol(fc.symbol);
