@@ -3,6 +3,8 @@
 node_modules/
 dist/
 builds/
+tscout/
+server/build/
 /.vs
 /notes.txt
 native/bin/

@@ -256,7 +256,7 @@ export const GalaxyEvent = (props: GalaxyEventProps) => {
       return <span />;
    }
 
-   for (let cb in currEvent.content.crew_bonuses) {
+   for (let cb in currEvent.content.crew_bonuses!) {
       let avatar = STTApi.getCrewAvatarBySymbol(cb);
       if (!avatar) {
          continue;
@@ -264,7 +264,7 @@ export const GalaxyEvent = (props: GalaxyEventProps) => {
 
       crew_bonuses.push({
          avatar,
-         bonus: currEvent.content.crew_bonuses[cb],
+         bonus: currEvent.content.crew_bonuses![cb],
          iconUrl: STTApi.imageProvider.getCrewCached(avatar, false)
       });
    }

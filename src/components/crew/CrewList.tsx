@@ -21,7 +21,7 @@ import { CrewData, ItemArchetypeDTO } from '../../api/STTApi';
 
 export interface CrewListProps {
 	data: CrewData[];
-	sortColumn: string;
+	sortColumn?: string;
 	selectedIds?: Set<number>;
 	filterText?: string;
 	onSelectionChange?: (sel:Set<number>) => void;
@@ -44,16 +44,16 @@ interface CrewListState {
 
 export class CrewList extends React.Component<CrewListProps, CrewListState> {
 
-	static defaultProps = {
-		sortColumn: 'max_rarity',
-	};
+	// static defaultProps = {
+	// 	sortColumn: 'max_rarity',
+	// };
 
 	constructor(props:CrewListProps) {
 		super(props);
 
 		this.state = {
 			items: props.data,
-			sorted: [{ id: props.sortColumn, desc: false }],
+			sorted: [{ id: props.sortColumn || 'max_rarity', desc: false }],
 			selection: props.selectedIds ? props.selectedIds : new Set(),
 			active: { }
 		};

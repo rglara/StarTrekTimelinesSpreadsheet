@@ -373,6 +373,8 @@ function parseAssetBundle(data) {
 		return undefined;
 	}
 
+	var sprites = [];
+
 	var result = {
 		imageName: imageTexture.m_Name,
 		imageBitmap: {
@@ -380,7 +382,7 @@ function parseAssetBundle(data) {
 			width: imageTexture.m_Width,
 			height: imageTexture.m_Height
 		},
-		sprites: []
+		sprites
 	};
 
 	if (hasSprites) {

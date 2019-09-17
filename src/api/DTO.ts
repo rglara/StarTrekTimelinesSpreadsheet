@@ -225,7 +225,7 @@ export interface GauntletCrewDTO {
    skills: { min: number; max: number; skill: string }[];
 
    /** @deprecated Added by app, but unused? */
-   iconUrl?: any;
+   iconUrl?: string;
 }
 
 export interface GauntletOpponentDTO {

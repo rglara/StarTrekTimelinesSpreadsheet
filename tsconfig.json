@@ -6,13 +6,17 @@
 		"jsx": "react",
 		"pretty": true,
 		"strict": true,
-    "sourceMap": true,
+		"outDir": "tscout",
+		"sourceMap": true,
 		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
 		"strictPropertyInitialization": false,
 		"allowJs": true
 	},
 	"exclude": [
-		"node_modules"
+		"node_modules",
+		"tscout",
+		"dist",
+		"native"
 	]
 }
