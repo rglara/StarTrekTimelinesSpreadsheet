@@ -322,10 +322,12 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 			let iconPromises : Promise<void>[] = [];
 
 			data.gauntlet.contest_data.selected_crew.forEach((crew) => {
+				let avatar = STTApi.getCrewAvatarBySymbol(crew.archetype_symbol);
+				const cid = crew.crew_id;
 				iconPromises.push(
-					STTApi.imageProvider.getCrewImageUrl(STTApi.getCrewAvatarBySymbol(crew.archetype_symbol), true, crew.crew_id).then(({ id, url }) => {
+					STTApi.imageProvider.getCrewImageUrl(avatar!, true).then(({ id, url }) => {
 						data.gauntlet.contest_data.selected_crew.forEach((crew) => {
-							if (crew.crew_id === id) {
+							if (crew.crew_id === cid) {
 								crew.iconUrl = url;
 							}
 						});
@@ -334,11 +336,15 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 			});
 
 			result.matches.forEach((match) => {
+				let avatar = STTApi.getCrewAvatarBySymbol(match.crewOdd.archetype_symbol);
+				let avatarOpp = STTApi.getCrewAvatarBySymbol(match.opponent.archetype_symbol);
+				const cidOdd = match.crewOdd.crew_id;
+				const cidOpp = match.opponent.crew_id;
 				iconPromises.push(
-					STTApi.imageProvider.getCrewImageUrl(STTApi.getCrewAvatarBySymbol(match.crewOdd.archetype_symbol), true, match.crewOdd.crew_id).then(({ id, url }) => {
+					STTApi.imageProvider.getCrewImageUrl(avatar!, true).then(({ id, url }) => {
 						if (this.state.roundOdds) {
 							this.state.roundOdds.matches.forEach((match) => {
-								if (match.crewOdd.crew_id === id) {
+								if (match.crewOdd.crew_id === cidOdd) {
 									match.crewOdd.iconUrl = url;
 								}
 							});
@@ -347,10 +353,10 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 					}).catch((error) => { /*console.warn(error);*/ }));
 
 				iconPromises.push(
-					STTApi.imageProvider.getCrewImageUrl(STTApi.getCrewAvatarBySymbol(match.opponent.archetype_symbol), true, match.opponent.crew_id).then(({ id, url }) => {
+					STTApi.imageProvider.getCrewImageUrl(avatarOpp!, true).then(({ id, url }) => {
 						if (this.state.roundOdds) {
 							this.state.roundOdds.matches.forEach((match) => {
-								if (match.opponent.crew_id === id) {
+								if (match.opponent.crew_id === cidOpp) {
 									match.opponent.iconUrl = url;
 								}
 							});

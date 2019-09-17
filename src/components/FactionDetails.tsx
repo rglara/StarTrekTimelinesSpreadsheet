@@ -8,6 +8,7 @@ import { ItemDisplay } from './ItemDisplay';
 import STTApi from '../api';
 import { CONFIG, refreshAllFactions, loadFactionStore } from '../api';
 import { FactionDTO, PotentialRewardDTO, RewardDTO, ItemArchetypeDTO, FactionStoreItemDTO } from '../api/STTApi';
+import { CrewImageData } from './images/ImageProvider';
 
 interface StoreItemProps {
 	storeItem: FactionStoreItemDTO;
@@ -34,7 +35,7 @@ const StoreItem = (props: StoreItemProps) => {
 
 	let iconUrl;
 	if (props.storeItem.offer.game_item.type === 1) {
-		iconUrl = STTApi.imageProvider.getCrewCached(props.storeItem.offer.game_item, false);
+		iconUrl = STTApi.imageProvider.getCrewCached(props.storeItem.offer.game_item as CrewImageData, false);
 	} else {
 		iconUrl = STTApi.imageProvider.getCached(props.storeItem.offer.game_item);
 	}

@@ -1,8 +1,8 @@
 import STTApi from "../../api/index";
 import CONFIG from "../../api/CONFIG";
-import { ImageProvider, ImageCache, IBitmap, IFoundResult } from './ImageProvider';
+import { ImageProvider, ImageCache, IBitmap, IFoundResult, CrewImageData } from './ImageProvider';
 import { WorkerPool } from '../../api/WorkerPool';
-import { CrewData, ShipDTO } from "../../api/STTApi";
+import { ShipDTO, ImageDataDTO } from "../../api/STTApi";
 
 export class AssetImageProvider implements ImageProvider {
     private _imageCache: ImageCache;
@@ -22,7 +22,7 @@ export class AssetImageProvider implements ImageProvider {
         return this._baseURLAsset;
     }
 
-    getCached(withIcon: any): string {
+    getCached(withIcon: { icon?: ImageDataDTO }): string {
         if (!withIcon.icon)
             return '';
 
@@ -32,7 +32,7 @@ export class AssetImageProvider implements ImageProvider {
         return this._imageCache.getCached(withIcon.icon.file);
     }
 
-    getCrewCached(crew: CrewData, fullBody: boolean): string {
+    getCrewCached(crew: CrewImageData, fullBody: boolean): string {
         return this._imageCache.getCached(fullBody ? crew.full_body.file : crew.portrait.file);
     }
 
@@ -40,15 +40,15 @@ export class AssetImageProvider implements ImageProvider {
         return this._imageCache.getCached(((assetName.length > 0) ? (assetName + '_') : '') + spriteName);
     }
 
-    getCrewImageUrl(crew: CrewData, fullBody: boolean, id: number = 0): Promise<IFoundResult> {
+    getCrewImageUrl(crew: CrewImageData, fullBody: boolean, id: number = 0): Promise<IFoundResult> {
         if (!crew) {
             return this.getImageUrl("", id);
         }
         return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, id);
     }
 
-    getShipImageUrl(ship: { name: string; icon: { file: string } }, id: any): Promise<IFoundResult> {
-        return this.getImageUrl(ship.icon.file, id); //schematic_icon
+    getShipImageUrl(ship: ShipDTO): Promise<IFoundResult> {
+        return this.getImageUrl(ship.icon.file, ship.name); //schematic_icon
     }
 
     getItemImageUrl(item: any, id: number): Promise<IFoundResult> {

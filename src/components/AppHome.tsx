@@ -575,13 +575,13 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 		// });
 
 		if (STTApi.playerData.character.crew_avatar) {
-			STTApi.imageProvider.getCrewImageUrl(STTApi.playerData.character.crew_avatar, false, 0).then(({ id, url }) => {
+			STTApi.imageProvider.getCrewImageUrl(STTApi.playerData.character.crew_avatar, false).then(({ id, url }) => {
 				if (url) {
 					this.setState({ captainAvatarUrl: url });
 				}
 			}).catch((error) => { this.setState({ captainAvatarUrl: '' }); });
 
-			STTApi.imageProvider.getCrewImageUrl(STTApi.playerData.character.crew_avatar, true, 0).then(({ id, url }) => {
+			STTApi.imageProvider.getCrewImageUrl(STTApi.playerData.character.crew_avatar, true).then(({ id, url }) => {
 				if (url) {
 					this.setState({ captainAvatarBodyUrl: url });
 				}

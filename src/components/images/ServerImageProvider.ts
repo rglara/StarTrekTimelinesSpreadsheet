@@ -1,5 +1,6 @@
 import STTApi, { CONFIG, IFoundResult, ImageProvider }  from '../../api';
-import { CrewData, ShipDTO } from '../../api/STTApi';
+import { ShipDTO, ImageDataDTO } from '../../api/STTApi';
+import { CrewImageData } from './ImageProvider';
 
 export class ServerImageProvider implements ImageProvider {
     _baseURLAsset: string;
@@ -27,7 +28,7 @@ export class ServerImageProvider implements ImageProvider {
         return imageName;
     }
 
-    getCached(withIcon: any): string {
+    getCached(withIcon: { icon?: ImageDataDTO }): string {
         if (!withIcon.icon)
             return '';
 
@@ -45,7 +46,7 @@ export class ServerImageProvider implements ImageProvider {
         }
     }
 
-    getCrewCached(crew: CrewData, fullBody: boolean): string {
+    getCrewCached(crew: CrewImageData, fullBody: boolean): string {
         return this.internalGetCached(fullBody ? crew.full_body.file : crew.portrait.file);
     }
 
@@ -57,12 +58,12 @@ export class ServerImageProvider implements ImageProvider {
         return this.internalGetCached(((assetName.length > 0) ? (assetName + '_') : '') + spriteName);
     }
 
-    getCrewImageUrl(crew: CrewData, fullBody: boolean, id: number = 0): Promise<IFoundResult> {
+    getCrewImageUrl(crew: CrewImageData, fullBody: boolean, id: number = 0): Promise<IFoundResult> {
         return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, id);
     }
 
-    getShipImageUrl(ship: { name: string; icon: { file:string } }, name: string): Promise<IFoundResult> {
-        return this.getImageUrl(ship.icon.file, name);
+    getShipImageUrl(ship: ShipDTO): Promise<IFoundResult> {
+        return this.getImageUrl(ship.icon.file, ship.name);
     }
 
     getItemImageUrl(item: any, id: number): Promise<IFoundResult> {

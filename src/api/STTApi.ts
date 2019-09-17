@@ -87,9 +87,8 @@ export class STTApiClass {
 			this.imageProvider = new ServerImageProvider(this.serverAddress);
 		}
 		else {
-			//TODO: cache images coming from the wiki to prevent hammering their website with requests
 			let cache : ImageCache = new FileImageCache();
-			this.imageProvider = new ImageProviderChain(new AssetImageProvider(cache), new WikiImageProvider());
+			this.imageProvider = new ImageProviderChain(cache, new AssetImageProvider(cache), new WikiImageProvider());
 		}
 	}
 

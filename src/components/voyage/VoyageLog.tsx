@@ -8,6 +8,7 @@ import { loadVoyage, recallVoyage, resolveDilemma } from './VoyageTools';
 import { estimateVoyageRemaining, CalcRemainingOptions } from './voyageCalc';
 import { VoyageLogEntry } from './VoyageLogEntry';
 import { VoyageNarrativeDTO, VoyageDTO, CrewData } from '../../api/STTApi';
+import { CrewImageData } from '../images/ImageProvider';
 
 interface VoyageExportData {
    id: number;
@@ -294,11 +295,16 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
          let iconPromises : any[] = [];
          voyageRewards.forEach((reward) => {
             reward.iconUrl = '';
-            //TODO: why did this case come up?
-            // if (reward.icon.atlas_info) {
-            //    // This is not fool-proof, but covers currently known sprites
-            //    reward.iconUrl = CONFIG.SPRITES[reward.icon.file].url;
-            // } else {
+            if (reward.type === 1) { // crew
+               iconPromises.push(STTApi.imageProvider.getCrewImageUrl(reward as CrewImageData, false)
+                     .then(found => {
+                        reward.iconUrl = found.url;
+                     })
+                     .catch(error => {
+                        /*console.warn(error);*/
+                     })
+               );
+            } else {
                iconPromises.push(
                   STTApi.imageProvider
                      .getItemImageUrl(reward, reward.id)
@@ -309,7 +315,7 @@ export class VoyageLog extends React.Component<VoyageLogProps, VoyageLogState> {
                         /*console.warn(error);*/
                      })
                );
-            // }
+            }
          });
 
          await Promise.all(iconPromises);
