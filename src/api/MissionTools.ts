@@ -67,10 +67,11 @@ export interface IMissionData {
 	quests: any[];
 }
 
-export async function loadMissionData(accepted_missions: any, dispute_histories: any): Promise<IMissionData[]> {
+export async function loadMissionData(accepted_missions: {symbol?:string, id:number}[],
+	dispute_histories: {symbol: string, mission_ids: number[] }[]): Promise<IMissionData[]> {
 	let mission_ids: any[] = [];
 
-	accepted_missions.forEach((mission: any) => {
+	accepted_missions.forEach((mission) => {
 		if (mission.symbol !== 'mission_npev2') {
 			// Ignore the tutorial episode
 			mission_ids.push(mission.id);

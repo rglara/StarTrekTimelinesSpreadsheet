@@ -181,6 +181,42 @@ export interface CrewData {
    archetypes?: any[];
 }
 
+export interface BorrowedCrewDTO {
+   action?: CrewActionDTO;
+   active_id: any;
+   active_index: number;
+   active_status: number;
+   archetype_id: number;
+   equipment: number[][];
+   equipment_rank: number;
+   equipment_slots: {
+      level: number;
+      archetype: number;
+   }[];
+   full_body: ImageDataDTO;
+   icon: ImageDataDTO;
+   id: number;
+   level: number;
+   max_equipment_rank: number;
+   max_level: number;
+   max_rarity: number;
+   name: string;
+   portrait: ImageDataDTO;
+   rarity: number;
+   ship_battle: {
+      accuracy: number;
+      crit_bonus: number;
+      crit_chance: number;
+      evasion: number;
+   };
+   short_name: string;
+   skills: { [sk: string]: SkillDTO; };
+   symbol: string;
+   traits: string[];
+   traits_hidden: string[];
+   voice_over: any;
+}
+
 export interface GauntletDTO {
    bracket_id: string;
    consecutive_wins: number;
@@ -411,17 +447,48 @@ export interface PlayerDTO {
 }
 
 export interface PlayerCharacterDTO {
-   accepted_missions: any[];
+   accepted_missions: {
+      accepted: boolean;
+      description: string;
+      episode: number;
+      episode_portrait: ImageDataDTO;
+      episode_title: string;
+      exclude_from_timeline: boolean | null;
+      id: number;
+      main_story: boolean;
+      marker: number[];
+      marker_icon: ImageDataDTO;
+      stars_earned: number;
+      state: number;
+      symbol: string;
+      total_stars: number;
+   }[];
    active_conflict: any; // null
    boost_windows: any[];
-   //TODO: type details
-   cadet_schedule: any;
+   cadet_schedule: {
+      current: number;
+      day: number;
+      ends_in: number;
+      missions: {
+         description: string;
+         id: number;
+         image: ImageDataDTO;
+         image_small: ImageDataDTO;
+         portrait: ImageDataDTO;
+         requirement: string;
+         speaker: string;
+         title: string;
+      }[];
+      next: number;
+      next_starts_in: number;
+      schedule: {day: number; mission: number }[];
+   };
    cadet_tickets: any;
    can_purchase_crew_limit_increase: boolean;
    can_purchase_shuttle_bay: boolean;
    crew: CrewDTO[];
    crew_avatar: any;
-   crew_borrows: any[];
+   crew_borrows: BorrowedCrewDTO[];
    crew_collection_buffs: any[];
    crew_limit: number;
    crew_limit_increase_per_purchase: number;
@@ -448,8 +515,29 @@ export interface PlayerCharacterDTO {
    location: { place: string; setup: string; system: string; x: number; y: number; };
    location_channel_prefix: string;
    max_level: number;
-   //TODO: type info
-   navmap: any;
+   navmap: {
+      places: {
+         client_asset: any;
+         display_name?: string;
+         id: number;
+         symbol: string;
+         system: string;
+         visibled?: boolean;
+      }[];
+      systems: {
+         active?: boolean;
+         decorator?: number;
+         default_place: string;
+         display_name?: string;
+         faction?: string;
+         id: number;
+         scale?: number;
+         star?: number;
+         symbol: string;
+         x: number;
+         y: number;
+      }[];
+   };
    next_crew_limit_increase_cost: { currency: number; amount: number; };
    next_daily_activity_reset: number;
    next_fleet_activity_reset: number;
@@ -513,8 +601,18 @@ export interface PlayerShuttleDTO {
       skills: string[];
       trait_bonuses: any;
    }[];
-   state: number;
+   state: number; // see SHUTTLE_STATE
 }
+
+export const SHUTTLE_STATE_OPENED = 0;
+export const SHUTTLE_STATE_COMPLETE = 2;
+export const SHUTTLE_STATE_NAMES : {[i:number]:string} = {
+   0: 'Opened',
+   1: 'In progress',
+   2: 'Complete',
+   3: 'Expired',
+};
+export const SHUTTLE_STATE_NAME_UNKNOWN = 'UNKNOWN';
 
 export interface FactionDTO {
    completed_shuttle_adventures: number;
@@ -628,12 +726,31 @@ export interface ItemArchetypeDTO {
    flavor: string;
    icon: ImageDataDTO;
    id: number;
-   //TODO: type details
-   item_sources: any[];
+   item_sources: {
+      challenge_difficulty?: number;
+      challenge_id?: number;
+      challenge_skill?: string;
+      chance_grade: number;
+      dispute: number;
+      energy_quotient: number;
+      id: number;
+      mastery: number;
+      mission: number;
+      name: string;
+      place: string;
+      type: number;
+   }[];
    name: string;
    rarity: number;
-   //TODO: type details
-   recipe: any;
+   recipe?: {
+      demands: { archetype_id: number; count: number; }[];
+      validity_hash: any;
+      jackpot?: {
+         reward: RewardDTO[];
+         skills: string[]; // array of comma-separated entries
+         trait_bonuses: {[trait:string]:number};
+      };
+   };
    short_name?: string;
    symbol: string;
    type: number;

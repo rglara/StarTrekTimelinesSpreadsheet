@@ -5,21 +5,55 @@ import { Button, Item, Image, List, Accordion, Icon, AccordionTitleProps } from 
 import { ItemDisplay } from '../ItemDisplay';
 
 import STTApi from '../../api';
-import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES } from '../../api/STTApi';
+import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES, ItemArchetypeDTO, ItemDTO, CrewData } from '../../api/STTApi';
 import { EventCrewBonusTable } from './EventHelperPage';
 
-function parseAdventure(adventure: any, crew_bonuses: { [crew_symbol: string]: number }): any[] {
-   let demands: any[] = [];
-   adventure.demands.forEach((demand: any) => {
+interface ItemDemand {
+   equipment: ItemArchetypeDTO;
+   bestCrewChance: number;
+   calcSlot: any;
+   craftCost: number;
+   have: number;
+   itemDemands: {
+      rd: any;
+      item?: ItemDTO;
+   }[];
+}
+
+interface BonusCrew {
+   crew: CrewData;
+   crew_id: number;
+   command_skill: number;
+   science_skill: number;
+   security_skill: number;
+   engineering_skill: number;
+   diplomacy_skill: number;
+   medicine_skill: number;
+   total: number;
+   text?: string;
+   value?: string;
+   image?: string;
+}
+
+interface CalcSlot {
+   bestCrew: BonusCrew[];
+   skills: string[];
+   type?: string;
+}
+
+function parseAdventure(adventure: EventGatherPoolAdventureDTO, crew_bonuses: { [crew_symbol: string]: number }): ItemDemand[] {
+   let demands: ItemDemand[] = [];
+   adventure.demands.forEach((demand) => {
       let e = STTApi.itemArchetypeCache.archetypes.find(equipment => equipment.id === demand.archetype_id);
-      if (!e) {
+      if (!e || !e.recipe || !e.recipe.jackpot) {
          return;
       }
 
       let skills = e.recipe.jackpot.skills;
 
-      let calcSlot: any = {
-         bestCrew: getRosterWithBonuses(crew_bonuses)
+      let calcSlot: CalcSlot = {
+         bestCrew: getRosterWithBonuses(crew_bonuses),
+         skills: []
       };
 
       if (skills.length === 1) {
@@ -50,14 +84,14 @@ function parseAdventure(adventure: any, crew_bonuses: { [crew_symbol: string]: n
       calcSlot.bestCrew.sort((a: any, b: any) => a.total - b.total);
       calcSlot.bestCrew = calcSlot.bestCrew.reverse();
 
-      calcSlot.bestCrew.forEach((c: any) => {
-         c.crew = STTApi.roster.find(cr => cr.id === c.crew_id);
+      calcSlot.bestCrew.forEach((c) => {
          c.text = `${c.crew.name} (${c.total})`;
          c.value = c.crew.symbol;
          c.image = c.crew.iconUrl;
       });
 
       const calcChance = (skillValue: number) => {
+         const cc = STTApi.serverConfig!.config.craft_config;
          let midpointOffset = skillValue / STTApi.serverConfig!.config.craft_config.specialist_challenge_rating;
 
          let val = Math.floor(
@@ -69,7 +103,7 @@ function parseAdventure(adventure: any, crew_bonuses: { [crew_symbol: string]: n
                ))
          );
 
-         return Math.min(val, STTApi.serverConfig!.config.craft_config.specialist_maximum_success_chance);
+         return Math.min(val / 100, STTApi.serverConfig!.config.craft_config.specialist_maximum_success_chance);
       };
 
       let bestCrewChance = calcChance(calcSlot.bestCrew[0].total);
@@ -117,9 +151,9 @@ function parseAdventure(adventure: any, crew_bonuses: { [crew_symbol: string]: n
    return demands;
 }
 
-function getRosterWithBonuses(crew_bonuses: { [crew_symbol: string]: number }) {
+function getRosterWithBonuses(crew_bonuses: { [crew_symbol: string]: number }): BonusCrew[] {
    // TODO: share some of this code with Shuttles
-   let sortedRoster: any[] = [];
+   let sortedRoster: BonusCrew[] = [];
    STTApi.roster.forEach(crew => {
       if (crew.buyback || crew.frozen > 0 || crew.active_id) {
          return;
@@ -131,6 +165,7 @@ function getRosterWithBonuses(crew_bonuses: { [crew_symbol: string]: number }) {
       }
 
       sortedRoster.push({
+         crew,
          crew_id: crew.id,
          command_skill: crew.command_skill.core * bonus,
          science_skill: crew.science_skill.core * bonus,
@@ -147,7 +182,7 @@ function getRosterWithBonuses(crew_bonuses: { [crew_symbol: string]: number }) {
 
 interface GalaxyAdventureDemandProps {
    onUpdate: () => void;
-   demand: any;
+   demand: ItemDemand;
 }
 
 const GalaxyAdventureDemand = (props: GalaxyAdventureDemandProps) => {
@@ -163,12 +198,15 @@ const GalaxyAdventureDemand = (props: GalaxyAdventureDemandProps) => {
             </Item.Header>
             <Item.Description>
                <p>
-                  {demand.itemDemands
-                     .map((id: any) => `${id.item ? id.item.name : 'NEED'} x ${id.rd.count} (have ${id.item ? id.item.quantity : 0})`)
-                     .join(', ')}
+                  {demand.itemDemands.map((id, index, all) =>
+                     <div><ItemDisplay src={id.item!.iconUrl!} style={{display: 'inline'}}
+                        size={50} maxRarity={id.item!.rarity} rarity={id.item!.rarity} />{id.rd.count}x {id.item ? id.item.name : 'NEED'} (have {id.item ? id.item.quantity : 0}){
+                           index === all.length-1 ? '' : ', '
+                        }</div>)
+                  }
                </p>
                <p>
-                  Best crew: {demand.calcSlot.bestCrew[0].crew.name} ({demand.bestCrewChance}%)
+                  Best crew: <img src={demand.calcSlot.bestCrew[0].crew.iconUrl} width='25' height='25' /> {demand.calcSlot.bestCrew[0].crew.name} ({demand.bestCrewChance}%)
                </p>
             </Item.Description>
             <Item.Extra>
@@ -190,14 +228,14 @@ interface GalaxyAdventureProps {
 
 const GalaxyAdventure = (props: GalaxyAdventureProps) => {
    let adventure_name = '';
-   let adventure_demands = [];
+   let adventure_demands : ItemDemand[] = [];
 
    const [, updateState] = React.useState();
    const forceUpdate = React.useCallback(() => updateState({}), []);
 
    if (!props.adventure.golden_octopus) {
-      adventure_name = props.adventure.name,
-         adventure_demands = parseAdventure(props.adventure, props.crew_bonuses)
+      adventure_name = props.adventure.name;
+      adventure_demands = parseAdventure(props.adventure, props.crew_bonuses);
    }
 
    // function _completeAdventure() {
@@ -223,7 +261,7 @@ const GalaxyAdventure = (props: GalaxyAdventureProps) => {
    return (
       <div style={{ padding: '10px' }}>
          <h4>{adventure_name}</h4>
-         <Item.Group divided>
+         <Item.Group style={{display: 'inline-flex'}}>
             {adventure_demands.map(demand => (
                <GalaxyAdventureDemand
                   key={demand.equipment.name}

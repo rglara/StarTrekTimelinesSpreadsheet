@@ -1,5 +1,5 @@
 import Dexie from "dexie";
-import { CrewDTO } from "./STTApi";
+import { CrewDTO, ItemArchetypeDTO } from "./STTApi";
 
 export class DexieCache extends Dexie {
     private _questsTable!: Dexie.Table<QuestsTable, number>;
@@ -58,7 +58,7 @@ export interface QuestsTable {
 
 export interface EquipmentTable {
     digest: string,
-    archetypeCache: any
+    archetypeCache: ItemArchetypeDTO[]
 }
 
 export interface ImmortalsDB {

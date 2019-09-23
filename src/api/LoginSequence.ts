@@ -72,10 +72,12 @@ export async function loginSequence(onProgress: (description: string) => void, l
         onProgress('Loading missions and quests...');
 
         // Filter out missions in a bad state
-        STTApi.playerData.character.accepted_missions = STTApi.playerData.character.accepted_missions.filter((mission: any) => mission.main_story);
+        STTApi.playerData.character.accepted_missions = STTApi.playerData.character.accepted_missions.filter((mission) => mission.main_story);
 
+        let ms = [ ...STTApi.playerData.character.cadet_schedule.missions,
+            ...STTApi.playerData.character.accepted_missions];
         // Not really an "icon", but adding it here because this is what we wait on at the end of this function (so code could run in parallel, especially network loads)
-        iconPromises.push(loadMissionData(STTApi.playerData.character.cadet_schedule.missions.concat(STTApi.playerData.character.accepted_missions), STTApi.playerData.character.dispute_histories).then((missions: any) => {
+        iconPromises.push(loadMissionData(ms, STTApi.playerData.character.dispute_histories).then((missions: any) => {
             STTApi.missions = missions;
 
             onProgress('Calculating mission success stats for crew...');

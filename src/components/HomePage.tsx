@@ -10,7 +10,7 @@ import { CONFIG, getChronitonCount, formatTimeSeconds, loadVoyage } from '../api
 import { loadGauntlet } from '../api/GauntletTools';
 
 import { openDevTools } from '../utils/pal';
-import { EVENT_TYPES, CrewData } from '../api/DTO';
+import { EVENT_TYPES, CrewData, SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_COMPLETE } from '../api/DTO';
 
 const Priority = Object.freeze({
 	INFO: 'info circle green',
@@ -98,7 +98,7 @@ export const HomePage = (props: HomePageProps) => {
 			icon: Priority.CHECK,
 			content: (
 				<p style={{ margin: '0' }}>
-					You used all cadet tickets ({STTApi.playerData.character.cadet_tickets.max}) for today's {cadet.title}.
+					You used all cadet tickets ({STTApi.playerData.character.cadet_tickets.max}) for today's {cadet!.title}.
 				</p>
 			)
 		});
@@ -109,7 +109,7 @@ export const HomePage = (props: HomePageProps) => {
 			content: (
 				<div>
 					<p style={{ margin: '0' }}>
-						You have {STTApi.playerData.character.cadet_tickets.current} cadet tickets left for today's {cadet.title}; it ends in{' '}
+						You have {STTApi.playerData.character.cadet_tickets.current} cadet tickets left for today's {cadet!.title}; it ends in{' '}
 						{formatTimeSeconds(STTApi.playerData.character.cadet_schedule.ends_in)}.
 					</p>
 					<p style={{ margin: '0' }}>See the 'Needed Equipment' tab for recommendations on which missions to run for items you need.</p>
@@ -184,7 +184,7 @@ export const HomePage = (props: HomePageProps) => {
 
 	let shuttles = STTApi.playerData.character.shuttle_adventures.map(sa => sa.shuttles[0]);
 	if (shuttles.length > 0) {
-		let shuttleReturn = shuttles.filter(sa => sa.state === 2).length;
+		let shuttleReturn = shuttles.filter(sa => sa.state === SHUTTLE_STATE_COMPLETE).length;
 		if (shuttleReturn > 0) {
 			recommendations.push({
 				title: 'Some shuttles are back',
@@ -193,7 +193,7 @@ export const HomePage = (props: HomePageProps) => {
 					<p style={{ margin: '0' }}>
 						Your shuttles (
 						{shuttles
-							.filter(sa => sa.state === 2)
+							.filter(sa => sa.state === SHUTTLE_STATE_COMPLETE)
 							.map(sa => sa.name)
 							.join(', ')}
 						) have returned. Go into the game to collect your rewards and send them back out!
@@ -201,21 +201,6 @@ export const HomePage = (props: HomePageProps) => {
 				)
 			});
 		}
-
-		const getShuttleState = (state:number) => {
-			switch (state) {
-				case 0:
-					return <b>Opened</b>;
-				case 1:
-					return <i>In progress</i>;
-				case 2:
-					return <i>Complete</i>;
-				case 3:
-					return <b>Expired</b>;
-				default:
-					return <b>UNKNOWN</b>;
-			}
-		};
 
 		recommendations.push({
 			title: 'Shuttle status',
@@ -225,7 +210,7 @@ export const HomePage = (props: HomePageProps) => {
 					{shuttles.sort((a,b) => a.expires_in - b.expires_in)
 						.map((sa, index:number) => (
 							<span key={sa.id}>
-								{sa.name} - {getShuttleState(sa.state)} ({formatTimeSeconds(sa.expires_in)}
+								{sa.name} - {SHUTTLE_STATE_NAMES[sa.state] || SHUTTLE_STATE_NAME_UNKNOWN} ({formatTimeSeconds(sa.expires_in)}
 								{' '}at {Moment(STTApi.lastSync).add(sa.expires_in, 's').format('h:mma')})
 								{(index === shuttles.length -1) ? '': ', '}
 							</span>
@@ -556,7 +541,7 @@ export const HomePage = (props: HomePageProps) => {
 					<p>
 						Location{' '}
 						{
-							STTApi.playerData.character.navmap.places.find((place:any) => place.symbol === STTApi.playerData.character.location.place)
+							STTApi.playerData.character.navmap.places.find((place:any) => place.symbol === STTApi.playerData.character.location.place)!
 								.display_name
 						}
 					</p>

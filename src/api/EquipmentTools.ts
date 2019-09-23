@@ -4,13 +4,13 @@ import { CrewData, PotentialRewardDTO, ItemArchetypeDTO, MissionDTO, MissionQues
 export function fixupAllCrewIds() : void {
 	// Now replace the ids with proper ones
 	STTApi.allcrew.forEach((crew: CrewData) => {
-		(crew.equipment_slots || []).forEach((es: any) => {
-			let acached = (crew.archetypes || []).find((a: any) => a.id === es.archetype);
+		(crew.equipment_slots || []).forEach((es) => {
+			let acached = (crew.archetypes || []).find((a) => a.id === es.archetype);
 			if (!acached) {
 				console.warn(`Something went wrong looking for equipment '${es.archetype}' of '${crew.name}'`);
 				return;
 			}
-			let a = STTApi.itemArchetypeCache.archetypes.find((a: any) => a.symbol === acached.symbol);
+			let a = STTApi.itemArchetypeCache.archetypes.find((a) => a.symbol === acached.symbol);
 			if (a) {
 				//console.log(`For ${crew.name} at level ${es.level} updating ${es.symbol} from ${es.archetype} to ${a.id}`);
 				es.archetype = a.id;
@@ -24,15 +24,15 @@ export function fixupAllCrewIds() : void {
 
 export async function loadFullTree(onProgress: (description: string) => void, recursing: boolean): Promise<void> {
 	let mapEquipment: Set<number> = new Set();
-	let missingEquipment: any[] = [];
+	let missingEquipment: number[] = [];
 
 	// Search for all equipment assignable to the crew at all levels
 	// This was a terrible idea; since the data is crowdsourced, it could come from outdated recipe trees and introduce cycles in the graph; data from STTApi.allcrew is not to be trusted
 
 	let allCrewEquip: Set<string> = new Set();
-	STTApi.allcrew.forEach((crew: any) => {
-		crew.equipment_slots.forEach((es: any) => {
-			let a = crew.archetypes.find((a: any) => a.id === es.archetype);
+	STTApi.allcrew.forEach((crew) => {
+		crew.equipment_slots.forEach((es) => {
+			let a = crew.archetypes!.find((a) => a.id === es.archetype);
 
 			if (a) {
 				allCrewEquip.add(a.symbol);
@@ -41,7 +41,7 @@ export async function loadFullTree(onProgress: (description: string) => void, re
 		});
 	});
 
-	STTApi.itemArchetypeCache.archetypes.forEach((equipment: any) => {
+	STTApi.itemArchetypeCache.archetypes.forEach((equipment) => {
 		mapEquipment.add(equipment.id);
 		allCrewEquip.delete(equipment.symbol);
 	});
@@ -54,7 +54,7 @@ export async function loadFullTree(onProgress: (description: string) => void, re
 
 	if (entry) {
 		// Merge the cached equipment, since the recipe tree didn't change since our last load
-		entry.archetypeCache.forEach((cacheEntry: any) => {
+		entry.archetypeCache.forEach((cacheEntry) => {
 			if (!mapEquipment.has(cacheEntry.id)) {
 				STTApi.itemArchetypeCache.archetypes.push(cacheEntry);
 				mapEquipment.add(cacheEntry.id);
@@ -80,9 +80,9 @@ export async function loadFullTree(onProgress: (description: string) => void, re
 	}
 
 	// Search for all equipment in the recipe tree
-	STTApi.itemArchetypeCache.archetypes.forEach((equipment: any) => {
+	STTApi.itemArchetypeCache.archetypes.forEach((equipment) => {
 		if (equipment.recipe && equipment.recipe.demands && equipment.recipe.demands.length > 0) {
-			equipment.recipe.demands.forEach((item: any) => {
+			equipment.recipe.demands.forEach((item) => {
 				if (!mapEquipment.has(item.archetype_id)) {
 					missingEquipment.push(item.archetype_id);
 				}
@@ -126,8 +126,8 @@ export async function loadFullTree(onProgress: (description: string) => void, re
 	});
 }
 
-async function loadItemsDescription(ids: number[] | string[]): Promise<any[]> {
-	let archetypes: any[] = [];
+async function loadItemsDescription(ids: number[] | string[]): Promise<ItemArchetypeDTO[]> {
+	let archetypes: ItemArchetypeDTO[] = [];
 	try {
 		// Load the description for the missing equipment
 		let data = await STTApi.executeGetRequest('item/description', { ids });
@@ -345,7 +345,7 @@ export class NeededEquipmentClass {
 				// don't have any partially built, queue up to break into pieces
 				if (!have || have.quantity <= 0) {
 					// Add all children in the recipe to parse on the next loop iteration
-					equipment.recipe.demands.forEach((recipeItem: any) => {
+					equipment.recipe.demands.forEach((recipeItem) => {
 						unparsedEquipment.push({
 							archetype: recipeItem.archetype_id,
 							need: recipeItem.count * eq.need,
@@ -382,7 +382,7 @@ export class NeededEquipmentClass {
 						if (found.needed < eq.need) {
 							partialNeeded = eq.need - found.needed;
 						}
-						equipment.recipe.demands.forEach((recipeItem: any) => {
+						equipment.recipe.demands.forEach((recipeItem) => {
 							unparsedEquipment.push({
 								archetype: recipeItem.archetype_id,
 								need: recipeItem.count * partialNeeded,
@@ -393,7 +393,7 @@ export class NeededEquipmentClass {
 						//NOTE: this clause can be removed to avoid zero counts for crew members
 						// Track the crew that needs them, but retain zero count (since the item is partially built)
 						// in case the intermediate item gets consumed elsewhere
-						equipment.recipe.demands.forEach((recipeItem: any) => {
+						equipment.recipe.demands.forEach((recipeItem) => {
 							unparsedEquipment.push({
 								archetype: recipeItem.archetype_id,
 								need: 0,
@@ -414,14 +414,14 @@ export class NeededEquipmentClass {
 					}
 				} else {
 					let have = STTApi.playerData.character.items.find((item) => item.archetype_id === eq.archetype);
-					let isDisputeMissionObtainable = equipment.item_sources.filter((e: any) => e.type === 0).length > 0;
-					let isShipBattleObtainable = equipment.item_sources.filter((e: any) => e.type === 2).length > 0;
-					let isFactionObtainable = equipment.item_sources.filter((e: any) => e.type === 1).length > 0;
+					let isDisputeMissionObtainable = equipment.item_sources.filter((e) => e.type === 0).length > 0;
+					let isShipBattleObtainable = equipment.item_sources.filter((e) => e.type === 2).length > 0;
+					let isFactionObtainable = equipment.item_sources.filter((e) => e.type === 1).length > 0;
 					let isCadetable = this._cadetableItems.has(equipment.id);
 					let counts: Map<number, EquipNeedCount> = new Map();
 					counts.set(eq.crew.id, { crew: eq.crew, count: eq.need });
 
-					equipment.item_sources.sort((a: any, b: any) => b.energy_quotient - a.energy_quotient);
+					equipment.item_sources.sort((a, b) => b.energy_quotient - a.energy_quotient);
 
 					mapUnowned.set(eq.archetype, {
 						equipment,
@@ -519,7 +519,7 @@ export class NeededEquipmentClass {
 				if (Array.from(entry.counts.values()).some((c: EquipNeedCount) => c.crew.name.toLowerCase().includes(filterString))) {
 					return true;
 				}
-				if (entry.equipment.item_sources.some((s: any) => s.name.toLowerCase().includes(filterString))) {
+				if (entry.equipment.item_sources.some((s) => s.name.toLowerCase().includes(filterString))) {
 					return true;
 				}
 				if (this._cadetableItems.has(entry.equipment.id)) {
@@ -527,7 +527,7 @@ export class NeededEquipmentClass {
 						this._cadetableItems
 							.get(entry.equipment.id)!
 							.some(
-								(c: any) =>
+								(c) =>
 									c.quest.name.toLowerCase().includes(filterString) || c.mission.episode_title.toLowerCase().includes(filterString)
 							)
 					) {

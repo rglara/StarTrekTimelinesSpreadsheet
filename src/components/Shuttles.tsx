@@ -1,10 +1,10 @@
 import React from 'react';
 
-import { Button, Image, Item, List, Dropdown, Label } from 'semantic-ui-react';
+import { Item, Dropdown, Label } from 'semantic-ui-react';
 
 import STTApi from '../api';
 import { CONFIG, formatTimeSeconds } from '../api';
-import { CrewAvatar, CrewData, PlayerShuttleDTO, EventDTO, EVENT_TYPES } from '../api/STTApi';
+import { CrewAvatar, CrewData, PlayerShuttleDTO, EventDTO, EVENT_TYPES, SkillDTO, BorrowedCrewDTO, SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_OPENED } from '../api/STTApi';
 
 export interface ShuttlesProps {
 	onTabSwitch?: (newTab: string) => void;
@@ -22,6 +22,7 @@ interface CalcSlot {
 
 interface CrewItem {
 	active_id?: number;
+	crew: CrewData | BorrowedCrewDTO;
 	crew_id: number;
 	command_skill: number;
 	science_skill: number;
@@ -30,8 +31,8 @@ interface CrewItem {
 	diplomacy_skill: number;
 	medicine_skill: number;
 	total: number;
-	//[key:string] : number;
-	crew?: CrewData;
+
+	// These three are needed for the item to appear in a combo
 	text?: string;
 	value?: number;
 	image?: string;
@@ -103,6 +104,11 @@ export const Shuttles = (props:ShuttlesProps) => {
 	}
 
 	function slotCalculator() {
+
+		const sk = (sd?: SkillDTO) => {
+			if (!sd) { return 0; }
+			return sd.core || 0;
+		};
 		let sortedRoster : CrewItem[] = [];
 
 		//TODO: account for shared crew
@@ -118,6 +124,7 @@ export const Shuttles = (props:ShuttlesProps) => {
 			}
 
 			sortedRoster.push({
+				crew: crew,
 				active_id: crew.active_id,
 				crew_id: crew.id,
 				command_skill: crew.command_skill_core! * bonus,
@@ -129,6 +136,31 @@ export const Shuttles = (props:ShuttlesProps) => {
 				total: 0
 			});
 		});
+
+		// These don't show up until you have already used them
+		let brws = STTApi.playerData.character.crew_borrows;
+		if (STTApi.playerData.character.crew_borrows) {
+			STTApi.playerData.character.crew_borrows.forEach(crew => {
+				let bonus = 1;
+				const foundBonus = crew_bonuses.find(cb => cb.avatar.symbol === crew.symbol);
+				if (foundBonus) {
+					bonus = foundBonus.bonus;
+				}
+
+				sortedRoster.push({
+					crew: crew,
+					active_id: crew.active_id,
+					crew_id: crew.id,
+					command_skill: sk(crew.skills['command_skill']) * bonus,
+					science_skill: sk(crew.skills['science_skill']) * bonus,
+					security_skill: sk(crew.skills['_skill']) * bonus,
+					engineering_skill: sk(crew.skills['engineering_skill']) * bonus,
+					diplomacy_skill: sk(crew.skills['diplomacy_skill']) * bonus,
+					medicine_skill: sk(crew.skills['medicine_skill']) * bonus,
+					total: 0
+				});
+			});
+		}
 
 		STTApi.playerData.character.shuttle_adventures.forEach(adventure => {
 			let shuttle = adventure.shuttles[0];
@@ -195,10 +227,9 @@ export const Shuttles = (props:ShuttlesProps) => {
 				calcSlot.bestCrew = bestCrew.reverse();
 
 				calcSlot.bestCrew.forEach((c) => {
-					c.crew = STTApi.roster.find(cr => cr.id === c.crew_id);
-					c.text = `${c.crew!.name} (${c.total})`;
+					c.text = `${c.crew.name} (${c.total})`;
 					c.value = c.crew_id;
-					c.image = c.crew!.iconUrl;
+					c.image = (c.crew as any).iconUrl;
 				});
 
 				calcSlot.selection = calcSlot.bestCrew[0].value;
@@ -289,21 +320,6 @@ export const Shuttles = (props:ShuttlesProps) => {
 		setCalcSlots(newCalcSlots);
 	}
 
-	function getState(state:number) {
-		switch (state) {
-			case 0:
-				return 'Opened';
-			case 1:
-				return 'In progress';
-			case 2:
-				return 'Complete';
-			case 3:
-				return 'Expired';
-			default:
-				return 'UNKNOWN';
-		}
-	}
-
 	function renderShuttle(shuttle:PlayerShuttleDTO) {
 		let faction = STTApi.playerData.character.factions.find(faction => faction.id === shuttle.faction_id);
 
@@ -325,7 +341,7 @@ export const Shuttles = (props:ShuttlesProps) => {
 								<Dropdown
 									fluid
 									selection
-									disabled={shuttle.state > 0}
+									disabled={shuttle.state !== SHUTTLE_STATE_OPENED}
 									options={calcSlot.bestCrew}
 									onChange={(e, { value }) => _chooseSlot(calcSlot, value as number)}
 									value={calcSlot.selection}
@@ -341,14 +357,14 @@ export const Shuttles = (props:ShuttlesProps) => {
 							}, 0)
 						)}{' '}
 						%
-						{shuttle.state == 0 &&
+						{shuttle.state === SHUTTLE_STATE_OPENED &&
 							calcSlots[shuttle.id].map(cs => cs.userSelect || false).reduce((p, c) => p || c)
 						  &&
 							<Label as='a' onClick={() => resetSelections(shuttle.id)}>Reset Selections</Label>
 						}
 					</Item.Description>
 					<Item.Extra>
-						State: {getState(shuttle.state)}
+						State: {SHUTTLE_STATE_NAMES[shuttle.state] || SHUTTLE_STATE_NAME_UNKNOWN }
 					</Item.Extra>
 				</Item.Content>
 			</Item>
