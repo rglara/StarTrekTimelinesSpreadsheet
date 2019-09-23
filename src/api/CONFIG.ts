@@ -25,8 +25,8 @@ export default class CONFIG {
 	// releases URL
 	// static readonly URL_GITHUBRELEASES: string = 'https://api.github.com/repos/IAmPicard/StarTrekTimelinesSpreadsheet/releases';
 
-	// Every 10 days, check the wiki again for updated / new images
-	static readonly HOURS_TO_RECOVERY: number = 24 * 10;
+	// Every 2 days, check the wiki again for updated / new images; because images can't be extracted from asset bundles
+	static readonly HOURS_TO_RECOVERY: number = 24 * 2;
 
 	static readonly RARITIES: Rarity[] = [
 		{ name: 'Basic', color: 'Grey' },
