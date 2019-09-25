@@ -27,7 +27,7 @@ import { NeededEquipmentClass, EquipNeedFilter, EquipNeed } from './EquipmentToo
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
-import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatar, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO } from './DTO';
+import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatar, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO } from './DTO';
 
 export * from './DTO';
 
@@ -35,8 +35,24 @@ export class STTApiClass {
 	private _accessToken: string | undefined;
 	private _net: NetworkInterface;
 	private _playerData?: { player: PlayerDTO; item_archetype_cache: { archetypes: ItemArchetypeDTO[]; id: number; }; };
-	private _starbaseData: any;
-	private _fleetMemberInfo: any;
+	private _starbaseData: {
+		starbase_rooms: FleetStarbaseRoomDTO[];
+		core?: {
+			acceleration_cost: number;
+			acceleration_rate: number;
+			donation_limit: number;
+			donation_reset_cost: { amount: number; currency: number; };
+			donations_today: number;
+			fleet_items: any[];
+			id: number;
+			reclamator_rooms: string[];
+			symbol: string;
+		}
+	};
+	private _fleetMemberInfo: {
+		members: FleetMemberDTO[];
+		squads: FleetSquadDTO[];
+	};
 	private _cache: DexieCache;
 	private _buffConfig: { [index: string]: BuffStat };
 	private _neededEquipment: NeededEquipmentClass;
@@ -45,7 +61,25 @@ export class STTApiClass {
 	public crewAvatars: CrewAvatar[];
 	public serverConfig?: { config: ServerConfigDTO; };;
 	public shipSchematics: ShipSchematicDTO[];
-	public fleetData: any;
+	public fleetData?: {
+		chatchannels: {[key:string]: string};
+		created: number;
+		cursize: number;
+		description: string;
+		enrollment: string;
+		id: number;
+		maxsize: number;
+		motd: string;
+		name: string;
+		nicon_index: number;
+		nleader_login: number;
+		nleader_player_dbid: number;
+		nmin_level: number;
+		nstarbase_level: number;
+		rlevel: number;
+		sinsignia: string;
+		slabel: string;
+	};
 	public roster: CrewData[];
 	public ships: ShipDTO[];
 	public missions: MissionDTO[];
@@ -98,9 +132,9 @@ export class STTApiClass {
 		this._playerData = undefined;
 		this.platformConfig = undefined;
 		this.shipSchematics = [];
-		this._starbaseData = null;
-		this.fleetData = null;
-		this._fleetMemberInfo = null;
+		this._starbaseData = { starbase_rooms: [], core: undefined };
+		this.fleetData = undefined;
+		this._fleetMemberInfo = { members: [], squads: [] };
 		this.roster = [];
 		this.ships = [];
 		this.missions = [];
@@ -159,16 +193,23 @@ export class STTApiClass {
 		return this._playerData!.item_archetype_cache;
 	}
 
-	get fleetMembers(): any {
+	get fleetMembers(): FleetMemberDTO[] {
 		return this._fleetMemberInfo.members;
 	}
 
-	get fleetSquads(): any {
+	get fleetSquads(): FleetSquadDTO[] {
 		return this._fleetMemberInfo.squads;
 	}
 
-	get starbaseRooms(): any {
-		return this._starbaseData[0].character.starbase_rooms;
+	get starbaseRooms(): FleetStarbaseRoomDTO[] {
+		return this._starbaseData.starbase_rooms;
+	}
+
+	get starbaseDonationsRemaining(): number {
+		if (!this._starbaseData.core) {
+			return 0;
+		}
+		return this._starbaseData.core.donation_limit - this._starbaseData.core.donations_today;
 	}
 
 	getTraitName(trait: string): string {
@@ -399,7 +440,7 @@ export class STTApiClass {
 		}
 	}
 
-	async loadFleetMemberInfo(guildId: string): Promise<void> {
+	async loadFleetMemberInfo(guildId: string | number): Promise<void> {
 		let data = await this.executePostRequest('fleet/complete_member_info', { guild_id: guildId });
 		if (data) {
 			this._fleetMemberInfo = data;
@@ -408,7 +449,7 @@ export class STTApiClass {
 		}
 	}
 
-	async loadFleetData(guildId: string): Promise<void> {
+	async loadFleetData(guildId: string | number): Promise<void> {
 		let data = await this.executeGetRequest('fleet/' + guildId);
 		if (data.fleet) {
 			this.fleetData = data.fleet;
@@ -417,16 +458,23 @@ export class STTApiClass {
 		}
 	}
 
-	async loadStarbaseData(guildId: string): Promise<void> {
+	async loadStarbaseData(guildId: string | number): Promise<void> {
 		let data = await this.executeGetRequest('starbase/get');
 		if (data) {
-			this._starbaseData = data;
+			if (Array.isArray(data) && data[0] && data[0].character) {
+				if (data[0].character.starbase_rooms) {
+					this._starbaseData.starbase_rooms = data[0].character.starbase_rooms;
+				}
+				if (Array.isArray(data[0].character.starbase) && data[0].character.starbase[0]) {
+					this._starbaseData.core = data[0].character.starbase[0];
+				}
+			}
 		} else {
 			throw new Error('Invalid data for starbase!');
 		}
 	}
 
-	async inspectPlayer(playerId: string): Promise<any> {
+	async inspectPlayer(playerId: string | number): Promise<any> {
 		let data = await this.executeGetRequest('player/inspect/' + playerId);
 		if (data.player) {
 			return data.player;

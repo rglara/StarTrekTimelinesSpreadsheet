@@ -54,6 +54,8 @@ export interface CrewActionDTO {
    initial_cooldown: number;
    limit?: number;
    name: string;
+   //TODO: type info
+   penalty?: any;
    special: boolean;
    symbol: string;
 }
@@ -118,19 +120,49 @@ export interface CrewDTO {
    archetypes?: any;
 }
 
+// Used internally by the app; not a DTO
 export interface CrewData {
-
-   full_body: ImageDataDTO;
-   id: number;
-   crew_id?: number;
    active_id?: number;
+   action?: CrewActionDTO;
+   archetypes?: any[];
+   buyback: boolean;
+   crew_id?: number;
+   equipment_slots: {
+      archetype: number;
+      level: number;
+      symbol?: any;
+      have?: boolean;
+   }[];
+   expires_in?: number;
+   favorite?: boolean;
+   flavor?: string;
+   frozen: number;
+   full_body: ImageDataDTO;
+   iconUrl?: string;
+   iconBodyUrl?: string;
+   id: number;
+   isExternal: boolean;
    level: number;
+
    max_level?: number;
    max_rarity: number;
    name: string;
    portrait: ImageDataDTO;
    rarity: number;
+   rawTraits: string[];
+   ship_battle?: {
+      accuracy: number;
+      crit_bonus: number;
+      crit_chance: number;
+      evasion: number;
+   };
    short_name: string;
+   symbol: string;
+   traits: string;
+
+   usage_value?: number;
+   voyage_score?: number;
+   gauntlet_score?: number;
    skills: { [sk: string]: SkillData; };
    //TODO: deprecate these raw fields and use the indexed 'skills' structure
    command_skill: SkillData;
@@ -152,33 +184,6 @@ export interface CrewData {
    science_skill_voy?: number;
    security_skill_voy?: number;
 
-   symbol: string;
-   traits: string;
-   rawTraits: string[];
-
-   isExternal: boolean;
-   frozen: number;
-   buyback: boolean;
-
-   iconUrl?: string;
-   iconBodyUrl?: string;
-   expires_in?: number;
-   favorite?: boolean;
-   usage_value?: number;
-   voyage_score?: number;
-   gauntlet_score?: number;
-
-   ship_battle?: any;
-   action?: any;
-   flavor?: string;
-   equipment_slots: {
-      archetype: number;
-      level: number;
-      symbol?: any;
-      have?: boolean;
-   }[];
-
-   archetypes?: any[];
 }
 
 export interface BorrowedCrewDTO {
@@ -425,7 +430,23 @@ export interface PlayerDTO {
    display_name: string;
    entitlements: any;
    environment: any;
-   fleet: any;
+   fleet: {
+      created: number;
+      cursize: number;
+      enrollment: string;
+      epoch_time: number;
+      id: number;
+      maxsize: number;
+      nicon_index: number;
+      nleader_login: number;
+      nleader_player_dbid: number;
+      nmin_level: number;
+      nstarbase_level: number;
+      rank: string;
+      rlevel: number;
+      sinsignia: string;
+      slabel: string;
+   };
    fleet_invite: any;
    honor: number;
    id: number;
@@ -559,6 +580,7 @@ export interface PlayerCharacterDTO {
    ships: ShipDTO[];
    shuttle_adventures: PlayerShuttleAdventureDTO[];
    shuttle_bays: number;
+   //TODO:
    starbase_buffs: any[];
    stimpack: any; // null
    stored_immortals: { id: number; quantity: number; }[];
@@ -572,6 +594,69 @@ export interface PlayerCharacterDTO {
    xp: number;
    xp_for_current_level: number;
    xp_for_next_level: number;
+}
+
+export interface FleetMemberDTO {
+   crew_avatar: {
+      default_avatar: boolean;
+      full_body: ImageDataDTO;
+      hide_from_cryo: boolean;
+      icon: ImageDataDTO;
+      id: number;
+      max_rarity: number;
+      name: string;
+      portrait: ImageDataDTO;
+      short_name: string;
+      skills: string[];
+      symbol: string;
+      traits: string[];
+      traits_hidden: string[];
+   };
+   daily_activity: number;
+   dbid: number;
+   display_name: string;
+   event_rank: number;
+   last_active: number;
+   level: number;
+   pid: number;
+   rank: string;
+   squad_id: string;
+   squad_rank: string;
+   starbase_activity: number;
+   uid: number;
+}
+
+export interface FleetSquadDTO {
+   chatchannels: { [key: string]: string };
+   created: number;
+   cursize: number;
+   description: string;
+   enrollment: string;
+   event_rank: number;
+   id: number;
+   maxsize: number;
+   motd: string;
+   name: string;
+   nleader_player_dbid?: string;
+   rootguild: number;
+   sinsignia?: string;
+   slabel: string;
+}
+
+export interface FleetStarbaseRoomDTO {
+   background: string;
+   description: string;
+   id: number;
+   level: number;
+   locked: boolean;
+   max_level: number;
+   name: string;
+   recommended: boolean;
+   room_type_id: number;
+   short_description: string;
+   symbol: string;
+   upgrade_finish_in: number;
+   upgrades: any[];
 }
 
 export interface PlayerShuttleAdventureDTO {

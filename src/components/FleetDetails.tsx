@@ -14,6 +14,9 @@ interface MemberListProps {
 }
 
 const MemberList = (props:MemberListProps) => {
+	if (!STTApi.fleetData) {
+		return <span></span>;
+	}
 	let members = props.members;
 	const [sorted, setSorted] = React.useState([{ id: 'display_name', desc: false }]);
 	const columns : Column[] = [
@@ -148,7 +151,7 @@ const MemberList = (props:MemberListProps) => {
 		let csv = simplejson2csv(members, fields);
 
 		let today = new Date();
-		download(STTApi.fleetData.name + '-' + (today.getUTCMonth() + 1) + '-' + (today.getUTCDate())+ '.csv', csv, 'Export fleet member list', 'Export');
+		download(STTApi.fleetData!.name + '-' + (today.getUTCMonth() + 1) + '-' + (today.getUTCDate())+ '.csv', csv, 'Export fleet member list', 'Export');
 	}
 
 	return (<CollapsibleSection title={props.title}>
@@ -264,7 +267,7 @@ interface FleetMember {
 	last_active: any;
 	level: string;
 	location?: string;
-	pid: string;
+	pid: number;
 	rank: any;
 	squad_rank?: any;
 	squad_name?: string;
@@ -281,13 +284,13 @@ export const FleetDetails = (props: FleetDetailsProps) => {
 	let [showSpinner, setShowSpinner] = React.useState(true);
 	const [,forceUpdate] = React.useState();
 
-	if (!STTApi.playerData.fleet || STTApi.playerData.fleet.id === 0) {
+	if (!STTApi.playerData.fleet || STTApi.playerData.fleet.id === 0 || !STTApi.fleetData) {
 		return <p>It looks like you are not part of a fleet yet!</p>;
 	}
 
 	if (!members || members.length === 0) {
 		let mems : FleetMember[] = [];
-		STTApi.fleetMembers.forEach((member:any) => {
+		STTApi.fleetMembers.forEach((member) => {
 			var newMember : FleetMember = {
 				dbid: member.dbid,
 				pid: member.pid,
@@ -305,7 +308,7 @@ export const FleetDetails = (props: FleetDetailsProps) => {
 			if (member.squad_id)
 			{
 				newMember.squad_rank = member.squad_rank;
-				let squad = STTApi.fleetSquads.find((squad:any) => squad.id == member.squad_id);
+				let squad = STTApi.fleetSquads.find((squad) => ('' + squad.id) == member.squad_id);
 				if (squad) {
 					newMember.squad_name = squad.name;
 					newMember.squad_event_rank = squad.event_rank;

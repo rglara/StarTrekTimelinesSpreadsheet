@@ -91,6 +91,18 @@ export const HomePage = (props: HomePageProps) => {
 		});
 	}
 
+	if (STTApi.starbaseDonationsRemaining > 0) {
+		recommendations.push({
+			title: 'Fleet Starbase donations remaining',
+			icon: Priority.EXCLAMATION,
+			content: (
+				<p style={{ margin: '0' }}>
+					You have {STTApi.starbaseDonationsRemaining} starbase donations left today. Help your fleet get their dailies!
+				</p>
+			)
+		});
+	}
+
 	let cadet = STTApi.playerData.character.cadet_schedule.missions.find((m:any) => m.id === STTApi.playerData.character.cadet_schedule.current);
 	if (STTApi.playerData.character.cadet_tickets.current === 0) {
 		recommendations.push({

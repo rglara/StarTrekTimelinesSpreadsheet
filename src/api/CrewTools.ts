@@ -90,7 +90,7 @@ function rosterFromCrew(rosterEntry: CrewData, crew: CrewDTO): void {
 
 	rosterEntry.equipment_slots = crew.equipment_slots;
 
-	rosterEntry.equipment_slots.forEach((equipment: any) => {
+	rosterEntry.equipment_slots.forEach((equipment) => {
 		equipment.have = false;
 	});
 
@@ -99,7 +99,7 @@ function rosterFromCrew(rosterEntry: CrewData, crew: CrewDTO): void {
 	});
 
 	rosterEntry.traits = '';
-	rosterEntry.traits = crew.traits.concat(crew.traits_hidden).map((trait: any) => { return STTApi.getTraitName(trait); }).join();
+	rosterEntry.traits = crew.traits.concat(crew.traits_hidden).map((trait) => STTApi.getTraitName(trait)).join();
 	rosterEntry.rawTraits = crew.traits.concat(crew.traits_hidden);
 
 	// Replace "nonhuman" with "alien" to make the search easier
