@@ -16,6 +16,7 @@ import { LoginDialog } from './LoginDialog';
 import { ShipList } from './ShipList';
 import { ItemPage } from './ItemPage';
 import { CrewPage } from './crew/CrewPage';
+import { CrewShipPage } from './crew/CrewShipPage';
 import { GauntletHelper } from './GauntletHelper';
 import { MissionExplorer } from './MissionExplorer';
 import { AboutAndHelp } from './AboutAndHelp';
@@ -261,6 +262,9 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 			case 'Crew':
 				return <CrewPage onCommandItemsUpdate={commandItemsUpdater} />;
 
+			case 'CrewShip':
+				return <CrewShipPage onCommandItemsUpdate={commandItemsUpdater} />;
+
 			case 'Items':
 				return <ItemPage onCommandItemsUpdate={commandItemsUpdater} />;
 
@@ -428,6 +432,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 			this._tabMenuItem({ key: 'FactionDetails', name: 'Factions', itemIcon: 'Teamwork' }),
 			this._tabMenuItem({ key: 'Shuttles', name: 'Shuttles', itemIcon: 'Sections' }),
 			this._tabMenuItem({ key: 'CryoCollections', name: 'Cryo collections', itemIcon: 'CheckList' }),
+			this._tabMenuItem({ key: 'CrewShip', name: 'Crew Ship Abilities', itemIcon: 'Teamwork' }),
 			this._tabMenuItem({ key: 'Experiments', name: 'Experiments', itemIcon: 'TestAutoSolid', disabled: true })];
 	}
 

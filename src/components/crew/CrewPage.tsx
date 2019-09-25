@@ -12,7 +12,6 @@ import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 
 export interface CrewPageProps {
     onCommandItemsUpdate?: (items: ICommandBarItemProps[]) => void;
-
 }
 
 export const CrewPage = (props: CrewPageProps) => {
