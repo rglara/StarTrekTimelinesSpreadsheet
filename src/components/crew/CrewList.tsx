@@ -151,7 +151,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				{eqTable}
 				{item.action && item.ship_battle && <span>
 				<h4 className="ui header">Ship abilitiy '{item.action.name}'</h4>
-				<Label>Accuracy +{item.ship_battle.accuracy}  Crit Bonus +{item.ship_battle.crit_bonus}  {item.ship_battle.crit_chance && <span>Crit Rating +{item.ship_battle.crit_chance}  </span>}Evasion +{item.ship_battle.evasion}</Label>
+				<Label>Accuracy +{item.ship_battle.accuracy}  Crit Bonus +{item.ship_battle.crit_bonus}  Crit Rating +{item.ship_battle.crit_chance}  Evasion +{item.ship_battle.evasion}</Label>
 				<Label>Increase {CONFIG.CREW_SHIP_BATTLE_BONUS_TYPE[item.action.bonus_type]} by {item.action.bonus_amount}</Label>
 				{item.action.penalty && <Label>Decrease {CONFIG.CREW_SHIP_BATTLE_BONUS_TYPE[item.action.penalty.type]} by {item.action.penalty.amount}</Label>}
 

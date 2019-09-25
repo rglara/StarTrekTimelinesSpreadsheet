@@ -85,6 +85,18 @@ function rosterFromCrew(rosterEntry: CrewData, crew: CrewDTO): void {
 	rosterEntry.usage_value = 0;
 
 	rosterEntry.ship_battle = crew.ship_battle;
+	if (!rosterEntry.ship_battle.accuracy) {
+		rosterEntry.ship_battle.accuracy = 0;
+	}
+	if (!rosterEntry.ship_battle.crit_bonus) {
+		rosterEntry.ship_battle.crit_bonus = 0;
+	}
+	if (!rosterEntry.ship_battle.crit_chance) {
+		rosterEntry.ship_battle.crit_chance = 0;
+	}
+	if (!rosterEntry.ship_battle.evasion) {
+		rosterEntry.ship_battle.evasion = 0;
+	}
 	rosterEntry.action = crew.action;
 	rosterEntry.flavor = crew.flavor;
 

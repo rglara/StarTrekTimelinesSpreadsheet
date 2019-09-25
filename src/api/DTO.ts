@@ -46,7 +46,13 @@ export interface CrewActionDTO {
    };
    bonus_amount: number;
    bonus_type: number;
-   charge_phases?: { charge_time: number; ability_amount: number; }[];
+   charge_phases?: {
+      charge_time: number;
+      ability_amount?: number;
+      bonus_amount?: number;
+      duration?: number;
+      cooldown?: number;
+   }[];
    cooldown: number;
    crew: number;
    duration: number;
@@ -55,7 +61,10 @@ export interface CrewActionDTO {
    limit?: number;
    name: string;
    //TODO: type info
-   penalty?: any;
+   penalty?: {
+      type: number;
+      amount: number;
+   };
    special: boolean;
    symbol: string;
 }
@@ -151,10 +160,10 @@ export interface CrewData {
    rarity: number;
    rawTraits: string[];
    ship_battle?: {
-      accuracy: number;
-      crit_bonus: number;
-      crit_chance: number;
-      evasion: number;
+      accuracy?: number;
+      crit_bonus?: number;
+      crit_chance?: number;
+      evasion?: number;
    };
    short_name: string;
    symbol: string;
@@ -209,10 +218,10 @@ export interface BorrowedCrewDTO {
    portrait: ImageDataDTO;
    rarity: number;
    ship_battle: {
-      accuracy: number;
-      crit_bonus: number;
-      crit_chance: number;
-      evasion: number;
+      accuracy?: number;
+      crit_bonus?: number;
+      crit_chance?: number;
+      evasion?: number;
    };
    short_name: string;
    skills: { [sk: string]: SkillDTO; };

@@ -88,6 +88,18 @@ export default class CONFIG {
 		8: 'Increase boarding damage by %VAL%%'
 	};
 
+	static readonly CREW_SHIP_BATTLE_ABILITY_TYPE_SHORT: { [index: number]: string } = {
+		0: 'Bonus',
+		1: 'ImmDmg %',
+		2: 'ImmHull +%',
+		3: 'ImmShield +%',
+		4: 'Crit+',
+		5: 'CRating+',
+		6: 'Shield Gen +%',
+		7: 'AtkSpeed +%',
+		8: 'Boarding +%'
+	};
+
 	static readonly REWARDS_ITEM_TYPE: { [index: number]: string } = {
 		0: 'None',
 		1: 'Crew',

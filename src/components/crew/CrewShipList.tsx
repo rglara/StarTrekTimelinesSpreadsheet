@@ -121,7 +121,7 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 				{eqTable}
 				{ item.action && item.ship_battle && <span>
 				<h4 className="ui header">Ship abilitiy '{item.action.name}'</h4>
-				<Label>Accuracy +{item.ship_battle.accuracy}  Crit Bonus +{item.ship_battle.crit_bonus}  {item.ship_battle.crit_chance && <span>Crit Rating +{item.ship_battle.crit_chance}  </span>}Evasion +{item.ship_battle.evasion}</Label>
+				<Label>Accuracy +{item.ship_battle.accuracy}  Crit Bonus +{item.ship_battle.crit_bonus}  Crit Rating +{item.ship_battle.crit_chance}  Evasion +{item.ship_battle.evasion}</Label>
 				<Label>Increase {CONFIG.CREW_SHIP_BATTLE_BONUS_TYPE[item.action.bonus_type]} by {item.action.bonus_amount}</Label>
 				{item.action.penalty && <Label>Decrease {CONFIG.CREW_SHIP_BATTLE_BONUS_TYPE[item.action.penalty.type]} by {item.action.penalty.amount}</Label>}
 
@@ -345,13 +345,127 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 			});
 		}
 
-		// Compute an average aggregate, only including nonzero values
-		let aggAvg = (vals: any) => {
-			let nonzeros = vals.reduce((a: any, b: any) => a + ((b || 0) > 0 ? 1 : 0), 0);
-			return vals.reduce((a: any, b: any) => (a || 0) + (b || 0), 0) / nonzeros;
-		}
-
 		_columns.push({
+				id: 'abilitytype',
+				Header: 'Type',
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: (cd) => CONFIG.CREW_SHIP_BATTLE_BONUS_TYPE[cd.action!.bonus_type],
+			}, {
+				id: 'abilityamt',
+				Header: 'Amt',
+				minWidth: 30,
+				maxWidth: 40,
+				resizable: true,
+				accessor: (cd) => cd.action!.bonus_amount || 0,
+			}, {
+				id: 'abilityact',
+				Header: 'Act',
+				minWidth: 50,
+				maxWidth: 100,
+				resizable: true,
+				accessor: (cd) => cd.action!.ability ? CONFIG.CREW_SHIP_BATTLE_ABILITY_TYPE_SHORT[cd.action!.ability!.type] : '',
+			}, {
+				id: 'abilityactamt',
+				Header: 'ActAmt',
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: (cd) => cd.action!.ability ? cd.action!.ability!.amount : '',
+			}, {
+				id: 'abilityinit',
+				Header: 'Init',
+				minWidth: 30,
+				maxWidth: 40,
+				resizable: true,
+				accessor: (cd) => cd.action!.initial_cooldown || 0,
+			}, {
+				id: 'abilitydur',
+				Header: 'Dur',
+				minWidth: 30,
+				maxWidth: 40,
+				resizable: true,
+				accessor: (cd) => cd.action!.duration || 0,
+			}, {
+				id: 'abilitycd',
+				Header: 'Cooldown',
+				minWidth: 30,
+				maxWidth: 40,
+				resizable: true,
+				accessor: (cd) => cd.action!.cooldown || 0,
+			}, {
+				id: 'abilitylim',
+				Header: 'Uses',
+				minWidth: 30,
+				maxWidth: 40,
+				resizable: true,
+				accessor: (cd) => cd.action!.limit,
+//TODO: trigger and penalty
+			}, {
+				id: 'charget',
+				Header: 'ChTime',
+				minWidth: 40,
+				maxWidth: 50,
+				resizable: true,
+				accessor: (cd) => cd.action!.charge_phases ? cd.action!.charge_phases.map(cp => cp.charge_time).join() : '',
+			}, {
+				id: 'chargeaa',
+				Header: 'ChAmt',
+				minWidth: 40,
+				maxWidth: 100,
+				resizable: true,
+				accessor: (cd) => cd.action!.charge_phases && cd.action!.charge_phases[0].ability_amount ? cd.action!.charge_phases.map(cp => cp.ability_amount).join() : '',
+			}, {
+				id: 'chargeba',
+				Header: 'ChBonus',
+				minWidth: 40,
+				maxWidth: 50,
+				resizable: true,
+				accessor: (cd) => cd.action!.charge_phases && cd.action!.charge_phases[0].bonus_amount ? cd.action!.charge_phases.map(cp => cp.bonus_amount).join() : '',
+			}, {
+				id: 'chargedur',
+				Header: 'ChDur',
+				minWidth: 40,
+				maxWidth: 50,
+				resizable: true,
+				accessor: (cd) => cd.action!.charge_phases && cd.action!.charge_phases[0].duration ? cd.action!.charge_phases.map(cp => cp.duration).join() : '',
+			}, {
+				id: 'chargecd',
+				Header: 'ChCd',
+				minWidth: 40,
+				maxWidth: 50,
+				resizable: true,
+				accessor: (cd) => cd.action!.charge_phases && cd.action!.charge_phases[0].cooldown ? cd.action!.charge_phases.map(cp => cp.cooldown).join() : '',
+			}, {
+				id: 'passiveacc',
+				Header: 'ACC',
+				minWidth: 30,
+				maxWidth: 40,
+				resizable: true,
+				accessor: (cd) => cd.ship_battle!.accuracy || 0,
+			}, {
+				id: 'passiveev',
+				Header: 'EV',
+				minWidth: 30,
+				maxWidth: 40,
+				resizable: true,
+				accessor: (cd) => cd.ship_battle!.evasion || 0,
+			}, {
+				id: 'passivecb',
+				Header: 'Crit',
+				minWidth: 30,
+				maxWidth: 40,
+				resizable: true,
+				accessor: (cd) => cd.ship_battle!.crit_bonus || 0,
+			}, {
+				id: 'passivecc',
+				Header: 'CR',
+				minWidth: 30,
+				maxWidth: 40,
+				resizable: true,
+				accessor: (cd) => cd.ship_battle!.crit_chance || 0,
+			},{
 				id: 'traits',
 				Header: 'Traits',
 				minWidth: 140,
@@ -381,6 +495,17 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 				// now search the raw traits
 				if (crew.rawTraits.find(trait => trait.toLowerCase().indexOf(text) > -1)) {
 					return true;
+				}
+
+				if (crew.action) {
+					// Check for bonus type name
+					if ((CONFIG.CREW_SHIP_BATTLE_BONUS_TYPE[crew.action.bonus_type] || '').toLowerCase().indexOf(text) > -1) {
+						return true;
+					}
+
+					if (crew.action.ability && (CONFIG.CREW_SHIP_BATTLE_ABILITY_TYPE_SHORT[crew.action.ability.type] || '').toLowerCase().indexOf(text) > -1) {
+						return true;
+					}
 				}
 
 				return false;
