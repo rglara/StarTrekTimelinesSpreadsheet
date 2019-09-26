@@ -2,7 +2,6 @@ import React from 'react';
 import { Image, List, Popup, Label } from 'semantic-ui-react';
 
 import { ItemDisplay } from './ItemDisplay';
-import { renderCrewBonus } from './events/EventHelperPage';
 import Moment from 'moment';
 
 import STTApi from '../api';
@@ -265,7 +264,9 @@ export const HomePage = (props: HomePageProps) => {
 			let newRecommendation = {
 				title: 'No voyage running',
 				icon: Priority.EXCLAMATION,
-				content: <p style={{ margin: '0' }}>Start a voyage in the 'Voyage' tab to collect rewards.</p>
+				content: <p style={{ margin: '0' }}>
+					Start a voyage in the <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Voyage')}>Voyage
+					</Label> tab to collect rewards.</p>
 			};
 
 			setRecVoy([newRecommendation]);
@@ -308,7 +309,8 @@ export const HomePage = (props: HomePageProps) => {
 					newRecommendation = {
 						title: 'Voyage is waiting on your dilemma decision',
 						icon: Priority.EXCLAMATION,
-						content: <p style={{ margin: '0' }}>Resolve the dilemma in the 'Voyage' tab or in the game.</p>
+						content: <p style={{ margin: '0' }}>Resolve the dilemma in the <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Voyage')}>Voyage
+							</Label> tab or in the game.</p>
 					};
 				} else {
 					// TODO: check the chances to reach a dilemma and go red if 0%
@@ -317,7 +319,8 @@ export const HomePage = (props: HomePageProps) => {
 						icon: Priority.CHECK,
 						content: (
 							<p style={{ margin: '0' }}>
-								Voyage has been ongoing for {formatTimeSeconds(voyage.voyage_duration)} (new dilemma in{' '}
+								<Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Voyage')}>Voyage</Label> has been
+								ongoing for {formatTimeSeconds(voyage.voyage_duration)} (new dilemma in{' '}
 								{formatTimeSeconds(voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma)}
 								{' '}at {Moment().add(voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma, 's').format('h:mma')})
 							</p>
@@ -366,7 +369,7 @@ export const HomePage = (props: HomePageProps) => {
 							{
 								!anyEnabled && `No crew available to compete. `
 							}
-							The gauntlet ends in {formatTimeSeconds(gauntlet.seconds_to_end)}, next crew refresh in{' '}
+							The <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Gauntlet')}>Gauntlet</Label> ends in {formatTimeSeconds(gauntlet.seconds_to_end)}, next crew refresh in{' '}
 							{formatTimeSeconds(gauntlet.seconds_to_next_crew_refresh)}
 							{' '}at {Moment().add(gauntlet.seconds_to_next_crew_refresh, 's').format('h:mma')}.
 						</p>
@@ -421,38 +424,13 @@ export const HomePage = (props: HomePageProps) => {
 			});
 		}
 		else if (eventData.content.content_type === EVENT_TYPES.SKIRMISH) {
-			let crew_bonuses : {iconUrl: string, crew: CrewData }[]= [];
-			eventData.featured_crew.forEach(fc => {
-				let avatar = STTApi.getCrewAvatarBySymbol(fc.symbol);
-				if (!avatar) {
-					return;
-				}
-
-				let crew = STTApi.roster.find(c => c.symbol === avatar!.symbol);
-				if (!crew) {
-					return;
-				}
-
-				let iconUrl = avatar.iconUrl;
-				if (!iconUrl || iconUrl == '') {
-					iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
-				}
-
-				crew_bonuses.push({
-					crew,
-					iconUrl
-				});
-			});
-
 			recommendations.push({
 				title: `Skirmish Event ` + msg,
 				icon: Priority.INFO,
 				content: <div style={{ margin: '0' }}>
-					{!hasEnded && <span>
-					<div>{eventData.bonus_text}</div>
-					Owned Event Bonus Crew: { !crew_bonuses.length && "None" }
-					<List horizontal>{crew_bonuses.map(cb => renderCrewBonus(cb))}</List>
-					</span>}
+					{!hasEnded &&
+						<Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Events')}>Event Details</Label>
+					}
 				</div>
 			});
 		}

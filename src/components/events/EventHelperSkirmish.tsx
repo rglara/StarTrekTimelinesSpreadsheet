@@ -1,0 +1,345 @@
+import React from 'react';
+import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
+import { Icon } from 'office-ui-fabric-react/lib/Icon';
+import { Label, Popup, List } from 'semantic-ui-react';
+import ReactTable, { Column } from 'react-table';
+import { EventDTO, EVENT_TYPES, CrewData } from "../../api/STTApi";
+import STTApi, { RarityStars, CONFIG } from '../../api';
+
+export interface SkirmishEventProps {
+   event: EventDTO;
+}
+
+export const SkirmishEvent = (props: SkirmishEventProps) => {
+   const [sorted, setSorted] = React.useState([{ id: 'max_rarity', desc: false }]);
+
+   if (!props.event ||
+      !props.event.content ||
+      props.event.content.content_type !== EVENT_TYPES.SKIRMISH ||
+      !props.event.content.bonus_crew
+   ) {
+      return <span />;
+   }
+
+   let crew_bonuses: { iconUrl: string, crew: CrewData } [] = [];
+   props.event.featured_crew.forEach(fc => {
+      let avatar = STTApi.getCrewAvatarBySymbol(fc.symbol);
+      if (!avatar) {
+         return;
+      }
+
+      let crew = STTApi.roster.find(c => c.symbol === avatar!.symbol);
+      if (!crew) {
+         return;
+      }
+
+      let iconUrl = avatar.iconUrl;
+      if (!iconUrl || iconUrl == '') {
+         iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
+      }
+
+      crew_bonuses.push({
+         crew,
+         iconUrl
+      });
+   });
+
+   let crew_bonuses_minor: { iconUrl: string, crew: CrewData }[] = [];
+   let items : CrewData[] = [];
+   STTApi.roster.forEach(crew => {
+      if (!crew.rawTraits.some(tr => props.event.content.bonus_traits.includes(tr))) {
+         if (!props.event.content.bonus_crew.includes(crew.symbol)) {
+            return;
+         }
+      }
+
+      let iconUrl = crew.iconUrl;
+      if (!iconUrl || iconUrl == '') {
+         iconUrl = STTApi.imageProvider.getCrewCached(crew, false);
+      }
+
+      crew_bonuses_minor.push({
+         crew,
+         iconUrl
+      });
+      items.push(crew);
+   });
+
+   const columns = getColumns();
+
+   return <div><h2>Skirmish Event Details</h2>
+      <div style={{ margin: '0' }}>
+         <span>
+            <div>{props.event.bonus_text}</div>
+            {/* <EventCrewBonusTable bonuses={props.event.content. shuttles[0].crew_bonuses} /> */}
+            <div>Bonus Event Crew (Major Bonus): {props.event.content.bonus_crew.join(', ')}</div>
+            Owned bonus crew: <List horizontal>{crew_bonuses.map(cb => renderCrewBonus(cb))}</List>
+            {/* TODO: use event helper page renderCrewBonus and remove from HomePage */}
+            <div>Bonus Crew (Minor Bonus) traits: {props.event.content.bonus_traits.join(', ')}</div>
+         </span>
+         <div className={'data-grid'} data-is-scrollable='true'>
+            <ReactTable
+               data={items}
+               columns={columns}
+               defaultPageSize={(items.length <= 50) ? items.length : 50}
+               pageSize={(items.length <= 50) ? items.length : 50}
+               sorted={sorted}
+               onSortedChange={sorted => setSorted(sorted)}
+               showPagination={(items.length > 50)}
+               showPageSizeOptions={false}
+               className="-striped -highlight"
+               style={((items.length > 50)) ? { height: 'calc(100vh - 88px)' } : {}}
+               getTrProps={(s: any, r: any) => {
+                  return {
+                     style: {
+                        opacity: (r && r.original && r.original.isExternal) ? "0.5" : "inherit"
+                     }
+                  };
+               }}
+               getTdProps={(s: any, r: any) => {
+                  return { style: { padding: "2px 3px" } };
+               }}
+            />
+         </div>
+
+      </div>
+   </div>;
+}
+
+export function renderCrewBonus(cb: any) {
+   return <Popup flowing key={cb.crew.symbol}
+      trigger={
+         <List.Item >
+            <img src={cb.iconUrl} width="25" height="25" />
+            <List.Content>
+               <List.Header>{cb.crew.name}</List.Header>
+               <RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
+               {cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
+               {cb.crew.frozen > 0 && <div>Frozen</div>}
+            </List.Content>
+         </List.Item>
+      }
+      content={<span key={cb.crew.id}>
+         Base: {Object.keys(cb.crew.skills).map(s => {
+            return (<span key={s}><img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
+               {cb.crew.skills[s].core} ({cb.crew.skills[s].min}-{cb.crew.skills[s].max})
+               </span>);
+         })}
+      </span>}
+   />
+}
+
+const getColumns = () => {
+   let _columns: Column<CrewData>[] = [];
+
+   _columns.push({
+         id: 'icon',
+         Header: '',
+         minWidth: 28,
+         maxWidth: 28,
+         resizable: false,
+         accessor: 'name',
+         Cell: (cell) => {
+            return <Image src={cell.original.iconUrl} width={22} height={22} imageFit={ImageFit.contain} shouldStartVisible={true} />;
+         },
+      },{
+         id: 'short_name',
+         Header: 'Name',
+         minWidth: 90,
+         maxWidth: 110,
+         resizable: true,
+         accessor: 'short_name',
+         Cell: (cell) => {
+            return <a href={'https://stt.wiki/wiki/' + cell.original.name.split(' ').join('_')} target='_blank'>{cell.original.short_name}</a>;
+         },
+      },{
+         id: 'name',
+         Header: 'Full name',
+         minWidth: 110,
+         maxWidth: 190,
+         resizable: true,
+         accessor: 'name',
+         Cell: (cell) => {
+            return <span>{cell.original.name}</span>;
+         },
+      },
+      {
+         id: 'level',
+         Header: 'Level',
+         minWidth: 40,
+         maxWidth: 45,
+         resizable: false,
+         accessor: 'level',
+      },
+      {
+         id: 'rarity',
+         Header: 'Rarity',
+         // Sort all by max fusion level, then fractional part by current fusion level
+         accessor: (obj) => obj.max_rarity + (obj.rarity / obj.max_rarity),
+         minWidth: 75,
+         maxWidth: 85,
+         resizable: false,
+         Cell: (cell) => {
+            return <RarityStars min={1} max={cell.original.max_rarity} value={cell.original.rarity ? cell.original.rarity : null} />;
+         },
+      // },{
+      //    id: 'favorite',
+      //    Header: () => <Icon iconName='FavoriteStar' />,
+      //    minWidth: 30,
+      //    maxWidth: 30,
+      //    style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
+      //    resizable: false,
+      //    accessor: 'favorite',
+      //    Cell: (cell) => {
+      //       if (cell.value) {
+      //          <Icon iconName='FavoriteStar' />
+      //       } else {
+      //          return <span></span>;
+      //       }
+      //    },
+      },
+         {
+            id: 'frozen',
+            Header: () => <Icon iconName='Snowflake' />,
+            minWidth: 30,
+            maxWidth: 30,
+            style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
+            resizable: false,
+            accessor: 'frozen',
+            Cell: (cell: any) => {
+               if (cell.value > 0) {
+                  return <span>{cell.value > 1 ? cell.value : ''}<Icon iconName='Snowflake' /></span>;
+               }
+               return <span></span>;
+            },
+         },{
+      id: 'abilitytype',
+      Header: 'Type',
+      minWidth: 50,
+      maxWidth: 70,
+      resizable: true,
+      accessor: (cd) => CONFIG.CREW_SHIP_BATTLE_BONUS_TYPE[cd.action!.bonus_type],
+   }, {
+      id: 'abilityamt',
+      Header: 'Amt',
+      minWidth: 30,
+      maxWidth: 40,
+      resizable: true,
+      accessor: (cd) => cd.action!.bonus_amount || 0,
+   }, {
+      id: 'abilityact',
+      Header: 'Act',
+      minWidth: 50,
+      maxWidth: 100,
+      resizable: true,
+      accessor: (cd) => cd.action!.ability ? CONFIG.CREW_SHIP_BATTLE_ABILITY_TYPE_SHORT[cd.action!.ability!.type] : '',
+   }, {
+      id: 'abilityactamt',
+      Header: 'ActAmt',
+      minWidth: 50,
+      maxWidth: 70,
+      resizable: true,
+      accessor: (cd) => cd.action!.ability ? cd.action!.ability!.amount : '',
+   }, {
+      id: 'abilityinit',
+      Header: 'Init',
+      minWidth: 30,
+      maxWidth: 40,
+      resizable: true,
+      accessor: (cd) => cd.action!.initial_cooldown || 0,
+   }, {
+      id: 'abilitydur',
+      Header: 'Dur',
+      minWidth: 30,
+      maxWidth: 40,
+      resizable: true,
+      accessor: (cd) => cd.action!.duration || 0,
+   }, {
+      id: 'abilitycd',
+      Header: 'Cooldown',
+      minWidth: 30,
+      maxWidth: 40,
+      resizable: true,
+      accessor: (cd) => cd.action!.cooldown || 0,
+   }, {
+      id: 'abilitylim',
+      Header: 'Uses',
+      minWidth: 30,
+      maxWidth: 40,
+      resizable: true,
+      accessor: (cd) => cd.action!.limit,
+      //TODO: trigger and penalty
+   }, {
+      id: 'charget',
+      Header: 'ChTime',
+      minWidth: 40,
+      maxWidth: 50,
+      resizable: true,
+      accessor: (cd) => cd.action!.charge_phases ? cd.action!.charge_phases.map(cp => cp.charge_time).join() : '',
+   }, {
+      id: 'chargeaa',
+      Header: 'ChAmt',
+      minWidth: 40,
+      maxWidth: 100,
+      resizable: true,
+      accessor: (cd) => cd.action!.charge_phases && cd.action!.charge_phases[0].ability_amount ? cd.action!.charge_phases.map(cp => cp.ability_amount).join() : '',
+   }, {
+      id: 'chargeba',
+      Header: 'ChBonus',
+      minWidth: 40,
+      maxWidth: 50,
+      resizable: true,
+      accessor: (cd) => cd.action!.charge_phases && cd.action!.charge_phases[0].bonus_amount ? cd.action!.charge_phases.map(cp => cp.bonus_amount).join() : '',
+   }, {
+      id: 'chargedur',
+      Header: 'ChDur',
+      minWidth: 40,
+      maxWidth: 50,
+      resizable: true,
+      accessor: (cd) => cd.action!.charge_phases && cd.action!.charge_phases[0].duration ? cd.action!.charge_phases.map(cp => cp.duration).join() : '',
+   }, {
+      id: 'chargecd',
+      Header: 'ChCd',
+      minWidth: 40,
+      maxWidth: 50,
+      resizable: true,
+      accessor: (cd) => cd.action!.charge_phases && cd.action!.charge_phases[0].cooldown ? cd.action!.charge_phases.map(cp => cp.cooldown).join() : '',
+   }, {
+      id: 'passiveacc',
+      Header: 'ACC',
+      minWidth: 30,
+      maxWidth: 40,
+      resizable: true,
+      accessor: (cd) => cd.ship_battle!.accuracy || 0,
+   }, {
+      id: 'passiveev',
+      Header: 'EV',
+      minWidth: 30,
+      maxWidth: 40,
+      resizable: true,
+      accessor: (cd) => cd.ship_battle!.evasion || 0,
+   }, {
+      id: 'passivecb',
+      Header: 'Crit',
+      minWidth: 30,
+      maxWidth: 40,
+      resizable: true,
+      accessor: (cd) => cd.ship_battle!.crit_bonus || 0,
+   }, {
+      id: 'passivecc',
+      Header: 'CR',
+      minWidth: 30,
+      maxWidth: 40,
+      resizable: true,
+      accessor: (cd) => cd.ship_battle!.crit_chance || 0,
+   }, {
+      id: 'traits',
+      Header: 'Traits',
+      minWidth: 140,
+      resizable: true,
+      accessor: 'traits',
+      Cell: (cell) => <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', height: '22px' }}>{cell.original.traits.replace(/,/g, ', ')}</div>,
+   });
+
+   return _columns;
+}

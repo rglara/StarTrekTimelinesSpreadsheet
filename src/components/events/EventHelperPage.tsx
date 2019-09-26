@@ -7,6 +7,7 @@ import STTApi, { formatTimeSeconds, CONFIG, RarityStars } from '../../api';
 import { EventDTO, CrewData } from "../../api/STTApi";
 import { GalaxyEvent } from './EventHelperGalaxy';
 import { ShuttleEvent } from './EventHelperShuttle';
+import { SkirmishEvent } from './EventHelperSkirmish';
 import { isMobile } from 'react-device-detect';
 import { Icon } from 'office-ui-fabric-react/lib/Icon';
 import { TooltipHost } from 'office-ui-fabric-react/lib/Tooltip';
@@ -16,35 +17,6 @@ import { SkillCell } from '../crew/SkillCell';
 
 export interface EventHelperPageProps {
    onTabSwitch?: (newTab: string) => void;
-}
-
-export function renderCrewBonus(cb: any) {
-   return <Popup flowing key={cb.crew.symbol}
-      trigger={
-         <List.Item >
-            <Image src={cb.iconUrl} width="25" height="25" />
-            <List.Content>
-               <List.Header>{cb.crew.name}</List.Header>
-               <RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
-               {cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
-               {cb.crew.frozen > 0 && <div>Frozen</div>}
-               Bonus level {cb.bonus}x
-            </List.Content>
-         </List.Item>
-      }
-      content={<span key={cb.crew.id}>
-         Base: {Object.keys(cb.crew.skills).map(s => {
-            return (<span key={s}><img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
-               {cb.crew.skills[s].core} ({cb.crew.skills[s].min}-{cb.crew.skills[s].max})
-               </span>);
-         })}
-         <br />
-         Bonus ({cb.bonus}x): {Object.keys(cb.crew.skills).map(s => {
-            return (<span key={s}><img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
-               {cb.crew.skills[s].core * cb.bonus} </span>);
-         })}
-      </span>}
-   />
 }
 
 export const EventHelperPage = (props:EventHelperPageProps) => {
@@ -100,6 +72,7 @@ export const EventHelperPage = (props:EventHelperPageProps) => {
 
          <GalaxyEvent event={currEvent} />
          <ShuttleEvent event={currEvent} onTabSwitch={props.onTabSwitch} />
+         <SkirmishEvent event={currEvent} />
       </div>
    );
 }

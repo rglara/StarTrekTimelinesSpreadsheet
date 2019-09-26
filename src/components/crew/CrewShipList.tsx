@@ -22,18 +22,12 @@ import { CrewData, ItemArchetypeDTO } from '../../api/STTApi';
 export interface CrewShipListProps {
 	data: CrewData[];
 	sortColumn?: string;
-	selectedIds?: Set<number>;
 	filterText?: string;
 }
 
 interface CrewShipListState {
 	items: CrewData[];
-	selection: Set<number>;
 	sorted: SortingRule[];
-	active: {
-		activeId?: number;
-		name?: string;
-	}
 }
 
 export class CrewShipList extends React.Component<CrewShipListProps, CrewShipListState> {
@@ -48,24 +42,18 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 		this.state = {
 			items: props.data,
 			sorted: [{ id: props.sortColumn || 'max_rarity', desc: false }],
-			selection: props.selectedIds ? props.selectedIds : new Set(),
-			active: { }
 		};
 
-		this._showActiveDialog = this._showActiveDialog.bind(this);
 		this._onRenderExpandedCard = this._onRenderExpandedCard.bind(this);
 		this._onRenderCompactCard = this._onRenderCompactCard.bind(this);
 	}
 
-	componentWillReceiveProps(nextProps:CrewShipListProps) {
-		if (nextProps.data !== this.state.items) {
-			this.setState({ items: nextProps.data });
-		}
-
-		if (nextProps.selectedIds !== this.state.selection) {
-			this.setState({ selection: nextProps.selectedIds ? nextProps.selectedIds : new Set() });
-		}
-	}
+	//TODO: is this even needed?
+	// componentWillReceiveProps(nextProps:CrewShipListProps) {
+	// 	if (nextProps.data !== this.state.items) {
+	// 		this.setState({ items: nextProps.data });
+	// 	}
+	// }
 
 	_onRenderCompactCard(item:CrewData) {
 		return <div className="ui items">
@@ -204,7 +192,6 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 						return { style: { padding: "2px 3px" } };
 					}}
 				/>
-				<ActiveCrewDialog activeId={this.state.active.activeId} name={this.state.active.name} />
 			</div>
 		);
 	}
@@ -511,9 +498,5 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 				return false;
 			});
 		});
-	}
-
-	_showActiveDialog(activeId:any, name:string) {
-		this.setState({active: { activeId, name}});
 	}
 }

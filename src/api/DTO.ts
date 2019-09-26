@@ -820,20 +820,7 @@ export interface ItemArchetypeDTO {
    flavor: string;
    icon: ImageDataDTO;
    id: number;
-   item_sources: {
-      challenge_difficulty?: number;
-      challenge_id?: number;
-      challenge_skill?: string;
-      chance_grade: number;
-      dispute: number;
-      energy_quotient: number;
-      id: number;
-      mastery: number;
-      mission: number;
-      name: string;
-      place: string;
-      type: number;
-   }[];
+   item_sources: ItemArchetypeSourceDTO[];
    name: string;
    rarity: number;
    recipe?: {
@@ -851,6 +838,21 @@ export interface ItemArchetypeDTO {
 
    //HACK: added by the app
    iconUrl?: string;
+}
+
+export interface ItemArchetypeSourceDTO {
+   challenge_difficulty?: number;
+   challenge_id?: number;
+   challenge_skill?: string;
+   chance_grade: number;
+   dispute: number;
+   energy_quotient: number;
+   id: number;
+   mastery: number;
+   mission: number;
+   name: string;
+   place: string;
+   type: number;
 }
 
 export interface ItemDTO {
@@ -1046,32 +1048,64 @@ export const EVENT_TYPES = {
    SKIRMISH: 'skirmish'
 }
 
+export interface EventContentGatherDTO {
+   content_type: 'gather';
+   craft_bonus: number;
+   crew_bonuses: {
+      [crew_symbol: string]: number;
+   };
+   gather_pools: EventGatherPoolDTO[];
+   refresh_cost: { amount: number; currency: number; };
+   supports_boosts: boolean;
+}
+
+//NOTE: until the skirmish starts, the DTO is empty except for content_type
+export interface EventContentSkirmishDTO {
+   battle_index: number;
+   battle_traits: { traits: string[] }[];
+   bonus_crew: string[]; // these are the "primary" event crew symbols, "dukat_breen_crew", "laforge_interfaced_crew", etc.
+   bonus_traits: string[]; // these are trait identifiers for secondary event crew: "laforge", "dukat", "weyoun", etc.
+   configs: {
+      normal: any;
+      elite: any;
+      epic: any;
+   };
+   content_type: 'skirmish';
+   currency: any;
+   current_difficulty: string;
+   difficulty_lockout: any;
+   event_ships: number[];
+   exp_hull_repair: number;
+   hull: number;
+   max_hull: number;
+   opponents: {
+      normal: any;
+      elite: any;
+      epic: any;
+   };
+   progress: string;
+   reroll_cost: number;
+   reroll_info: string;
+   rerolls_available: number;
+   start_cost: number;
+}
+
+export interface EventContentShuttlesDTO {
+   content_type: 'shuttles';
+
+   shuttles: EventShuttleDTO[];
+}
+
+export interface EventContentExpedetionDTO {
+   content_type: 'expedetion?';
+
+   special_crew: string[];
+};
+
 export interface EventDTO {
    bonus_text: string;
    bonus_victory_points?: number;
-   content: {
-      content_type: 'gather' | 'shuttles' | 'skirmish';
-
-      // Galaxy/gather events
-      craft_bonus: number;
-      crew_bonuses?: {
-         [crew_symbol: string]: number;
-      };
-      gather_pools: EventGatherPoolDTO[];
-      refresh_cost: { amount: number; currency: number; };
-      supports_boosts: boolean;
-
-      // skirmish events
-      bonus_crew?: {
-         [crew_symbol: string]: number;
-      };
-
-      // faction events
-      shuttles?: EventShuttleDTO[];
-
-      // expedetion events
-      special_crew?: string[];
-   };
+   content: EventContentGatherDTO & EventContentSkirmishDTO & EventContentShuttlesDTO & EventContentExpedetionDTO
    description: string;
    featured_crew: {
       action: CrewActionDTO;
