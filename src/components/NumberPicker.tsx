@@ -35,20 +35,21 @@ export interface NumberPickerProps {
 	step: number;
 	min: number;
 	max: number;
-	onChange: () => void;
-	name: string;
-	circular: boolean;
-	basic: boolean;
+	onChange: (obj: {name: string, value: number}) => void;
+	name?: string;
+	circular?: boolean;
+	basic?: boolean;
 	compact: boolean;
-	placeholder: string;
-	required: boolean;
-	maxLength: number;
-	id: string;
-	defaultValue: string;
-	classname_button_minus: string;
-	classname_button_plus: string;
-	classname_outer_input: string;
-	classname_inner_input: string;
+	placeholder?: string;
+	label?: string;
+	required?: boolean;
+	maxLength?: number;
+	id?: string;
+	defaultValue?: string;
+	classname_button_minus?: string;
+	classname_button_plus?: string;
+	classname_outer_input?: string;
+	classname_inner_input?: string;
 }
 
 export const NumberPicker = (props:NumberPickerProps) => {

@@ -510,6 +510,12 @@ export const HomePage = (props: HomePageProps) => {
 					{STTApi.playerData.money}
 				</div>
 
+				{ STTApi.playerData.character.stimpack &&
+					<div className='ui black large image label'>
+						Supply Kit Active (expires in {formatTimeSeconds(STTApi.playerData.character.stimpack.ends_in)})
+					</div>
+				}
+
 				<button className='ui primary button' onClick={() => props.onLogout()}>
 					<i className='icon sign out' />
 					Logout

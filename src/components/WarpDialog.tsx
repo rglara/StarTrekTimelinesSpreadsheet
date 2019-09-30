@@ -5,26 +5,41 @@ import UserStore from './Styles';
 
 import STTApi from '../api';
 import { CONFIG, NumberPicker, getChronitonCount } from '../api';
+import { MissionQuestDTO, MissionQuestMasteryLevelDTO } from '../api/DTO';
 
-export class WarpDialog extends React.Component {
-    constructor(props) {
+export class WarpDialogProps {
+    onWarped: () => void;
+}
+
+class WarpDialogState {
+    showDialog: boolean;
+    iconUrl?: string;
+    warpCount: number;
+    quest?: MissionQuestDTO;
+    mastery?: MissionQuestMasteryLevelDTO;
+    mastery_level?: number;
+}
+
+//NOTE: this is used as a React.useRef<WarpDialog> and therefore can't be converted to a function component
+export class WarpDialog extends React.Component<WarpDialogProps, WarpDialogState> {
+    constructor(props: WarpDialogProps) {
         super(props);
 
         this.state = {
             showDialog: false,
             iconUrl: '',
             warpCount: 1,
-            quest: undefined
+            quest: undefined,
         };
 
         this._closeDialog = this._closeDialog.bind(this);
         this.show = this.show.bind(this);
     }
 
-    show(id, mastery_level) {
+    show(id: number, mastery_level: number) {
         for (let mission of STTApi.missions) {
-			let quest = mission.quests.find(q => q.id === id);
-			if (quest) {
+            let quest = mission.quests.find(q => q.id === id);
+            if (quest) {
                 let mastery = quest.mastery_levels[mastery_level];
 
                 STTApi.imageProvider.getImageUrl(quest.timeline_icon.file, quest).then((found) => {
@@ -40,7 +55,7 @@ export class WarpDialog extends React.Component {
 
                 break;
             }
-		}
+        }
     }
 
     _closeDialog() {
@@ -52,9 +67,9 @@ export class WarpDialog extends React.Component {
         });
     }
 
-    async _warp(warpCount) {
+    async _warp(warpCount: number) {
         while (warpCount > 10) {
-            let ephemerals = await STTApi.warpQuest(this.state.quest.id, this.state.mastery_level, 10);
+            let ephemerals = await STTApi.warpQuest(this.state.quest!.id, this.state.mastery_level!, 10);
             // TODO: show rewards to the user somehow
             console.log(ephemerals);
 
@@ -62,7 +77,7 @@ export class WarpDialog extends React.Component {
         }
 
         if (warpCount > 0) {
-            let ephemerals = await STTApi.warpQuest(this.state.quest.id, this.state.mastery_level, warpCount);
+            let ephemerals = await STTApi.warpQuest(this.state.quest!.id, this.state.mastery_level!, warpCount);
             // TODO: show rewards to the user somehow
             console.log(ephemerals);
         }
@@ -80,7 +95,12 @@ export class WarpDialog extends React.Component {
         }
 
         let chronAvailable = getChronitonCount();
-        let chronNeeded = this.state.mastery.energy_cost * this.state.warpCount;
+        let cost = this.state.mastery!.energy_cost;
+        if (STTApi.playerData.character.stimpack) {
+            cost *= 1 - (STTApi.playerData.character.stimpack.energy_discount / 100);
+            cost = Math.ceil(cost);
+        }
+        let chronNeeded = cost * this.state.warpCount;
 
         let currentTheme = UserStore.get('theme');
 
@@ -89,7 +109,7 @@ export class WarpDialog extends React.Component {
             onDismiss={this._closeDialog}
             dialogContentProps={{
                 type: DialogType.normal,
-                title: `Warp mission '${this.state.quest.name}' on ${CONFIG.MASTERY_LEVELS[this.state.mastery_level].name}`
+                title: `Warp mission '${this.state.quest.name}' on ${CONFIG.MASTERY_LEVELS[this.state.mastery_level!].name}`
             }}
             modalProps={{
                 containerClassName: 'warpdialogMainOverride',
@@ -100,7 +120,7 @@ export class WarpDialog extends React.Component {
                 <div style={{ gridArea: 'image' }}><img src={this.state.iconUrl} width={200} height={200} style={{objectFit: 'contain'}} /></div>
                 <div style={{ gridArea: 'description' }}>
                     <p>{this.state.quest.description}</p>
-                    {this.state.mastery.locked && <p>This mission is locked; you can't warp it until you complete this mastery level in the game</p>}
+                    {this.state.mastery!.locked && <p>This mission is locked; you can't warp it until you complete this mastery level in the game</p>}
                     <p><b>NOTE:</b> This feature is experimental; let me know how it worked for you.</p>
                 </div>
                 <div style={{ gridArea: 'chronitons' }}>
@@ -112,8 +132,8 @@ export class WarpDialog extends React.Component {
             </div>
 
             <DialogFooter>
-                <PrimaryButton onClick={() => this._warp(10)} text='Warp 10' disabled={((this.state.mastery.energy_cost * 10) > chronAvailable) || this.state.mastery.locked} />
-                <PrimaryButton onClick={() => this._warp(this.state.warpCount)} text={`Warp ${this.state.warpCount}`} disabled={(chronNeeded > chronAvailable) || this.state.mastery.locked} />
+                <PrimaryButton onClick={() => this._warp(10)} text='Warp 10' disabled={((cost * 10) > chronAvailable) || this.state.mastery!.locked} />
+                <PrimaryButton onClick={() => this._warp(this.state.warpCount)} text={`Warp ${this.state.warpCount}`} disabled={(chronNeeded > chronAvailable) || this.state.mastery!.locked} />
                 <DefaultButton onClick={() => this._closeDialog()} text='Cancel' />
             </DialogFooter>
         </Dialog>;

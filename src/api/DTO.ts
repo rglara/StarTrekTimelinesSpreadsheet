@@ -596,7 +596,12 @@ export interface PlayerCharacterDTO {
    shuttle_bays: number;
    //TODO:
    starbase_buffs: any[];
-   stimpack: any; // null
+   stimpack?: {
+      crew_xp_multiplier: number;
+      ends_in: number;
+      energy_discount: number; // as a whole number, like '25' to mean '25%'
+      nonpremium_currency_multiplier: number;
+   };
    stored_immortals: { id: number; quantity: number; }[];
    tng_the_game_level: number;
    tutorials: any[];
@@ -989,9 +994,18 @@ export interface MissionDTO {
    total_stars: number;
 }
 
+export interface MissionQuestMasteryLevelDTO {
+   energy_cost: number;
+   id: number;
+   jackpots: any[];
+   locked: boolean;
+   progress: { goal_progress: number; goals: number; };
+   rewards: (PotentialRewardDTO | RewardDTO)[]; // first item is PotentialRewardDTO with type=0, second is RewardDTO
+}
+
 export interface MissionQuestDTO {
    action: string;
-   cadet: boolean;
+   cadet?: boolean;
    challenges: {
       children: number[];
       critical: {
@@ -1011,7 +1025,7 @@ export interface MissionQuestDTO {
       skill: string;
       trait_bonuses: { trait: string; bonuses: number[] }[];
    }[];
-   crew_requirement: {
+   crew_requirement?: {
       description: string;
       max_stars: number;
       min_stars: number;
@@ -1020,22 +1034,15 @@ export interface MissionQuestDTO {
    description: string;
    id: number;
    locked: boolean;
-   mastery_levels: {
-      energy_cost: number;
-      id: number;
-      jackpots: any[];
-      locked: boolean;
-      progress: { goal_progress: number; goals: number; };
-      rewards: (PotentialRewardDTO | RewardDTO)[]; // first item is PotentialRewardDTO with type=0, second is RewardDTO
-   }[];
+   mastery_levels: MissionQuestMasteryLevelDTO[];
    material_bundle: string;
    name: string;
    place: string;
    quest_type: string;
    star_background: boolean;
    symbol: string;
-   timeline_action: ImageDataDTO;
-   unlock_text: any;
+   timeline_icon: ImageDataDTO;
+   unlock_text?: any;
 }
 
 export interface PotentialRewardDTO {
