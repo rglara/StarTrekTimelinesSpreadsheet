@@ -382,7 +382,9 @@ export const HomePage = (props: HomePageProps) => {
 		});
 	}
 
-	if (STTApi.playerData.character.events && STTApi.playerData.character.events.length > 0) {
+	if (STTApi.playerData.character.events &&
+		 STTApi.playerData.character.events.length > 0 &&
+		 STTApi.playerData.character.events[0].content) {
 		let eventData = STTApi.playerData.character.events[0];
 
 		//TODO: check event start time and change icon

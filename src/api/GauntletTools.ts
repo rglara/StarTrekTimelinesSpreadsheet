@@ -49,8 +49,9 @@ export async function payToReviveCrew(crew_id: number, save: boolean): Promise<G
 	return STTApi.playerData.character.gauntlets[0];
 }
 
-export async function playContest(match: Match, consecutive_wins: number): Promise<GauntletData> {
+export async function playContest(gauntlet: GauntletDTO, match: Match, consecutive_wins: number): Promise<GauntletData> {
 	let postData: any = {
+		gauntlet_id: gauntlet.gauntlet_id,
 		crew_id: match.crewOdd.crew_id,
 		opponent_id: match.opponent.player_id,
 		op_crew_id: match.opponent.crew_id,

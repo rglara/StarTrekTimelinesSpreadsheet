@@ -75,7 +75,7 @@ interface GauntletMatchProps {
 
 const GauntletMatch = (props: GauntletMatchProps) => {
 	let _playMatch = (event:any) => {
-		playContest(props.match, props.consecutive_wins).
+		playContest(props.gauntlet, props.match, props.consecutive_wins).
 			then((data) => {
 				let logPath = undefined;
 
