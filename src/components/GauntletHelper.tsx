@@ -21,6 +21,7 @@ import {
 import { GauntletDTO, GauntletCrewDTO, GauntletContestDTO, GauntletContestLootDTO } from '../api/STTApi';
 import { CircularLabel } from './CircularLabel';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
+import { CrewImageData } from './images/ImageProvider';
 
 interface GauntletCrewProps {
 	crew: GauntletCrewDTO;
@@ -164,12 +165,6 @@ interface GauntletHelperState {
 	featuredSkill?: string;
 	lastErrorMessage?: string;
 	rewards?: {loot: GauntletContestLootDTO[]};
-	// Recommendation calculation settings
-	featuredSkillBonus: number;
-	critBonusDivider: number;
-	includeFrozen: boolean;
-	calculating: boolean;
-	crewSelection?: number[];
 	logPath?: string;
 	showSpinner: boolean;
 	showStats: boolean;
@@ -187,11 +182,6 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 			lastResult: undefined,
 			lastErrorMessage: undefined,
 			rewards: undefined,
-			// Recommendation calculation settings
-			featuredSkillBonus: 10,
-			critBonusDivider: 3,
-			includeFrozen: false,
-			calculating: false,
 			logPath: undefined,
 			showSpinner: true,
 			showStats: false,
@@ -203,8 +193,6 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 		this._gauntletDataRecieved = this._gauntletDataRecieved.bind(this);
 		this._payForNewOpponents = this._payForNewOpponents.bind(this);
 		this._payToReviveCrew = this._payToReviveCrew.bind(this);
-		this._calculateSelection = this._calculateSelection.bind(this);
-		this._startGauntlet = this._startGauntlet.bind(this);
 		this._exportLog = this._exportLog.bind(this);
 		this._reloadGauntletData();
 		this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
@@ -380,6 +368,38 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 		}
 
 		if (data.lastResult) {
+			if (data.rewards && data.rewards.loot) {
+				let iconPromises: any[] = [];
+				data.rewards.loot.forEach((reward) => {
+					reward.iconUrl = '';
+					if (reward.type === 1) { // crew
+						iconPromises.push(STTApi.imageProvider.getCrewImageUrl(reward as CrewImageData, false)
+							.then(found => {
+								reward.iconUrl = found.url;
+								this.forceUpdate();
+							})
+							.catch(error => {
+								/*console.warn(error);*/
+							})
+						);
+					} else {
+						iconPromises.push(
+							STTApi.imageProvider
+								.getItemImageUrl(reward, reward.id)
+								.then(found => {
+									reward.iconUrl = found.url;
+									this.forceUpdate();
+								})
+								.catch(error => {
+									/*console.warn(error);*/
+								})
+						);
+					}
+				});
+
+				//Promise.all(iconPromises).then(() => this.forceUpdate());
+			}
+
 			this.setState({
 				lastResult: data.lastResult,
 				lastMatch: match,
@@ -394,68 +414,6 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 		// #!endif
 
 		this.setState({ logPath: logPath, showSpinner: false }, () => { this._updateCommandItems(); });
-	}
-
-	_calculateSelection() {
-		if (!this.state.gauntlet) {
-			return;
-		}
-		this.setState({ calculating: true })
-		var result = gauntletCrewSelection(this.state.gauntlet, STTApi.roster, (100 + this.state.featuredSkillBonus) / 100, this.state.critBonusDivider, 5 /*preSortCount*/, this.state.includeFrozen);
-		this.setState({ crewSelection: result.recommendations, calculating: false });
-	}
-
-	_startGauntlet() {
-		if (this.state.gauntlet && this.state.gauntlet.gauntlet_id && this.state.crewSelection) {
-
-			let crew_ids : number[] = [];
-			this.state.crewSelection.forEach(id => {
-				let crew = STTApi.roster.find(crew => (crew.crew_id === id));
-				if (!crew) {
-					console.error(`Crew ${id} not found; are you trying to start a gauntlet with frozen crew?`);
-					return;
-				}
-
-				crew_ids.push(crew.id);
-			});
-
-			if (crew_ids.length === 5) {
-				enterGauntlet(this.state.gauntlet.gauntlet_id, crew_ids).then((data) => this._gauntletDataRecieved({ gauntlet: data }));
-			}
-		}
-	}
-
-	renderBestCrew() {
-		if (!this.state.crewSelection) {
-			return <span />;
-		}
-
-		let crewSpans : any[] = [];
-		this.state.crewSelection.forEach(id => {
-			let crew = STTApi.roster.find(crew => (crew.crew_id === id) || (crew.id === id));
-			if (!crew) {
-				return;
-			}
-
-			let crewSpan = <Persona
-				key={crew.name}
-				imageUrl={crew.iconUrl}
-				text={crew.name}
-				secondaryText={crew.short_name}
-				tertiaryText={formatCrewStats(crew)}
-				size={PersonaSize.large}
-				presence={(crew.frozen === 0) ? PersonaPresence.online : PersonaPresence.away} />
-
-			crewSpans.push(crewSpan);
-		});
-
-		return (<div>
-			<h3>Best crew</h3>
-			{this.state.calculating && <div className="ui medium centered text active inline loader">Still calculating...</div>}
-			<div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap' }}>
-				{crewSpans}
-			</div>
-		</div>);
 	}
 
 	renderStatistic(value:number|string, label:string, classAdd:string|undefined = undefined) : any {
@@ -477,81 +435,24 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 		}
 
 		if (this.state.gauntlet && (this.state.gauntlet.state == 'NONE')) {
-			return (
-				<div>
-					<Label>Next gauntlet starts in {this.state.startsIn}.</Label>
-					{ this.state.featuredSkill &&
-						<span className='quest-mastery'>Featured skill: <img src={CONFIG.SPRITES['icon_' + this.state.featuredSkill].url} height={18} /> {CONFIG.SKILLS[this.state.featuredSkill]}</span>
-					}
-					<Label>Featured traits: {this.state.traits && this.state.traits.join(', ')}</Label>
-
-					{this.renderBestCrew()}
-
-					<div className="ui grid" style={{ maxWidth: '600px' }}>
-						<div className="row">
-							<div className="column"><h4>Algorithm settings</h4></div>
-						</div>
-
-						<div className="two column row">
-							<div className="column">
-								<SpinButton value='{this.state.featuredSkillBonus}' label='Featured skill bonus:' min={0} max={100} step={1}
-									onIncrement={(value) => { this.setState({ featuredSkillBonus: +value + 1 }); }}
-									onDecrement={(value) => { this.setState({ featuredSkillBonus: +value - 1 }); }}
-									onValidate={(value:string) => {
-										if (isNaN(+value)) {
-											this.setState({ featuredSkillBonus: 10 });
-											return '10';
-										}
-
-										return value;
-									}}
-								/>
-							</div>
-							<div className="column">
-								The higher this number, the more bias applied towards the featured skill during crew selection
-							</div>
-						</div>
-
-						<div className="two column row">
-							<div className="column">
-								<SpinButton value='{this.state.critBonusDivider}' label='Crit bonus divider:' min={0.1} max={100} step={0.1}
-									onIncrement={(value) => { this.setState({ critBonusDivider: +value + 0.1 }); }}
-									onDecrement={(value) => { this.setState({ critBonusDivider: +value - 0.1 }); }}
-									onValidate={(value:string) => {
-										if (isNaN(+value)) {
-											this.setState({ critBonusDivider: 3 });
-											return '3';
-										}
-
-										return value;
-									}}
-								/>
-							</div>
-							<div className="column">
-								The lower this number, the more bias applied towards crew with higher crit bonus rating during selection
-							</div>
-						</div>
-
-						<div className="row">
-							<div className="column">
-								<Checkbox checked={this.state.includeFrozen} label="Include frozen crew"
-									onChange={(e, isChecked) => { this.setState({ includeFrozen: isChecked || false }); }}
-								/>
-							</div>
-						</div>
-					</div>
-
-					<br />
-
-					<div style={{ display: 'grid', gridGap: '5px', width: 'fit-content', gridTemplateColumns: 'max-content max-content' }}>
-						<div className={"ui primary button" + (this.state.calculating ? ' disabled' : '')} onClick={this._calculateSelection}>Calculate best crew selection</div>
-						<div className={"ui primary button" + (!this.state.crewSelection ? ' disabled' : '')} onClick={this._startGauntlet}>Start gauntlet with recommendations</div>
-					</div>
-				</div>
-			);
+			return <GauntletSelectCrew
+				gauntlet={this.state.gauntlet}
+				startsIn={this.state.startsIn}
+				featuredSkill={this.state.featuredSkill!}
+				traits={this.state.traits}
+				gauntletLoaded={this._gauntletDataRecieved}
+			/>;
 		}
-		else if (this.state.gauntlet && ((this.state.gauntlet.state == 'STARTED') && this.state.roundOdds)) {
-			let playerCrew, opponentCrew, playerRoll, opponentRoll, playerRollMsg = [], opponentRollMsg = [];
+		if (this.state.gauntlet && (this.state.gauntlet.state == 'ENDED_WITH_REWARDS')) {
+			return <div>
+				<h3>Gauntlet ended, your final rank was <b>{this.state.gauntlet.rank}</b>. Use game client to claim rewards.</h3>
+				<p>Note: you won't see the rewards here, you'll go straight to crew selection. Claim rewards in the game client to see them!</p>
+			</div>;
+		}
+
+		if (this.state.gauntlet && ((this.state.gauntlet.state == 'STARTED') && this.state.roundOdds)) {
+			let playerCrew, opponentCrew, playerRoll = 0, opponentRoll = 0, playerRollMsg = [], opponentRollMsg = [];
+			let playerCritPct = 0, opponentCritPct = 0;
 
 			if (this.state.lastResult && this.state.lastMatch) {
 				let crewAva = STTApi.getCrewAvatarBySymbol(this.state.lastMatch.crewOdd.archetype_symbol);
@@ -561,6 +462,10 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 
 				playerRoll = this.state.lastResult.player_rolls.reduce((sum: number, value: number) => sum + value, 0);
 				opponentRoll = this.state.lastResult.opponent_rolls.reduce((sum: number, value: number) => sum + value, 0);
+				playerCritPct = this.state.lastResult.player_crit_rolls.reduce((sum: number, value: boolean) => sum + (value ? 1 : 0), 0) / 6;
+				opponentCritPct = this.state.lastResult.opponent_crit_rolls.reduce((sum: number, value: boolean) => sum + (value ? 1 : 0), 0) / 6;
+				playerCritPct = Math.floor(playerCritPct * 100);
+				opponentCritPct = Math.floor(opponentCritPct * 100);
 
 				for (let i = 0; i < 6; i++) {
 					playerRollMsg.push(`${this.state.lastResult.player_rolls[i]}${this.state.lastResult.player_crit_rolls[i] ? '*' : ''}`);
@@ -579,6 +484,20 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 
 			const gaunt = this.state.gauntlet;
 			const rewards = this.state.rewards;
+
+			const containerStyleLast = {
+				padding: '3px',
+				backgroundColor: getTheme().palette.themeLighter,
+				display: 'grid',
+				gridTemplateColumns: '100px auto auto 100px',
+				gridTemplateRows: '20px 150px 50px',
+				gridTemplateAreas: `
+					"pcrewname pcrewname ocrewname ocrewname"
+					"pcrewimage stats stats ocrewimage"
+					"pcrewimage chance chance ocrewimage"`};
+
+			const stEm = { textAlign: 'center', verticalAlign: 'middle', fontSize: '1.2rem', fontWeight: 700, lineHeight: '1.2em' };
+			const stNorm = { textAlign: 'center', verticalAlign: 'middle' };
 
 			return (
 				<div className='tab-panel' data-is-scrollable='true'>
@@ -609,20 +528,57 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 							{this.renderStatistic(STTApi.playerData.premium_earnable, 'Merits')}
 							{this.state.lastResult && this.renderStatistic(((this.state.lastResult.win === true) ? 'WON' : 'LOST'), 'Last round', ((this.state.lastResult.win === true) ? 'green' : 'red'))}
 						</div>
-						{this.state.lastResult && this.state.lastMatch && <div className="ui attached segment" style={{ backgroundColor: getTheme().palette.themeLighterAlt }}>
-							<p>Your <b>{playerCrew}</b> rolled <b>{playerRoll}</b> ({playerRollMsg.join(', ')})</p>
-							<p><i>{this.state.lastMatch.opponent.name}</i>'s <b>{opponentCrew}</b> rolled <b>{opponentRoll}</b> ({opponentRollMsg.join(', ')})</p>
-							<p>Match had a <b>{this.state.lastMatch.chance}%</b> chance of success; you got <b>{this.state.lastResult.value} points</b>.</p>
-							{rewards &&
-								<p>
-									<span>Rewards: </span>
-									{rewards.loot.map((loot:any, index:number) =>
-										<span key={index} style={{ color: loot.rarity && CONFIG.RARITIES[loot.rarity].color }}
-										>{loot.quantity} {(loot.rarity == null) ? '' : CONFIG.RARITIES[loot.rarity].name} {loot.full_name}
-										{index < rewards.loot.length-1 ? ', ':''}</span>
-									)}
-								</p>
-							}
+						{this.state.lastResult && this.state.lastMatch && <div className="ui attached segment"
+							style={{ display: 'flex', flexFlow: 'row nowrap', backgroundColor: getTheme().palette.themeLighterAlt }}>
+							<div style={containerStyleLast} className="ui attached segment">
+								<span style={{ gridArea: 'pcrewname', justifySelf: 'center' }}>Your <b>{playerCrew}</b></span>
+								<div style={{ gridArea: 'pcrewimage', position: 'relative' }}>
+									<img src={this.state.lastMatch.crewOdd.iconUrl} height={128} />
+									<CircularLabel percent={this.state.lastMatch.crewOdd.crit_chance} />
+								</div>
+
+								<div style={{ gridArea: 'stats' }}>
+									<table style={{ width: '100%' }}>
+										<tbody>
+											{[...Array(6).keys()].map(i =>
+											{
+												let stP = this.state.lastResult!.player_crit_rolls[i] ? stEm : stNorm;
+												let stO = this.state.lastResult!.opponent_crit_rolls[i] ? stEm : stNorm;
+
+												return <tr key={i}><td style={stP as any}>{this.state.lastResult!.player_rolls[i]}</td>
+													<td style={stO as any}>{this.state.lastResult!.opponent_rolls[i]}</td></tr>; })
+											}
+											<tr><td style={ (playerRoll > opponentRoll ? stEm : stNorm) as any}>Score: {playerRoll}</td>
+												<td style={ (playerRoll < opponentRoll ? stEm : stNorm) as any}>Score: {opponentRoll}</td></tr>
+											<tr><td style={ stNorm as any }>Actual Crit: {playerCritPct}%</td>
+												<td style={ stNorm as any }>Actual Crit: {opponentCritPct}%</td></tr>
+										</tbody>
+									</table>
+								</div>
+
+								<div style={{ gridArea: 'ocrewimage', position: 'relative' }}>
+									<img src={this.state.lastMatch.opponent.iconUrl} height={128} />
+									<CircularLabel percent={this.state.lastMatch.opponent.crit_chance} />
+								</div>
+
+								<span style={{ gridArea: 'ocrewname', justifySelf: 'center' }}><i>{this.state.lastMatch.opponent.name}</i>'s <b>{opponentCrew}</b></span>
+							</div>
+
+							<div style={{ marginLeft: '15px' }}><p>Match success chance: <b>{this.state.lastMatch.chance}%</b></p>
+							<p>You got <b>{this.state.lastResult.value} points</b>.</p>
+								{rewards &&
+									<p>
+										Rewards:
+										<div>
+										{rewards.loot.map((loot, index) =>
+											<span key={index} style={{ color: loot.rarity ? CONFIG.RARITIES[loot.rarity].color : '#000' }}
+											><img src={loot.iconUrl || ''} width='50' height='50' /><br/>{loot.quantity} {(loot.rarity == null) ? '' : CONFIG.RARITIES[loot.rarity].name} {loot.full_name}
+												{index < rewards.loot.length - 1 ? ', ' : ''}</span>
+										)}
+										</div>
+									</p>
+								}
+							</div>
 						</div>}
 						<div className="ui two bottom attached buttons">
 							<div className={'ui primary button' + ((this.state.roundOdds.matches.length > 0) ? '' : ' disabled')} onClick={this._payForNewOpponents}>
@@ -649,11 +605,6 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 					</div>
 				</div>
 			);
-		} else if (this.state.gauntlet && (this.state.gauntlet.state == 'ENDED_WITH_REWARDS')) {
-			return <div>
-				<h3>Gauntlet ended, your final rank was <b>{this.state.gauntlet.rank}</b>. Use game client to claim rewards.</h3>
-				<p>Note: you won't see the rewards here, you'll go straight to crew selection. Claim rewards in the game client to see them!</p>
-			</div>;
 		}
 		else {
 			return (<MessageBar messageBarType={MessageBarType.error} >Unknown state for this gauntlet! Check the app, perhaps it's waiting to join or already done.</MessageBar>);
@@ -671,4 +622,155 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 		});
 		// #!endif
 	}
+}
+
+const GauntletSelectCrew = (props: {
+	gauntlet: GauntletDTO;
+	startsIn?: string;
+	featuredSkill: string;
+	traits?: string[];
+	gauntletLoaded: (data: { gauntlet: GauntletDTO}) => void;
+}) => {
+	const [crewSelection, setCrewSelection] = React.useState(undefined as unknown as number[]);
+	const [calculating, setCalculating] = React.useState(false);
+	const [includeFrozen, setIncludeFrozen] = React.useState(false);
+	// Recommendation calculation settings
+	const [featuredSkillBonus, setFeaturedSkillBonus] = React.useState(10);
+	const [critBonusDivider, setCritBonusDivider] = React.useState(3);
+
+	const renderBestCrew = () => {
+		if (!crewSelection) {
+			return <span />;
+		}
+
+		let crewSpans: any[] = [];
+		crewSelection.forEach(id => {
+			let crew = STTApi.roster.find(crew => (crew.crew_id === id) || (crew.id === id));
+			if (!crew) {
+				return;
+			}
+
+			let crewSpan = <Persona
+				key={crew.name}
+				imageUrl={crew.iconUrl}
+				text={crew.name}
+				secondaryText={crew.short_name}
+				tertiaryText={formatCrewStats(crew)}
+				size={PersonaSize.large}
+				presence={(crew.frozen === 0) ? PersonaPresence.online : PersonaPresence.away} />
+
+			crewSpans.push(crewSpan);
+		});
+
+		return (<div>
+			<h3>Best crew</h3>
+			{calculating && <div className="ui medium centered text active inline loader">Still calculating...</div>}
+			<div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap' }}>
+				{crewSpans}
+			</div>
+		</div>);
+	}
+
+	const _calculateSelection = () => {
+		if (!props.gauntlet) {
+			return;
+		}
+		setCalculating(true);
+		var result = gauntletCrewSelection(props.gauntlet, STTApi.roster, (100 + featuredSkillBonus) / 100, critBonusDivider, 5 /*preSortCount*/, includeFrozen);
+		setCrewSelection(result.recommendations);
+		setCalculating(false);
+	}
+
+	const _startGauntlet = () => {
+		if (props.gauntlet && props.gauntlet.gauntlet_id && crewSelection) {
+
+			let crew_ids: number[] = [];
+			crewSelection.forEach(id => {
+				let crew = STTApi.roster.find(crew => (crew.crew_id === id));
+				if (!crew) {
+					console.error(`Crew ${id} not found; are you trying to start a gauntlet with frozen crew?`);
+					return;
+				}
+
+				crew_ids.push(crew.id);
+			});
+
+			if (crew_ids.length === 5) {
+				enterGauntlet(props.gauntlet.gauntlet_id, crew_ids).then((data) => props.gauntletLoaded({ gauntlet: data }));
+			}
+		}
+	}
+
+	return (
+		<div>
+			<Label>Next gauntlet starts in {props.startsIn}.</Label>
+			{props.featuredSkill &&
+				<span className='quest-mastery'>Featured skill: <img src={CONFIG.SPRITES['icon_' + props.featuredSkill].url} height={18} /> {CONFIG.SKILLS[props.featuredSkill]}</span>
+			}
+			<Label>Featured traits: {props.traits && props.traits.join(', ')}</Label>
+
+			{renderBestCrew()}
+
+			<div className="ui grid" style={{ maxWidth: '600px' }}>
+				<div className="row">
+					<div className="column"><h4>Algorithm settings</h4></div>
+				</div>
+
+				<div className="two column row">
+					<div className="column">
+						<SpinButton value='{this.state.featuredSkillBonus}' label='Featured skill bonus:' min={0} max={100} step={1}
+							onIncrement={(value) => { setFeaturedSkillBonus(+value + 1); }}
+							onDecrement={(value) => { setFeaturedSkillBonus(+value - 1); }}
+							onValidate={(value: string) => {
+								if (isNaN(+value)) {
+									setFeaturedSkillBonus(10);
+									return '10';
+								}
+
+								return value;
+							}}
+						/>
+					</div>
+					<div className="column">
+						The higher this number, the more bias applied towards the featured skill during crew selection
+							</div>
+				</div>
+
+				<div className="two column row">
+					<div className="column">
+						<SpinButton value='{this.state.critBonusDivider}' label='Crit bonus divider:' min={0.1} max={100} step={0.1}
+							onIncrement={(value) => { setCritBonusDivider(+value + 0.1); }}
+							onDecrement={(value) => { setCritBonusDivider(+value - 0.1); }}
+							onValidate={(value: string) => {
+								if (isNaN(+value)) {
+									setCritBonusDivider(3);
+									return '3';
+								}
+
+								return value;
+							}}
+						/>
+					</div>
+					<div className="column">
+						The lower this number, the more bias applied towards crew with higher crit bonus rating during selection
+							</div>
+				</div>
+
+				<div className="row">
+					<div className="column">
+						<Checkbox checked={includeFrozen} label="Include frozen crew"
+							onChange={(e, isChecked) => { setIncludeFrozen(isChecked || false ); }}
+						/>
+					</div>
+				</div>
+			</div>
+
+			<br />
+
+			<div style={{ display: 'grid', gridGap: '5px', width: 'fit-content', gridTemplateColumns: 'max-content max-content' }}>
+				<div className={"ui primary button" + (calculating ? ' disabled' : '')} onClick={_calculateSelection}>Calculate best crew selection</div>
+				<div className={"ui primary button" + (!crewSelection ? ' disabled' : '')} onClick={_startGauntlet}>Start gauntlet with recommendations</div>
+			</div>
+		</div>
+	);
 }

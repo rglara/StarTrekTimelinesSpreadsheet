@@ -303,15 +303,20 @@ export interface GauntletContestDTO {
 
 export interface GauntletContestLootDTO {
    flavor: string;
+   full_body?: ImageDataDTO;
    full_name: string;
    icon: ImageDataDTO;
    id: number;
    instance: { bucket: string; id: number; };
    name: string;
+   portrait?: ImageDataDTO;
    quantity: number;
    rarity: number;
    symbol: string;
    type: number;
+
+   //HACK: added by app
+   iconUrl?: string;
 }
 
 export interface VoyageUpdateDTO {
