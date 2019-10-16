@@ -22,6 +22,7 @@ import { GauntletDTO, GauntletCrewDTO, GauntletContestDTO, GauntletContestLootDT
 import { CircularLabel } from './CircularLabel';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 import { CrewImageData } from './images/ImageProvider';
+import { string } from 'prop-types';
 
 interface GauntletCrewProps {
 	crew: GauntletCrewDTO;
@@ -148,6 +149,22 @@ const GauntletMatch = (props: GauntletMatchProps) => {
 			<span style={{ gridArea: 'ocrewname', justifySelf: 'center' }}>{oppCrew ? oppCrew.short_name : "<unknown>"}</span>
 		</div>
 		<div className="ui bottom attached primary button" onClick={_playMatch}>Engage!</div>
+	</div>;
+}
+
+const GauntletStat = (props:{
+	windowWidth: number,
+	value: number | string,
+	label: string,
+	classAdd?: string
+}) => {
+	let classSize = '';
+	if (props.windowWidth < 1200) { classSize = 'small'; }
+	if (props.windowWidth < 800) { classSize = 'tiny'; }
+	if (props.windowWidth < 500) { classSize = 'mini'; }
+	return <div className={`${props.classAdd ? props.classAdd : ''} ui ${classSize} statistic`}>
+		<div className="value" style={{ color: props.classAdd || 'unset' }}>{props.value}</div>
+		<div className="label" style={{ color: 'unset' }}>{props.label}</div>
 	</div>;
 }
 
@@ -416,17 +433,6 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 		this.setState({ logPath: logPath, showSpinner: false }, () => { this._updateCommandItems(); });
 	}
 
-	renderStatistic(value:number|string, label:string, classAdd:string|undefined = undefined) : any {
-		let classSize = '';
-		if (this.state.windowWidth < 1200) { classSize = 'small'; }
-		if (this.state.windowWidth < 800) { classSize = 'tiny'; }
-		if (this.state.windowWidth < 500) { classSize = 'mini'; }
-		return <div className={`${classAdd} ui ${classSize} statistic`}>
-			<div className="value" style={{ color: classAdd || 'unset' }}>{value}</div>
-			<div className="label" style={{ color: 'unset' }}>{label}</div>
-		</div>;
-	}
-
 	render() {
 		if (this.state.showSpinner) {
 			return <div className="centeredVerticalAndHorizontal">
@@ -518,68 +524,71 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 					{this.state.lastErrorMessage && <p>Error: '{this.state.lastErrorMessage}'</p>}
 
 					<div className="ui compact segments" style={{ margin: '8px' }}>
-						<h5 className="ui top attached header" style={{ color: getTheme().palette.neutralDark, backgroundColor: getTheme().palette.themeLighter, textAlign: 'center', padding: '2px' }}>
-							The gauntlet ends in {formatTimeSeconds(this.state.gauntlet.seconds_to_end)}
-						</h5>
-						<div className="ui attached segment" style={{ backgroundColor: getTheme().palette.themeLighter }}>
-							{this.renderStatistic(formatTimeSeconds(this.state.gauntlet.seconds_to_next_crew_refresh), 'Crew refresh')}
-							{this.renderStatistic(this.state.roundOdds.rank, 'Your rank')}
-							{this.renderStatistic(this.state.roundOdds.consecutive_wins, 'Consecutive wins')}
-							{this.renderStatistic(STTApi.playerData.premium_earnable, 'Merits')}
-							{this.state.lastResult && this.renderStatistic(((this.state.lastResult.win === true) ? 'WON' : 'LOST'), 'Last round', ((this.state.lastResult.win === true) ? 'green' : 'red'))}
+						<div style={{display: 'flex', flexDirection: 'row'}}>
+							<div className="ui attached statistic" style={{ marginBottom: '0em', paddingBottom:'1em', width:'300px', backgroundColor: getTheme().palette.themeLighter }}>
+								<h5 className="ui top attached header" style={{ color: getTheme().palette.neutralDark, backgroundColor: getTheme().palette.themeLighter, textAlign: 'center', padding: '2px' }}>
+									The gauntlet ends in {formatTimeSeconds(this.state.gauntlet.seconds_to_end)}
+								</h5>
+								<GauntletStat windowWidth={this.state.windowWidth} label='Crew refresh' value={formatTimeSeconds(this.state.gauntlet.seconds_to_next_crew_refresh)} />
+								<GauntletStat windowWidth={this.state.windowWidth} label='Your rank' value={this.state.roundOdds.rank} />
+								<GauntletStat windowWidth={this.state.windowWidth} label='Consecutive wins' value={this.state.roundOdds.consecutive_wins} />
+								<GauntletStat windowWidth={this.state.windowWidth} label='Merits' value={STTApi.playerData.premium_earnable} />
+								{this.state.lastResult &&
+									<GauntletStat windowWidth={this.state.windowWidth} label='Last round' value={((this.state.lastResult.win === true) ? 'WON' : 'LOST')} classAdd={(this.state.lastResult.win === true) ? 'green' : 'red'}/>}
+							</div>
+							{this.state.lastResult && this.state.lastMatch && <div className="ui attached segment"
+								style={{ display: 'flex', flexFlow: 'row nowrap', backgroundColor: getTheme().palette.themeLighterAlt }}>
+								<div style={containerStyleLast} className="ui attached segment">
+									<span style={{ gridArea: 'pcrewname', justifySelf: 'center' }}>Your <b>{playerCrew}</b></span>
+									<div style={{ gridArea: 'pcrewimage', position: 'relative' }}>
+										<img src={this.state.lastMatch.crewOdd.iconUrl} height={128} />
+										<CircularLabel percent={this.state.lastMatch.crewOdd.crit_chance} />
+									</div>
+
+									<div style={{ gridArea: 'stats' }}>
+										<table style={{ width: '100%' }}>
+											<tbody>
+												{[...Array(6).keys()].map(i =>
+												{
+													let stP = this.state.lastResult!.player_crit_rolls[i] ? stEm : stNorm;
+													let stO = this.state.lastResult!.opponent_crit_rolls[i] ? stEm : stNorm;
+
+													return <tr key={i}><td style={stP as any}>{this.state.lastResult!.player_rolls[i]}</td>
+														<td style={stO as any}>{this.state.lastResult!.opponent_rolls[i]}</td></tr>; })
+												}
+												<tr><td style={ (playerRoll > opponentRoll ? stEm : stNorm) as any}>Score: {playerRoll}</td>
+													<td style={ (playerRoll < opponentRoll ? stEm : stNorm) as any}>Score: {opponentRoll}</td></tr>
+												<tr><td style={ stNorm as any }>Actual Crit: {playerCritPct}%</td>
+													<td style={ stNorm as any }>Actual Crit: {opponentCritPct}%</td></tr>
+											</tbody>
+										</table>
+									</div>
+
+									<div style={{ gridArea: 'ocrewimage', position: 'relative' }}>
+										<img src={this.state.lastMatch.opponent.iconUrl} height={128} />
+										<CircularLabel percent={this.state.lastMatch.opponent.crit_chance} />
+									</div>
+
+									<span style={{ gridArea: 'ocrewname', justifySelf: 'center' }}><i>{this.state.lastMatch.opponent.name}</i>'s <b>{opponentCrew}</b></span>
+								</div>
+
+								<div style={{ marginLeft: '15px' }}><p>Match success chance: <b>{this.state.lastMatch.chance}%</b></p>
+								<p>You got <b>{this.state.lastResult.value} points</b>.</p>
+									{rewards &&
+										<p>
+											Rewards:
+											<div>
+											{rewards.loot.map((loot, index) =>
+												<span key={index} style={{ color: loot.rarity ? CONFIG.RARITIES[loot.rarity].color : '#000' }}
+												><img src={loot.iconUrl || ''} width='50' height='50' /><br/>{loot.quantity} {(loot.rarity == null) ? '' : CONFIG.RARITIES[loot.rarity].name} {loot.full_name}
+													{index < rewards.loot.length - 1 ? ', ' : ''}</span>
+											)}
+											</div>
+										</p>
+									}
+								</div>
+							</div>}
 						</div>
-						{this.state.lastResult && this.state.lastMatch && <div className="ui attached segment"
-							style={{ display: 'flex', flexFlow: 'row nowrap', backgroundColor: getTheme().palette.themeLighterAlt }}>
-							<div style={containerStyleLast} className="ui attached segment">
-								<span style={{ gridArea: 'pcrewname', justifySelf: 'center' }}>Your <b>{playerCrew}</b></span>
-								<div style={{ gridArea: 'pcrewimage', position: 'relative' }}>
-									<img src={this.state.lastMatch.crewOdd.iconUrl} height={128} />
-									<CircularLabel percent={this.state.lastMatch.crewOdd.crit_chance} />
-								</div>
-
-								<div style={{ gridArea: 'stats' }}>
-									<table style={{ width: '100%' }}>
-										<tbody>
-											{[...Array(6).keys()].map(i =>
-											{
-												let stP = this.state.lastResult!.player_crit_rolls[i] ? stEm : stNorm;
-												let stO = this.state.lastResult!.opponent_crit_rolls[i] ? stEm : stNorm;
-
-												return <tr key={i}><td style={stP as any}>{this.state.lastResult!.player_rolls[i]}</td>
-													<td style={stO as any}>{this.state.lastResult!.opponent_rolls[i]}</td></tr>; })
-											}
-											<tr><td style={ (playerRoll > opponentRoll ? stEm : stNorm) as any}>Score: {playerRoll}</td>
-												<td style={ (playerRoll < opponentRoll ? stEm : stNorm) as any}>Score: {opponentRoll}</td></tr>
-											<tr><td style={ stNorm as any }>Actual Crit: {playerCritPct}%</td>
-												<td style={ stNorm as any }>Actual Crit: {opponentCritPct}%</td></tr>
-										</tbody>
-									</table>
-								</div>
-
-								<div style={{ gridArea: 'ocrewimage', position: 'relative' }}>
-									<img src={this.state.lastMatch.opponent.iconUrl} height={128} />
-									<CircularLabel percent={this.state.lastMatch.opponent.crit_chance} />
-								</div>
-
-								<span style={{ gridArea: 'ocrewname', justifySelf: 'center' }}><i>{this.state.lastMatch.opponent.name}</i>'s <b>{opponentCrew}</b></span>
-							</div>
-
-							<div style={{ marginLeft: '15px' }}><p>Match success chance: <b>{this.state.lastMatch.chance}%</b></p>
-							<p>You got <b>{this.state.lastResult.value} points</b>.</p>
-								{rewards &&
-									<p>
-										Rewards:
-										<div>
-										{rewards.loot.map((loot, index) =>
-											<span key={index} style={{ color: loot.rarity ? CONFIG.RARITIES[loot.rarity].color : '#000' }}
-											><img src={loot.iconUrl || ''} width='50' height='50' /><br/>{loot.quantity} {(loot.rarity == null) ? '' : CONFIG.RARITIES[loot.rarity].name} {loot.full_name}
-												{index < rewards.loot.length - 1 ? ', ' : ''}</span>
-										)}
-										</div>
-									</p>
-								}
-							</div>
-						</div>}
 						<div className="ui two bottom attached buttons">
 							<div className={'ui primary button' + ((this.state.roundOdds.matches.length > 0) ? '' : ' disabled')} onClick={this._payForNewOpponents}>
 								<i className="money bill alternate outline icon"></i>

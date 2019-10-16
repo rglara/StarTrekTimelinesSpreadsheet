@@ -732,6 +732,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				if (crew.name.toLowerCase().indexOf(text) > -1) {
 					return true;
 				}
+				if (crew.short_name.toLowerCase().indexOf(text) > -1) {
+					return true;
+				}
 
 				// now search the traits
 				if (crew.traits.toLowerCase().indexOf(text) > -1) {
