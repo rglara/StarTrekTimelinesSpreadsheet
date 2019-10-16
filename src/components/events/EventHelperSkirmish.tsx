@@ -10,18 +10,28 @@ export interface SkirmishEventProps {
    event: EventDTO;
 }
 
+type CrewBonus = {
+   iconUrl: string,
+   crew: CrewData
+};
+
 export const SkirmishEvent = (props: SkirmishEventProps) => {
    const [sorted, setSorted] = React.useState([{ id: 'max_rarity', desc: false }]);
 
    if (!props.event ||
       !props.event.content ||
-      props.event.content.content_type !== EVENT_TYPES.SKIRMISH ||
-      !props.event.content.bonus_crew
+      props.event.content.content_type !== EVENT_TYPES.SKIRMISH
    ) {
       return <span />;
    }
 
-   let crew_bonuses: { iconUrl: string, crew: CrewData } [] = [];
+   if (!props.event.content.bonus_crew) {
+      return <div><h2>Skirmish Event Details</h2>
+         Event bonus crew data not yet available
+      </div>;
+   }
+
+   let crew_bonuses: CrewBonus[] = [];
    props.event.featured_crew.forEach(fc => {
       let avatar = STTApi.getCrewAvatarBySymbol(fc.symbol);
       if (!avatar) {
@@ -44,7 +54,7 @@ export const SkirmishEvent = (props: SkirmishEventProps) => {
       });
    });
 
-   let crew_bonuses_minor: { iconUrl: string, crew: CrewData }[] = [];
+   let crew_bonuses_minor: CrewBonus[] = [];
    let items : CrewData[] = [];
    STTApi.roster.forEach(crew => {
       if (!crew.rawTraits.some(tr => props.event.content.bonus_traits.includes(tr))) {
@@ -73,7 +83,7 @@ export const SkirmishEvent = (props: SkirmishEventProps) => {
             <div>{props.event.bonus_text}</div>
             {/* <EventCrewBonusTable bonuses={props.event.content. shuttles[0].crew_bonuses} /> */}
             <div>Bonus Event Crew (Major Bonus): {props.event.content.bonus_crew.join(', ')}</div>
-            Owned bonus crew: <List horizontal>{crew_bonuses.map(cb => renderCrewBonus(cb))}</List>
+            Owned bonus crew: <List horizontal>{crew_bonuses.map(cb => <CrewBonusEntry cb={cb} />)}</List>
             {/* TODO: use event helper page renderCrewBonus and remove from HomePage */}
             <div>Bonus Crew (Minor Bonus) traits: {props.event.content.bonus_traits.join(', ')}</div>
          </span>
@@ -106,14 +116,15 @@ export const SkirmishEvent = (props: SkirmishEventProps) => {
    </div>;
 }
 
-export function renderCrewBonus(cb: any) {
+const CrewBonusEntry = (props: { cb: CrewBonus }) => {
+   let cb = props.cb;
    return <Popup flowing key={cb.crew.symbol}
       trigger={
          <List.Item >
             <img src={cb.iconUrl} width="25" height="25" />
             <List.Content>
                <List.Header>{cb.crew.name}</List.Header>
-               <RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity ? cb.crew.rarity : null} />
+               <RarityStars min={1} max={cb.crew.max_rarity} value={cb.crew.rarity} />
                {cb.crew.level < 100 && <div>Level {cb.crew.level}</div>}
                {cb.crew.frozen > 0 && <div>Frozen</div>}
             </List.Content>
@@ -129,6 +140,7 @@ export function renderCrewBonus(cb: any) {
    />
 }
 
+// Copies CrewShipList details with some small changes for skirmish crew bonus info
 const getColumns = () => {
    let _columns: Column<CrewData>[] = [];
 
