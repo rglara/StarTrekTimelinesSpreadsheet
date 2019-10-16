@@ -1,19 +1,10 @@
 import React from 'react';
-
 import { Message, Dropdown, Header, Select, Checkbox, Form, Image, Card } from 'semantic-ui-react';
 
-import STTApi from '../../api';
-import {
-	CONFIG,
-	formatCrewStats,
-	bonusCrewForCurrentEvent,
-	formatTimeSeconds
-} from '../../api';
-
-import { bestVoyageShip, startVoyage } from './VoyageTools';
-import { download } from '../../utils/pal';
-import { calculateVoyage, exportVoyageData, CalcChoice, cleanCrewName } from './voyageCalc';
+import STTApi, { CONFIG, formatCrewStats, bonusCrewForCurrentEvent, formatTimeSeconds, download, RarityStars } from '../../api';
 import { CrewData } from '../../api/DTO';
+import { bestVoyageShip, startVoyage } from './VoyageTools';
+import { calculateVoyage, exportVoyageData, CalcChoice, cleanCrewName } from './voyageCalc';
 
 interface VoyageCrewEntry {
 	key: number;
@@ -74,43 +65,6 @@ export const VoyageCrew = (props: {
 	// 		}
 	// 	}
 	// }
-
-	function renderBestCrew() {
-		if (calcState.state === 'inprogress' || calcState.state === 'done') {
-			let crewSpans: any[] = [];
-			calcState.crewSelection.forEach((entry) => {
-				if (entry.choice) {
-					let status = entry.choice.frozen > 0 ? 'frozen' : entry.choice.active_id ? 'active' : 'available';
-					let statusColor = status === 'frozen' ? 'red' : status === 'active' ? 'yellow' : 'green';
-					let crew = (
-						<Card key={entry.choice.crew_id || entry.choice.id} color={status === 'frozen' ? 'red' : status === 'active' ? 'yellow' : 'green'}>
-							<Card.Content>
-								<Image floated='right' size='mini' src={entry.choice.iconUrl} />
-								<Card.Header>{entry.choice.name}</Card.Header>
-								<Card.Meta>{STTApi.playerData.character.voyage_descriptions[0].crew_slots[entry.slotId].name}</Card.Meta>
-								<Card.Description>{formatCrewStats(entry.choice)}</Card.Description>
-							</Card.Content>
-							<Card.Content extra>Status: {status}</Card.Content>
-						</Card>
-					);
-
-					crewSpans[entry.slotId] = crew;
-				} else {
-					console.error(entry);
-				}
-			});
-
-			return (
-				<div>
-					<br />
-					{calcState.state === 'inprogress' && <div className='ui medium centered text active inline loader'>Still calculating...</div>}
-					<Card.Group>{crewSpans}</Card.Group>
-				</div>
-			);
-		} else {
-			return <span />;
-		}
-	}
 
 	let shipSpans = [];
 	for (let entry of bestShips) {
@@ -178,7 +132,7 @@ export const VoyageCrew = (props: {
 
 				<Form.Group inline>
 					<Form.Field>
-						<label>Choose a ship</label>
+						<label>Choose a ship (Bonus: {STTApi.playerData.character.voyage_descriptions[0].ship_trait})</label>
 						<Dropdown
 							className='ship-dropdown'
 							selection
@@ -257,7 +211,7 @@ export const VoyageCrew = (props: {
 				Error: {error}
 			</Message>
 
-			{renderBestCrew()}
+			<BestCrew state={calcState.state} crewSelection={calcState.crewSelection} />
 		</div>
 	);
 
@@ -495,4 +449,56 @@ export const VoyageCrew = (props: {
 		);
 	}
 	// #!endif
+}
+
+const BestCrew = (props : { state: string | undefined, crewSelection: CalcChoice[]}) => {
+	if (props.state === 'inprogress' || props.state === 'done') {
+		let crewSpans: any[] = [];
+		props.crewSelection.forEach((entry) => {
+			if (entry.choice) {
+				let isShuttle = false;
+				STTApi.playerData.character.shuttle_adventures.forEach((shuttle) => {
+					if (shuttle.shuttles[0].id === entry.choice.active_id) {
+						isShuttle = true;
+					}
+				});
+
+				let trait = STTApi.playerData.character.voyage_descriptions[0].crew_slots[entry.slotId].trait;
+				let traitMatch = entry.choice.rawTraits.find(t => t === trait);
+
+				let status = entry.choice.frozen > 0 ? 'Frozen' : entry.choice.active_id ? isShuttle ? 'On Shuttle' : 'On Voyage' : 'Available';
+				let crew = (
+					<Card key={entry.choice.crew_id || entry.choice.id} color={status === 'Frozen' ? 'red' : status === 'Available' ? 'green' : 'yellow'}>
+						<Card.Content>
+							<Image floated='right' size='mini' src={entry.choice.iconUrl} />
+							<Card.Header>{entry.choice.name}</Card.Header>
+							<Card.Meta>
+								{STTApi.playerData.character.voyage_descriptions[0].crew_slots[entry.slotId].name}<br/>
+								{traitMatch ? <b>{trait}</b> : trait }
+							</Card.Meta>
+							<Card.Description>
+								<RarityStars max={entry.choice.max_rarity} value={entry.choice.rarity} colored={true} />
+								<div>{formatCrewStats(entry.choice)}</div>
+							</Card.Description>
+						</Card.Content>
+						<Card.Content extra>Status: {status}</Card.Content>
+					</Card>
+				);
+
+				crewSpans[entry.slotId] = crew;
+			} else {
+				console.error(entry);
+			}
+		});
+
+		return (
+			<div>
+				<br />
+				{props.state === 'inprogress' && <div className='ui medium centered text active inline loader'>Still calculating...</div>}
+				<Card.Group>{crewSpans}</Card.Group>
+			</div>
+		);
+	} else {
+		return <span />;
+	}
 }
