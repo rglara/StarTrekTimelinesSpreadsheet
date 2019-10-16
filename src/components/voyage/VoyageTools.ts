@@ -1,6 +1,6 @@
 import STTApi from '../../api/index';
 import { mergeDeep } from '../../api/ObjectMerge';
-import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO } from '../../api/STTApi';
+import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO } from '../../api/STTApi';
 
 export async function loadVoyage(voyageId: number, newOnly: boolean = true): Promise<VoyageNarrativeDTO[]> {
 	let data = await STTApi.executePostRequest('voyage/refresh', { voyage_status_id: voyageId, new_only: newOnly });
@@ -118,10 +118,10 @@ export async function startVoyage(
 	}
 }
 
-export function bestVoyageShip(): any[] {
+export function bestVoyageShip(): {ship: ShipDTO, score: number }[] {
 	let voyage = STTApi.playerData.character.voyage_descriptions[0];
 
-	let consideredShips: any[] = [];
+	let consideredShips: { ship: ShipDTO, score: number }[] = [];
 	STTApi.ships.forEach((ship) => {
 		if (ship.id > 0) {
 			let entry = {

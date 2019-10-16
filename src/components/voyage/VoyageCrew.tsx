@@ -13,28 +13,7 @@ import {
 import { bestVoyageShip, startVoyage } from './VoyageTools';
 import { download } from '../../utils/pal';
 import { calculateVoyage, exportVoyageData, CalcChoice, cleanCrewName } from './voyageCalc';
-
-export interface VoyageCrewProps {
-	onRefreshNeeded: () => void;
-}
-
-export interface VoyageCrewState {
-	bestShips: any[];
-	selectedShip?: number;
-	includeFrozen: boolean;
-	includeActive: boolean;
-	shipName?: string;
-	state?: any;
-	searchDepth: number;
-	extendsTarget: number;
-	peopleList: VoyageCrewEntry[];
-	error?: any;
-	generatingVoyCrewRank: boolean;
-	activeEvent?: string;
-	currentSelectedItems: number[];
-	crewSelection: CalcChoice[];
-	estimatedDuration?: number;
-}
+import { CrewData } from '../../api/DTO';
 
 interface VoyageCrewEntry {
 	key: number;
@@ -43,58 +22,63 @@ interface VoyageCrewEntry {
 	text: string;
 }
 
-export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState> {
-	constructor(props: VoyageCrewProps) {
-		super(props);
+export const VoyageCrew = (props: {
+	onRefreshNeeded: () => void;
+}) => {
+	const [error, setError] = React.useState(undefined as string | undefined);
+	const [generatingVoyCrewRank, setGeneratingVoyCrewRank] = React.useState(false);
+	const [searchDepth, setSearchDepth] = React.useState(6);
+	const [extendsTarget, setExtendsTarget] = React.useState(0);
+	const [includeFrozen, setIncludeFrozen] = React.useState(false);
+	const [includeActive, setIncludeActive] = React.useState(false);
+	const [shipName, setShipName] = React.useState(undefined as string | undefined);
 
-		let peopleList: VoyageCrewEntry[] = [];
+	const initialCalcState = {
+		estimatedDuration: undefined,
+		state: undefined,
+		crewSelection: []
+	} as {
+		estimatedDuration: number | undefined,
+		state: string | undefined,
+		crewSelection: CalcChoice[]
+	}
+
+	const [calcState, setCalcState] = React.useState(initialCalcState);
+
+	let bestVoyageShips = bestVoyageShip();
+	const [bestShips, setBestShips] = React.useState(bestVoyageShips);
+	const [selectedShip, setSelectedShip] = React.useState(bestVoyageShips[0].ship.id as number | undefined);
+
+		let peopleListVal: VoyageCrewEntry[] = [];
 		STTApi.roster.forEach(crew => {
-			peopleList.push({
+			peopleListVal.push({
 				key: crew.crew_id || crew.id,
 				value: crew.crew_id || crew.id,
 				image: { avatar: true, src: crew.iconUrl },
 				text: crew.name
 			});
 		});
-		peopleList.sort((a, b) => (a.text < b.text) ? -1 : ((a.text > b.text) ? 1 : 0));
+		peopleListVal.sort((a, b) => (a.text < b.text) ? -1 : ((a.text > b.text) ? 1 : 0));
+	const [peopleList, setPeopleList] = React.useState(peopleListVal);
 
-		let bestVoyageShips = bestVoyageShip();
 		// See which crew is needed in the event to give the user a chance to remove them from consideration
 		let result = bonusCrewForCurrentEvent();
-		this.state = {
-			bestShips: bestVoyageShips,
-			selectedShip: bestVoyageShips[0].ship.id,
-			includeFrozen: false,
-			includeActive: false,
-			shipName: undefined,
-			state: undefined,
-			searchDepth: 6,
-			extendsTarget: 0,
-			peopleList,
-			error: undefined,
-			generatingVoyCrewRank: false,
-			activeEvent : result ? result.eventName : undefined,
-			currentSelectedItems : result ? result.crewIds : [],
-			crewSelection: [],
-		};
+	const [activeEvent, setActiveEvent] = React.useState(result ? result.eventName : undefined);
+	const [currentSelectedItems, setCurrentSelectedItems] = React.useState(result ? result.crewIds : []);
 
-		this._calcVoyageData = this._calcVoyageData.bind(this);
-		this._startVoyage = this._startVoyage.bind(this);
-	}
+	// function getIndexBySlotName(slotName: any) : number | undefined {
+	// 	const crewSlots = STTApi.playerData.character.voyage_descriptions[0].crew_slots;
+	// 	for (let slotIndex = 0; slotIndex < crewSlots.length; slotIndex++) {
+	// 		if (crewSlots[slotIndex].name === slotName) {
+	// 			return slotIndex;
+	// 		}
+	// 	}
+	// }
 
-	getIndexBySlotName(slotName: any) : number | undefined {
-		const crewSlots = STTApi.playerData.character.voyage_descriptions[0].crew_slots;
-		for (let slotIndex = 0; slotIndex < crewSlots.length; slotIndex++) {
-			if (crewSlots[slotIndex].name === slotName) {
-				return slotIndex;
-			}
-		}
-	}
-
-	renderBestCrew() {
-		if (this.state.state === 'inprogress' || this.state.state === 'done') {
-			let crewSpans: any= [];
-			this.state.crewSelection.forEach((entry) => {
+	function renderBestCrew() {
+		if (calcState.state === 'inprogress' || calcState.state === 'done') {
+			let crewSpans: any[] = [];
+			calcState.crewSelection.forEach((entry) => {
 				if (entry.choice) {
 					let status = entry.choice.frozen > 0 ? 'frozen' : entry.choice.active_id ? 'active' : 'available';
 					let statusColor = status === 'frozen' ? 'red' : status === 'active' ? 'yellow' : 'green';
@@ -119,7 +103,7 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 			return (
 				<div>
 					<br />
-					{this.state.state === 'inprogress' && <div className='ui medium centered text active inline loader'>Still calculating...</div>}
+					{calcState.state === 'inprogress' && <div className='ui medium centered text active inline loader'>Still calculating...</div>}
 					<Card.Group>{crewSpans}</Card.Group>
 				</div>
 			);
@@ -128,168 +112,166 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 		}
 	}
 
-	render() {
-		let shipSpans = [];
-		for (let entry of this.state.bestShips) {
-			shipSpans.push({
-				key: entry.ship.id,
-				text: entry.ship.name,
-				value: entry.ship.id,
-				content: (
-					<Header
-						icon={<img src={entry.ship.iconUrl} height={48} style={{ display: 'inline-block' }} />}
-						content={entry.ship.name}
-						subheader={`${entry.score.toFixed(0)} antimatter`}
-					/>
-				)
-			});
-		}
-
-		let curVoy = '';
-		if (STTApi.playerData.character.voyage_descriptions && STTApi.playerData.character.voyage_descriptions.length > 0) {
-			curVoy = `${CONFIG.SKILLS[STTApi.playerData.character.voyage_descriptions[0].skills.primary_skill]} primary / ${
-				CONFIG.SKILLS[STTApi.playerData.character.voyage_descriptions[0].skills.secondary_skill]
-			} secondary`;
-		}
-		if (STTApi.playerData.character.voyage && STTApi.playerData.character.voyage.length > 0) {
-			curVoy = `${CONFIG.SKILLS[STTApi.playerData.character.voyage[0].skills.primary_skill]} primary / ${
-				CONFIG.SKILLS[STTApi.playerData.character.voyage[0].skills.secondary_skill]
-			} secondary`;
-		}
-
-		return (
-			<div style={{ margin: '5px' }}>
-				<Message attached>
-					Configure the settings below, then click on the "Calculate" button to see the recommendations. Current voyage is <b>{curVoy}</b>.
-				</Message>
-				<Form className='attached fluid segment' loading={this.state.generatingVoyCrewRank || this.state.state === 'inprogress'}>
-					<Form.Group inline>
-						<Form.Field
-							control={Select}
-							label='Search depth'
-							options={[
-								{ key: '4', text: '4 (fastest)', value: 4 },
-								{ key: '5', text: '5 (faster)', value: 5 },
-								{ key: '6', text: '6 (normal)', value: 6 },
-								{ key: '7', text: '7 (slower)', value: 7 },
-								{ key: '8', text: '8 (slowest)', value: 8 },
-								{ key: '9', text: '9 (for supercomputers)', value: 9 }
-							]}
-							value={this.state.searchDepth}
-							onChange={(e: any, { value }: any) => this.setState({ searchDepth: value })}
-							placeholder='Search depth'
-						/>
-						<Form.Field
-							control={Select}
-							label='Extends (target)'
-							options={[
-								{ key: '0', text: 'none (default)', value: 0 },
-								{ key: '1', text: 'one', value: 1 },
-								{ key: '2', text: 'two', value: 2 }
-							]}
-							value={this.state.extendsTarget}
-							onChange={(e:any, { value }:any) => this.setState({ extendsTarget: value })}
-							placeholder='How many times you plan to revive'
-						/>
-					</Form.Group>
-
-					<Form.Group inline>
-						<Form.Field>
-							<label>Choose a ship</label>
-							<Dropdown
-								className='ship-dropdown'
-								selection
-								options={shipSpans}
-								placeholder='Choose a ship for your voyage'
-								value={this.state.selectedShip}
-								onChange={(ev, { value }) => this.setState({ selectedShip: value !== undefined ? +value : undefined })}
-							/>
-						</Form.Field>
-
-						<Form.Input
-							label='Ship name'
-							value={this.state.shipName}
-							placeholder={this.state.bestShips.find((s: any) => s.ship.id == this.state.selectedShip).ship.name}
-							onChange={(ev, { value }) => this.setState({ shipName: value })}
-						/>
-					</Form.Group>
-
-					<Form.Group>
-						<Form.Field
-							control={Dropdown}
-							clearable
-							fluid
-							multiple
-							search
-							selection
-							options={this.state.peopleList}
-							placeholder='Select or search for crew'
-							label={
-								"Crew you don't want to consider for voyage" +
-								(this.state.activeEvent ? ` (preselected crew which gives bonus in the event ${this.state.activeEvent})` : '')
-							}
-							value={this.state.currentSelectedItems}
-							onChange={(e: any, { value }: any) => this.setState({ currentSelectedItems: value })}
-						/>
-					</Form.Group>
-
-					<Form.Group inline>
-						<Form.Field
-							control={Checkbox}
-							label='Include active (on shuttles) crew'
-							checked={this.state.includeActive}
-							onChange={(e: any, { checked }: any) => this.setState({ includeActive: checked })}
-						/>
-
-						<Form.Field
-							control={Checkbox}
-							label='Include frozen (vaulted) crew'
-							checked={this.state.includeFrozen}
-							onChange={(e: any, { checked }: any) => this.setState({ includeFrozen: checked })}
-						/>
-					</Form.Group>
-
-					{(this.state.state === 'inprogress' || this.state.state === 'done') && (
-						<h3>
-							Estimated duration: <b>{formatTimeSeconds(this.state.estimatedDuration! * 60 * 60)}</b>
-						</h3>
-					)}
-
-					<Form.Group>
-						<Form.Button primary onClick={this._calcVoyageData} disabled={this.state.state === 'inprogress'}>
-							Calculate best crew selection
-						</Form.Button>
-						<Form.Button secondary onClick={this._startVoyage} disabled={this.state.state !== 'done'}>
-							Start voyage with recommendations
-						</Form.Button>
-
-						{/* #!if ENV === 'electron' */}
-						<Form.Button onClick={() => this._generateVoyCrewRank()} disabled={this.state.state === 'inprogress'}>
-							Export CSV with crew Voyage ranking...
-						</Form.Button>
-						{/* #!endif */}
-					</Form.Group>
-				</Form>
-				<Message attached='bottom' error hidden={!this.state.error}>
-					Error: {this.state.error}
-				</Message>
-
-				{this.renderBestCrew()}
-			</div>
-		);
+	let shipSpans = [];
+	for (let entry of bestShips) {
+		shipSpans.push({
+			key: entry.ship.id,
+			text: entry.ship.name,
+			value: entry.ship.id,
+			content: (
+				<Header
+					icon={<img src={entry.ship.iconUrl} height={48} style={{ display: 'inline-block' }} />}
+					content={entry.ship.name}
+					subheader={`${entry.score.toFixed(0)} antimatter`}
+				/>
+			)
+		});
 	}
 
-	_startVoyage() {
+	let curVoy = '';
+	if (STTApi.playerData.character.voyage_descriptions && STTApi.playerData.character.voyage_descriptions.length > 0) {
+		curVoy = `${CONFIG.SKILLS[STTApi.playerData.character.voyage_descriptions[0].skills.primary_skill]} primary / ${
+			CONFIG.SKILLS[STTApi.playerData.character.voyage_descriptions[0].skills.secondary_skill]
+		} secondary`;
+	}
+	if (STTApi.playerData.character.voyage && STTApi.playerData.character.voyage.length > 0) {
+		curVoy = `${CONFIG.SKILLS[STTApi.playerData.character.voyage[0].skills.primary_skill]} primary / ${
+			CONFIG.SKILLS[STTApi.playerData.character.voyage[0].skills.secondary_skill]
+		} secondary`;
+	}
+
+	return (
+		<div style={{ margin: '5px' }}>
+			<Message attached>
+				Configure the settings below, then click on the "Calculate" button to see the recommendations. Current voyage is <b>{curVoy}</b>.
+			</Message>
+			<Form className='attached fluid segment' loading={generatingVoyCrewRank || calcState.state === 'inprogress'}>
+				<Form.Group inline>
+					<Form.Field
+						control={Select}
+						label='Search depth'
+						options={[
+							{ key: '4', text: '4 (fastest)', value: 4 },
+							{ key: '5', text: '5 (faster)', value: 5 },
+							{ key: '6', text: '6 (normal)', value: 6 },
+							{ key: '7', text: '7 (slower)', value: 7 },
+							{ key: '8', text: '8 (slowest)', value: 8 },
+							{ key: '9', text: '9 (for supercomputers)', value: 9 }
+						]}
+						value={searchDepth}
+						onChange={(e: any, { value }: any) => setSearchDepth(value)}
+						placeholder='Search depth'
+					/>
+					<Form.Field
+						control={Select}
+						label='Extends (target)'
+						options={[
+							{ key: '0', text: 'none (default)', value: 0 },
+							{ key: '1', text: 'one', value: 1 },
+							{ key: '2', text: 'two', value: 2 }
+						]}
+						value={extendsTarget}
+						onChange={(e:any, { value }:any) => setExtendsTarget(value)}
+						placeholder='How many times you plan to revive'
+					/>
+				</Form.Group>
+
+				<Form.Group inline>
+					<Form.Field>
+						<label>Choose a ship</label>
+						<Dropdown
+							className='ship-dropdown'
+							selection
+							options={shipSpans}
+							placeholder='Choose a ship for your voyage'
+							value={selectedShip}
+							onChange={(ev, { value }) => setSelectedShip(value !== undefined ? +value : undefined)}
+						/>
+					</Form.Field>
+
+					<Form.Input
+						label='Ship name'
+						value={shipName}
+						placeholder={bestShips.find((s) => s.ship.id == selectedShip)!.ship.name}
+						onChange={(ev, { value }) => setShipName(value)}
+					/>
+				</Form.Group>
+
+				<Form.Group>
+					<Form.Field
+						control={Dropdown}
+						clearable
+						fluid
+						multiple
+						search
+						selection
+						options={peopleList}
+						placeholder='Select or search for crew'
+						label={
+							"Crew you don't want to consider for voyage" +
+							(activeEvent ? ` (preselected crew which gives bonus in the event ${activeEvent})` : '')
+						}
+						value={currentSelectedItems}
+						onChange={(e: any, { value }: any) => setCurrentSelectedItems(value)}
+					/>
+				</Form.Group>
+
+				<Form.Group inline>
+					<Form.Field
+						control={Checkbox}
+						label='Include active (on shuttles) crew'
+						checked={includeActive}
+						onChange={(e: any, { checked }: any) => setIncludeActive(checked)}
+					/>
+
+					<Form.Field
+						control={Checkbox}
+						label='Include frozen (vaulted) crew'
+						checked={includeFrozen}
+						onChange={(e: any, { checked }: any) => setIncludeFrozen(checked)}
+					/>
+				</Form.Group>
+
+				{(calcState.state === 'inprogress' || calcState.state === 'done') && (
+					<h3>
+						Estimated duration: <b>{formatTimeSeconds(calcState.estimatedDuration! * 60 * 60)}</b>
+					</h3>
+				)}
+
+				<Form.Group>
+					<Form.Button primary onClick={_calcVoyageData} disabled={calcState.state === 'inprogress'}>
+						Calculate best crew selection
+					</Form.Button>
+					<Form.Button secondary onClick={_startVoyage} disabled={calcState.state !== 'done'}>
+						Start voyage with recommendations
+					</Form.Button>
+
+					{/* #!if ENV === 'electron' */}
+					<Form.Button onClick={() => _generateVoyCrewRank()} disabled={calcState.state === 'inprogress'}>
+						Export CSV with crew Voyage ranking...
+					</Form.Button>
+					{/* #!endif */}
+				</Form.Group>
+			</Form>
+			<Message attached='bottom' error hidden={!error}>
+				Error: {error}
+			</Message>
+
+			{renderBestCrew()}
+		</div>
+	);
+
+	function _startVoyage() {
 		let selectedCrewIds = [];
 		for (let i = 0; i < STTApi.playerData.character.voyage_descriptions[0].crew_slots.length; i++) {
-			let entry = this.state.crewSelection.find((entry) => entry.slotId === i);
+			let entry = calcState.crewSelection.find((entry) => entry.slotId === i);
 			if (!entry) {
-				this.setState({ error: `Cannot start voyage with unknown crew slot '${i}'` });
+				setError(`Cannot start voyage with unknown crew slot '${i}'`);
 				return;
 			}
 
 			if (!entry.choice.crew_id || entry.choice.active_id) {
-				this.setState({ error: `Cannot start voyage with frozen or active crew '${entry.choice.name}'` });
+				setError(`Cannot start voyage with frozen or active crew '${entry.choice.name}'`);
 				return;
 			}
 
@@ -298,12 +280,12 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 
 		startVoyage(
 			STTApi.playerData.character.voyage_descriptions[0].symbol,
-			this.state.bestShips.find((s: any) => s.ship.id == this.state.selectedShip).ship.id,
-			this.state.shipName,
+			bestShips.find((s) => s.ship.id == selectedShip)!.ship.id,
+			shipName,
 			selectedCrewIds
 		)
 			.then(() => {
-				this.props.onRefreshNeeded();
+				props.onRefreshNeeded();
 
 				let voyage = STTApi.playerData.character.voyage[0];
 				if (voyage && voyage.id) {
@@ -312,22 +294,22 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 				}
 			})
 			.catch(err => {
-				this.setState({ error: err.message });
+				setError(err.message);
 			});
 	}
 
-	_packVoyageOptions() {
+	function _packVoyageOptions() {
 		let filteredRoster = STTApi.roster.filter(crew => {
 			// Filter out buy-back crew
 			if (crew.buyback) {
 				return false;
 			}
 
-			if (!this.state.includeActive && crew.active_id) {
+			if (!includeActive && crew.active_id) {
 				return false;
 			}
 
-			if (!this.state.includeFrozen && crew.frozen > 0) {
+			if (!includeFrozen && crew.frozen > 0) {
 				return false;
 			}
 
@@ -336,8 +318,8 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 
 			// Filter out crew the user has chosen not to include
 			if (
-				this.state.currentSelectedItems.length > 0 &&
-				this.state.currentSelectedItems.some((ignored: any) => ignored === (crew.crew_id || crew.id))
+				currentSelectedItems.length > 0 &&
+				currentSelectedItems.some((ignored) => ignored === (crew.crew_id || crew.id))
 			) {
 				return false;
 			}
@@ -346,9 +328,9 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 		});
 
 		return {
-			searchDepth: this.state.searchDepth,
-			extendsTarget: this.state.extendsTarget,
-			shipAM: this.state.bestShips.find((s: any) => s.ship.id == this.state.selectedShip).score,
+			searchDepth: searchDepth,
+			extendsTarget: extendsTarget,
+			shipAM: bestShips.find((s) => s.ship.id == selectedShip)!.score,
 			skillPrimaryMultiplier: 3.5,
 			skillSecondaryMultiplier: 2.5,
 			skillMatchingMultiplier: 1.1,
@@ -358,20 +340,20 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 		};
 	}
 
-	_calcVoyageData() {
-		let options = this._packVoyageOptions();
+	function _calcVoyageData() {
+		let options = _packVoyageOptions();
 
 		calculateVoyage(
 			options,
 			(entries: CalcChoice[], score: number) => {
-				this.setState({
+				setCalcState({
 					crewSelection: entries,
 					estimatedDuration: score,
 					state: 'inprogress'
 				});
 			},
 			(entries: CalcChoice[], score: number) => {
-				this.setState({
+				setCalcState({
 					crewSelection: entries,
 					estimatedDuration: score,
 					state: 'done'
@@ -381,7 +363,7 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 	}
 
 	// #!if ENV === 'electron'
-	_generateVoyCrewRank() {
+	function _generateVoyCrewRank() {
 		function nthIndex(str:string, pat:string, n:number) {
 			let L = str.length, i = -1;
 			while (n-- && i++ < L) {
@@ -391,14 +373,14 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 			return i;
 		}
 
-		this.setState({ generatingVoyCrewRank: true });
+		setGeneratingVoyCrewRank(true);
 
-		let dataToExport = exportVoyageData(this._packVoyageOptions());
+		let dataToExport = exportVoyageData(_packVoyageOptions());
 
 		const NativeExtension = require('electron').remote.require('stt-native');
 		NativeExtension.calculateVoyageCrewRank(
 			JSON.stringify(dataToExport),
-			(rankResult: any, estimateResult: any) => {
+			(rankResult: string, estimateResult: string) => {
 				// estimateResult is of the form "Primary,Secondary,Estimate,Crew\nDIP, CMD, 8.2, crew1 | crew2 | crew3 | crew4 | crew5 | ... crew12\nCMD, DIP, 8.2, crew1 | ... "
 				// crew names may have spaces and commas
 				let lines = estimateResult.split('\n');
@@ -439,13 +421,13 @@ export class VoyageCrew extends React.Component<VoyageCrewProps, VoyageCrewState
 					estimateResultSplit += line.substring(0, posEst) + ',' + est + ', "' + crewlist.join(' | ') + '"\n'; // join back with pipe to make easier equations
 				});
 
-				this.setState({ generatingVoyCrewRank: false });
+				setGeneratingVoyCrewRank(false);
 
 				// Now also update rankResult to add crew usage value column
 				// Format is: "Score,Alt 1,Alt 2,Alt 3,Alt 4,Alt 5,Status,Crew,Voyages (Pri),Voyages(alt)"
 				let linesCrew = rankResult.split('\n');
 				let rankResultSplit = "";
-				let includedCrew : any = {};
+				let includedCrew : { [cid:number]: CrewData } = {};
 				linesCrew.forEach((line:string, index:number) => {
 					let posName = nthIndex(line, ',', 7);
 					let partA = line.substring(0, posName);
