@@ -6,16 +6,15 @@ import ReactTable, { Column } from 'react-table';
 import { EventDTO, EVENT_TYPES, CrewData } from "../../api/STTApi";
 import STTApi, { RarityStars, CONFIG } from '../../api';
 
-export interface SkirmishEventProps {
-   event: EventDTO;
-}
-
 type CrewBonus = {
    iconUrl: string,
    crew: CrewData
 };
 
-export const SkirmishEvent = (props: SkirmishEventProps) => {
+export const SkirmishEvent = (props: {
+   event: EventDTO;
+   onTabSwitch?: (newTab: string) => void;
+}) => {
    const [sorted, setSorted] = React.useState([{ id: 'max_rarity', desc: false }]);
 
    if (!props.event ||
@@ -26,14 +25,19 @@ export const SkirmishEvent = (props: SkirmishEventProps) => {
    }
 
    if (!props.event.content.bonus_crew) {
+      let ref = <span>Crew Ship Details</span>;
+      if (props.onTabSwitch) {
+         ref = <Label as='a' onClick={() => props.onTabSwitch!('Shuttles')}>Shuttle Details</Label>;
+      }
+
       return <div><h2>Skirmish Event Details</h2>
-         Event bonus crew data not yet available
+         Event bonus crew data not yet available, but you can check the {ref} page to start planning.
       </div>;
    }
 
    let crew_bonuses: CrewBonus[] = [];
-   props.event.featured_crew.forEach(fc => {
-      let avatar = STTApi.getCrewAvatarBySymbol(fc.symbol);
+   props.event.content.bonus_crew.forEach(bcSymbol => {
+      let avatar = STTApi.getCrewAvatarBySymbol(bcSymbol);
       if (!avatar) {
          return;
       }

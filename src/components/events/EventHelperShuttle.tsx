@@ -3,12 +3,10 @@ import { EventDTO, EVENT_TYPES } from "../../api/STTApi";
 import { Label } from 'semantic-ui-react';
 import { EventCrewBonusTable } from './EventHelperPage';
 
-export interface ShuttleEventProps {
+export const ShuttleEvent = (props: {
    event: EventDTO;
    onTabSwitch?: (newTab: string) => void;
-}
-
-export const ShuttleEvent = (props: ShuttleEventProps) => {
+}) => {
    if (!props.event ||
       !props.event.content ||
       props.event.content.content_type !== EVENT_TYPES.SHUTTLES ||

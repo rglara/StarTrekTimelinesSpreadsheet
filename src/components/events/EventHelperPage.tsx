@@ -15,11 +15,9 @@ import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
 
 import { SkillCell } from '../crew/SkillCell';
 
-export interface EventHelperPageProps {
+export const EventHelperPage = (props: {
    onTabSwitch?: (newTab: string) => void;
-}
-
-export const EventHelperPage = (props:EventHelperPageProps) => {
+}) => {
    const [eventImageUrl, setEventImageUrl] = React.useState();
 
    let currEvent : EventDTO | undefined = undefined;
@@ -72,7 +70,7 @@ export const EventHelperPage = (props:EventHelperPageProps) => {
 
          <GalaxyEvent event={currEvent} />
          <ShuttleEvent event={currEvent} onTabSwitch={props.onTabSwitch} />
-         <SkirmishEvent event={currEvent} />
+         <SkirmishEvent event={currEvent} onTabSwitch={props.onTabSwitch} />
       </div>
    );
 }
