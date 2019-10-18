@@ -13,7 +13,7 @@ interface VoyageCrewEntry {
 	text: string;
 }
 
-export const VoyageCrew = (props: {
+export const VoyageCrewSelect = (props: {
 	onRefreshNeeded: () => void;
 }) => {
 	const [error, setError] = React.useState(undefined as string | undefined);

@@ -391,7 +391,25 @@ export interface VoyageDTO {
       trait: string;
    }[];
    description: string; // seems to be unused
-   dilemma?: any;
+   dilemma?: {
+      icon: string;
+      id: number;
+      intro: string;
+      resolutions: {
+         locked: boolean;
+         loot: string[];
+         option: string;
+         outro: string;
+         outro_crew: any[];
+         skill: string;
+      }[];
+      rewards?: {
+         loot: VoyagePendingLootDTO[];
+      }
+      state: string;
+      symbol: string;
+      title: string;
+   };
    first_leave: boolean;
    granted_rewards: any; // was null
    hp: number;
@@ -400,11 +418,13 @@ export interface VoyageDTO {
    log_index: number;
    max_hp: number;
    name: string; // seems to be unused
+   next_interaction?: string;
    pending_rewards: { loot: VoyagePendingLootDTO[] };
    recalled_at: string;
    recall_time_left?: number;
    seconds_between_dilemmas: number;
    seconds_since_last_dilemma: number;
+   seconds_til_death?: number;
    seed: number;
    ship_id: number;
    ship_name: string;
@@ -414,6 +434,7 @@ export interface VoyageDTO {
    speedup_cost?: { currency: number; amount: number; };
    state: string;
    time_to_next_event: number;
+   time_till_next_interaction?: number;
    voyage_duration: number;
 }
 

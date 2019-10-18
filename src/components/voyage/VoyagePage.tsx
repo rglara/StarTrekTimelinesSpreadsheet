@@ -1,6 +1,6 @@
 import React from 'react';
 import STTApi from '../../api';
-import { VoyageCrew } from './VoyageCrew';
+import { VoyageCrewSelect } from './VoyageCrewSelect';
 import { VoyageLog } from './VoyageLog';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 
@@ -10,16 +10,15 @@ export interface VoyagePageProps {
 
 export const VoyagePage = (props: VoyagePageProps) => {
    const [, updateState] = React.useState();
-   const forceUpdate = React.useCallback(() => updateState({}), []);
+   const forceUpdate = React.useCallback(() => {
+      updateState({});
+      updateCommandItems(); // when a voyage starts, command items need to update to show toggle
+   }, []);
    const [showCalcAnyway, setShowCalcAnyway] = React.useState(false);
 
-   React.useEffect(() => _updateCommandItems(), [showCalcAnyway]);
+   React.useEffect(() => updateCommandItems(), [showCalcAnyway]);
 
-   function _onRefreshNeeded() {
-      forceUpdate();
-   }
-
-   function _updateCommandItems() {
+   function updateCommandItems() {
       if (props.onCommandItemsUpdate) {
          const activeVoyage = STTApi.playerData.character.voyage.length > 0;
 
@@ -31,7 +30,6 @@ export const VoyagePage = (props: VoyagePageProps) => {
                   iconProps: { iconName: 'Switch' },
                   onClick: () => {
                      setShowCalcAnyway(!showCalcAnyway);
-                     //_updateCommandItems();
                   }
                }
             ]);
@@ -45,7 +43,7 @@ export const VoyagePage = (props: VoyagePageProps) => {
 
    return (
       <div className='tab-panel' data-is-scrollable='true'>
-         {(!activeVoyage || showCalcAnyway) && <VoyageCrew onRefreshNeeded={() => _onRefreshNeeded()} />}
+         {(!activeVoyage || showCalcAnyway) && <VoyageCrewSelect onRefreshNeeded={() => forceUpdate()} />}
          {activeVoyage && !showCalcAnyway && <VoyageLog />}
       </div>
    );
