@@ -575,16 +575,16 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 								<div style={{ marginLeft: '15px' }}><p>Match success chance: <b>{this.state.lastMatch.chance}%</b></p>
 								<p>You got <b>{this.state.lastResult.value} points</b>.</p>
 									{rewards &&
-										<p>
+										<div>
 											Rewards:
-											<p>
+											<div>
 											{rewards.loot.map((loot, index) =>
 												<span key={index} style={{ color: loot.rarity ? CONFIG.RARITIES[loot.rarity].color : '#000' }}
 												><img src={loot.iconUrl || ''} width='50' height='50' /><br/>{loot.quantity} {(loot.rarity == null) ? '' : CONFIG.RARITIES[loot.rarity].name} {loot.full_name}
 													{index < rewards.loot.length - 1 ? ', ' : ''}</span>
 											)}
-											</p>
-										</p>
+											</div>
+										</div>
 									}
 								</div>
 							</div>}
