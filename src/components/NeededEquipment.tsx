@@ -27,6 +27,7 @@ export const NeededEquipment = (props: {
 	} as EquipNeedFilter);
 	const [neededEquipment, setNeededEquipment] = React.useState([] as EquipNeed[]);
 	const [currentSelectedItems, setCurrentSelectedItems] = React.useState([] as number[]);
+	const [replicatorTarget, setReplicatorTarget] = React.useState(undefined as ItemArchetypeDTO | undefined);
 
 	React.useEffect(() => {
 		_updateCommandItems();
@@ -46,9 +47,6 @@ export const NeededEquipment = (props: {
 	});
 
 	const [peopleList, setPeopleList] = React.useState(peopleListInit);
-
-	let _replicateDialog = React.createRef<ReplicatorDialog>();
-	let _warpDialog = React.createRef<WarpDialog>();
 
 	const _filterNeededEquipment = (filters: EquipNeedFilter) : void => {
 		const neededEquipment = STTApi.getNeededEquipment(filters, currentSelectedItems);
@@ -137,90 +135,6 @@ export const NeededEquipment = (props: {
 				}
 			]);
 		}
-	}
-
-	const renderFarmList = () => {
-		if (!neededEquipment) {
-			return <span />;
-		}
-
-		type MissionEquip = {
-			mission: ItemArchetypeSourceDTO;
-			equipment: ItemArchetypeDTO[];
-		};
-
-		let missionMap = new Map<number, MissionEquip>();
-		neededEquipment.forEach(entry => {
-			let equipment = entry.equipment;
-			let missions = equipment.item_sources.filter(e => (e.type === 0) || (e.type === 2));
-
-			missions.forEach(mission => {
-				if (!_getMissionCost(mission.id, mission.mastery)) {
-					// Disabled missions are filtered out
-					return;
-				}
-
-				let key = mission.id * (mission.mastery + 1);
-				if (!missionMap.has(key)) {
-					missionMap.set(key, {
-						mission: mission,
-						equipment: []
-					});
-				}
-
-				missionMap.get(key)!.equipment.push(equipment);
-			});
-		});
-
-		let entries = Array.from(missionMap.values());
-		entries.sort((a, b) => a.equipment.length - b.equipment.length);
-
-		// Minimize entries
-		const obtainable = (equipment: ItemArchetypeDTO, entry: MissionEquip) => entries.some(e => (e !== entry) && e.equipment.some(eq => eq.id === equipment.id));
-
-		// TODO: there must be a better algorithm for this, maybe one that also accounts for drop chances to break ties :)
-		let reducePossible = true;
-		while (reducePossible) {
-			reducePossible = false;
-
-			for (let entry of entries) {
-				if (entry.equipment.every(eq => obtainable(eq, entry))) {
-					entries.splice(entries.indexOf(entry), 1);
-					reducePossible = true;
-				}
-			}
-		}
-
-		entries.reverse();
-
-		let res = [];
-		for (let val of entries) {
-			let key = val.mission.id * (val.mission.mastery + 1);
-			let entry = val.mission;
-
-			res.push(<div key={key} style={{ lineHeight: '2.5' }}>
-				<div className="ui labeled button compact tiny" key={key} onClick={() => _warpDialog.current!.show(entry.id, entry.mastery)}>
-					<div className="ui button compact tiny">
-						{entry.name} <span style={{ display: 'inline-block' }}><img src={CONFIG.MASTERY_LEVELS[entry.mastery].url()} height={14} /></span> ({entry.chance_grade}/5)
-					</div>
-					<a className="ui blue label">
-						{_getMissionCost(entry.id, entry.mastery)} <span style={{ display: 'inline-block' }}><img src={CONFIG.SPRITES['energy_icon'].url} height={14} /></span>
-					</a>
-				</div>
-
-				<div className="ui label small">
-					{val.equipment.map((entry, idx, all) => <span key={idx}
-						style={{ color: entry.rarity ? CONFIG.RARITIES[entry.rarity].color : '' }}>{(entry.rarity ?
-						CONFIG.RARITIES[entry.rarity].name : '')} {entry.name}{idx == all.length - 1 ? '' : <span>&nbsp;&nbsp;</span>}
-						</span>)}
-				</div>
-			</div>);
-		}
-
-		return <CollapsibleSection title='Farming list (WORK IN PROGRESS, NEEDS A LOT OF IMPROVEMENT)'>
-			<p>This list minimizes the number of missions that can yield all filtered equipment as rewards (it <b>doesn't</b> factor in drop chances).</p>
-			{res}
-		</CollapsibleSection>;
 	}
 
 	const _exportCSV = () => {
@@ -316,20 +230,19 @@ export const NeededEquipment = (props: {
 				<div key={idx} className="ui raised segment" style={{ display: 'grid', gridTemplateColumns: '128px auto', gridTemplateAreas: `'icon name' 'icon details'`, padding: '8px 4px', margin: '8px', backgroundColor: getTheme().palette.themeLighter }}>
 					<div style={{ gridArea: 'icon', textAlign: 'center' }}>
 						<ItemDisplay src={entry.equipment.iconUrl || ''} size={128} maxRarity={entry.equipment.rarity} rarity={entry.equipment.rarity} />
-						<button style={{ marginBottom: '8px' }} className="ui button" onClick={() => _replicateDialog.current!.show(entry.equipment)}>Replicate...</button>
+						<button style={{ marginBottom: '8px' }} className="ui button" onClick={() => setReplicatorTarget(entry.equipment)}>Replicate...</button>
 					</div>
 					<div style={{ gridArea: 'name', alignSelf: 'start', margin: '0' }}>
 						<h4><a href={'https://stt.wiki/wiki/' + entry.equipment.name.split(' ').join('_')} target='_blank'>{entry.equipment.name}</a>
 						{` (need ${entry.needed}, have ${entry.have})`}</h4>
 					</div>
 					<div style={{ gridArea: 'details', alignSelf: 'start' }}>
-						<NeededEquipmentSources entry={entry} warpDialog={_warpDialog} />
+						<NeededEquipmentSources entry={entry} onWarp={() => _filterNeededEquipment(filters) } />
 					</div>
 				</div>
 			)}
-			{renderFarmList()}
-			<ReplicatorDialog ref={_replicateDialog} />
-			<WarpDialog ref={_warpDialog} onWarped={() => _filterNeededEquipment(filters)} />
+			<FarmList neededEquipment={neededEquipment} onWarp={() => _filterNeededEquipment(filters)} />
+			<ReplicatorDialog targetArchetype={replicatorTarget} />
 		</div>);
 	}
 	else {
@@ -359,10 +272,9 @@ function _getMissionCost(id: number, mastery_level: number) {
 
 const NeededEquipmentSources = (props: {
 	entry: EquipNeed,
-	warpDialog: React.RefObject<WarpDialog>,
+	onWarp?: () => void;
 }) => {
 	const entry = props.entry;
-	const _warpDialog = props.warpDialog;
 
 	let equipment = entry.equipment;
 	let counts = entry.counts;
@@ -387,7 +299,7 @@ const NeededEquipmentSources = (props: {
 			{disputeMissions.map((entry, idx, all) =>
 				<div className={"ui labeled button compact tiny" + ((_getMissionCost(entry.id, entry.mastery) === undefined) ? " disabled" : "")}
 					key={idx}
-					onClick={() => _warpDialog.current!.show(entry.id, entry.mastery)}>
+					onClick={() => warp(entry)}>
 					<div className="ui button compact tiny">
 						{entry.name} <span style={{ display: 'inline-block' }}><img src={CONFIG.MASTERY_LEVELS[entry.mastery].url()} height={14} /></span> ({entry.chance_grade}/5)
 						</div>
@@ -406,7 +318,7 @@ const NeededEquipmentSources = (props: {
 			{shipBattles.map((entry, idx, all) =>
 				<div className={"ui labeled button compact tiny" + ((_getMissionCost(entry.id, entry.mastery) === undefined) ? " disabled" : "")}
 					key={idx}
-					onClick={() => _warpDialog.current!.show(entry.id, entry.mastery)}>
+					onClick={() => warp(entry)}>
 					<div className="ui button compact tiny">
 						{entry.name} <span style={{ display: 'inline-block' }}><img src={CONFIG.MASTERY_LEVELS[entry.mastery].url()} height={14} /></span> ({entry.chance_grade}/5)
 						</div>
@@ -449,6 +361,112 @@ const NeededEquipmentSources = (props: {
 		</div>)
 	}
 
-	return <div>{res}</div>;
+	const [warpQuestId, setWarpQuestId] = React.useState(undefined as number | undefined);
+	const [warpMasteryLevel, setWarpMasteryLevel] = React.useState(undefined as number | undefined);
+
+	function warp(entry: ItemArchetypeSourceDTO) {
+		setWarpQuestId(entry.id);
+		setWarpMasteryLevel(entry.mastery);
+	};
+
+	return <div>
+		{res}
+		<WarpDialog questId={warpQuestId} masteryLevel={warpMasteryLevel} onWarped={props.onWarp} />
+	</div>;
 }
 
+const FarmList = (props:{
+	neededEquipment?: EquipNeed[];
+	onWarp?: () => void;
+}) => {
+	if (!props.neededEquipment) {
+		return <span />;
+	}
+
+	type MissionEquip = {
+		mission: ItemArchetypeSourceDTO;
+		equipment: ItemArchetypeDTO[];
+	};
+
+	let missionMap = new Map<number, MissionEquip>();
+	props.neededEquipment.forEach(entry => {
+		let equipment = entry.equipment;
+		let missions = equipment.item_sources.filter(e => (e.type === 0) || (e.type === 2));
+
+		missions.forEach(mission => {
+			if (!_getMissionCost(mission.id, mission.mastery)) {
+				// Disabled missions are filtered out
+				return;
+			}
+
+			let key = mission.id * (mission.mastery + 1);
+			if (!missionMap.has(key)) {
+				missionMap.set(key, {
+					mission: mission,
+					equipment: []
+				});
+			}
+
+			missionMap.get(key)!.equipment.push(equipment);
+		});
+	});
+
+	let entries = Array.from(missionMap.values());
+	entries.sort((a, b) => a.equipment.length - b.equipment.length);
+
+	// Minimize entries
+	const obtainable = (equipment: ItemArchetypeDTO, entry: MissionEquip) => entries.some(e => (e !== entry) && e.equipment.some(eq => eq.id === equipment.id));
+
+	// TODO: there must be a better algorithm for this, maybe one that also accounts for drop chances to break ties :)
+	let reducePossible = true;
+	while (reducePossible) {
+		reducePossible = false;
+
+		for (let entry of entries) {
+			if (entry.equipment.every(eq => obtainable(eq, entry))) {
+				entries.splice(entries.indexOf(entry), 1);
+				reducePossible = true;
+			}
+		}
+	}
+
+	entries.reverse();
+
+	let res = [];
+	for (let val of entries) {
+		let key = val.mission.id * (val.mission.mastery + 1);
+		let entry = val.mission;
+
+		res.push(<div key={key} style={{ lineHeight: '2.5' }}>
+			<div className="ui labeled button compact tiny" key={key} onClick={() => warp(entry)}>
+				<div className="ui button compact tiny">
+					{entry.name} <span style={{ display: 'inline-block' }}><img src={CONFIG.MASTERY_LEVELS[entry.mastery].url()} height={14} /></span> ({entry.chance_grade}/5)
+					</div>
+				<a className="ui blue label">
+					{_getMissionCost(entry.id, entry.mastery)} <span style={{ display: 'inline-block' }}><img src={CONFIG.SPRITES['energy_icon'].url} height={14} /></span>
+				</a>
+			</div>
+
+			<div className="ui label small">
+				{val.equipment.map((entry, idx, all) => <span key={idx}
+					style={{ color: entry.rarity ? CONFIG.RARITIES[entry.rarity].color : '' }}>{(entry.rarity ?
+						CONFIG.RARITIES[entry.rarity].name : '')} {entry.name}{idx == all.length - 1 ? '' : <span>&nbsp;&nbsp;</span>}
+				</span>)}
+			</div>
+		</div>);
+	}
+
+	const [warpQuestId, setWarpQuestId] = React.useState(undefined as number | undefined);
+	const [warpMasteryLevel, setWarpMasteryLevel] = React.useState(undefined as number | undefined);
+
+	function warp(entry: ItemArchetypeSourceDTO) {
+		setWarpQuestId(entry.id);
+		setWarpMasteryLevel(entry.mastery);
+	};
+
+	return <CollapsibleSection title='Farming list (WORK IN PROGRESS, NEEDS A LOT OF IMPROVEMENT)'>
+		<p>This list minimizes the number of missions that can yield all filtered equipment as rewards (it <b>doesn't</b> factor in drop chances).</p>
+		{res}
+		<WarpDialog questId={warpQuestId} masteryLevel={warpMasteryLevel} onWarped={props.onWarp}/>
+	</CollapsibleSection>;
+}
