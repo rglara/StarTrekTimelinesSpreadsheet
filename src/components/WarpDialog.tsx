@@ -11,6 +11,7 @@ export const WarpDialog = (props:{
     questId?: number;
     masteryLevel?: number;
     onWarped?: () => void;
+    onClose?: () => void;
 }) => {
     const [showDialog, setShowDialog] = React.useState(false);
     const [iconUrl, setIconUrl] = React.useState('');
@@ -55,6 +56,9 @@ export const WarpDialog = (props:{
         setMasteryLevel(undefined);
         setWarpCount(1);
         setIconUrl('');
+        if (props.onClose) {
+            props.onClose();
+        }
     }
 
     const warp = async (warpCount: number) => {

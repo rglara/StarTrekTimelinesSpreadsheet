@@ -11,6 +11,8 @@ export interface ItemDisplayProps {
     style?: any;
     src: string;
     sources?: any; // JSX element
+    onClick?: () => void;
+    onDoubleClick?: () => void;
 }
 
 export const ItemDisplay = (props: ItemDisplayProps) => {
@@ -43,7 +45,7 @@ export const ItemDisplay = (props: ItemDisplayProps) => {
     divStyle.width = props.size + 'px';
     divStyle.height = props.size + 'px';
 
-    return <div style={divStyle}>
+    return <div style={divStyle} onDoubleClick={props.onDoubleClick} onClick={props.onClick} >
         <img src={props.src}
                 style={{ borderStyle: 'solid',
                         borderRadius: borderRadius + 'px',

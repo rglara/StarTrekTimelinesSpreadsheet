@@ -11,6 +11,7 @@ import UserStore from './Styles';
 import STTApi from '../api';
 import { CONFIG, replicatorCurrencyCost, replicatorFuelCost, canReplicate, replicatorFuelValue, canUseAsFuel, replicate } from '../api';
 import { ItemDTO, ItemArchetypeDTO } from '../api/DTO';
+import { ReplicatorFuel } from '../api/ReplicatorTools';
 
 type FuelTankItem = {
 	name: string;
@@ -24,6 +25,8 @@ type FuelTankItem = {
 
 export const ReplicatorDialog = (props:{
 	targetArchetype?: ItemArchetypeDTO;
+	onReplicate?: () => void;
+	onClose?: () => void;
 }) => {
 	const [showDialog, setShowDialog] = React.useState(false);
 	const [fuelconfig, setFuelConfig] = React.useState('extraSchematics');
@@ -33,7 +36,7 @@ export const ReplicatorDialog = (props:{
 	const [fuelCost, setFuelCost] = React.useState(1000);
 	const [canBeReplicated, setCanBeReplicated] = React.useState(false);
 	const [currencyCost, setCurrencyCost] = React.useState(undefined as number | undefined);
-	const [targetArchetype, setTargetArchetype] = React.useState(undefined as ItemArchetypeDTO | undefined);
+	const [targetArchetype, setTargetArchetype] = React.useState(props.targetArchetype);
 
 	// Call when props change
 	React.useEffect(() => {
@@ -44,9 +47,17 @@ export const ReplicatorDialog = (props:{
 		if (!props.targetArchetype) {
 			return;
 		}
+		let canBeReplicated = canReplicate(props.targetArchetype.id);
+		if (!canBeReplicated) {
+			console.log("Can not be replicated " + props.targetArchetype.name);
+			return;
+		}
 		let currencyCost = replicatorCurrencyCost(props.targetArchetype.id, props.targetArchetype.rarity);
 		let fuelCost = replicatorFuelCost(props.targetArchetype.type, props.targetArchetype.rarity);
-		let canBeReplicated = canReplicate(props.targetArchetype.id);
+		if (!fuelCost) {
+			console.log("Can not be replicated (no fuel cost)" + props.targetArchetype.name);
+			return;
+		}
 
 		setShowDialog(true);
 		setCurrencyCost(currencyCost);
@@ -62,6 +73,10 @@ export const ReplicatorDialog = (props:{
 		setFuelTankValue(0);
 		setFuelTank([]);
 		setTargetArchetype(undefined);
+
+		if (props.onClose) {
+			props.onClose();
+		}
 	}
 
 	function reloadItems(fuelConfig: string) {
@@ -163,40 +178,29 @@ export const ReplicatorDialog = (props:{
 		let neededQuantity = Math.ceil(neededFuelCost / fuelValue);
 
 		if (amount > neededQuantity) {
+			amount = neededQuantity;
+		}
+
+		let found = currentTank.find(fti => fti.id === item.id);
+		// Add requested amount
+		if (found) {
+			found.quantity += amount;
+			if (found.quantity > item.quantity) {
+				found.quantity = item.quantity;
+			}
+		}
+		else {
 			currentTank.push({
 				name: item.name,
 				iconUrl: item.iconUrl,
-				quantity: neededQuantity,
+				quantity: amount,
 				// Not for display
 				id: item.id,
 				type: item.type,
 				rarity: item.rarity,
 				item
 			});
-
-			// Calculate value
-			let tankTotal = 0;
-			for (let fuel of currentTank) {
-				tankTotal += replicatorFuelValue(fuel.type, fuel.rarity) * fuel.quantity;
-			}
-
-			setFuelTank(currentTank);
-			setFuelTankValue(tankTotal);
-
-			return { remainingCost: 0, added: neededQuantity };
 		}
-
-		// Add all of it
-		currentTank.push({
-			name: item.name,
-			iconUrl: item.iconUrl,
-			quantity: item.quantity,
-			// Not for display
-			id: item.id,
-			type: item.type,
-			rarity: item.rarity,
-			item
-		});
 
 		// Calculate value
 		let tankTotal = 0;
@@ -208,73 +212,33 @@ export const ReplicatorDialog = (props:{
 		setFuelTankValue(tankTotal);
 
 		return {
-			remainingCost: neededFuelCost - (fuelValue * item.quantity),
-			added: item.quantity
+			remainingCost: neededFuelCost - (fuelValue * amount),
+			added: amount
 		}
 	}
 
 	function autoFill() {
 		for (let item of fuellist) {
 			let {remainingCost, added } = tankAdd(item, undefined);
-			if (remainingCost == 0) {
+			if (remainingCost <= 0) {
 				break;
 			}
 		}
+	}
 
-		// let neededFuelCost = fuelCost - fuelTankValue;
-		// let currentTank = fueltank;
-
-		// if (neededFuelCost <= 0) {
-		// 	return;
-		// }
-
-		// for (let item of fuellist) {
-		// 	if (neededFuelCost <= 0) {
-		// 		break;
-		// 	}
-
-		// 	if (canUseAsFuel(item.id)) {
-		// 		let fuelValue = replicatorFuelValue(item.type, item.rarity);
-
-		// 		let neededQuantity = Math.ceil(neededFuelCost / fuelValue);
-
-		// 		if (item.quantity > neededQuantity) {
-		// 			currentTank.push({
-		// 				name: item.name,
-		// 				iconUrl: item.iconUrl,
-		// 				quantity: neededQuantity,
-		// 				// Not for display
-		// 				id: item.id,
-		// 				type: item.type,
-		// 				rarity: item.rarity
-		// 			});
-
-		// 			break;
-		// 		} else {
-		// 			// Add all of it, and keep going through the list
-		// 			currentTank.push({
-		// 				name: item.name,
-		// 				iconUrl: item.iconUrl,
-		// 				quantity: item.quantity,
-		// 				// Not for display
-		// 				id: item.id,
-		// 				type: item.type,
-		// 				rarity: item.rarity
-		// 			});
-
-		// 			neededFuelCost -= fuelValue * item.quantity;
-		// 		}
-		// 	}
-		// }
-
-		// // Calculate value
-		// let fuelValue = 0;
-		// for (let fuel of currentTank) {
-		// 	fuelValue += replicatorFuelValue(fuel.type, fuel.rarity) * fuel.quantity;
-		// }
-
-		// setFuelTank(currentTank);
-		// setFuelTankValue(fuelValue);
+	function doReplicate() {
+		let fuel : ReplicatorFuel[] = [];
+		for (let item of fueltank) {
+			fuel.push({
+				archetype_id: item.item.archetype_id,
+				quantity: item.quantity
+			});
+		}
+		replicate(targetArchetype!.id, fuel);
+		closeDialog();
+		if (props.onReplicate) {
+			props.onReplicate();
+		}
 	}
 
 	if (!showDialog) {
@@ -297,6 +261,7 @@ export const ReplicatorDialog = (props:{
 		<div
 			style={{
 				minWidth: '800px',
+				minHeight: '800px',
 				color: currentTheme.semanticColors.bodyText,
 				backgroundColor: currentTheme.semanticColors.bodyBackground
 			}}>
@@ -459,7 +424,7 @@ export const ReplicatorDialog = (props:{
 
 		<DialogFooter>
 			<PrimaryButton
-				onClick={closeDialog}
+				onClick={doReplicate}
 				text='Replicate'
 				disabled={canBeReplicated && fuelTankValue < fuelCost}
 			/>

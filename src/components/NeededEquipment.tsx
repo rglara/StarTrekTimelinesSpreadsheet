@@ -17,7 +17,6 @@ import { ItemArchetypeDTO, ItemArchetypeSourceDTO } from '../api/DTO';
 export const NeededEquipment = (props: {
 	onCommandItemsUpdate?: (items: ICommandBarItemProps[]) => void;
 }) => {
-
 	const [filters, setFilters] = React.useState({
 		onlyNeeded: true,
 		onlyFaction: false,
@@ -242,7 +241,9 @@ export const NeededEquipment = (props: {
 				</div>
 			)}
 			<FarmList neededEquipment={neededEquipment} onWarp={() => _filterNeededEquipment(filters)} />
-			<ReplicatorDialog targetArchetype={replicatorTarget} />
+			<ReplicatorDialog targetArchetype={replicatorTarget}
+				onReplicate={() => { setReplicatorTarget(undefined); _filterNeededEquipment(filters); } }
+				onClose={() => setReplicatorTarget(undefined) } />
 		</div>);
 	}
 	else {
@@ -369,9 +370,17 @@ const NeededEquipmentSources = (props: {
 		setWarpMasteryLevel(entry.mastery);
 	};
 
+	function onWarp(didWarp:boolean) {
+		setWarpQuestId(undefined);
+		setWarpMasteryLevel(undefined);
+		if (didWarp && props.onWarp) {
+			props.onWarp();
+		}
+	}
+
 	return <div>
 		{res}
-		<WarpDialog questId={warpQuestId} masteryLevel={warpMasteryLevel} onWarped={props.onWarp} />
+		<WarpDialog questId={warpQuestId} masteryLevel={warpMasteryLevel} onWarped={() => onWarp(true)} onClose={() => onWarp(false)} />
 	</div>;
 }
 
@@ -464,9 +473,17 @@ const FarmList = (props:{
 		setWarpMasteryLevel(entry.mastery);
 	};
 
+	function onWarp(didWarp: boolean) {
+		setWarpQuestId(undefined);
+		setWarpMasteryLevel(undefined);
+		if (didWarp && props.onWarp) {
+			props.onWarp();
+		}
+	}
+
 	return <CollapsibleSection title='Farming list (WORK IN PROGRESS, NEEDS A LOT OF IMPROVEMENT)'>
 		<p>This list minimizes the number of missions that can yield all filtered equipment as rewards (it <b>doesn't</b> factor in drop chances).</p>
 		{res}
-		<WarpDialog questId={warpQuestId} masteryLevel={warpMasteryLevel} onWarped={props.onWarp}/>
+		<WarpDialog questId={warpQuestId} masteryLevel={warpMasteryLevel} onWarped={() => onWarp(true)} onClose={() => onWarp(false)} />
 	</CollapsibleSection>;
 }

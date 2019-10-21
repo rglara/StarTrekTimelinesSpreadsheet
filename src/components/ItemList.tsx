@@ -4,7 +4,8 @@ import ReactTable, { SortingRule, Column } from 'react-table';
 import { ItemDisplay } from './ItemDisplay';
 import { RarityStars } from './RarityStars';
 import STTApi, { CONFIG } from '../api';
-import { PotentialRewardDTO, RewardDTO, ItemDTO } from '../api/STTApi';
+import { PotentialRewardDTO, RewardDTO, ItemDTO, ItemArchetypeDTO } from '../api/STTApi';
+import { ReplicatorDialog } from './ReplicatorDialog';
 
 export interface ItemListProps {
 	data: ItemDTO[];
@@ -15,6 +16,9 @@ export interface ItemListState {
 	columns: Column<ItemDTO>[];
 	items: ItemDTO[];
 	sorted: SortingRule[];
+	//FIXME: can't open the same item twice, so need to add and handle onClose for the dialog
+	replicatorTarget?: ItemArchetypeDTO;
+	//const[replicatorTarget, setReplicatorTarget] = React.useState(undefined as ItemArchetypeDTO | undefined);
 }
 
 export class ItemList extends React.Component<ItemListProps, ItemListState> {
@@ -72,6 +76,7 @@ export class ItemList extends React.Component<ItemListProps, ItemListState> {
 			}
 		});
 
+
 		this.state = {
 			items: this.props.data,
 			sorted: [{ id: 'name', desc: false }, { id: 'rarity', desc: false }],
@@ -85,7 +90,17 @@ export class ItemList extends React.Component<ItemListProps, ItemListState> {
 					accessor: 'name',
 					Cell: (cell) => {
 						let item = cell.original;
-						return <ItemDisplay src={item.iconUrl} size={50} maxRarity={item.rarity} rarity={item.rarity} />;
+						let found = STTApi.itemArchetypeCache.archetypes.find(arch => arch.id === item.archetype_id);
+						if (!found) {
+							// For some reason not all items are in the archetype cache, so jam in the needed properties from
+							// the existing item
+							found = {
+								...item,
+								id: item.archetype_id
+							};
+						}
+						return <ItemDisplay src={item.iconUrl} size={50} maxRarity={item.rarity} rarity={item.rarity}
+							onClick={() => this.setState({ replicatorTarget: found })} />;
 					}
 				},
 				{
@@ -208,6 +223,10 @@ export class ItemList extends React.Component<ItemListProps, ItemListState> {
 					className='-striped -highlight'
 					style={items.length > 50 ? { height: 'calc(100vh - 88px)' } : {}}
 				/>
+
+				<ReplicatorDialog targetArchetype={this.state.replicatorTarget}
+					onReplicate={() => this.setState({ replicatorTarget: undefined })}
+					onClose={() => this.setState({ replicatorTarget: undefined })} />
 			</div>
 		);
 	}

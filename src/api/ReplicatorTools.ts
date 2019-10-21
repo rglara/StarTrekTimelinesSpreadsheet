@@ -4,9 +4,9 @@ export function replicatorCurrencyCost(archetypeType: number, rarity: number): n
     return STTApi.platformConfig!.config.replicator_config.currency_costs[rarity].amount;
 }
 
-export function replicatorFuelCost(archetypeType: number, rarity: number): number {
+export function replicatorFuelCost(archetypeType: number, rarity: number): number | undefined {
     let replicatorFuel = STTApi.platformConfig!.config.replicator_config.fuel_costs.find((replicatorFuel) => (replicatorFuel.item_type === archetypeType) && (replicatorFuel.rarity === rarity));
-    return replicatorFuel!.fuel;
+    return replicatorFuel ? replicatorFuel.fuel : undefined;
 }
 
 export function canReplicate(archetypeId: number): boolean {
@@ -23,16 +23,14 @@ export function canUseAsFuel(itemId: number): boolean {
     return STTApi.platformConfig!.config.replicator_config.fuel_blacklist.indexOf(itemId) === -1;
 }
 
-export interface ReplicatorFuel
-{
+export type ReplicatorFuel = {
     archetype_id: number;
     quantity: number;
 }
 
 export async function replicate(targetArchetypeId: number, fuel: ReplicatorFuel[]): Promise<any> {
-    let params: any = { id: targetArchetypeId};
+    let params: any = { id: targetArchetypeId };
 
-    // TODO: figure out how these are formatted
     fuel.forEach(f => {
         params[`fuels[${f.archetype_id}]`] = f.quantity;
     });
@@ -40,6 +38,4 @@ export async function replicate(targetArchetypeId: number, fuel: ReplicatorFuel[
     let data = await STTApi.executePostRequest("item/replicate", params);
 
     await STTApi.applyUpdates(data);
-
-    return;
 }
