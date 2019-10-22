@@ -319,7 +319,7 @@ export interface GauntletContestLootDTO {
    iconUrl?: string;
 }
 
-export interface VoyageUpdateDTO {
+export interface VoyageUpdateInProgressDTO {
    hp: number;
    id: number;
    seconds_since_last_dilemma: number;
@@ -327,6 +327,20 @@ export interface VoyageUpdateDTO {
    time_to_next_event: number;
    voyage_duration: number;
 }
+
+export interface VoyageUpdateRecalledDTO {
+   hp: number;
+   id: number;
+   recall_time_left: number;
+   speedup_cost: {
+      amount: number;
+      currency: number;
+   }
+   state: string;
+   voyage_duration: number;
+}
+
+export type VoyageUpdateDTO = VoyageUpdateInProgressDTO & VoyageUpdateRecalledDTO;
 
 export const VOYAGE_ENCOUNTER_TYPES: string[] = ['flavor', 'reward', 'reward_found', 'hazard', 'hp_change', 'dilemma'];
 export interface VoyageNarrativeDTO {
@@ -357,26 +371,8 @@ export interface RewardDTO {
    symbol: string;
    traits?: string[];
    type: number;
-}
 
-export interface VoyagePendingLootDTO {
-   flavor: string;
-   full_name: string;
-   icon: ImageDataDTO;
-   id: number;
-   item_type?: number;
-   name: string;
-   quantity: number;
-   rarity: number;
-   symbol: string;
-   type: number;
-   action?: CrewActionDTO;
-   full_body?: ImageDataDTO;
-   portrait?: ImageDataDTO;
-   skills?: { [skill: string]: SkillDTO; };
-   traits?: string[];
-
-   //TODO: added by the app?
+   // added by the app
    iconUrl?: string;
 }
 
@@ -404,7 +400,7 @@ export interface VoyageDTO {
          skill: string;
       }[];
       rewards?: {
-         loot: VoyagePendingLootDTO[];
+         loot: RewardDTO[];
       }
       state: string;
       symbol: string;
@@ -419,7 +415,7 @@ export interface VoyageDTO {
    max_hp: number;
    name: string; // seems to be unused
    next_interaction?: string;
-   pending_rewards: { loot: VoyagePendingLootDTO[] };
+   pending_rewards: { loot: RewardDTO[] };
    recalled_at: string;
    recall_time_left?: number;
    seconds_between_dilemmas: number;

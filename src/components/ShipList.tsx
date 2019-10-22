@@ -23,11 +23,8 @@ export const ShipList = () => {
 
 	let items: ShipObj[] = STTApi.ships.map(ship => {
 		const schematic = STTApi.shipSchematics.find(schematic => schematic.ship.archetype_id === ship.archetype_id);
-		let schematic_count = 0;
-		if (schematic) {
-			const playerSchematic = playerSchematics.find(playerSchematic => playerSchematic.archetype_id === schematic.id);
-			schematic_count = playerSchematic ? playerSchematic.quantity : 0;
-		}
+		const playerSchematic = playerSchematics.find(playerSchematic => playerSchematic.archetype_id === ship.schematic_id);
+		let schematic_count = playerSchematic ? playerSchematic.quantity : 0;
 
 		let lev = ship.id > 0 ? (ship.level + 1) / (ship.max_level + 1) : 0;
 		let sc = schematic_count;

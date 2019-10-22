@@ -7,7 +7,7 @@ import STTApi, { CONFIG, RarityStars, formatTimeSeconds, CollapsibleSection, dow
 import { loadVoyage, recallVoyage, resolveDilemma } from './VoyageTools';
 import { estimateVoyageRemaining, CalcRemainingOptions } from './voyageCalc';
 import { VoyageLogEntry } from './VoyageLogEntry';
-import { VoyageNarrativeDTO, VoyageDTO, CrewData, VoyagePendingLootDTO } from '../../api/STTApi';
+import { VoyageNarrativeDTO, VoyageDTO, CrewData, RewardDTO } from '../../api/DTO';
 import { CrewImageData } from '../images/ImageProvider';
 
 type VoyageExportData = {
@@ -44,7 +44,7 @@ export const VoyageLog = (props:{}) => {
    const [estimatedMinutesLeft, setEstimatedMinutesLeft] = React.useState(undefined as number | undefined);
    const [estimatedMinutesLeftRefill, setEstimatedMinutesLeftRefill] = React.useState(undefined as number | undefined);
    const [nativeEstimate, setNativeEstimate] = React.useState(undefined as boolean | undefined);
-   const [voyageRewards, setVoyageRewards] = React.useState(undefined as VoyagePendingLootDTO[] | undefined);
+   const [voyageRewards, setVoyageRewards] = React.useState(undefined as RewardDTO[] | undefined);
    const [voyageExport, setVoyageExport] = React.useState(undefined as VoyageExportData | undefined);
    const [indexedNarrative, setIndexedNarrative] = React.useState(undefined as IndexedNarrative | undefined);
    const [skillChecks, setSkillChecks] = React.useState(undefined as SkillChecks | undefined);
@@ -147,7 +147,24 @@ export const VoyageLog = (props:{}) => {
             return r;
          }, Object.create(null) as IndexedNarrative);
 
-         let voyageRewards = voyage.pending_rewards.loot;
+         //Note: pending_rewards is not updated unless a full player data refresh occurs, so
+         //      pull rewards out of the narrative instead of this structure
+         let voyageRewards: RewardDTO[] = [];//voyage.pending_rewards.loot;
+
+         voyageNarrative.filter(n => n.rewards && n.rewards.loot)
+            .map(n => n.rewards!.loot)
+            .reduce((all, loot) => {
+               loot.forEach(r => {
+                  let found = all.find(item => item.id === r.id);
+                  if (found) {
+                     found.quantity += r.quantity;
+                  }
+                  else {
+                     all.push({...r});
+                  }
+               });
+               return all;
+            }, voyageRewards);
          let iconPromises : any[] = [];
          voyageRewards.forEach((reward) => {
             reward.iconUrl = '';
