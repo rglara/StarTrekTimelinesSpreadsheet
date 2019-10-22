@@ -17,7 +17,7 @@ import { ActiveCrewDialog } from './ActiveCrewDialog';
 import { ItemDisplay } from '../ItemDisplay';
 
 import STTApi, { CONFIG, RarityStars } from '../../api';
-import { CrewData, ItemArchetypeDTO } from '../../api/STTApi';
+import { CrewData, ItemArchetypeDTO } from '../../api/DTO';
 
 export interface CrewListProps {
 	data: CrewData[];

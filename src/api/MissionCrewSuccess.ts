@@ -1,6 +1,6 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
-import { CrewData, SkillData } from "./STTApi";
+import { CrewData, SkillData } from "./DTO";
 
 export interface IChallengeSuccessTrait
 {

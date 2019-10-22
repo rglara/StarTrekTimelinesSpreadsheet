@@ -4,8 +4,8 @@ import ReactTable, { SortingRule, Column } from 'react-table';
 import { ItemDisplay } from './ItemDisplay';
 import { RarityStars } from './RarityStars';
 import STTApi, { CONFIG } from '../api';
-import { PotentialRewardDTO, RewardDTO, ItemDTO, ItemArchetypeDTO } from '../api/STTApi';
-import { ReplicatorDialog } from './ReplicatorDialog';
+import { PotentialRewardDTO, RewardDTO, ItemDTO, ItemArchetypeDTO } from '../api/DTO';
+import { ReplicatorDialog } from './replicator/ReplicatorDialog';
 
 export interface ItemListProps {
 	data: ItemDTO[];

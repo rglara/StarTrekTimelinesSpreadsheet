@@ -1,10 +1,10 @@
 import React from 'react';
-
 import { Item, Dropdown, Label } from 'semantic-ui-react';
 
-import STTApi from '../api';
-import { CONFIG, formatTimeSeconds } from '../api';
-import { CrewAvatar, CrewData, PlayerShuttleDTO, EventDTO, EVENT_TYPES, SkillDTO, BorrowedCrewDTO, SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_OPENED } from '../api/STTApi';
+import STTApi, { CONFIG, formatTimeSeconds } from '../api';
+import { CrewAvatar, CrewData, PlayerShuttleDTO, EventDTO,
+	EVENT_TYPES, SkillDTO, BorrowedCrewDTO,
+	SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_OPENED } from '../api/DTO';
 
 export interface ShuttlesProps {
 	onTabSwitch?: (newTab: string) => void;

@@ -6,7 +6,7 @@ import { RarityStars } from './RarityStars';
 
 import STTApi from '../api';
 import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
-import { ShipDTO, ShipSchematicDTO } from '../api/STTApi';
+import { ShipDTO, ShipSchematicDTO } from '../api/DTO';
 
 export const ShipList = () => {
 	const [sorted, setSorted] = React.useState([{ id: 'name', desc: false },{id: 'sort_level', desc:false}] as SortingRule[]);

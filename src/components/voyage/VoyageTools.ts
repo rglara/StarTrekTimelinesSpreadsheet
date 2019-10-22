@@ -1,6 +1,6 @@
 import STTApi from '../../api/index';
 import { mergeDeep } from '../../api/ObjectMerge';
-import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO } from '../../api/STTApi';
+import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO } from '../../api/DTO';
 
 export async function loadVoyage(voyageId: number, newOnly: boolean = true): Promise<VoyageNarrativeDTO[]> {
 	let data = await STTApi.executePostRequest('voyage/refresh', { voyage_status_id: voyageId, new_only: newOnly });

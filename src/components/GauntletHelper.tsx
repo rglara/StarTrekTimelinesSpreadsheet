@@ -10,19 +10,16 @@ import { getTheme } from '@uifabric/styling';
 import Logger from '../utils/logger';
 // #!endif
 
-import { download } from '../utils/pal';
-
-import STTApi, { CONFIG, formatTimeSeconds, formatCrewStats } from '../api';
+import STTApi, { CONFIG, formatTimeSeconds, formatCrewStats, download } from '../api';
 import {
 	GauntletRoundOdds, GauntletData,
 	loadGauntlet, gauntletCrewSelection, gauntletRoundOdds, payToGetNewOpponents,
 	payToReviveCrew, playContest, enterGauntlet, Match
 } from '../api/GauntletTools';
-import { GauntletDTO, GauntletCrewDTO, GauntletContestDTO, GauntletContestLootDTO } from '../api/STTApi';
+import { GauntletDTO, GauntletCrewDTO, GauntletContestDTO, GauntletContestLootDTO } from '../api/DTO';
 import { CircularLabel } from './CircularLabel';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 import { CrewImageData } from './images/ImageProvider';
-import { string } from 'prop-types';
 
 interface GauntletCrewProps {
 	crew: GauntletCrewDTO;

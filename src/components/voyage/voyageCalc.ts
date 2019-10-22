@@ -1,6 +1,5 @@
-import STTApi from '../../api';
-import { CONFIG } from '../../api';
-import { CrewData, SkillData, VoyageDescriptionDTO } from '../../api/STTApi';
+import STTApi, { CONFIG } from '../../api';
+import { CrewData, SkillData, VoyageDescriptionDTO } from '../../api/DTO';
 
 export interface CalcChoice {
     slotId: number;

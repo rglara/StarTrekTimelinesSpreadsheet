@@ -2,7 +2,7 @@ import STTApi from "../../api/index";
 import CONFIG from "../../api/CONFIG";
 import { ImageProvider, ImageCache, IBitmap, IFoundResult, CrewImageData } from './ImageProvider';
 import { WorkerPool } from '../../api/WorkerPool';
-import { ShipDTO, ImageDataDTO } from "../../api/STTApi";
+import { ShipDTO, ImageDataDTO } from "../../api/DTO";
 
 export class AssetImageProvider implements ImageProvider {
     private _imageCache: ImageCache;

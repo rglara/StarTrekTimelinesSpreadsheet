@@ -8,10 +8,11 @@ import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator'
 import { ItemDisplay } from '../ItemDisplay';
 import UserStore from '../Styles';
 
-import STTApi from '../../api';
-import { CONFIG, replicatorCurrencyCost, replicatorFuelCost, canReplicate, replicatorFuelValue, canUseAsFuel, replicate } from '../../api';
+import STTApi, { CONFIG } from '../../api';
 import { ItemDTO, ItemArchetypeDTO } from '../../api/DTO';
-import { ReplicatorFuel, computeExtraSchematics, computeExtraItems } from './ReplicatorTools';
+import { ReplicatorFuel, computeExtraSchematics, computeExtraItems,
+	replicatorCurrencyCost, replicatorFuelCost, canReplicate,
+	replicatorFuelValue, canUseAsFuel, replicate } from './ReplicatorTools';
 
 type FuelTankItem = {
 	name: string;

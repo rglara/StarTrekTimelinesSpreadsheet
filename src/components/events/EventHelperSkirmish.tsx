@@ -3,7 +3,7 @@ import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
 import { Icon } from 'office-ui-fabric-react/lib/Icon';
 import { Label, Popup, List } from 'semantic-ui-react';
 import ReactTable, { Column } from 'react-table';
-import { EventDTO, EVENT_TYPES, CrewData } from "../../api/STTApi";
+import { EventDTO, EVENT_TYPES, CrewData } from "../../api/DTO";
 import STTApi, { RarityStars, CONFIG } from '../../api';
 
 type CrewBonus = {

@@ -5,7 +5,7 @@ import { Button, Item, Image, List, Accordion, Icon, AccordionTitleProps } from 
 import { ItemDisplay } from '../ItemDisplay';
 
 import STTApi from '../../api';
-import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES, ItemArchetypeDTO, ItemDTO, CrewData } from '../../api/STTApi';
+import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES, ItemArchetypeDTO, ItemDTO, CrewData } from '../../api/DTO';
 import { EventCrewBonusTable } from './EventHelperPage';
 
 interface ItemDemand {

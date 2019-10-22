@@ -5,9 +5,8 @@ import { getTheme } from '@uifabric/styling';
 
 import { ItemDisplay } from './ItemDisplay';
 
-import STTApi from '../api';
-import { CONFIG, refreshAllFactions, loadFactionStore } from '../api';
-import { FactionDTO, PotentialRewardDTO, RewardDTO, ItemArchetypeDTO, FactionStoreItemDTO } from '../api/STTApi';
+import STTApi, { CONFIG, refreshAllFactions, loadFactionStore } from '../api';
+import { FactionDTO, PotentialRewardDTO, RewardDTO, ItemArchetypeDTO, FactionStoreItemDTO } from '../api/DTO';
 import { CrewImageData } from './images/ImageProvider';
 
 interface StoreItemProps {

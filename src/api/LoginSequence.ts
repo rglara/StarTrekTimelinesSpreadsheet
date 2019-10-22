@@ -1,4 +1,4 @@
-import STTApi, { IFoundResult } from "./index";
+import STTApi from "./index";
 import CONFIG from "./CONFIG";
 import { matchCrew, formatAllCrew } from './CrewTools';
 import { matchShips } from './ShipTools';
@@ -6,7 +6,8 @@ import { loadMissionData } from './MissionTools';
 import { loadFullTree, fixupAllCrewIds } from './EquipmentTools';
 import { refreshAllFactions, loadFactionStore } from './FactionTools';
 import { calculateMissionCrewSuccess, calculateMinimalComplementAsync } from './MissionCrewSuccess';
-import { CrewData, CrewDTO } from "./STTApi";
+import { CrewData, CrewDTO } from "./DTO";
+import { IFoundResult } from "../components/images/ImageProvider";
 
 export async function loginSequence(onProgress: (description: string) => void, loadMissions: boolean = true) {
     let mainResources = [

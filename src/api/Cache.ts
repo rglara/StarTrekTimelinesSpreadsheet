@@ -1,5 +1,5 @@
 import Dexie from "dexie";
-import { CrewDTO, ItemArchetypeDTO } from "./STTApi";
+import { CrewDTO, ItemArchetypeDTO } from "./DTO";
 
 export class DexieCache extends Dexie {
     private _questsTable!: Dexie.Table<QuestsTable, number>;

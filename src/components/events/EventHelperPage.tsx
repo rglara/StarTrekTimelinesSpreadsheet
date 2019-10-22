@@ -4,7 +4,7 @@ import { Popup, List } from 'semantic-ui-react';
 import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
 import ReactTable, { Column, SortingRule } from 'react-table';
 import STTApi, { formatTimeSeconds, CONFIG, RarityStars } from '../../api';
-import { EventDTO, CrewData } from "../../api/STTApi";
+import { EventDTO, CrewData } from "../../api/DTO";
 import { GalaxyEvent } from './EventHelperGalaxy';
 import { ShuttleEvent } from './EventHelperShuttle';
 import { SkirmishEvent } from './EventHelperSkirmish';

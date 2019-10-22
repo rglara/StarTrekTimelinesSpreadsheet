@@ -1,7 +1,7 @@
 import STTApi from "../../api/index";
 import CONFIG from "../../api/CONFIG";
 import { ImageProvider, IFoundResult, ImageCache, CrewImageData } from './ImageProvider';
-import { ShipDTO, ImageDataDTO } from "../../api/STTApi";
+import { ShipDTO, ImageDataDTO } from "../../api/DTO";
 
 async function getWikiImageUrl(fileName: string, id: any): Promise<IFoundResult> {
 	let entry = await STTApi.wikiImages.where('fileName').equals(fileName).first();

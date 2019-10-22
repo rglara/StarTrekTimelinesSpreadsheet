@@ -1,6 +1,6 @@
-import STTApi, { CONFIG, IFoundResult, ImageProvider }  from '../../api';
-import { ShipDTO, ImageDataDTO } from '../../api/STTApi';
-import { CrewImageData } from './ImageProvider';
+import STTApi, { CONFIG }  from '../../api';
+import { ShipDTO, ImageDataDTO } from '../../api/DTO';
+import { CrewImageData, ImageProvider, IFoundResult } from './ImageProvider';
 
 export class ServerImageProvider implements ImageProvider {
     _baseURLAsset: string;

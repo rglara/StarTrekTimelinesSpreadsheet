@@ -5,7 +5,7 @@ import { Button, Item, Image, List, Accordion, Icon, AccordionTitleProps } from 
 import { ItemDisplay } from './ItemDisplay';
 
 import STTApi from '../api';
-import { EventDTO, EventGatherPoolAdventureDTO } from '../api/STTApi';
+import { EventDTO, EventGatherPoolAdventureDTO } from '../api/DTO';
 
 const CrewShipAbilityTable = () => {
 	return <span>Hello</span>;

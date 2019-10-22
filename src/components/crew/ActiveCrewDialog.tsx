@@ -4,8 +4,8 @@ import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dia
 
 import UserStore from '../Styles';
 
-import STTApi, { CONFIG, CollapsibleSection, loadVoyage, formatTimeSeconds } from '../../api';
-import { FactionDTO, VoyageDTO, VoyageNarrativeDTO } from '../../api/STTApi';
+import STTApi, { CONFIG, loadVoyage, formatTimeSeconds } from '../../api';
+import { VoyageDTO, VoyageNarrativeDTO } from '../../api/DTO';
 import { DefaultButton } from 'office-ui-fabric-react/lib/Button';
 
 export interface ShuttleAdventureProps {

@@ -1,6 +1,6 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
-import { CrewAvatar, CrewData, CrewDTO, PlayerCharacterDTO, SkillData} from './STTApi'
+import { CrewAvatar, CrewData, CrewDTO, PlayerCharacterDTO, SkillData } from './DTO'
 
 export interface BuffStat {
 	multiplier: number;

@@ -22,14 +22,16 @@ import { IChallengeSuccess } from './MissionCrewSuccess';
 import { matchCrew, calculateBuffConfig, BuffStat } from './CrewTools';
 import { MinimalComplement } from './MinimalComplement';
 import { mergeDeep } from './ObjectMerge';
-import { ImageCache, ImageProvider, WikiImageProvider, AssetImageProvider, ServerImageProvider, ImageProviderChain, FileImageCache } from './';
+import { ImageProvider, ImageCache } from '../components/images/ImageProvider';
+import { ServerImageProvider } from '../components/images/ServerImageProvider';
+import { FileImageCache } from '../components/images/FileImageCache';
+import { ImageProviderChain, WikiImageProvider } from '../components/images/WikiImageTools';
+import { AssetImageProvider } from '../components/images/AssetImageProvider';
 import { NeededEquipmentClass, EquipNeedFilter, EquipNeed } from './EquipmentTools';
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
 import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatar, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO } from './DTO';
-
-export * from './DTO';
 
 export class STTApiClass {
 	private _accessToken: string | undefined;

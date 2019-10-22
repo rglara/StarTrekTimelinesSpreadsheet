@@ -1,5 +1,5 @@
 import STTApi from './index';
-import { CrewData, PotentialRewardDTO, ItemArchetypeDTO, MissionDTO, MissionQuestDTO, FactionDTO } from './STTApi';
+import { CrewData, PotentialRewardDTO, ItemArchetypeDTO, MissionDTO, MissionQuestDTO, FactionDTO } from './DTO';
 
 export function fixupAllCrewIds() : void {
 	// Now replace the ids with proper ones
@@ -285,6 +285,7 @@ export class NeededEquipmentClass {
 							.filter((r) => r.type === 0)
 							.forEach((reward) => {
 								(reward as PotentialRewardDTO).potential_rewards.forEach((item) => {
+									//let archItem = STTApi.itemArchetypeCache.archetypes.find(arch => arch.id === item.id);
 									let info: CadetItemSource = {
 										quest: quest,
 										mission: cadetMission,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { EventDTO, EVENT_TYPES } from "../../api/STTApi";
+import { EventDTO, EVENT_TYPES } from "../../api/DTO";
 import { Label } from 'semantic-ui-react';
 import { EventCrewBonusTable } from './EventHelperPage';
 
