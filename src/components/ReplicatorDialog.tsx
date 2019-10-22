@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactTable from 'react-table';
+import ReactTable, { SortingRule } from 'react-table';
 import { Dialog, DialogType, DialogFooter } from 'office-ui-fabric-react/lib/Dialog';
 import { PrimaryButton, DefaultButton } from 'office-ui-fabric-react/lib/Button';
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
@@ -37,6 +37,8 @@ export const ReplicatorDialog = (props:{
 	const [canBeReplicated, setCanBeReplicated] = React.useState(false);
 	const [currencyCost, setCurrencyCost] = React.useState(undefined as number | undefined);
 	const [targetArchetype, setTargetArchetype] = React.useState(props.targetArchetype);
+	const [sortedAvailable, setSortedAvailable] = React.useState([{ id: 'name', desc: false }] as SortingRule[]);
+	const [errorMessage, setErrorMessage] = React.useState(undefined as string | undefined);
 
 	// Call when props change
 	React.useEffect(() => {
@@ -47,29 +49,39 @@ export const ReplicatorDialog = (props:{
 		if (!props.targetArchetype) {
 			return;
 		}
-		let canBeReplicated = canReplicate(props.targetArchetype.id);
-		if (!canBeReplicated) {
+		// Go ahead and show the dialog so it can display the error message
+		setShowDialog(true);
+		setTargetArchetype(props.targetArchetype);
+
+		let canRep = canReplicate(props.targetArchetype.id);
+		if (!canRep) {
+			setCanBeReplicated(false);
 			console.log("Can not be replicated " + props.targetArchetype.name);
 			return;
 		}
-		let currencyCost = replicatorCurrencyCost(props.targetArchetype.id, props.targetArchetype.rarity);
 		let fuelCost = replicatorFuelCost(props.targetArchetype.type, props.targetArchetype.rarity);
 		if (!fuelCost) {
-			console.log("Can not be replicated (no fuel cost)" + props.targetArchetype.name);
+			setCanBeReplicated(false);
+			console.log("Can not be replicated (no fuel cost) " + props.targetArchetype.name);
 			return;
 		}
 
-		setShowDialog(true);
-		setCurrencyCost(currencyCost);
+		setCanBeReplicated(true);
+		let currencyCost = replicatorCurrencyCost(props.targetArchetype.id, props.targetArchetype.rarity);
+
 		setFuelCost(fuelCost);
-		setCanBeReplicated(canBeReplicated);
-		setTargetArchetype(props.targetArchetype);
+		setCurrencyCost(currencyCost);
+
+		if (props.targetArchetype.type !== 2 && props.targetArchetype.type !== 3) {
+			setErrorMessage('Item might not replicate, type is ' + CONFIG.REWARDS_ITEM_TYPE[props.targetArchetype.type]);
+		}
 
 		reloadItems(fuelconfig);
 	}
 
 	function closeDialog() {
 		setShowDialog(false);
+		setErrorMessage(undefined);
 		setFuelTankValue(0);
 		setFuelTank([]);
 		setTargetArchetype(undefined);
@@ -86,13 +98,9 @@ export const ReplicatorDialog = (props:{
 			let fuellist : ItemDTO[] = [];
 			STTApi.ships.forEach(ship => {
 				if (ship.level === ship.max_level) {
-					const schematic = STTApi.shipSchematics.find(schematic => schematic.ship.archetype_id === ship.archetype_id);
-					if (schematic) {
-						const playerSchematic = playerSchematics.find(playerSchematic => playerSchematic.archetype_id === schematic.id);
-
-						if (playerSchematic) {
-							fuellist.push(playerSchematic);
-						}
+					const playerSchematic = playerSchematics.find(playerSchematic => playerSchematic.archetype_id === ship.schematic_id);
+					if (playerSchematic) {
+						fuellist.push(playerSchematic);
 					}
 				}
 			});
@@ -226,7 +234,7 @@ export const ReplicatorDialog = (props:{
 		}
 	}
 
-	function doReplicate() {
+	async function doReplicate() {
 		let fuel : ReplicatorFuel[] = [];
 		for (let item of fueltank) {
 			fuel.push({
@@ -234,18 +242,26 @@ export const ReplicatorDialog = (props:{
 				quantity: item.quantity
 			});
 		}
-		replicate(targetArchetype!.id, fuel);
-		closeDialog();
-		if (props.onReplicate) {
-			props.onReplicate();
+
+		try {
+			await replicate(targetArchetype!.id, fuel);
+
+			closeDialog();
+			if (props.onReplicate) {
+				props.onReplicate();
+			}
+		} catch (err) {
+			console.error(err);
+			setErrorMessage(err.message ? err.message : err);
 		}
 	}
 
-	if (!showDialog) {
+	if (!showDialog || !targetArchetype) {
 		return <span />;
 	}
 
 	let currentTheme = UserStore.get('theme');
+	const MAX_PAGE_SIZE = 10;
 
 	return <Dialog
 		hidden={!showDialog}
@@ -261,19 +277,17 @@ export const ReplicatorDialog = (props:{
 		<div
 			style={{
 				minWidth: '800px',
-				minHeight: '800px',
 				color: currentTheme.semanticColors.bodyText,
 				backgroundColor: currentTheme.semanticColors.bodyBackground
 			}}>
-			{!canBeReplicated && (
-				<p>
-					<b>This item cannot be replicated!</b>
-				</p>
-			)}
 			<div style={{ color: 'red' }}>
-				The actual replicator functionality is not implemented yet. Feel free to browse the tables on the left for inspiration though.
+			{!canBeReplicated &&
+				<b>This item cannot be replicated!</b>
+			}
+			{errorMessage &&
+				<b>Failed to replicate: {errorMessage}</b>
+			}
 			</div>
-
 			<div
 				style={{
 					display: 'grid',
@@ -288,7 +302,7 @@ export const ReplicatorDialog = (props:{
 							setFuelConfig(item!.key as string);
 							reloadItems(item!.key as string);
 						}}
-						placeHolder='What kind of items?'
+						placeholder='What kind of items?'
 						options={[
 							{ key: 'extraSchematics', text: 'Unneeded ship schematics' },
 							{ key: 'extraItems', text: 'Potentially unneeded items' },
@@ -317,14 +331,17 @@ export const ReplicatorDialog = (props:{
 								minWidth: 90,
 								maxWidth: 180,
 								resizable: true,
+								sortable: true,
 								accessor: 'name'
 							},
 							{
 								id: 'quantity',
 								Header: 'Quantity',
+								accessor: 'quantity',
 								minWidth: 80,
 								maxWidth: 80,
 								resizable: true,
+								sortable: true,
 								Cell: row => {
 									let quant = row.original.quantity;
 									let found = fueltank.find(item => item.id === row.original.id);
@@ -345,26 +362,29 @@ export const ReplicatorDialog = (props:{
 									let ref = React.createRef<HTMLInputElement>();
 									return <div className='ui action input' style={{ width: '100px' }}>
 										<input type='text' placeholder='Count...' ref={ref} />
-										<button className='ui icon button' onClick={() => tankAdd(row.original, ref.current!.value)}>
+										<button className='ui icon button'
+											onClick={() => tankAdd(row.original, ref.current!.value)}
+											disabled={!canBeReplicated}
+											>
 											<i className='angle double right icon' />
 										</button>
 									</div>;
 								}
 							}
 						]}
+						sorted={sortedAvailable}
+						onSortedChange={sorted => setSortedAvailable(sorted)}
 						showPageSizeOptions={false}
-						defaultPageSize={fuellist.length <= 50 ? fuellist.length : 50}
-						pageSize={fuellist.length <= 50 ? fuellist.length : 50}
-						showPagination={fuellist.length > 50}
+						defaultPageSize={fuellist.length <= MAX_PAGE_SIZE ? fuellist.length : MAX_PAGE_SIZE}
+						pageSize={fuellist.length <= MAX_PAGE_SIZE ? fuellist.length : MAX_PAGE_SIZE}
+						showPagination={fuellist.length > MAX_PAGE_SIZE}
 						className='-striped -highlight'
-						style={{ height: '300px' }}
+						style={{ height: '45vh' }}
 					/>
 				</div>
 				<div style={{ gridArea: 'fueltank' }}>
 					<ReactTable
 						data={fueltank}
-						defaultPageSize={fueltank.length <= 50 ? fueltank.length : 50}
-						pageSize={fueltank.length <= 50 ? fueltank.length : 50}
 						columns={[
 							{
 								id: 'icon',
@@ -409,11 +429,12 @@ export const ReplicatorDialog = (props:{
 						showPagination={false}
 						showPageSizeOptions={false}
 						className='-striped -highlight'
-						style={{ height: '280px' }}
+						style={{ height: '40vh' }}
 					/>
 					<ProgressIndicator
 						description={`Fuel: ${fuelTankValue} of ${fuelCost}`}
-						percentComplete={(fuelTankValue * 100) / fuelCost}
+						percentComplete={(fuelTankValue / fuelCost)}
+						barHeight={4}
 					/>
 				</div>
 				<div style={{ gridArea: 'details' }}>
@@ -426,7 +447,7 @@ export const ReplicatorDialog = (props:{
 			<PrimaryButton
 				onClick={doReplicate}
 				text='Replicate'
-				disabled={canBeReplicated && fuelTankValue < fuelCost}
+				disabled={!canBeReplicated || fuelTankValue < fuelCost}
 			/>
 			<DefaultButton onClick={closeDialog} text='Cancel' />
 		</DialogFooter>

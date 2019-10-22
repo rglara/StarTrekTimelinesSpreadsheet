@@ -209,19 +209,21 @@ export class ItemList extends React.Component<ItemListProps, ItemListState> {
 			items = items.filter(i => this._filterItem(i, this.props.filterText!.toLowerCase()))
 		}
 
+		const MAX_PAGE_SIZE = 30;
+
 		return (
 			<div className='data-grid' data-is-scrollable='true'>
 				<ReactTable
 					data={items}
 					columns={columns}
-					defaultPageSize={items.length <= 50 ? items.length : 50}
-					pageSize={items.length <= 50 ? items.length : 50}
+					defaultPageSize={items.length <= MAX_PAGE_SIZE ? items.length : MAX_PAGE_SIZE}
+					pageSize={items.length <= MAX_PAGE_SIZE ? items.length : MAX_PAGE_SIZE}
 					sorted={sorted}
 					onSortedChange={sorted => this.setState({ sorted })}
-					showPagination={items.length > 50}
+					showPagination={items.length > MAX_PAGE_SIZE}
 					showPageSizeOptions={false}
 					className='-striped -highlight'
-					style={items.length > 50 ? { height: 'calc(100vh - 88px)' } : {}}
+					style={items.length > MAX_PAGE_SIZE ? { height: 'calc(100vh - 88px)' } : {}}
 				/>
 
 				<ReplicatorDialog targetArchetype={this.state.replicatorTarget}
