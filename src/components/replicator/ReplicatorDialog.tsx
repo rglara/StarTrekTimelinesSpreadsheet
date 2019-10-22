@@ -5,13 +5,13 @@ import { PrimaryButton, DefaultButton } from 'office-ui-fabric-react/lib/Button'
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
 import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
 
-import { ItemDisplay } from './ItemDisplay';
-import UserStore from './Styles';
+import { ItemDisplay } from '../ItemDisplay';
+import UserStore from '../Styles';
 
-import STTApi from '../api';
-import { CONFIG, replicatorCurrencyCost, replicatorFuelCost, canReplicate, replicatorFuelValue, canUseAsFuel, replicate } from '../api';
-import { ItemDTO, ItemArchetypeDTO } from '../api/DTO';
-import { ReplicatorFuel } from '../api/ReplicatorTools';
+import STTApi from '../../api';
+import { CONFIG, replicatorCurrencyCost, replicatorFuelCost, canReplicate, replicatorFuelValue, canUseAsFuel, replicate } from '../../api';
+import { ItemDTO, ItemArchetypeDTO } from '../../api/DTO';
+import { ReplicatorFuel, computeExtraSchematics, computeExtraItems } from './ReplicatorTools';
 
 type FuelTankItem = {
 	name: string;
@@ -93,52 +93,9 @@ export const ReplicatorDialog = (props:{
 
 	function reloadItems(fuelConfig: string) {
 		if (fuelConfig === 'extraSchematics') {
-			let playerSchematics = STTApi.playerData.character.items.filter(item => item.type === 8);
-
-			let fuellist : ItemDTO[] = [];
-			STTApi.ships.forEach(ship => {
-				if (ship.level === ship.max_level) {
-					const playerSchematic = playerSchematics.find(playerSchematic => playerSchematic.archetype_id === ship.schematic_id);
-					if (playerSchematic) {
-						fuellist.push(playerSchematic);
-					}
-				}
-			});
-
-			setFuelList(fuellist);
+			setFuelList(computeExtraSchematics());
 		} else if (fuelConfig === 'extraItems') {
-			let equipmentAlreadyOnCrew = new Set();
-			STTApi.roster.forEach(crew => {
-				if (crew.buyback) {
-					return;
-				}
-
-				// Comment this line if we want to be more aggressive (with potentially more false positives for in-progress crew)
-				if (crew.level < 100) {
-					return;
-				}
-
-				let lastEquipmentLevel = crew.level;
-				for (let equipment of crew.equipment_slots) {
-					if (!equipment.have) {
-						lastEquipmentLevel = equipment.level;
-					}
-				}
-
-				let feCrew = STTApi.allcrew.find(c => c.symbol === crew.symbol);
-				if (feCrew) {
-					feCrew.equipment_slots.forEach(equipment => {
-						if (equipment.level < lastEquipmentLevel) {
-							equipmentAlreadyOnCrew.add(equipment.archetype);
-						}
-					});
-				}
-			});
-
-			let fuellist = STTApi.playerData.character.items.filter(
-				item => equipmentAlreadyOnCrew.has(item.archetype_id) && item.quantity === 1 && item.rarity > 1
-			);
-			setFuelList(fuellist);
+			setFuelList(computeExtraItems());
 		} else if (fuelConfig === 'everything') {
 			let fuellist = STTApi.playerData.character.items;
 			setFuelList(fuellist);
