@@ -106,7 +106,6 @@ export const Shuttles = (props:ShuttlesProps) => {
 		};
 		let sortedRoster : CrewItem[] = [];
 
-		//TODO: account for shared crew
 		STTApi.roster.forEach(crew => {
 			if (crew.buyback || crew.frozen > 0) {
 				return;
@@ -144,7 +143,13 @@ export const Shuttles = (props:ShuttlesProps) => {
 
 				let skills: { [sk: string]: number } = {};
 				for (let sk in CONFIG.SKILLS) {
-					skills[sk] = crew.skills[sk].core * bonus;
+					// borrowed crew does not have all skills filled like CrewData does
+					if (!crew.skills[sk]) {
+						skills[sk] = 0;
+					}
+					else {
+						skills[sk] = crew.skills[sk].core * bonus;
+					}
 				}
 
 				sortedRoster.push({
