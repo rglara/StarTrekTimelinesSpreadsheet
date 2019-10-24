@@ -1,7 +1,7 @@
 import React from 'react';
 
 import STTApi, { CONFIG } from '../api';
-import { CrewAvatar, CrewData, CryoCollectionDTO } from '../api/DTO';
+import { CrewAvatarDTO, CrewData, CryoCollectionDTO } from '../api/DTO';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 
 interface CryoCollectionsProps {
@@ -18,7 +18,7 @@ interface CryoCollectionProps {
 
 interface CryoCollectionState {
     imageUrl?: string;
-    unownedCrew: CrewAvatar[];
+    unownedCrew: CrewAvatarDTO[];
     ownedCrew: CrewData[];
     ownedCrewFrozen: CrewData[];
 }
@@ -35,14 +35,14 @@ class CryoCollection extends React.Component<CryoCollectionProps, CryoCollection
             }).catch((error) => { console.warn(error); });
         }
 
-        let archetypes = STTApi.crewAvatars.filter((crew: CrewAvatar) =>
+        let archetypes = STTApi.crewAvatars.filter(crew =>
             (crew.traits.concat(crew.traits_hidden).filter((trait:string) =>
                 this.props.collection.traits.includes(trait)).length > 0) || this.props.collection.extra_crew.includes(crew.id));
-        let unowned: CrewAvatar[] = [];
+        let unowned: CrewAvatarDTO[] = [];
         let owned: CrewData[] = [];
         let ownedFrozen: CrewData[] = [];
         let allOwnedCrew: CrewData[] = STTApi.roster.filter(crew => !crew.buyback);
-        archetypes.forEach((a: CrewAvatar) => {
+        archetypes.forEach(a => {
             let crew = allOwnedCrew.find((crew:CrewData) => crew.id === a.id);
             if (!crew) {
                 unowned.push(a);

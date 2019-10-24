@@ -2,7 +2,7 @@
  * This file lists the data transfer objects used to communicate with the STT server.
  */
 
-export interface CrewAvatar {
+export interface CrewAvatarDTO {
    id: number;
    symbol: string;
    name: string;
@@ -31,13 +31,6 @@ export interface SkillDTO {
    range_min: number;
    range_max: number;
 }
-export interface SkillData {
-   core: number;
-   min: number;
-   max: number;
-   voy?: number;
-}
-
 export interface CrewActionDTO {
    ability?: {
       amount: number;
@@ -60,7 +53,6 @@ export interface CrewActionDTO {
    initial_cooldown: number;
    limit?: number;
    name: string;
-   //TODO: type info
    penalty?: {
       type: number;
       amount: number;
@@ -71,7 +63,7 @@ export interface CrewActionDTO {
 
 export interface CrewDTO {
    action: CrewActionDTO;
-   active_id: any;
+   active_id?: number;
    active_index: number;
    active_status: number;
    archetype_id: number;
@@ -89,7 +81,7 @@ export interface CrewDTO {
       level: number;
       archetype: number;
    }[];
-   expires_in: any;
+   expires_in?: number;
    favorite: boolean;
    flavor: string;
    full_body: ImageDataDTO;
@@ -130,48 +122,79 @@ export interface CrewDTO {
 }
 
 // Used internally by the app; not a DTO
+export interface SkillData {
+   core: number;
+   min: number;
+   max: number;
+   voy: number;
+}
+
+export interface CrewEquipmentSlotData {
+   archetype: number;
+   level: number;
+   // TODO type info
+   symbol: any;
+   have: boolean;
+}
+
+// Used internally by the app; not a DTO
 export interface CrewData {
    active_id?: number;
-   action?: CrewActionDTO;
+   action: CrewActionDTO;
    archetypes?: any[];
+   /** @deprecated - migrate to using status.buyback */
    buyback: boolean;
-   crew_id?: number;
-   equipment_slots: {
-      archetype: number;
-      level: number;
-      symbol?: any;
-      have?: boolean;
-   }[];
+   crew_id: number;
+   equipment_slots: CrewEquipmentSlotData[];
+   /** @deprecated - migrate to using status.expires_in */
    expires_in?: number;
-   favorite?: boolean;
-   flavor?: string;
+   favorite: boolean;
+   flavor: string;
+   //TODO: fix uses where this is treated as a boolean
+   /** @deprecated - migrate to using status.frozen */
    frozen: number;
+   status: {
+      // Is this crew in the active roster
+      active: boolean;
+      // How many this crew represents which are all frozen
+      frozen: number;
+      // Is this crew in the buyback roster
+      buyback: boolean;
+      expires_in: number;
+      // Is this from 'allcrew' or local
+      external: boolean;
+   }
    full_body: ImageDataDTO;
    iconUrl?: string;
    iconBodyUrl?: string;
+   //TODO: rename to avatar_id
+   /** moved to avatar_id */
    id: number;
+   avatar_id: number;
+   /** @deprecated - migrate to using status.external */
    isExternal: boolean;
    level: number;
 
-   max_level?: number;
+   max_level: number;
    max_rarity: number;
    name: string;
    portrait: ImageDataDTO;
    rarity: number;
    rawTraits: string[];
-   ship_battle?: {
-      accuracy?: number;
-      crit_bonus?: number;
-      crit_chance?: number;
-      evasion?: number;
+   ship_battle: {
+      accuracy: number;
+      crit_bonus: number;
+      crit_chance: number;
+      evasion: number;
    };
    short_name: string;
+   //TODO: fix test against symbol when there could be multiple (frozen too)
    symbol: string;
    traits: string;
 
-   usage_value?: number;
-   voyage_score?: number;
-   gauntlet_score?: number;
+   usage_value: number;
+   voyage_score: number;
+   gauntlet_score: number;
    skills: { [sk: string]: SkillData; };
    //TODO: deprecate these raw fields and use the indexed 'skills' structure
    command_skill: SkillData;

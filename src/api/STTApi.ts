@@ -19,7 +19,7 @@ import { NetworkInterface } from './NetworkInterface';
 import { NetworkFetch } from './NetworkFetch';
 import { DexieCache, QuestsTable, EquipmentTable, ImmortalsDB, ConfigTable, WikiImageTable } from './Cache';
 import { IChallengeSuccess } from './MissionCrewSuccess';
-import { matchCrew, calculateBuffConfig, BuffStat } from './CrewTools';
+import { buildCrewData, calculateBuffConfig, BuffStat } from './CrewTools';
 import { MinimalComplement } from './MinimalComplement';
 import { mergeDeep } from './ObjectMerge';
 import { ImageProvider, ImageCache } from '../components/images/ImageProvider';
@@ -31,7 +31,7 @@ import { NeededEquipmentClass, EquipNeedFilter, EquipNeed } from './EquipmentToo
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
-import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatar, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO } from './DTO';
+import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO } from './DTO';
 
 export class STTApiClass {
 	private _accessToken: string | undefined;
@@ -60,7 +60,7 @@ export class STTApiClass {
 	private _neededEquipment: NeededEquipmentClass;
 
 	public platformConfig?: { config: PlatformConfigDTO; };
-	public crewAvatars: CrewAvatar[];
+	public crewAvatars: CrewAvatarDTO[];
 	public serverConfig?: { config: ServerConfigDTO; };;
 	public shipSchematics: ShipSchematicDTO[];
 	public fleetData?: {
@@ -222,12 +222,12 @@ export class STTApiClass {
 		return this.platformConfig!.config.ship_trait_names[trait] ? this.platformConfig!.config.ship_trait_names[trait] : trait;
 	}
 
-	getCrewAvatarById(id: number): CrewAvatar | undefined {
-		return this.crewAvatars.find((avatar: CrewAvatar) => avatar.id === id);
+	getCrewAvatarById(avatarId: number): CrewAvatarDTO | undefined {
+		return this.crewAvatars.find(avatar => avatar.id === avatarId);
 	}
 
-	getCrewAvatarBySymbol(symbol: string): CrewAvatar | undefined {
-		return this.crewAvatars.find((avatar: CrewAvatar) => avatar.symbol === symbol);
+	getCrewAvatarBySymbol(symbol: string): CrewAvatarDTO | undefined {
+		return this.crewAvatars.find(avatar => avatar.symbol === symbol);
 	}
 
 	async login(username: string, password: string, autoLogin: boolean): Promise<any> {
@@ -362,7 +362,7 @@ export class STTApiClass {
 	async loadCrewArchetypes(): Promise<void> {
 		let data = await this.executeGetRequest('character/get_avatar_crew_archetypes');
 		if (data.crew_avatars) {
-			this.crewAvatars = data.crew_avatars as CrewAvatar[];
+			this.crewAvatars = data.crew_avatars as CrewAvatarDTO[];
 		} else {
 			throw new Error('Invalid data for crew avatars!');
 		}
@@ -416,7 +416,7 @@ export class STTApiClass {
 		}
 	}
 
-	async loadFrozenCrew(symbol: string): Promise<CrewDTO> {
+	async loadFrozenCrewData(symbol: string): Promise<CrewDTO> {
 		let data = await this.executePostRequest('stasis_vault/immortal_restore_info', { symbol: symbol });
 		if (data.crew) {
 			return data.crew as CrewDTO;
@@ -491,7 +491,7 @@ export class STTApiClass {
 
 	async refreshRoster(): Promise<void> {
 		// TODO: need to reload icon urls as well
-		this.roster = await matchCrew(this._playerData!.player.character);
+		this.roster = await buildCrewData(this._playerData!.player.character);
 	}
 
 	async applyUpdates(data: any): Promise<any[]> {

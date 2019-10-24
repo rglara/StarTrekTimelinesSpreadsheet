@@ -2,7 +2,7 @@ import React from 'react';
 import { Item, Dropdown, Label } from 'semantic-ui-react';
 
 import STTApi, { CONFIG, formatTimeSeconds } from '../api';
-import { CrewAvatar, CrewData, PlayerShuttleDTO, EventDTO,
+import { CrewAvatarDTO, CrewData, PlayerShuttleDTO, EventDTO,
 	EVENT_TYPES, SkillDTO, BorrowedCrewDTO,
 	SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_OPENED } from '../api/DTO';
 
@@ -45,7 +45,7 @@ export const Shuttles = (props:ShuttlesProps) => {
 		name: string;
 		description: string;
 		crew_bonuses: {
-			avatar: CrewAvatar;
+			avatar: CrewAvatarDTO;
 			bonus: number;
 			iconUrl: string;
 		}[],
@@ -62,7 +62,7 @@ export const Shuttles = (props:ShuttlesProps) => {
 		event = STTApi.playerData.character.events[0];
 	}
 
-	let crew_bonuses : {avatar: CrewAvatar; bonus: number; iconUrl: string }[] = [];
+	let crew_bonuses: { avatar: CrewAvatarDTO; bonus: number; iconUrl: string }[] = [];
 	if (event) {
 		for (let cb in event.content.shuttles![0].crew_bonuses) {
 			let avatar = STTApi.getCrewAvatarBySymbol(cb);

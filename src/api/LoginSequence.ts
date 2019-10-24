@@ -1,6 +1,6 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
-import { matchCrew, formatAllCrew } from './CrewTools';
+import { buildCrewData, buildCrewDataAll } from './CrewTools';
 import { matchShips } from './ShipTools';
 import { loadMissionData } from './MissionTools';
 import { loadFullTree, fixupAllCrewIds } from './EquipmentTools';
@@ -66,7 +66,7 @@ export async function loginSequence(onProgress: (description: string) => void, l
     }
 
     onProgress('Analyzing crew...');
-    let roster: CrewData[] = await matchCrew(STTApi.playerData.character);
+    let roster: CrewData[] = await buildCrewData(STTApi.playerData.character);
     STTApi.roster = roster;
 
     if (loadMissions) {
@@ -245,7 +245,13 @@ export async function loginSequence(onProgress: (description: string) => void, l
     try {
         let allcrew : CrewDTO[] | undefined = undefined;
         allcrew = await STTApi.networkHelper.get(STTApi.serverAddress + 'allcrew.json', undefined);
+<<<<<<< Upstream, based on github/master
         STTApi.allcrew = formatAllCrew(allcrew || []);
+=======
+        // #!endif
+
+        STTApi.allcrew = buildCrewDataAll(allcrew || []);
+>>>>>>> 80ccd0c Refactored crew data initialization
     }
     catch (e) {
         console.error(e);

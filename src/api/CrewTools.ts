@@ -1,6 +1,6 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
-import { CrewAvatar, CrewData, CrewDTO, PlayerCharacterDTO, SkillData } from './DTO'
+import { CrewAvatarDTO, CrewData, CrewDTO, PlayerCharacterDTO, SkillData, CrewActionDTO, CrewEquipmentSlotData } from './DTO'
 
 export interface BuffStat {
 	multiplier: number;
@@ -37,115 +37,117 @@ export function calculateBuffConfig(): { [index: string]: BuffStat } {
 	return buffConfig;
 }
 
-
-function rosterFromCrew(rosterEntry: CrewData, crew: CrewDTO): void {
-	rosterEntry.level = crew.level;
-	rosterEntry.max_level = crew.max_level;
-	rosterEntry.rarity = crew.rarity;
-	rosterEntry.buyback = crew.in_buy_back_state;
-	rosterEntry.expires_in = crew.expires_in;
-	rosterEntry.favorite = crew.favorite;
-	rosterEntry.crew_id = crew.id;
-	rosterEntry.active_id = crew.active_id;
-
-	rosterEntry.voyage_score = 0;
-	rosterEntry.gauntlet_score = 0;
-
-	rosterEntry.skills = {};
-
-	for (let skill in crew.skills) {
-		let re: any = rosterEntry;
-		let cs: any = crew.skills;
+function crewToRoster(dto: CrewDTO) : CrewData {
+	let voyage_score = 0;
+	let gauntlet_score = 0;
+	let skillData : {[sk: string] : SkillData } = {};
+	for (let skill in CONFIG.SKILLS) {
+		let sdto = dto.skills[skill];
+		if (!sdto) {
+			sdto = {
+				core: 0,
+				range_min: 0,
+				range_max: 0
+			};
+		}
+		let profAvg = (sdto.range_max + sdto.range_min) / 2;
 		let sd: SkillData = {
-			core: cs[skill].core,
-			min: cs[skill].range_min,
-			max: cs[skill].range_max,
+			core: sdto.core,
+			min: sdto.range_min,
+			max: sdto.range_max,
+			voy: sdto.core + profAvg
 		};
-		re[skill] = sd;
-		rosterEntry.skills[skill] = sd;
-		let profAvg = (cs[skill].range_max + cs[skill].range_min) / 2;
-		sd.voy = (cs[skill].core + profAvg) || 0;
-		rosterEntry.voyage_score += re[skill].voy;
-		rosterEntry.gauntlet_score += profAvg;
+		skillData[skill] = sd;
+		voyage_score += skillData[skill].voy || 0;
+		gauntlet_score += profAvg;
 	}
 
-	rosterEntry.command_skill_core = rosterEntry.command_skill.core;
-	rosterEntry.science_skill_core = rosterEntry.science_skill.core;
-	rosterEntry.security_skill_core = rosterEntry.security_skill.core;
-	rosterEntry.engineering_skill_core = rosterEntry.engineering_skill.core;
-	rosterEntry.diplomacy_skill_core = rosterEntry.diplomacy_skill.core;
-	rosterEntry.medicine_skill_core = rosterEntry.medicine_skill.core;
+	let equipment_slots : CrewEquipmentSlotData[] = dto.equipment_slots as CrewEquipmentSlotData[];
 
-	rosterEntry.command_skill_voy = rosterEntry.command_skill.voy;
-	rosterEntry.science_skill_voy = rosterEntry.science_skill.voy;
-	rosterEntry.security_skill_voy = rosterEntry.security_skill.voy;
-	rosterEntry.engineering_skill_voy = rosterEntry.engineering_skill.voy;
-	rosterEntry.diplomacy_skill_voy = rosterEntry.diplomacy_skill.voy;
-	rosterEntry.medicine_skill_voy = rosterEntry.medicine_skill.voy;
-	rosterEntry.usage_value = 0;
-
-	rosterEntry.ship_battle = crew.ship_battle;
-	if (!rosterEntry.ship_battle.accuracy) {
-		rosterEntry.ship_battle.accuracy = 0;
-	}
-	if (!rosterEntry.ship_battle.crit_bonus) {
-		rosterEntry.ship_battle.crit_bonus = 0;
-	}
-	if (!rosterEntry.ship_battle.crit_chance) {
-		rosterEntry.ship_battle.crit_chance = 0;
-	}
-	if (!rosterEntry.ship_battle.evasion) {
-		rosterEntry.ship_battle.evasion = 0;
-	}
-	rosterEntry.action = crew.action;
-	rosterEntry.flavor = crew.flavor;
-
-	rosterEntry.equipment_slots = crew.equipment_slots;
-
-	rosterEntry.equipment_slots.forEach((equipment) => {
+	equipment_slots.forEach((equipment) => {
 		equipment.have = false;
 	});
 
-	crew.equipment.forEach(equipment => {
-		rosterEntry.equipment_slots[equipment[0]].have = true;
+	dto.equipment.forEach(equipment => {
+		equipment_slots[equipment[0]].have = true;
 	});
 
-	rosterEntry.traits = '';
-	rosterEntry.traits = crew.traits.concat(crew.traits_hidden).map((trait) => STTApi.getTraitName(trait)).join();
-	rosterEntry.rawTraits = crew.traits.concat(crew.traits_hidden);
+	let traits = dto.traits.concat(dto.traits_hidden).map((trait) => STTApi.getTraitName(trait)).join();
+	let rawTraits = dto.traits.concat(dto.traits_hidden);
 
 	// Replace "nonhuman" with "alien" to make the search easier
-	let nh = rosterEntry.rawTraits.indexOf('nonhuman');
+	let nh = rawTraits.indexOf('nonhuman');
 	if (nh > -1) {
-		rosterEntry.rawTraits.splice(nh,1);
-		rosterEntry.rawTraits.push('alien');
-	}
-}
-
-function getDefaultsInner(crew?: CrewAvatar | CrewDTO): CrewData | undefined {
-	if (!crew) {
-		return undefined;
+		rawTraits.splice(nh, 1, 'alient');
 	}
 
 	return {
-		id: crew.id, name: crew.name, short_name: crew.short_name, max_rarity: crew.max_rarity, symbol: crew.symbol, isExternal: false,
-		level: 0, rarity: 0, frozen: 0, buyback: false, traits: '', rawTraits: [], portrait: crew.portrait, full_body: crew.full_body,
-		command_skill: { 'core': 0, 'min': 0, 'max': 0 }, science_skill: { 'core': 0, 'min': 0, 'max': 0 },
-		security_skill: { 'core': 0, 'min': 0, 'max': 0 }, engineering_skill: { 'core': 0, 'min': 0, 'max': 0 },
-		diplomacy_skill: { 'core': 0, 'min': 0, 'max': 0 }, medicine_skill: { 'core': 0, 'min': 0, 'max': 0 },
-		equipment_slots: [], skills: {}
+		id: dto.archetype_id,
+		avatar_id: dto.archetype_id,
+		crew_id: dto.id,
+		symbol: dto.symbol,
+		name: dto.name,
+		short_name: dto.short_name,
+		portrait: dto.portrait,
+		full_body: dto.full_body,
+
+		buyback: dto.in_buy_back_state,
+		frozen: 0,
+		isExternal: false,
+		expires_in: dto.expires_in,
+		status: {
+			frozen: 0,
+			buyback: dto.in_buy_back_state,
+			expires_in: dto.expires_in,
+			active: !dto.in_buy_back_state,
+			external: false,
+		},
+
+		rarity: dto.rarity,
+		max_rarity: dto.max_rarity,
+		level: dto.level,
+		max_level: dto.max_level,
+		favorite: dto.favorite,
+		flavor: dto.flavor,
+		active_id: dto.active_id,
+		action: dto.action,
+		ship_battle: dto.ship_battle,
+
+		traits,
+		rawTraits,
+		equipment_slots,
+		skills: skillData,
+		command_skill: skillData['command_skill'],
+		science_skill: skillData['science_skill'],
+		security_skill: skillData['security_skill'],
+		engineering_skill: skillData['engineering_skill'],
+		diplomacy_skill: skillData['diplomacy_skill'],
+		medicine_skill: skillData['medicine_skill'],
+		command_skill_core: skillData['command_skill'].core,
+		science_skill_core: skillData['science_skill'].core,
+		security_skill_core: skillData['security_skill'].core,
+		engineering_skill_core: skillData['engineering_skill'].core,
+		diplomacy_skill_core: skillData['diplomacy_skill'].core,
+		medicine_skill_core: skillData['medicine_skill'].core,
+		command_skill_voy: skillData['command_skill'].voy,
+		science_skill_voy: skillData['science_skill'].voy,
+		security_skill_voy: skillData['security_skill'].voy,
+		engineering_skill_voy: skillData['engineering_skill'].voy,
+		diplomacy_skill_voy: skillData['diplomacy_skill'].voy,
+		medicine_skill_voy: skillData['medicine_skill'].voy,
+
+		voyage_score,
+		gauntlet_score,
+		usage_value: 0
 	};
 }
 
-function getDefaults(id: number): CrewData | undefined {
-	return getDefaultsInner(STTApi.getCrewAvatarById(id));
-}
-
-export function formatAllCrew(allcrew: CrewDTO[]): CrewData[] {
-	let roster: CrewData[] = [];
+export function buildCrewDataAll(allcrew: CrewDTO[]): CrewData[] {
+	let rosterAll: CrewData[] = [];
 	let dupeChecker = new Set<string>();
 	allcrew.forEach((crew: CrewDTO) => {
-		// Sometimes duplicates can sneak into our allcrew list, filter them out
+		// Sometimes duplicates can sneak into our allcrew list, filter them out, but keep
+		// if at a different level or rarity
 		let key = crew.symbol + '.' + crew.level + '.' + crew.rarity;
 		if (dupeChecker.has(key)) {
 			return;
@@ -153,47 +155,43 @@ export function formatAllCrew(allcrew: CrewDTO[]): CrewData[] {
 
 		dupeChecker.add(key);
 
-		STTApi.applyBuffConfig(crew);
-
-		let rosterEntry = getDefaultsInner(crew);
-		if (!rosterEntry) {
+		let avatar = STTApi.getCrewAvatarBySymbol(crew.symbol);
+		if (!avatar) {
+			console.error(`Could not find the crew avatar for (all crew entry) archetype_id ${crew.archetype_id}`);
 			return;
 		}
+		STTApi.applyBuffConfig(crew);
+		let rosterEntry = crewToRoster(crew);
 		rosterEntry.isExternal = true;
-
-		rosterFromCrew(rosterEntry, crew);
+		rosterEntry.status.external = true;
 
 		rosterEntry.archetypes = crew.archetypes;
 
-		let avatar = STTApi.getCrewAvatarBySymbol(crew.symbol);
-		if (avatar) {
-			rosterEntry.id = avatar.id;
-		}
-
-		roster.push(rosterEntry);
+		rosterAll.push(rosterEntry);
 	});
 
-	for (let crew of roster) {
+	for (let crew of rosterAll) {
 		// Populate default icons (if they're already cached)
 		crew.iconUrl = STTApi.imageProvider.getCrewCached(crew, false);
 		crew.iconBodyUrl = STTApi.imageProvider.getCrewCached(crew, true);
 	}
 
-	return roster;
+	return rosterAll;
 }
 
-export async function matchCrew(character: PlayerCharacterDTO): Promise<CrewData[]> {
+// Build CrewData[] from player.character CrewDTO[] and frozen immortal data
+export async function buildCrewData(character: PlayerCharacterDTO): Promise<CrewData[]> {
 	let roster: CrewData[] = [];
 
 	// Add all the crew in the active roster
 	character.crew.forEach((crew) => {
-		let rosterEntry = getDefaults(crew.archetype_id);
-		if (!rosterEntry) {
+		const avatar = STTApi.getCrewAvatarById(crew.archetype_id);
+		if (!avatar) {
 			console.error(`Could not find the crew avatar for archetype_id ${crew.archetype_id}`);
 			return;
 		}
 
-		rosterFromCrew(rosterEntry, crew);
+		let rosterEntry = crewToRoster(crew);
 		roster.push(rosterEntry);
 	});
 
@@ -201,23 +199,21 @@ export async function matchCrew(character: PlayerCharacterDTO): Promise<CrewData
 	if (character.stored_immortals && character.stored_immortals.length > 0) {
 		// Use the cache wherever possible
 		// TODO: does DB ever change the stats of crew? If yes, we may need to ocasionally clear the cache - perhaps based on record's age
-		let frozenPromises: Promise<void>[] = [];
+		let frozenPromises: Promise<CrewData>[] = [];
 
 		character.stored_immortals.forEach((imm) => {
-			let rosterEntry = getDefaults(imm.id);
-			if (!rosterEntry) {
+			const avatar = STTApi.getCrewAvatarById(imm.id);
+			if (!avatar) {
 				console.error(`Could not find the crew avatar for frozen archetype_id ${imm.id}`);
 				return;
 			}
-			rosterEntry.frozen = imm.quantity;
-			rosterEntry.level = 100;
-			rosterEntry.rarity = rosterEntry.max_rarity;
-			roster.push(rosterEntry);
+			//let rosterEntry = getDefaultsInner(avatar);
+			//roster.push(rosterEntry);
 
-			frozenPromises.push(loadFrozen(rosterEntry));
+			frozenPromises.push(loadFrozen(avatar.symbol, imm.quantity));
 		});
 
-		await Promise.all(frozenPromises);
+		await Promise.all(frozenPromises).then(datas => roster.splice(roster.length, 0, ...datas));
 	}
 
 	for (let crew of roster) {
@@ -276,22 +272,37 @@ export async function matchCrew(character: PlayerCharacterDTO): Promise<CrewData
 	return roster;
 }
 
-async function loadFrozen(rosterEntry: CrewData): Promise<void> {
-	let entry = await STTApi.immortals.where('symbol').equals(rosterEntry.symbol).first();
+async function loadFrozen(crewSymbol: string, frozenCount: number): Promise<CrewData> {
+	let crew : CrewDTO | undefined = undefined;
+	let entry = await STTApi.immortals.where('symbol').equals(crewSymbol).first();
 	if (entry) {
-		//console.info('Found ' + rosterEntry.symbol + ' in the immortalized crew cache');
+		//console.info('Found ' + crewSymbol + ' in the immortalized crew cache');
 		STTApi.applyBuffConfig(entry.crew);
-		rosterFromCrew(rosterEntry, entry.crew);
+		crew = entry.crew;
 	} else {
-		let crew = await STTApi.loadFrozenCrew(rosterEntry.symbol);
-		rosterFromCrew(rosterEntry, crew);
+		crew = await STTApi.loadFrozenCrewData(crewSymbol);
 
 		// We don't need to await, as this is just populating a cache and can be done whenever
 		STTApi.immortals.put({
-			symbol: rosterEntry.symbol,
+			symbol: crewSymbol,
 			crew: crew
 		});
 	}
+
+	let roster = crewToRoster(crew);
+	if (!roster.crew_id) {
+		// frozen crew don't have a unique id, so supply one; make it less than one to distinguish internally
+		roster.crew_id = Math.random();
+	}
+
+	roster.frozen = frozenCount;
+	roster.status.frozen = frozenCount;
+	roster.status.active = false;
+	roster.status.buyback = false;
+	roster.level = 100;
+	roster.rarity = roster.max_rarity;
+
+	return roster;
 }
 
 export function formatCrewStats(crew: CrewData): string {

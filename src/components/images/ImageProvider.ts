@@ -17,7 +17,7 @@ export interface ImageCache {
 	getCached(url: string): string;
 }
 
-// An interface to union the various DTOs that can define crew images, including CrewData, CrewAvatar, and RewardDTO
+// An interface to union the various DTOs that can define crew images, including CrewData, CrewAvatarDTO, and RewardDTO
 export interface CrewImageData {
 	full_body: ImageDataDTO;
 	portrait: ImageDataDTO;
