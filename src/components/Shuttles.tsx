@@ -24,12 +24,7 @@ interface CrewItem {
 	active_id?: number;
 	crew: CrewData | BorrowedCrewDTO;
 	crew_id: number;
-	command_skill: number;
-	science_skill: number;
-	security_skill: number;
-	engineering_skill: number;
-	diplomacy_skill: number;
-	medicine_skill: number;
+	skills: { [sk: string] : number };
 	total: number;
 
 	// These three are needed for the item to appear in a combo
@@ -123,16 +118,16 @@ export const Shuttles = (props:ShuttlesProps) => {
 				bonus = foundBonus.bonus;
 			}
 
+			let skills : {[sk:string]:number} = { };
+			for (let sk in CONFIG.SKILLS) {
+				skills[sk] = crew.skills[sk].core * bonus;
+			}
+
 			sortedRoster.push({
 				crew: crew,
 				active_id: crew.active_id,
 				crew_id: crew.id,
-				command_skill: crew.command_skill_core! * bonus,
-				science_skill: crew.science_skill_core! * bonus,
-				security_skill: crew.security_skill_core! * bonus,
-				engineering_skill: crew.engineering_skill_core! * bonus,
-				diplomacy_skill: crew.diplomacy_skill_core! * bonus,
-				medicine_skill: crew.medicine_skill_core! * bonus,
+				skills,
 				total: 0
 			});
 		});
@@ -147,16 +142,16 @@ export const Shuttles = (props:ShuttlesProps) => {
 					bonus = foundBonus.bonus;
 				}
 
+				let skills: { [sk: string]: number } = {};
+				for (let sk in CONFIG.SKILLS) {
+					skills[sk] = crew.skills[sk].core * bonus;
+				}
+
 				sortedRoster.push({
 					crew: crew,
 					active_id: crew.active_id,
 					crew_id: crew.id,
-					command_skill: sk(crew.skills['command_skill']) * bonus,
-					science_skill: sk(crew.skills['science_skill']) * bonus,
-					security_skill: sk(crew.skills['_skill']) * bonus,
-					engineering_skill: sk(crew.skills['engineering_skill']) * bonus,
-					diplomacy_skill: sk(crew.skills['diplomacy_skill']) * bonus,
-					medicine_skill: sk(crew.skills['medicine_skill']) * bonus,
+					skills,
 					total: 0
 				});
 			});
@@ -183,14 +178,14 @@ export const Shuttles = (props:ShuttlesProps) => {
 					calcSlot.skills = slot.skills[0].split(',');
 					if (calcSlot.skills.length === 1) {
 						calcSlot.type = 'SINGLE';
-						calcSlot.bestCrew.forEach((c:any) => {
-							c.total = c[calcSlot.skills![0]];
+						calcSlot.bestCrew.forEach((c) => {
+							c.total = c.skills[calcSlot.skills![0]];
 						});
 					} else {
 						calcSlot.type = 'AND';
-						calcSlot.bestCrew.forEach((c: any) => {
-							let a1 = c[calcSlot.skills![0]];
-							let a2 = c[calcSlot.skills![1]];
+						calcSlot.bestCrew.forEach((c) => {
+							let a1 = c.skills[calcSlot.skills![0]];
+							let a2 = c.skills[calcSlot.skills![1]];
 							c.total = Math.floor(
 								Math.max(a1, a2) + Math.min(a1, a2) * STTApi.serverConfig!.config.shuttle_adventures.secondary_skill_percentage
 							);
@@ -200,8 +195,8 @@ export const Shuttles = (props:ShuttlesProps) => {
 					// OR
 					calcSlot.type = 'OR';
 					calcSlot.skills = slot.skills;
-					calcSlot.bestCrew.forEach((c: any) => {
-						c.total = Math.max(c[calcSlot.skills![0]], c[calcSlot.skills![1]]);
+					calcSlot.bestCrew.forEach((c) => {
+						c.total = Math.max(c.skills[calcSlot.skills![0]], c.skills[calcSlot.skills![1]]);
 					});
 				}
 

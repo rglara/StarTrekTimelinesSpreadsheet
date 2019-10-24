@@ -117,24 +117,6 @@ function crewToRoster(dto: CrewDTO) : CrewData {
 		rawTraits,
 		equipment_slots,
 		skills: skillData,
-		command_skill: skillData['command_skill'],
-		science_skill: skillData['science_skill'],
-		security_skill: skillData['security_skill'],
-		engineering_skill: skillData['engineering_skill'],
-		diplomacy_skill: skillData['diplomacy_skill'],
-		medicine_skill: skillData['medicine_skill'],
-		command_skill_core: skillData['command_skill'].core,
-		science_skill_core: skillData['science_skill'].core,
-		security_skill_core: skillData['security_skill'].core,
-		engineering_skill_core: skillData['engineering_skill'].core,
-		diplomacy_skill_core: skillData['diplomacy_skill'].core,
-		medicine_skill_core: skillData['medicine_skill'].core,
-		command_skill_voy: skillData['command_skill'].voy,
-		science_skill_voy: skillData['science_skill'].voy,
-		security_skill_voy: skillData['security_skill'].voy,
-		engineering_skill_voy: skillData['engineering_skill'].voy,
-		diplomacy_skill_voy: skillData['diplomacy_skill'].voy,
-		medicine_skill_voy: skillData['medicine_skill'].voy,
 
 		voyage_score,
 		gauntlet_score,
@@ -222,12 +204,12 @@ export async function buildCrewData(character: PlayerCharacterDTO): Promise<Crew
 		crew.iconBodyUrl = STTApi.imageProvider.getCrewCached(crew, true);
 	}
 
-	// collects usage_value field for the given skill
+	// collects usage_value field for the given skill over the entire roster
 	function collect(skillField: string, extField: string, max:number):void {
 		let filtered = roster.filter(c => !c.buyback);
 		if (extField) {
-			filtered = filtered.filter((c: any) => c[skillField][extField] > 0)
-				.sort((a: any, b: any) => b[skillField][extField] - a[skillField][extField]);
+			filtered = filtered.filter((c) => c.skills[skillField][extField] > 0)
+				.sort((a, b) => b.skills[skillField][extField] - a.skills[skillField][extField]);
 		}
 		else {
 			filtered = filtered.filter((c: any) => c[skillField] > 0)
@@ -248,24 +230,11 @@ export async function buildCrewData(character: PlayerCharacterDTO): Promise<Crew
 		}
 	}
 
-	collect('command_skill', 'core', 6);
-	collect('diplomacy_skill', 'core', 6);
-	collect('engineering_skill', 'core', 6);
-	collect('medicine_skill', 'core', 6);
-	collect('science_skill', 'core', 6);
-	collect('security_skill', 'core', 6);
-	collect('command_skill', 'max', 3);
-	collect('diplomacy_skill', 'max', 3);
-	collect('engineering_skill', 'max', 3);
-	collect('medicine_skill', 'max', 3);
-	collect('science_skill', 'max', 3);
-	collect('security_skill', 'max', 3);
-	collect('command_skill', 'voy', 9);
-	collect('diplomacy_skill', 'voy', 9);
-	collect('engineering_skill', 'voy', 9);
-	collect('medicine_skill', 'voy', 9);
-	collect('science_skill', 'voy', 9);
-	collect('security_skill', 'voy', 9);
+	for (let sk in CONFIG.SKILLS) {
+		collect(sk, 'core', 6);
+		collect(sk, 'max', 3);
+		collect(sk, 'voy', 9);
+	}
 	collect('voyage_score', '', 9);
 	collect('gauntlet_score', '', 9);
 

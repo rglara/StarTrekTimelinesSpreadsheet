@@ -127,6 +127,9 @@ export interface SkillData {
    min: number;
    max: number;
    voy: number;
+
+   // index operator to use strings for keys
+   [sk:string] : number;
 }
 
 export interface CrewEquipmentSlotData {
@@ -160,7 +163,7 @@ export interface CrewData {
       frozen: number;
       // Is this crew in the buyback roster
       buyback: boolean;
-      expires_in: number;
+      expires_in?: number;
       // Is this from 'allcrew' or local
       external: boolean;
    }
@@ -196,26 +199,6 @@ export interface CrewData {
    voyage_score: number;
    gauntlet_score: number;
    skills: { [sk: string]: SkillData; };
-   //TODO: deprecate these raw fields and use the indexed 'skills' structure
-   command_skill: SkillData;
-   diplomacy_skill: SkillData;
-   engineering_skill: SkillData;
-   medicine_skill: SkillData;
-   science_skill: SkillData;
-   security_skill: SkillData;
-   command_skill_core?: number;
-   diplomacy_skill_core?: number;
-   engineering_skill_core?: number;
-   medicine_skill_core?: number;
-   science_skill_core?: number;
-   security_skill_core?: number;
-   command_skill_voy?: number;
-   diplomacy_skill_voy?: number;
-   engineering_skill_voy?: number;
-   medicine_skill_voy?: number;
-   science_skill_voy?: number;
-   security_skill_voy?: number;
-
 }
 
 export interface BorrowedCrewDTO {

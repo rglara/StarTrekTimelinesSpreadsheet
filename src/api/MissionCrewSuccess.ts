@@ -115,8 +115,7 @@ export function calculateMissionCrewSuccess(): Array<IChallengeSuccess> {
                         }
 
                         // Compute roll for crew
-                        let cAny :any = crew;
-                        let csk: SkillData = cAny[entry.skill];
+                        let csk: SkillData = crew.skills[entry.skill];
 
                         let rollCrew = csk.core;
 

@@ -4,7 +4,7 @@ import { Button, Item, Image, List, Accordion, Icon, AccordionTitleProps } from 
 
 import { ItemDisplay } from '../ItemDisplay';
 
-import STTApi from '../../api';
+import STTApi, { CONFIG } from '../../api';
 import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES, ItemArchetypeDTO, ItemDTO, CrewData } from '../../api/DTO';
 import { EventCrewBonusTable } from './EventHelperPage';
 
@@ -23,12 +23,7 @@ interface ItemDemand {
 interface BonusCrew {
    crew: CrewData;
    crew_id: number;
-   command_skill: number;
-   science_skill: number;
-   security_skill: number;
-   engineering_skill: number;
-   diplomacy_skill: number;
-   medicine_skill: number;
+   skills: { [sk:string]:number };
    total: number;
    text?: string;
    value?: string;
@@ -61,27 +56,27 @@ function parseAdventure(adventure: EventGatherPoolAdventureDTO, crew_bonuses: { 
          calcSlot.skills = skills[0].split(',');
          if (calcSlot.skills.length === 1) {
             calcSlot.type = 'SINGLE';
-            calcSlot.bestCrew.forEach((c: any) => {
-               c.total = c[calcSlot.skills[0]];
+            calcSlot.bestCrew.forEach((c) => {
+               c.total = c.skills[calcSlot.skills[0]];
             });
          } else {
             calcSlot.type = 'AND';
-            calcSlot.bestCrew.forEach((c: any) => {
-               c.total = Math.floor((c[calcSlot.skills[0]] + c[calcSlot.skills[1]]) / 2);
+            calcSlot.bestCrew.forEach((c) => {
+               c.total = Math.floor((c.skills[calcSlot.skills[0]] + c.skills[calcSlot.skills[1]]) / 2);
             });
          }
       } else {
          // OR
          calcSlot.type = 'OR';
          calcSlot.skills = skills;
-         calcSlot.bestCrew.forEach((c: any) => {
-            c.total = Math.max(c[calcSlot.skills[0]], c[calcSlot.skills[1]]);
+         calcSlot.bestCrew.forEach((c) => {
+            c.total = Math.max(c.skills[calcSlot.skills[0]], c.skills[calcSlot.skills[1]]);
          });
       }
 
       let seen = new Set();
-      calcSlot.bestCrew = calcSlot.bestCrew.filter((c: any) => c.total > 0).filter((c: any) => (seen.has(c.crew_id) ? false : seen.add(c.crew_id)));
-      calcSlot.bestCrew.sort((a: any, b: any) => a.total - b.total);
+      calcSlot.bestCrew = calcSlot.bestCrew.filter((c) => c.total > 0).filter((c) => (seen.has(c.crew_id) ? false : seen.add(c.crew_id)));
+      calcSlot.bestCrew.sort((a, b) => a.total - b.total);
       calcSlot.bestCrew = calcSlot.bestCrew.reverse();
 
       calcSlot.bestCrew.forEach((c) => {
@@ -164,15 +159,15 @@ function getRosterWithBonuses(crew_bonuses: { [crew_symbol: string]: number }): 
          bonus = crew_bonuses[crew.symbol];
       }
 
+      let skills: { [sk: string]: number } = {};
+      for (let sk in CONFIG.SKILLS) {
+         skills[sk] = crew.skills[sk].core * bonus;
+      }
+
       sortedRoster.push({
          crew,
          crew_id: crew.id,
-         command_skill: crew.command_skill.core * bonus,
-         science_skill: crew.science_skill.core * bonus,
-         security_skill: crew.security_skill.core * bonus,
-         engineering_skill: crew.engineering_skill.core * bonus,
-         diplomacy_skill: crew.diplomacy_skill.core * bonus,
-         medicine_skill: crew.medicine_skill.core * bonus,
+         skills,
          total: 0
       });
    });

@@ -489,204 +489,57 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 			return vals.reduce((a: any, b: any) => (a || 0) + (b || 0), 0) / nonzeros;
 		}
 
-		_columns.push({
-			id: 'command_skill',
-			Header: 'COM',
-			minWidth: 50,
-			maxWidth: 70,
-			resizable: true,
-			accessor: 'command_skill_core',
-			Cell: (cell) => cell.original ? <SkillCell skill={cell.original.command_skill} compactMode={compactMode} /> : <span />,
-			aggregate: aggAvg,
-			Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
-		},
-			{
-				id: 'diplomacy_skill',
-				Header: 'DIP',
+		let colsCore : Column<CrewData>[] = [];
+		for (let sk in CONFIG.SKILLS_SHORT) {
+			let head = CONFIG.SKILLS_SHORT[sk];
+			colsCore.push({
+				id: sk,
+				Header: head,
 				minWidth: 50,
 				maxWidth: 70,
 				resizable: true,
-				accessor: 'diplomacy_skill_core',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.diplomacy_skill} compactMode={compactMode} /> : <span />,
+				accessor: (crew) => crew.skills[sk].core,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.skills[sk]} compactMode={compactMode} /> : <span />,
 				aggregate: aggAvg,
 				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
-			},
-			{
-				id: 'engineering_skill',
-				Header: 'ENG',
-				minWidth: 50,
-				maxWidth: 70,
-				resizable: true,
-				accessor: 'engineering_skill_core',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.engineering_skill} compactMode={compactMode} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
-			},
-			{
-				id: 'medicine_skill',
-				Header: 'MED',
-				minWidth: 50,
-				maxWidth: 70,
-				resizable: true,
-				accessor: 'medicine_skill_core',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.medicine_skill} compactMode={compactMode} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
-			},
-			{
-				id: 'science_skill',
-				Header: 'SCI',
-				minWidth: 50,
-				maxWidth: 70,
-				resizable: true,
-				accessor: 'science_skill_core',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.science_skill} compactMode={compactMode} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
-			},
-			{
-				id: 'security_skill',
-				Header: 'SEC',
-				minWidth: 50,
-				maxWidth: 70,
-				resizable: true,
-				accessor: 'security_skill_core',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.security_skill} compactMode={compactMode} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
-			},
-			{
-				id: 'command_skill_prof',
-				Header: 'Com+',
+			});
+		}
+		colsCore.sort((a,b) => (a.Header as string).localeCompare(b.Header as string));
+		let colsProf: Column<CrewData>[] = [];
+		for (let sk in CONFIG.SKILLS_SHORT) {
+			let head = CONFIG.SKILLS_SHORT[sk];
+			colsProf.push({
+				id: sk+'_prof',
+				Header: head+'+',
 				minWidth: 70,
 				maxWidth: 100,
 				resizable: true,
-				accessor: 'command_skill.max',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.command_skill} compactMode={compactMode} proficiency={true} /> : <span />,
+				accessor: (crew) => crew.skills[sk].max,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.skills[sk]} compactMode={compactMode} proficiency={true} /> : <span />,
 				aggregate: aggAvg,
 				Aggregated: (row) => <span>{Math.floor(row.value)} (avg max)</span>
-			},
-			{
-				id: 'diplomacy_skill_prof',
-				Header: 'Dip+',
-				minWidth: 70,
-				maxWidth: 100,
-				resizable: true,
-				accessor: 'diplomacy_skill.max',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.diplomacy_skill} compactMode={compactMode} proficiency={true} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg max)</span>
-			},
-			{
-				id: 'engineering_skill_prof',
-				Header: 'Eng+',
-				minWidth: 70,
-				maxWidth: 100,
-				resizable: true,
-				accessor: 'engineering_skill.max',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.engineering_skill} compactMode={compactMode} proficiency={true} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg max)</span>
-			},
-			{
-				id: 'medicine_skill_prof',
-				Header: 'Med+',
-				minWidth: 70,
-				maxWidth: 100,
-				resizable: true,
-				accessor: 'medicine_skill.max',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.medicine_skill} compactMode={compactMode} proficiency={true} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg max)</span>
-			},
-			{
-				id: 'science_skill_prof',
-				Header: 'Sci+',
-				minWidth: 70,
-				maxWidth: 100,
-				resizable: true,
-				accessor: 'science_skill.max',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.science_skill} compactMode={compactMode} proficiency={true} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg max)</span>
-			},
-			{
-				id: 'security_skill_prof',
-				Header: 'Sec+',
-				minWidth: 70,
-				maxWidth: 100,
-				resizable: true,
-				accessor: 'security_skill.max',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.security_skill} compactMode={compactMode} proficiency={true} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg max)</span>
-			},
-			{
-				id: 'command_skill_voy',
-				Header: 'Com++',
+			});
+		}
+		colsProf.sort((a, b) => (a.Header as string).localeCompare(b.Header as string));
+		let colsVoy: Column<CrewData>[] = [];
+		for (let sk in CONFIG.SKILLS_SHORT) {
+			let head = CONFIG.SKILLS_SHORT[sk];
+			colsVoy.push({
+				id: sk + '_voy',
+				Header: head + '++',
 				minWidth: 50,
 				maxWidth: 70,
 				resizable: true,
-				accessor: 'command_skill_voy',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.command_skill} compactMode={compactMode} combined={true} /> : <span />,
+				accessor: (crew) => crew.skills[sk].voy,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.skills[sk]} compactMode={compactMode} combined={true} /> : <span />,
 				aggregate: aggAvg,
 				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
-			},
-			{
-				id: 'diplomacy_skill_voy',
-				Header: 'Dip++',
-				minWidth: 50,
-				maxWidth: 70,
-				resizable: true,
-				accessor: 'diplomacy_skill_voy',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.diplomacy_skill} compactMode={compactMode} combined={true} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
-			},
-			{
-				id: 'engineering_skill_voy',
-				Header: 'Eng++',
-				minWidth: 50,
-				maxWidth: 70,
-				resizable: true,
-				accessor: 'engineering_skill_voy',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.engineering_skill} compactMode={compactMode} combined={true} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
-			},
-			{
-				id: 'medicine_skill_voy',
-				Header: 'Med++',
-				minWidth: 50,
-				maxWidth: 70,
-				resizable: true,
-				accessor: 'medicine_skill_voy',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.medicine_skill} compactMode={compactMode} combined={true} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
-			},
-			{
-				id: 'science_skill_voy',
-				Header: 'Sci++',
-				minWidth: 50,
-				maxWidth: 70,
-				resizable: true,
-				accessor: 'science_skill_voy',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.science_skill} compactMode={compactMode} combined={true} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
-			},
-			{
-				id: 'security_skill_voy',
-				Header: 'Sec++',
-				minWidth: 50,
-				maxWidth: 70,
-				resizable: true,
-				accessor: 'security_skill_voy',
-				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.security_skill} compactMode={compactMode} combined={true} /> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
-			},
+			});
+		}
+		colsVoy.sort((a, b) => (a.Header as string).localeCompare(b.Header as string));
+
+		_columns.push(...colsCore, ...colsProf, ...colsVoy);
+		_columns.push(
 			{
 				id: 'voyage_score',
 				Header: 'VOY',

@@ -104,17 +104,16 @@ export const EventCrewBonusTable = (props: EventCrewBonusTableProps) => {
       }
 
       crews.forEach(crew => {
+         // override skills and skill data shallow copies and incorporate bonuses directly
+         let skills = { ...crew.skills };
+         for (let sk in CONFIG.SKILLS) {
+            skills[sk].core *= bonusValue;
+         }
          let bonusCrew = {
             ...crew,
             // additional properties not in CrewData
             bonus: bonusValue,
-            // override skills and skill data shallow copies and incorporate bonuses directly
-            command_skill: { ...crew.command_skill, core: crew.command_skill.core * bonusValue },
-            diplomacy_skill: { ...crew.diplomacy_skill, core: crew.diplomacy_skill.core * bonusValue },
-            security_skill: { ...crew.security_skill, core: crew.security_skill.core * bonusValue },
-            medicine_skill: { ...crew.medicine_skill, core: crew.medicine_skill.core * bonusValue },
-            engineering_skill: { ...crew.engineering_skill, core: crew.engineering_skill.core * bonusValue },
-            science_skill: { ...crew.science_skill, core: crew.science_skill.core * bonusValue },
+            skills
          };
 
          items.push(bonusCrew);
@@ -226,6 +225,21 @@ export const EventCrewBonusTable = (props: EventCrewBonusTableProps) => {
          });
       }
 
+      let colsCore: Column<CrewData>[] = [];
+      for (let sk in CONFIG.SKILLS_SHORT) {
+         let head = CONFIG.SKILLS_SHORT[sk];
+         colsCore.push({
+            id: sk,
+            Header: head,
+            minWidth: 50,
+            maxWidth: 70,
+            resizable: true,
+            accessor: (crew) => crew.skills[sk].core,
+            Cell: (cell) => cell.original ? <SkillCell skill={cell.original.skills[sk]} compactMode={compactMode} /> : <span />,
+         });
+      }
+      colsCore.sort((a, b) => (a.Header as string).localeCompare(b.Header as string));
+
       _columns.push(
          {
             id: 'frozen',
@@ -277,60 +291,7 @@ export const EventCrewBonusTable = (props: EventCrewBonusTableProps) => {
                }
             },
          },
-         {
-            id: 'command_skill',
-            Header: 'COM',
-            minWidth: 50,
-            maxWidth: 70,
-            resizable: true,
-            accessor: (crew) => crew.command_skill.core,
-            Cell: (cell) => cell.original ? <SkillCell skill={cell.original.command_skill} compactMode={compactMode} /> : <span />,
-         },
-         {
-            id: 'diplomacy_skill',
-            Header: 'DIP',
-            minWidth: 50,
-            maxWidth: 70,
-            resizable: true,
-            accessor: (crew) => crew.diplomacy_skill.core,
-            Cell: (cell) => cell.original ? <SkillCell skill={cell.original.diplomacy_skill} compactMode={compactMode} /> : <span />,
-         },
-         {
-            id: 'engineering_skill',
-            Header: 'ENG',
-            minWidth: 50,
-            maxWidth: 70,
-            resizable: true,
-            accessor: (crew) => crew.engineering_skill.core,
-            Cell: (cell) => cell.original ? <SkillCell skill={cell.original.engineering_skill} compactMode={compactMode} /> : <span />,
-         },
-         {
-            id: 'medicine_skill',
-            Header: 'MED',
-            minWidth: 50,
-            maxWidth: 70,
-            resizable: true,
-            accessor: (crew) => crew.medicine_skill.core,
-            Cell: (cell) => cell.original ? <SkillCell skill={cell.original.medicine_skill} compactMode={compactMode} /> : <span />,
-         },
-         {
-            id: 'science_skill',
-            Header: 'SCI',
-            minWidth: 50,
-            maxWidth: 70,
-            resizable: true,
-            accessor: (crew) => crew.science_skill.core,
-            Cell: (cell) => cell.original ? <SkillCell skill={cell.original.science_skill} compactMode={compactMode} /> : <span />,
-         },
-         {
-            id: 'security_skill',
-            Header: 'SEC',
-            minWidth: 50,
-            maxWidth: 70,
-            resizable: true,
-            accessor: (crew) => crew.security_skill.core,
-            Cell: (cell) => cell.original ? <SkillCell skill={cell.original.security_skill} compactMode={compactMode} /> : <span />,
-         },
+         ...colsCore,
          {
             id: 'traits',
             Header: 'Traits',

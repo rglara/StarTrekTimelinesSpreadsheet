@@ -1,12 +1,8 @@
 import React from 'react';
+import { SkillData } from '../../api/DTO';
 
 export interface SkillCellProps {
-	skill: {
-		core: number;
-		min: number;
-		max: number;
-		voy: number;
-	};
+	skill: SkillData;
 	combined?: boolean;
 	proficiency?: boolean;
 	compactMode?: boolean;
