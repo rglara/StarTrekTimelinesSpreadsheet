@@ -245,13 +245,7 @@ export async function loginSequence(onProgress: (description: string) => void, l
     try {
         let allcrew : CrewDTO[] | undefined = undefined;
         allcrew = await STTApi.networkHelper.get(STTApi.serverAddress + 'allcrew.json', undefined);
-<<<<<<< Upstream, based on github/master
-        STTApi.allcrew = formatAllCrew(allcrew || []);
-=======
-        // #!endif
-
         STTApi.allcrew = buildCrewDataAll(allcrew || []);
->>>>>>> 80ccd0c Refactored crew data initialization
     }
     catch (e) {
         console.error(e);
