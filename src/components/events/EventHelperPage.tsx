@@ -107,7 +107,12 @@ export const EventCrewBonusTable = (props: EventCrewBonusTableProps) => {
          // override skills and skill data shallow copies and incorporate bonuses directly
          let skills = { ...crew.skills };
          for (let sk in CONFIG.SKILLS) {
-            skills[sk].core *= bonusValue;
+            skills[sk] = {
+               core: skills[sk].core * bonusValue,
+               min: 0,
+               max: 0,
+               voy: 0
+            };
          }
          let bonusCrew = {
             ...crew,

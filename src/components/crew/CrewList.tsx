@@ -18,6 +18,7 @@ import { ItemDisplay } from '../ItemDisplay';
 
 import STTApi, { CONFIG, RarityStars } from '../../api';
 import { CrewData, ItemArchetypeDTO } from '../../api/DTO';
+import { ReplicatorDialog } from '../replicator/ReplicatorDialog';
 
 export interface CrewListProps {
 	data: CrewData[];
@@ -40,6 +41,7 @@ interface CrewListState {
 		activeId?: number;
 		name?: string;
 	}
+	replicatorTarget?: ItemArchetypeDTO;
 }
 
 export class CrewList extends React.Component<CrewListProps, CrewListState> {
@@ -132,7 +134,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 							equipment.map((eq, ix) => {
 								if (eq.e) {
 									return (<td key={eq.e.name + ix}>
-										<ItemDisplay src={eq.e.iconUrl || ''} size={100} maxRarity={eq.e.rarity} rarity={eq.e.rarity} />
+										<ItemDisplay src={eq.e.iconUrl || ''}
+											size={100} maxRarity={eq.e.rarity} rarity={eq.e.rarity}
+											onClick={() => this.setState({ replicatorTarget: eq.e })} />
 										<span style={{ fontSize: '0.8rem', color: eq.have ? "" : "red" }}>{eq.e.name}</span>
 									</td>);
 								}
@@ -241,6 +245,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 					}}
 				/>
 				<ActiveCrewDialog activeId={this.state.active.activeId} name={this.state.active.name} />
+				<ReplicatorDialog targetArchetype={this.state.replicatorTarget}
+					onReplicate={() => this.setState({ replicatorTarget: undefined })}
+					onClose={() => this.setState({ replicatorTarget: undefined })} />
 			</div>
 		);
 	}

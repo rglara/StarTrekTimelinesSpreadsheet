@@ -8,7 +8,7 @@ import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator'
 import { ItemDisplay } from '../ItemDisplay';
 import UserStore from '../Styles';
 
-import STTApi, { CONFIG } from '../../api';
+import STTApi, { CONFIG, RarityStars } from '../../api';
 import { ItemDTO, ItemArchetypeDTO } from '../../api/DTO';
 import { ReplicatorFuel, computeExtraSchematics, computeExtraItems,
 	replicatorCurrencyCost, replicatorFuelCost, canReplicate,
@@ -53,6 +53,11 @@ export const ReplicatorDialog = (props:{
 		// Go ahead and show the dialog so it can display the error message
 		setShowDialog(true);
 		setTargetArchetype(props.targetArchetype);
+		if (STTApi.playerData.replicator_uses_today >= STTApi.playerData.replicator_limit) {
+			setCanBeReplicated(false);
+			setErrorMessage('You have used your '+STTApi.playerData.replicator_limit+' replicator uses today');
+			return;
+		}
 
 		let canRep = canReplicate(props.targetArchetype.id);
 		if (!canRep) {
@@ -93,13 +98,16 @@ export const ReplicatorDialog = (props:{
 	}
 
 	function reloadItems(fuelConfig: string) {
-		if (fuelConfig === 'extraSchematics') {
+		if (fuelConfig === 'everything') {
+			setFuelList(STTApi.playerData.character.items);
+		} else if (fuelConfig === 'extraSchematics') {
 			setFuelList(computeExtraSchematics());
 		} else if (fuelConfig === 'extraItems') {
 			setFuelList(computeExtraItems());
-		} else if (fuelConfig === 'everything') {
-			let fuellist = STTApi.playerData.character.items;
-			setFuelList(fuellist);
+		} else if (fuelConfig === 'trainers') {
+			setFuelList(STTApi.playerData.character.items.filter(item => item.type === 7));
+		} else if (fuelConfig === 'rations') {
+			setFuelList(STTApi.playerData.character.items.filter(item => item.type === 9));
 		} else {
 			setFuelList([]);
 		}
@@ -238,14 +246,16 @@ export const ReplicatorDialog = (props:{
 				color: currentTheme.semanticColors.bodyText,
 				backgroundColor: currentTheme.semanticColors.bodyBackground
 			}}>
-			<div style={{ color: 'red' }}>
 			{!canBeReplicated &&
-				<b>This item cannot be replicated!</b>
+				<div style={{ color: 'red' }}>
+					<b>This item cannot be replicated!</b>
+				</div>
 			}
 			{errorMessage &&
-				<b>Failed to replicate: {errorMessage}</b>
+				<div style={{ color: 'red' }}>
+					<b>Failed to replicate: {errorMessage}</b>
+				</div>
 			}
-			</div>
 			<div
 				style={{
 					display: 'grid',
@@ -264,6 +274,8 @@ export const ReplicatorDialog = (props:{
 						options={[
 							{ key: 'extraSchematics', text: 'Unneeded ship schematics' },
 							{ key: 'extraItems', text: 'Potentially unneeded items' },
+							{ key: 'trainers', text: 'Crew Experience Training' },
+							{ key: 'rations', text: 'Replicator Ration' },
 							{ key: 'everything', text: 'All items' }
 						]}
 					/>
@@ -293,10 +305,23 @@ export const ReplicatorDialog = (props:{
 								accessor: 'name'
 							},
 							{
+								id: 'rarity',
+								Header: 'Rarity',
+								minWidth: 30,
+								maxWidth: 40,
+								resizable: true,
+								sortable: true,
+								accessor: 'rarity',
+								// Cell: (cell) => {
+								// 	let item = cell.original;
+								// 	return <RarityStars min={1} max={item.rarity} value={item.rarity ? item.rarity : null} />;
+								// }
+							},
+							{
 								id: 'quantity',
 								Header: 'Quantity',
 								accessor: 'quantity',
-								minWidth: 80,
+								minWidth: 50,
 								maxWidth: 80,
 								resizable: true,
 								sortable: true,
