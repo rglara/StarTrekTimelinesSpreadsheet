@@ -544,6 +544,14 @@ const FarmList = (props: {
             accessor: 'uses',
          },
          {
+            id: 'cost',
+            Header: 'Farming Cost',
+            minWidth: 50,
+            maxWidth: 50,
+            resizable: true,
+            accessor: (fli) => fli.sources.sort((a,b) => b.quotient - a.quotient)[0].quotient,
+         },
+         {
             id: 'sources',
             Header: 'Sources',
             minWidth: 400,
