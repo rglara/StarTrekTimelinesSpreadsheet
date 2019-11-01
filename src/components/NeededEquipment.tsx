@@ -10,7 +10,7 @@ import { WarpDialog } from './WarpDialog';
 import STTApi, { CONFIG, CollapsibleSection, download } from '../api';
 
 import { simplejson2csv } from '../utils/simplejson2csv';
-import { EquipNeedFilter, EquipNeed } from '../api/EquipmentTools';
+import { EquipNeedFilter, EquipNeed, getMissionCost } from '../api/EquipmentTools';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 import { ItemArchetypeDTO, ItemArchetypeSourceDTO } from '../api/DTO';
 
@@ -251,26 +251,6 @@ export const NeededEquipment = (props: {
 	}
 }
 
-function _getMissionCost(id: number, mastery_level: number) {
-	for (let mission of STTApi.missions) {
-		let q = mission.quests.find(q => q.id === id);
-		if (q) {
-			if (q.locked || (q.mastery_levels[mastery_level].progress.goal_progress !== q.mastery_levels[mastery_level].progress.goals)) {
-				return undefined;
-			}
-
-			let raw = q.mastery_levels[mastery_level].energy_cost;
-			let sp = STTApi.playerData.character.stimpack;
-			if (sp) {
-				raw *= 1 - (sp.energy_discount / 100);
-			}
-			return Math.ceil(raw);
-		}
-	}
-
-	return undefined;
-}
-
 const NeededEquipmentSources = (props: {
 	entry: EquipNeed,
 	onWarp?: () => void;
@@ -298,14 +278,14 @@ const NeededEquipmentSources = (props: {
 		res.push(<div key={'disputeMissions'} style={{ lineHeight: '2.5' }}>
 			<b>Missions: </b>
 			{disputeMissions.map((entry, idx, all) =>
-				<div className={"ui labeled button compact tiny" + ((_getMissionCost(entry.id, entry.mastery) === undefined) ? " disabled" : "")}
+				<div className={"ui labeled button compact tiny" + ((getMissionCost(entry.id, entry.mastery) === undefined) ? " disabled" : "")}
 					key={idx}
 					onClick={() => warp(entry)}>
 					<div className="ui button compact tiny">
 						{entry.name} <span style={{ display: 'inline-block' }}><img src={CONFIG.MASTERY_LEVELS[entry.mastery].url()} height={14} /></span> ({entry.chance_grade}/5)
 						</div>
 					<a className="ui blue label">
-						{_getMissionCost(entry.id, entry.mastery)} <span style={{ display: 'inline-block' }}><img src={CONFIG.SPRITES['energy_icon'].url} height={14} /></span>
+						{getMissionCost(entry.id, entry.mastery)} <span style={{ display: 'inline-block' }}><img src={CONFIG.SPRITES['energy_icon'].url} height={14} /></span>
 					</a>
 					{idx == all.length - 1 ? '' : <span>&nbsp;</span>}
 				</div>
@@ -317,14 +297,14 @@ const NeededEquipmentSources = (props: {
 		res.push(<div key={'shipBattles'} style={{ lineHeight: '2.5' }}>
 			<b>Ship battles: </b>
 			{shipBattles.map((entry, idx, all) =>
-				<div className={"ui labeled button compact tiny" + ((_getMissionCost(entry.id, entry.mastery) === undefined) ? " disabled" : "")}
+				<div className={"ui labeled button compact tiny" + ((getMissionCost(entry.id, entry.mastery) === undefined) ? " disabled" : "")}
 					key={idx}
 					onClick={() => warp(entry)}>
 					<div className="ui button compact tiny">
 						{entry.name} <span style={{ display: 'inline-block' }}><img src={CONFIG.MASTERY_LEVELS[entry.mastery].url()} height={14} /></span> ({entry.chance_grade}/5)
 						</div>
 					<a className="ui blue label">
-						{_getMissionCost(entry.id, entry.mastery)} <span style={{ display: 'inline-block' }}><img src={CONFIG.SPRITES['energy_icon'].url} height={14} /></span>
+						{getMissionCost(entry.id, entry.mastery)} <span style={{ display: 'inline-block' }}><img src={CONFIG.SPRITES['energy_icon'].url} height={14} /></span>
 					</a>
 					{idx == all.length - 1 ? '' : <span>&nbsp;</span>}
 				</div>
@@ -403,7 +383,7 @@ const FarmList = (props:{
 		let missions = equipment.item_sources.filter(e => (e.type === 0) || (e.type === 2));
 
 		missions.forEach(mission => {
-			if (!_getMissionCost(mission.id, mission.mastery)) {
+			if (!getMissionCost(mission.id, mission.mastery)) {
 				// Disabled missions are filtered out
 				return;
 			}
@@ -452,7 +432,7 @@ const FarmList = (props:{
 					{entry.name} <span style={{ display: 'inline-block' }}><img src={CONFIG.MASTERY_LEVELS[entry.mastery].url()} height={14} /></span> ({entry.chance_grade}/5)
 					</div>
 				<a className="ui blue label">
-					{_getMissionCost(entry.id, entry.mastery)} <span style={{ display: 'inline-block' }}><img src={CONFIG.SPRITES['energy_icon'].url} height={14} /></span>
+					{getMissionCost(entry.id, entry.mastery)} <span style={{ display: 'inline-block' }}><img src={CONFIG.SPRITES['energy_icon'].url} height={14} /></span>
 				</a>
 			</div>
 

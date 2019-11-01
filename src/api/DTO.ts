@@ -887,14 +887,14 @@ export interface ItemArchetypeSourceDTO {
    challenge_id?: number;
    challenge_skill?: string;
    chance_grade: number;
-   dispute: number;
+   dispute?: number;
    energy_quotient: number;
    id: number;
    mastery: number;
    mission: number;
    name: string;
    place: string;
-   type: number;
+   type: number; // 0: disputes, 1: faction transmission, 2: ship battle; others?
 }
 
 export interface ItemDTO {

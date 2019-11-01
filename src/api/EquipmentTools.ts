@@ -1,5 +1,5 @@
 import STTApi from './index';
-import { CrewData, PotentialRewardDTO, ItemArchetypeDTO, MissionDTO, MissionQuestDTO, FactionDTO } from './DTO';
+import { CrewData, PotentialRewardDTO, ItemArchetypeDTO, MissionDTO, MissionQuestDTO, FactionDTO, MissionQuestMasteryLevelDTO } from './DTO';
 
 export function fixupAllCrewIds() : void {
 	// Now replace the ids with proper ones
@@ -20,6 +20,54 @@ export function fixupAllCrewIds() : void {
 			}
 		});
 	});
+}
+
+export function getMissionCost(questId: number, mastery_level: number) : number | undefined {
+	for (let mission of STTApi.missions) {
+		let q = mission.quests.find(q => q.id === questId);
+		if (q) {
+			if (q.locked || (q.mastery_levels[mastery_level].progress.goal_progress !== q.mastery_levels[mastery_level].progress.goals)) {
+				return undefined;
+			}
+
+			let raw = q.mastery_levels[mastery_level].energy_cost;
+			let sp = STTApi.playerData.character.stimpack;
+			if (sp) {
+				raw *= 1 - (sp.energy_discount / 100);
+			}
+			return Math.ceil(raw);
+		}
+	}
+
+	return undefined;
+}
+
+export interface MissionCostDetails {
+	mission?: MissionDTO,
+	quest?: MissionQuestDTO,
+	questMastery?: MissionQuestMasteryLevelDTO,
+	cost?: number
+}
+
+export function getMissionCostDetails(questId: number, mastery_level: number): MissionCostDetails {
+	for (let mission of STTApi.missions) {
+		let quest = mission.quests.find(q => q.id === questId);
+		if (quest) {
+			let questMastery = quest.mastery_levels[mastery_level];
+			if (quest.locked || !questMastery || (questMastery.progress.goal_progress !== questMastery.progress.goals)) {
+				return { mission, quest, questMastery };
+			}
+
+			let raw = questMastery.energy_cost;
+			let sp = STTApi.playerData.character.stimpack;
+			if (sp) {
+				raw *= 1 - (sp.energy_discount / 100);
+			}
+			return { mission, quest, questMastery, cost: Math.ceil(raw)};
+		}
+	}
+
+	return { };
 }
 
 export async function loadFullTree(onProgress: (description: string) => void, recursing: boolean): Promise<void> {

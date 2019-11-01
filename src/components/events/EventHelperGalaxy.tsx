@@ -7,7 +7,8 @@ import { ItemDisplay } from '../ItemDisplay';
 import STTApi, { CONFIG, RarityStars } from '../../api';
 import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES, ItemArchetypeDTO, ItemDTO, CrewData, ItemArchetypeDemandDTO } from '../../api/DTO';
 import { EventCrewBonusTable } from './EventHelperPage';
-import ReactTable, { Column, FilterFunction } from 'react-table';
+import ReactTable, { Column, SortingRule } from 'react-table';
+import { getMissionCostDetails, MissionCostDetails } from '../../api/EquipmentTools';
 
 interface ItemDemand {
    equipment: ItemArchetypeDTO;
@@ -41,6 +42,7 @@ interface FarmListItem {
    archetype: ItemArchetypeDTO;
    item?: ItemDTO;
    uses: string;
+   sources: (MissionCostDetails & { chance: number; quotient: number; title: string })[]
 }
 
 function parseAdventure(adventure: EventGatherPoolAdventureDTO, crew_bonuses: { [crew_symbol: string]: number }): ItemDemand[] {
@@ -341,10 +343,33 @@ export const GalaxyEvent = (props: {
    );
 
    farmingList.forEach((v, k) => {
+      let archetype = STTApi.itemArchetypeCache.archetypes.find(a => a.id === k)!;
+
+      let missions = archetype.item_sources.filter(e => e.type === 0 || e.type === 2);
+      const sources = missions.map((entry, idx) => {
+         const chance = entry.chance_grade / 5;
+         const quotient = entry.energy_quotient;
+         const costDetails = getMissionCostDetails(entry.id, entry.mastery);
+         let title = '';
+         if (costDetails.mission && costDetails.quest && costDetails.cost) {
+            const qoff = costDetails.mission.quests.indexOf(costDetails.quest) + 1;
+            const missionTitle = costDetails.mission.description.length > costDetails.mission.episode_title.length ?
+               costDetails.mission.episode_title : costDetails.mission.description;
+            title = missionTitle + ' #' + qoff + ' ('+costDetails.quest.name+')[' + entry.chance_grade + '/5 @ ' + costDetails.cost + ' Chrons (q=' + (Math.round(entry.energy_quotient * 100) / 100) + ')]';
+         }
+         return {
+            ...costDetails,
+            chance,
+            quotient,
+            title
+         };
+      });
+      const filtered = sources.filter(s => s.title !== '');
       farmList.push({
-         archetype: STTApi.itemArchetypeCache.archetypes.find(a => a.id === k)!,
+         archetype,
          item: STTApi.playerData.character.items.find(item => item.archetype_id === k),
-         uses: v
+         uses: v,
+         sources: filtered
       });
    });
 
@@ -438,7 +463,7 @@ export const GalaxyEvent = (props: {
 const FarmList = (props: {
    farmList: FarmListItem[]
 }) => {
-   const [sorted, setSorted] = React.useState([{ id: 'name', desc: false }, { id: 'rarity', desc: false }]);
+   const [sorted, setSorted] = React.useState([{ id: 'quantity', desc: false }] as SortingRule[]);
    const MAX_PAGE_SIZE = 20;
    let columns = buildColumns();
 
@@ -458,7 +483,7 @@ const FarmList = (props: {
       </div>;
 
    function buildColumns() {
-      let cols: Column[] = [
+      let cols: Column<FarmListItem>[] = [
          {
             id: 'icon',
             Header: '',
@@ -517,6 +542,19 @@ const FarmList = (props: {
             maxWidth: 50,
             resizable: true,
             accessor: 'uses',
+         },
+         {
+            id: 'sources',
+            Header: 'Sources',
+            minWidth: 400,
+            maxWidth: 1000,
+            resizable: true,
+            sortable: false,
+            Cell: (cell) => {
+               let item: FarmListItem = cell.original;
+               return item.sources.sort((a,b) => b.quotient - a.quotient)
+                  .map((src, idx, all) => src.title + (idx === all.length-1 ? '' : ', '));
+            }
          }
       ];
       return cols;
