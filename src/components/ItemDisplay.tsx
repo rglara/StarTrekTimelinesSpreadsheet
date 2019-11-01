@@ -1,6 +1,7 @@
 import React from 'react';
 import { Header } from 'semantic-ui-react';
 import STTApi, { CONFIG } from '../api';
+import { ItemDTO } from '../api/DTO';
 
 export interface ItemDisplayProps {
     size: number;
@@ -8,6 +9,7 @@ export interface ItemDisplayProps {
     rarity: number;
     maxRarity: number;
     itemId?: number;
+    item?: ItemDTO;
     style?: any;
     src: string;
     sources?: any; // JSX element
@@ -33,8 +35,11 @@ export const ItemDisplay = (props: ItemDisplayProps) => {
     }
 
     let count = 0;
-    if (props.itemId) {
-        let have = STTApi.playerData.character.items.find(item => item.archetype_id === props.itemId);
+    if (props.itemId || props.item) {
+        let have = props.item;
+        if (!have && props.itemId) {
+            have = STTApi.playerData.character.items.find(item => item.archetype_id === props.itemId);
+        }
         if (have && have.quantity > 0) {
             count = have.quantity;
         }

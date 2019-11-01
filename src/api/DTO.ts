@@ -147,13 +147,14 @@ export interface CrewData {
    archetypes?: any[];
    /** @deprecated - migrate to using status.buyback */
    buyback: boolean;
+   /** Frozen crew have crew_id random plus 2 billion (to not overflow 32bit int) */
    crew_id: number;
    equipment_slots: CrewEquipmentSlotData[];
    /** @deprecated - migrate to using status.expires_in */
    expires_in?: number;
    favorite: boolean;
    flavor: string;
-   //TODO: fix uses where this is treated as a boolean
+   //TODO: allow multiples in voyage crew computation when enabled
    /** @deprecated - migrate to using status.frozen */
    frozen: number;
    status: {
@@ -170,8 +171,7 @@ export interface CrewData {
    full_body: ImageDataDTO;
    iconUrl?: string;
    iconBodyUrl?: string;
-   //TODO: rename to avatar_id
-   /** moved to avatar_id */
+   /** @deprecated moved to avatar_id */
    id: number;
    avatar_id: number;
    /** @deprecated - migrate to using status.external */
@@ -374,7 +374,7 @@ export interface RewardDTO {
    quantity: number;
    rarity: number;
    skills?: { [skill: string]: SkillDTO; };
-   symbol: string;
+   symbol: string; // 'energy' (chrons), 'honor' (honor), 'nonpremium' (merits), 'season_points' (accolades), 'premium' (dilithium)
    traits?: string[];
    type: number;
 
@@ -466,7 +466,11 @@ export interface PlayerDTO {
    dbid: number;
    display_name: string;
    entitlements: any;
-   environment: any;
+   environment: { [key:string] : any };
+   // environment.video_ad_campaign_limit: {
+   //    master_limit: { chance: number; period_minutes: number; }
+   //    stt_cadet_warp: { chance: number; period_minutes: number; }
+   // }
    fleet: {
       created: number;
       cursize: number;
@@ -848,6 +852,11 @@ export interface ShipSchematicDTO {
    // };
 }
 
+export interface ItemArchetypeDemandDTO {
+   archetype_id: number;
+   count: number;
+}
+
 export interface ItemArchetypeDTO {
    bonuses?: { [key: number]: number };
    flavor: string;
@@ -857,7 +866,7 @@ export interface ItemArchetypeDTO {
    name: string;
    rarity: number;
    recipe?: {
-      demands: { archetype_id: number; count: number; }[];
+      demands: ItemArchetypeDemandDTO[];
       validity_hash: any;
       jackpot?: {
          reward: RewardDTO[];

@@ -124,6 +124,11 @@ function crewToRoster(dto: CrewDTO) : CrewData {
 	};
 }
 
+function createFakeCrewId() : number {
+	let val = Math.random() * 100_000 + 2_000_000_000;
+	return Math.round(val);
+}
+
 export function buildCrewDataAll(allcrew: CrewDTO[]): CrewData[] {
 	let rosterAll: CrewData[] = [];
 	let dupeChecker = new Set<string>();
@@ -144,6 +149,8 @@ export function buildCrewDataAll(allcrew: CrewDTO[]): CrewData[] {
 		}
 		STTApi.applyBuffConfig(crew);
 		let rosterEntry = crewToRoster(crew);
+		// external crew don't have a unique id, so supply one; make it less than one to distinguish internally
+		rosterEntry.crew_id = createFakeCrewId();
 		rosterEntry.isExternal = true;
 		rosterEntry.status.external = true;
 
@@ -259,10 +266,8 @@ async function loadFrozen(crewSymbol: string, frozenCount: number): Promise<Crew
 	}
 
 	let roster = crewToRoster(crew);
-	if (!roster.crew_id) {
-		// frozen crew don't have a unique id, so supply one; make it less than one to distinguish internally
-		roster.crew_id = Math.random();
-	}
+	// frozen crew don't have a unique id, so supply one; make it less than one to distinguish internally
+	roster.crew_id = createFakeCrewId();
 
 	roster.frozen = frozenCount;
 	roster.status.frozen = frozenCount;

@@ -4,9 +4,10 @@ import { Button, Item, Image, List, Accordion, Icon, AccordionTitleProps } from 
 
 import { ItemDisplay } from '../ItemDisplay';
 
-import STTApi, { CONFIG } from '../../api';
-import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES, ItemArchetypeDTO, ItemDTO, CrewData } from '../../api/DTO';
+import STTApi, { CONFIG, RarityStars } from '../../api';
+import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES, ItemArchetypeDTO, ItemDTO, CrewData, ItemArchetypeDemandDTO } from '../../api/DTO';
 import { EventCrewBonusTable } from './EventHelperPage';
+import ReactTable, { Column, FilterFunction } from 'react-table';
 
 interface ItemDemand {
    equipment: ItemArchetypeDTO;
@@ -15,7 +16,7 @@ interface ItemDemand {
    craftCost: number;
    have: number;
    itemDemands: {
-      rd: any;
+      rd: ItemArchetypeDemandDTO;
       item?: ItemDTO;
    }[];
 }
@@ -34,6 +35,12 @@ interface CalcSlot {
    bestCrew: BonusCrew[];
    skills: string[];
    type?: string;
+}
+
+interface FarmListItem {
+   archetype: ItemArchetypeDTO;
+   item?: ItemDTO;
+   uses: string;
 }
 
 function parseAdventure(adventure: EventGatherPoolAdventureDTO, crew_bonuses: { [crew_symbol: string]: number }): ItemDemand[] {
@@ -113,7 +120,7 @@ function parseAdventure(adventure: EventGatherPoolAdventureDTO, crew_bonuses: { 
 
       bestCrewChance = Math.floor(Math.min(bestCrewChance, 1) * 100);
 
-      let itemDemands = [];
+      let itemDemands: { rd: ItemArchetypeDemandDTO, item?: ItemDTO }[] = [];
       for (let rd of e.recipe.demands) {
          let item = STTApi.playerData.character.items.find(item => item.archetype_id === rd.archetype_id);
          itemDemands.push({
@@ -175,12 +182,11 @@ function getRosterWithBonuses(crew_bonuses: { [crew_symbol: string]: number }): 
    return sortedRoster;
 }
 
-interface GalaxyAdventureDemandProps {
+
+const GalaxyAdventureDemand = (props: {
    onUpdate: () => void;
    demand: ItemDemand;
-}
-
-const GalaxyAdventureDemand = (props: GalaxyAdventureDemandProps) => {
+}) => {
    let demand = props.demand;
    let canCraft = false;//!demand.itemDemands.some((id: any) => !id.item);
 
@@ -192,36 +198,34 @@ const GalaxyAdventureDemand = (props: GalaxyAdventureDemandProps) => {
                {demand.equipment.name} (have {demand.have})
             </Item.Header>
             <Item.Description>
-               <p>
+               <div>
                   {demand.itemDemands.map((id, index, all) =>
-                     <div><ItemDisplay src={id.item!.iconUrl!} style={{display: 'inline'}}
+                     <div key={index} ><ItemDisplay src={id.item!.iconUrl!} style={{display: 'inline'}}
                         size={50} maxRarity={id.item!.rarity} rarity={id.item!.rarity} />{id.rd.count}x {id.item ? id.item.name : 'NEED'} (have {id.item ? id.item.quantity : 0}){
                            index === all.length-1 ? '' : ', '
                         }</div>)
                   }
-               </p>
-               <p>
+               </div>
+               <div>
                   Best crew: <img src={demand.calcSlot.bestCrew[0].crew.iconUrl} width='25' height='25' /> {demand.calcSlot.bestCrew[0].crew.name} ({demand.bestCrewChance}%)
-               </p>
+               </div>
             </Item.Description>
-            <Item.Extra>
+            {/* <Item.Extra>
                <Button
                   floated='right'
                   disabled={!canCraft}
                   content={`Craft (${demand.craftCost} credits)`}
                />
-            </Item.Extra>
+            </Item.Extra> */}
          </Item.Content>
       </Item>
    );
 }
 
-interface GalaxyAdventureProps {
+const GalaxyAdventure = (props: {
    adventure: EventGatherPoolAdventureDTO;
    crew_bonuses: { [crew_symbol: string]: number };
-}
-
-const GalaxyAdventure = (props: GalaxyAdventureProps) => {
+}) => {
    let adventure_name = '';
    let adventure_demands : ItemDemand[] = [];
 
@@ -269,16 +273,14 @@ const GalaxyAdventure = (props: GalaxyAdventureProps) => {
    );
 }
 
-export interface GalaxyEventProps {
+export const GalaxyEvent = (props: {
    event: EventDTO;
-}
-
-export const GalaxyEvent = (props: GalaxyEventProps) => {
+}) => {
    let [activeIndex, setActiveIndex] = React.useState(-1);
 
    let crew_bonuses = [];
    let eventEquip = [];
-   let farmList: any[] = [];
+   let farmList: FarmListItem[] = [];
    let currEvent: EventDTO = props.event;
 
    if (!props.event ||
@@ -327,26 +329,27 @@ export const GalaxyEvent = (props: GalaxyEventProps) => {
       }
    }
 
-   let farmingList = new Map();
+   let farmingList = new Map<number,string>();
    eventEquip.forEach(e =>
       e.itemDemands.forEach(id => {
          if (farmingList.has(id.rd.archetype_id)) {
-            farmingList.set(id.rd.archetype_id, farmingList.get(id.rd.archetype_id) + id.rd.count);
+            farmingList.set(id.rd.archetype_id, farmingList.get(id.rd.archetype_id)! + ',' + id.rd.count + 'x');
          } else {
-            farmingList.set(id.rd.archetype_id, id.rd.count);
+            farmingList.set(id.rd.archetype_id, '' + id.rd.count + 'x');
          }
       })
    );
 
    farmingList.forEach((v, k) => {
       farmList.push({
-         equipment: STTApi.itemArchetypeCache.archetypes.find(a => a.id === k),
-         count: v
+         archetype: STTApi.itemArchetypeCache.archetypes.find(a => a.id === k)!,
+         item: STTApi.playerData.character.items.find(item => item.archetype_id === k),
+         uses: v
       });
    });
 
    // TODO: compare with future galaxy events
-   let toSave = farmList.map(fl => ({ equipment_id: fl.equipment.id, equipment_symbol: fl.equipment.symbol, count: fl.count }));
+   let toSave = farmList.map(fl => ({ equipment_id: fl.archetype.id, equipment_symbol: fl.archetype.symbol, uses: fl.uses }));
    console.log(toSave);
 
    // this.state = { event: currEvent, crew_bonuses, activeIndex: -1, eventEquip, farmList };
@@ -362,7 +365,7 @@ export const GalaxyEvent = (props: GalaxyEventProps) => {
       setActiveIndex(newIndex);
    }
 
-   let adventures = currEvent.content.gather_pools[0].adventures;
+   let adventures = currEvent.content.gather_pools.length > 0 ? currEvent.content.gather_pools[0].adventures : undefined;
 
    // const { activeIndex, farmList, eventEquip } = this.state;
    return (
@@ -370,42 +373,10 @@ export const GalaxyEvent = (props: GalaxyEventProps) => {
          <h3>Galaxy event: {currEvent.name}</h3>
 
          <Accordion>
-            <Accordion.Title active={activeIndex === 0} index={0} onClick={(e, titleProps) => _handleClick(titleProps)}>
-               <Icon name='dropdown' />
-               Farming list for Galaxy event
-				</Accordion.Title>
-            <Accordion.Content active={activeIndex === 0}>
-               {farmList.map(item => (
-                  <div key={item.equipment.id} style={{ display: 'contents' }}>
-                     <ItemDisplay
-                        style={{ display: 'inline-block' }}
-                        src={item.equipment.iconUrl}
-                        size={24}
-                        maxRarity={item.equipment.rarity}
-                        rarity={item.equipment.rarity}
-                     />{' '}
-                     {item.equipment.name} x {item.count}
-                  </div>
-               ))}
-            </Accordion.Content>
-            <Accordion.Title active={activeIndex === 1} index={1} onClick={(e, titleProps) => _handleClick(titleProps)}>
-               <Icon name='dropdown' />
-               Event equipment requirements
-				</Accordion.Title>
-            <Accordion.Content active={activeIndex === 1}>
-               {eventEquip.map(e => (
-                  <div key={e.equip.id}>
-                     <h3>
-                        {e.equip.name} (have {e.have ? e.have.quantity : 0})
-							</h3>
-                     <p>{e.itemDemands.map(id => `${id.item_name} x ${id.rd.count} (have ${id.item_quantity})`).join(', ')}</p>
-                  </div>
-               ))}
-            </Accordion.Content>
             <Accordion.Title active={activeIndex === 2} index={2} onClick={(e, titleProps) => _handleClick(titleProps)}>
                <Icon name='dropdown' />
                Crew bonuses
-				</Accordion.Title>
+            </Accordion.Title>
             <Accordion.Content active={activeIndex === 2}>
                <List horizontal>
                   {crew_bonuses.map(cb => (
@@ -414,7 +385,7 @@ export const GalaxyEvent = (props: GalaxyEventProps) => {
                         <List.Content>
                            <List.Header>{cb.avatar.name}</List.Header>
                            Bonus level {cb.bonus}x
-								</List.Content>
+                        </List.Content>
                      </List.Item>
                   ))}
                </List>
@@ -422,16 +393,132 @@ export const GalaxyEvent = (props: GalaxyEventProps) => {
             <Accordion.Title active={activeIndex === 3} index={3} onClick={(e, titleProps) => _handleClick(titleProps)}>
                <Icon name='dropdown' />
                Owned Crew Bonus Table
-				</Accordion.Title>
+            </Accordion.Title>
             <Accordion.Content active={activeIndex === 3}>
                <EventCrewBonusTable bonuses={currEvent.content.crew_bonuses!} />
             </Accordion.Content>
+            <Accordion.Title active={activeIndex === 1} index={1} onClick={(e, titleProps) => _handleClick(titleProps)}>
+               <Icon name='dropdown' />
+               Event equipment requirements {eventEquip.length == 0 && '(Pending event start)'}
+            </Accordion.Title>
+            <Accordion.Content active={activeIndex === 1}>
+               {eventEquip.map(e => (
+                  <div key={e.equip.id}>
+                     <h3>
+                        {e.equip.name} (have {e.have ? e.have.quantity : 0})
+                     </h3>
+                     <div>{e.itemDemands.map(id => `${id.item_name} x ${id.rd.count} (have ${id.item_quantity})`).join(', ')}</div>
+                  </div>
+               ))}
+            </Accordion.Content>
+            <Accordion.Title active={activeIndex === 0} index={0} onClick={(e, titleProps) => _handleClick(titleProps)}>
+               <Icon name='dropdown' />
+               Farming list for Galaxy event {farmList.length == 0 && '(Pending event start)'}
+            </Accordion.Title>
+            <Accordion.Content active={activeIndex === 0}>
+               <FarmList farmList={farmList} />
+            </Accordion.Content>
+            <Accordion.Title active={activeIndex === 4} index={4} onClick={(e, titleProps) => _handleClick(titleProps)}>
+               <Icon name='dropdown' />
+               Active adventures in the pool
+            </Accordion.Title>
+            <Accordion.Content active={activeIndex === 4}>
+               {adventures && adventures.filter(ad => !ad.golden_octopus).map((adventure) => (
+                  <GalaxyAdventure key={adventure.name} adventure={adventure} crew_bonuses={currEvent!.content.crew_bonuses!} />
+               ))}
+               {adventures && adventures.filter(ad => ad.golden_octopus).map((adventure) => (
+                  <GalaxyAdventure key={adventure.name} adventure={adventure} crew_bonuses={currEvent!.content.crew_bonuses!} />
+               ))}
+            </Accordion.Content>
          </Accordion>
-
-         <h4>Active adventures in the pool</h4>
-         {adventures.map((adventure) => (
-            <GalaxyAdventure key={adventure.name} adventure={adventure} crew_bonuses={currEvent!.content.crew_bonuses!} />
-         ))}
       </div>
    );
+}
+
+const FarmList = (props: {
+   farmList: FarmListItem[]
+}) => {
+   const [sorted, setSorted] = React.useState([{ id: 'name', desc: false }, { id: 'rarity', desc: false }]);
+   const MAX_PAGE_SIZE = 20;
+   let columns = buildColumns();
+
+   return <div className='data-grid' data-is-scrollable='true'>
+         <ReactTable
+            data={props.farmList}
+            columns={columns}
+            defaultPageSize={props.farmList.length <= MAX_PAGE_SIZE ? props.farmList.length : MAX_PAGE_SIZE}
+            pageSize={props.farmList.length <= MAX_PAGE_SIZE ? props.farmList.length : MAX_PAGE_SIZE}
+            sorted={sorted}
+            onSortedChange={sorted => setSorted(sorted)}
+            showPagination={props.farmList.length > MAX_PAGE_SIZE}
+            showPageSizeOptions={false}
+            className='-striped -highlight'
+            style={props.farmList.length > MAX_PAGE_SIZE ? { height: 'calc(80vh - 88px)' } : {}}
+         />
+      </div>;
+
+   function buildColumns() {
+      let cols: Column[] = [
+         {
+            id: 'icon',
+            Header: '',
+            minWidth: 50,
+            maxWidth: 50,
+            resizable: false,
+            sortable: false,
+            accessor: (fli) => fli.archetype.name,
+            Cell: (cell) => {
+               let item : FarmListItem = cell.original;
+               return <ItemDisplay src={item.archetype.iconUrl!} size={30} maxRarity={item.archetype.rarity} rarity={item.archetype.rarity}
+               // onClick={() => this.setState({ replicatorTarget: found })}
+               />;
+            }
+         },
+         {
+            id: 'name',
+            Header: 'Name',
+            minWidth: 130,
+            maxWidth: 180,
+            resizable: true,
+            accessor: (fli) => fli.archetype.name,
+            Cell: (cell) => {
+               let item: FarmListItem = cell.original;
+               return (
+                  <a href={'https://stt.wiki/wiki/' + item.archetype.name.split(' ').join('_')} target='_blank'>
+                     {item.archetype.name}
+                  </a>
+               );
+            }
+         },
+         {
+            id: 'rarity',
+            Header: 'Rarity',
+            accessor: (fli) => fli.archetype.rarity,
+            minWidth: 80,
+            maxWidth: 80,
+            resizable: false,
+            Cell: (cell) => {
+               let item: FarmListItem = cell.original;
+               return <RarityStars min={1} max={item.archetype.rarity} value={item.archetype.rarity} />;
+            }
+         },
+         {
+            id: 'quantity',
+            Header: 'Have',
+            minWidth: 50,
+            maxWidth: 80,
+            resizable: true,
+            accessor: (fli:FarmListItem) => fli.item ? fli.item.quantity : 0,
+         },
+         {
+            id: 'uses',
+            Header: 'Uses',
+            minWidth: 50,
+            maxWidth: 50,
+            resizable: true,
+            accessor: 'uses',
+         }
+      ];
+      return cols;
+   }
 }
