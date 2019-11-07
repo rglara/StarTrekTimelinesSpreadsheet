@@ -3,7 +3,7 @@ import Moment from 'moment';
 import { Button, Icon, Popup } from 'semantic-ui-react';
 import ReactTable, { SortingRule } from 'react-table';
 
-import STTApi, { CONFIG, RarityStars, formatTimeSeconds, CollapsibleSection, download } from '../../api';
+import STTApi, { CONFIG, RarityStars, formatTimeSeconds, CollapsibleSection, download, CrewSkills } from '../../api';
 import { loadVoyage, recallVoyage, resolveDilemma } from './VoyageTools';
 import { estimateVoyageRemaining, CalcRemainingOptions } from './voyageCalc';
 import { VoyageLogEntry } from './VoyageLogEntry';
@@ -42,7 +42,7 @@ export const VoyageLog = (props:{}) => {
    const [sorted, setSorted] = React.useState([{ id: 'type', desc: false }, { id: 'rarity', desc: true }] as SortingRule[]);
    const [shipName, setShipName] = React.useState(undefined as string | undefined);
    const [estimatedMinutesLeft, setEstimatedMinutesLeft] = React.useState(undefined as number | undefined);
-   const [estimatedMinutesLeftRefill, setEstimatedMinutesLeftRefill] = React.useState(undefined as number | undefined);
+   //const [estimatedMinutesLeftRefill, setEstimatedMinutesLeftRefill] = React.useState(undefined as number | undefined);
    const [nativeEstimate, setNativeEstimate] = React.useState(undefined as boolean | undefined);
    const [voyageRewards, setVoyageRewards] = React.useState(undefined as RewardDTO[] | undefined);
    const [voyageExport, setVoyageExport] = React.useState(undefined as VoyageExportData | undefined);
@@ -203,7 +203,7 @@ export const VoyageLog = (props:{}) => {
          setShipName(ship_name);
          setVoyage(voyage);
          setEstimatedMinutesLeft(voyage.hp / 21);
-         setEstimatedMinutesLeftRefill(voyage.hp / 21);
+         //setEstimatedMinutesLeftRefill(voyage.hp / 21);
          setIndexedNarrative(indexedNarrative);
          setSkillChecks(skillChecks);
          setNativeEstimate(false);
@@ -249,20 +249,161 @@ export const VoyageLog = (props:{}) => {
 
       estimateVoyageRemaining(options, (estimate) => {
          setEstimatedMinutesLeft(estimate);
+         setNativeEstimate(true);
 
          if (!voyage || !voyage.max_hp){
             return;
          }
 
-         options.remainingAntiMatter += voyage.max_hp;
-         estimateVoyageRemaining(options, (estimate: any) => {
-            setEstimatedMinutesLeftRefill(estimate);
-            setNativeEstimate(true);
-         });
+         //TODO: to estimte including a single refill
+         // options.remainingAntiMatter += voyage.max_hp;
+         // estimateVoyageRemaining(options, (estimate: any) => {
+         //    setEstimatedMinutesLeftRefill(estimate);
+         //    setNativeEstimate(true);
+         // });
       });
    }
 
-   const getColumns = () => {
+   const recall = async () => {
+      await recallVoyage(STTApi.playerData.character.voyage[0].id);
+      reloadVoyageState();
+   }
+
+   React.useEffect(() => {
+      reloadVoyageState();
+   }, []);
+
+   if (showSpinner) {
+      return (
+         <div className='centeredVerticalAndHorizontal'>
+            <div className='ui massive centered text active inline loader'>Loading voyage details...</div>
+         </div>
+      );
+   }
+
+   if (!voyage || !voyage.crew_slots) {
+      return <div/>;
+   }
+
+   const defaultButton = (props: any) => (
+      <Button {...props} style={{ width: '100%' }}>
+         {props.children}
+      </Button>
+   );
+
+   const rewardTableColumns = getColumns();
+   let voy = voyage;
+
+   return <div style={{ userSelect: 'initial' }}>
+         <h3>Voyage on the {shipName}</h3>
+         <VoyageState
+            voyage={voyage}
+            estimatedMinutesLeft={estimatedMinutesLeft}
+            nativeEstimate={nativeEstimate}
+            recall={recall} />
+         <VoyageDilemma voyage={voyage} reload={reloadVoyageState} />
+         <p>
+            Antimatter remaining: {voy.hp} / {voy.max_hp}.
+         </p>
+         <table style={{ borderSpacing: '0' }}>
+            <tbody>
+               <tr>
+                  <td>
+                     <section>
+                        <h4>Full crew complement and skill aggregates</h4>
+                        <ul>
+                           {
+                           // map by voyage description slots because they are sorted
+                           STTApi.playerData.character.voyage_descriptions[0].crew_slots.map((dslot) => {
+                              const slot = voyage.crew_slots.find(s => s.symbol === dslot.symbol)!;
+                              const crew = STTApi.roster.find(c => c.crew_id === slot.crew.id)!;
+                              return (
+                                 <li key={slot.symbol}>
+                                    <span className='quest-mastery'>
+                                       <img src={CONFIG.SPRITES['icon_' + slot.skill].url} height={18} /> &nbsp;
+                                       {slot.name} &nbsp;{' '}
+                                       <Popup flowing
+                                          trigger={<span className='quest-mastery'>
+                                             <img src={crew.iconUrl} height={20} />{' '}
+                                             &nbsp; {crew.name}
+                                          </span>}
+                                          content={<CrewSkills crew={crew} useIcon={true} asVoyScore={true} addVoyTotal={true} />}
+                                       />
+                                    </span>
+                                 </li>
+                              );
+                           })}
+                        </ul>
+                     </section>
+                  </td>
+                  <td>
+                     <ul>
+                        {Object.keys(voy.skill_aggregates).map(k => voy.skill_aggregates[k]).map(skill => {
+                           let isPri = skill.skill == voy.skills.primary_skill;
+                           let isSec = skill.skill == voy.skills.secondary_skill;
+                           return (
+                              <li key={skill.skill}>
+                                 <span className='quest-mastery'>
+                                    <img src={CONFIG.SPRITES['icon_' + skill.skill].url} height={18} /> &nbsp; {skill.core} ({skill.range_min}-
+                                    {skill.range_max})&nbsp;[{skill.core + (skill.range_min + skill.range_max) / 2}]&nbsp;
+                                    {isPri ? ' (Pri) ' : ''}
+                                    {isSec ? ' (Sec) ' : ''}
+                                    &nbsp;
+                                    <Popup
+                                       trigger={<span style={isPri ? { color: CONFIG.RARITIES[5].color } : isSec ? { color: CONFIG.RARITIES[1].color } : {}}><Icon name='thumbs up' /></span>}
+                                       content="Skill checks passed"
+                                    /> {skillChecks && skillChecks![skill.skill].passed + '/' + skillChecks![skill.skill].att}
+                                 </span>
+                              </li>
+                           );
+                        })}
+                     </ul>
+                  </td>
+               </tr>
+            </tbody>
+         </table>
+
+         {voyageRewards && <span>
+            <h3>{'Pending rewards (' + voyageRewards.length + ')'}</h3>
+            <div style={{ maxWidth: '750px'}}>
+               <ReactTable
+                  data={voyageRewards}
+                  columns={rewardTableColumns}
+                  sorted={sorted}
+                  onSortedChange={sorted => setSorted(sorted)}
+                  className='-striped -highlight'
+                  defaultPageSize={10}
+                  pageSize={10}
+                  showPagination={voyageRewards.length > 10}
+                  showPageSizeOptions={false}
+                  NextComponent={defaultButton}
+                  PreviousComponent={defaultButton}
+               />
+            </div>
+            <br />
+            </span>
+         }
+         {indexedNarrative &&
+            <CollapsibleSection title={"Complete Captain's Log (" + Object.keys(indexedNarrative).length + ')'}>
+            {Object.keys(indexedNarrative).map(key => {
+               let v = indexedNarrative[+key];
+               return <VoyageLogEntry key={key} log={v} />;
+            })}
+            </CollapsibleSection>
+         }
+         <button className='ui mini button blue'
+            onClick={() => download('narrative.' + voy.id + '.json',
+               JSON.stringify(voyageExport),
+               'Export voyage narrative JSON',
+               'Export',
+               false)}>
+            Export Narrative JSON
+         </button>
+
+         <br />
+      </div>;
+
+   function getColumns() {
       return [
          {
             id: 'icon',
@@ -375,160 +516,7 @@ export const VoyageLog = (props:{}) => {
                return item.type;
             }
          }];
-   };
-
-   const recall = async () => {
-      await recallVoyage(STTApi.playerData.character.voyage[0].id);
-      reloadVoyageState();
    }
-
-   React.useEffect(() => {
-      reloadVoyageState();
-   }, []);
-
-   if (showSpinner) {
-      return (
-         <div className='centeredVerticalAndHorizontal'>
-            <div className='ui massive centered text active inline loader'>Loading voyage details...</div>
-         </div>
-      );
-   }
-
-   if (!voyage || !voyage.crew_slots) {
-      return <div/>;
-   }
-
-   const defaultButton = (props: any) => (
-      <Button {...props} style={{ width: '100%' }}>
-         {props.children}
-      </Button>
-   );
-
-   const rewardTableColumns = getColumns();
-   let voy = voyage;
-
-   return (
-      <div style={{ userSelect: 'initial' }}>
-         <h3>Voyage on the {shipName}</h3>
-         <VoyageState
-            voyage={voyage}
-            estimatedMinutesLeft={estimatedMinutesLeft}
-            nativeEstimate={nativeEstimate}
-            recall={recall} />
-         <VoyageDilemma voyage={voyage} reload={reloadVoyageState} />
-         <p>
-            Antimatter remaining: {voy.hp} / {voy.max_hp}.
-         </p>
-         <table style={{ borderSpacing: '0' }}>
-            <tbody>
-               <tr>
-                  <td>
-                     <section>
-                        <h4>Full crew complement and skill aggregates</h4>
-                        <ul>
-                           {voyage.crew_slots.map((slot:any) => {
-                              let img = STTApi.roster.find(rosterCrew => rosterCrew.id == slot.crew.archetype_id);
-                              return (
-                                 <li key={slot.symbol}>
-                                    <span className='quest-mastery'>
-                                       <img src={CONFIG.SPRITES['icon_' + slot.skill].url} height={18} /> &nbsp;
-                                       {slot.name} &nbsp;{' '}
-                                       <Popup flowing
-                                          trigger={<span className='quest-mastery'>
-                                             <img src={img ? img.iconUrl : ''} height={20} />{' '}
-                                             &nbsp; {slot.crew.name}
-                                          </span>}
-                                          content={<CrewSkills crew={slot.crew} />}
-                                       />
-                                    </span>
-                                 </li>
-                              );
-                           })}
-                        </ul>
-                     </section>
-                  </td>
-                  <td>
-                     <ul>
-                        {Object.keys(voy.skill_aggregates).map(k => voy.skill_aggregates[k]).map(skill => {
-                           let isPri = skill.skill == voy.skills.primary_skill;
-                           let isSec = skill.skill == voy.skills.secondary_skill;
-                           return (
-                              <li key={skill.skill}>
-                                 <span className='quest-mastery'>
-                                    <img src={CONFIG.SPRITES['icon_' + skill.skill].url} height={18} /> &nbsp; {skill.core} ({skill.range_min}-
-                                    {skill.range_max})&nbsp;[{skill.core + (skill.range_min + skill.range_max) / 2}]&nbsp;
-                                    {isPri ? ' (Pri) ' : ''}
-                                    {isSec ? ' (Sec) ' : ''}
-                                    &nbsp;
-                                    <Popup
-                                       trigger={<span style={isPri ? { color: CONFIG.RARITIES[5].color } : isSec ? { color: CONFIG.RARITIES[1].color } : {}}><Icon name='thumbs up' /></span>}
-                                       content="Skill checks passed"
-                                    /> {skillChecks && skillChecks![skill.skill].passed + '/' + skillChecks![skill.skill].att}
-                                 </span>
-                              </li>
-                           );
-                        })}
-                     </ul>
-                  </td>
-               </tr>
-            </tbody>
-         </table>
-
-         {voyageRewards && <span>
-            <h3>{'Pending rewards (' + voyageRewards.length + ')'}</h3>
-            <div className='voyage-rewards-grid'>
-               <ReactTable
-                  data={voyageRewards}
-                  columns={rewardTableColumns}
-                  sorted={sorted}
-                  onSortedChange={sorted => setSorted(sorted)}
-                  className='-striped -highlight'
-                  defaultPageSize={10}
-                  pageSize={10}
-                  showPagination={voyageRewards.length > 10}
-                  showPageSizeOptions={false}
-                  NextComponent={defaultButton}
-                  PreviousComponent={defaultButton}
-               />
-            </div>
-            <br />
-            </span>
-         }
-         {indexedNarrative &&
-            <CollapsibleSection title={"Complete Captain's Log (" + Object.keys(indexedNarrative).length + ')'}>
-            {Object.keys(indexedNarrative).map(key => {
-               let v = indexedNarrative[+key];
-               return <VoyageLogEntry key={key} log={v} />;
-            })}
-            </CollapsibleSection>
-         }
-         <button className='ui mini button blue'
-            onClick={() => download('narrative.' + voy.id + '.json',
-               JSON.stringify(voyageExport),
-               'Export voyage narrative JSON',
-               'Export',
-               false)}>
-            Export Narrative JSON
-         </button>
-
-         <br />
-      </div>
-   );
-}
-
-const CrewSkills = (props: {
-   crew: any
-}) => {
-   const crew = props.crew;
-   return <span key={crew.id}>
-      <RarityStars max={crew.max_rarity} value={crew.rarity} asSpan={true} colored={true} />
-      &nbsp;
-         {Object.keys(crew.skills).map(s => {
-         return (<span key={s}><img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
-            {crew.skills[s].core} ({crew.skills[s].range_min}-{crew.skills[s].range_max})
-            </span>);
-      })}
-   </span>
 }
 
 const VoyageState = (props: {

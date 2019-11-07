@@ -1,14 +1,17 @@
 import React from 'react';
-import { SkillData } from '../../api/DTO';
+import { SkillData, CrewDTO, CrewData } from '../../api/DTO';
+import { RarityStars, CONFIG } from '../../api';
 
-export interface SkillCellProps {
+/**
+ * Shows a <div> of <span>s with optional voy/combined or core, optional proficiency.
+ * Suited for use in table cells.
+ */
+export const SkillCell = (props: {
 	skill: SkillData;
 	combined?: boolean;
 	proficiency?: boolean;
 	compactMode?: boolean;
-}
-
-export const SkillCell = (props:SkillCellProps) => {
+}) => {
 	if (props.skill.core > 0) {
 		let out = <span className='skill-stats'>{props.skill.core}</span>;
 		let range = <span className='skill-stats-range'>+({props.skill.min} - {props.skill.max})</span>;
@@ -27,4 +30,40 @@ export const SkillCell = (props:SkillCellProps) => {
 	else {
 		return <div className='skill-stats-div'></div>;
 	}
+}
+
+/**
+ * Show all nonzero crew skills by icon or text
+ */
+export const CrewSkills = (props: {
+	crew: CrewData,
+	useIcon?: boolean,
+	asVoyScore?: boolean,
+	addVoyTotal?: boolean
+}) => {
+	const crew = props.crew;
+	return <span key={crew.id}>
+		<RarityStars max={crew.max_rarity} value={crew.rarity} asSpan={true} colored={true} />
+		&nbsp;
+		{ Object.keys(CONFIG.SKILLS).map(s => {
+			if (crew.skills[s].voy <= 0) {
+				return <span key={s} />;
+			}
+			return <span key={s}>{
+				props.useIcon ?
+					<img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
+					: <span>{' - '}{CONFIG.SKILLS_SHORT[s]}{' '}</span>
+				}
+				{
+					props.asVoyScore ? crew.skills[s].voy :
+					`{crew.skills[s].core} ({crew.skills[s].min}-{crew.skills[s].max})`
+				}
+				</span>;
+		})}
+		{
+			props.addVoyTotal && <span key='v'>{' - '}
+				Voy {Object.keys(CONFIG.SKILLS).map(s => crew.skills[s].voy).reduce((acc,c) => acc + c, 0)}
+			</span>
+		}
+	</span>;
 }

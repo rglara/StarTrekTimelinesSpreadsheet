@@ -1,10 +1,10 @@
 import React from 'react';
-import { Message, Dropdown, Header, Select, Checkbox, Form, Image, Card } from 'semantic-ui-react';
+import { Message, Dropdown, Header, Select, Checkbox, Form, Image, Card, Button, DropdownItem, DropdownItemProps } from 'semantic-ui-react';
 
-import STTApi, { CONFIG, formatCrewStats, bonusCrewForCurrentEvent, formatTimeSeconds, download, RarityStars } from '../../api';
-import { CrewData } from '../../api/DTO';
+import STTApi, { CONFIG, formatCrewStatsVoy, bonusCrewForCurrentEvent, formatTimeSeconds, download, RarityStars, CrewSkills } from '../../api';
+import { CrewData, VoyageDTO } from '../../api/DTO';
 import { bestVoyageShip, startVoyage } from './VoyageTools';
-import { calculateVoyage, exportVoyageData, CalcChoice, cleanCrewName } from './voyageCalc';
+import { calculateVoyage, exportVoyageData, CalcChoice, cleanCrewName, CalcRemainingOptions, estimateVoyageRemaining } from './voyageCalc';
 
 interface VoyageCrewEntry {
 	key: number;
@@ -26,19 +26,25 @@ export const VoyageCrewSelect = (props: {
 
 	const initialCalcState = {
 		estimatedDuration: undefined,
-		state: undefined,
+		state: 'open',
 		crewSelection: []
 	} as {
 		estimatedDuration: number | undefined,
-		state: string | undefined,
+		state: string,
 		crewSelection: CalcChoice[]
 	}
 
 	const [calcState, setCalcState] = React.useState(initialCalcState);
 
+	React.useEffect(() => {
+		if (calcState.state === 'open') {
+			calcVoyageLength();
+		}
+	}, [calcState]);
+
 	let bestVoyageShips = bestVoyageShip();
 	const [bestShips, setBestShips] = React.useState(bestVoyageShips);
-	const [selectedShip, setSelectedShip] = React.useState(bestVoyageShips[0].ship.id as number | undefined);
+	const [selectedShipId, setSelectedShipId] = React.useState(bestVoyageShips[0].ship.id as number | undefined);
 
 		let peopleListVal: VoyageCrewEntry[] = [];
 		STTApi.roster.forEach(crew => {
@@ -88,9 +94,11 @@ export const VoyageCrewSelect = (props: {
 			CONFIG.SKILLS[STTApi.playerData.character.voyage_descriptions[0].skills.secondary_skill]
 		} secondary`;
 	}
+	let voyage: VoyageDTO | undefined = undefined;
 	if (STTApi.playerData.character.voyage && STTApi.playerData.character.voyage.length > 0) {
-		curVoy = `${CONFIG.SKILLS[STTApi.playerData.character.voyage[0].skills.primary_skill]} primary / ${
-			CONFIG.SKILLS[STTApi.playerData.character.voyage[0].skills.secondary_skill]
+		voyage = STTApi.playerData.character.voyage[0];
+		curVoy = `${CONFIG.SKILLS[voyage.skills.primary_skill]} primary / ${
+			CONFIG.SKILLS[voyage.skills.secondary_skill]
 		} secondary`;
 	}
 
@@ -138,15 +146,15 @@ export const VoyageCrewSelect = (props: {
 							selection
 							options={shipSpans}
 							placeholder='Choose a ship for your voyage'
-							value={selectedShip}
-							onChange={(ev, { value }) => setSelectedShip(value !== undefined ? +value : undefined)}
+							value={selectedShipId}
+							onChange={(ev, { value }) => setSelectedShipId(value !== undefined ? +value : undefined)}
 						/>
 					</Form.Field>
 
 					<Form.Input
 						label='Ship name'
 						value={shipName}
-						placeholder={bestShips.find((s) => s.ship.id == selectedShip)!.ship.name}
+						placeholder={bestShips.find((s) => s.ship.id == selectedShipId)!.ship.name}
 						onChange={(ev, { value }) => setShipName(value)}
 					/>
 				</Form.Group>
@@ -196,7 +204,7 @@ export const VoyageCrewSelect = (props: {
 					<Form.Button primary onClick={_calcVoyageData} disabled={calcState.state === 'inprogress'}>
 						Calculate best crew selection
 					</Form.Button>
-					<Form.Button secondary onClick={_startVoyage} disabled={calcState.state !== 'done'}>
+					<Form.Button secondary onClick={_startVoyage} disabled={calcState.state !== 'done' || voyage !== undefined}>
 						Start voyage with recommendations
 					</Form.Button>
 
@@ -211,9 +219,21 @@ export const VoyageCrewSelect = (props: {
 				Error: {error}
 			</Message>
 
-			<BestCrew state={calcState.state} crewSelection={calcState.crewSelection} />
+			<BestCrew
+				state={calcState.state}
+				crewSelection={calcState.crewSelection}
+				crewAvailable={getAvailableCrew()}
+				crewUpdated={crewSelectionChanged} />
 		</div>
 	);
+
+	function crewSelectionChanged(selection: CalcChoice[]) {
+		setCalcState({
+			crewSelection: selection,
+			estimatedDuration: 0,
+			state: 'open'
+		});
+	}
 
 	function _startVoyage() {
 		let selectedCrewIds = [];
@@ -232,28 +252,27 @@ export const VoyageCrewSelect = (props: {
 			selectedCrewIds.push(entry.choice.crew_id);
 		}
 
+		if (!selectedShipId) {
+			setError(`Cannot start voyage without a selected ship`);
+			return;
+		}
+
 		startVoyage(
 			STTApi.playerData.character.voyage_descriptions[0].symbol,
-			bestShips.find((s) => s.ship.id == selectedShip)!.ship.id,
+			selectedShipId,
 			shipName,
 			selectedCrewIds
 		)
 			.then(() => {
 				props.onRefreshNeeded();
-
-				let voyage = STTApi.playerData.character.voyage[0];
-				if (voyage && voyage.id) {
-					// this.state.estimatedDuration
-					// Save it somewhere
-				}
 			})
 			.catch(err => {
 				setError(err.message);
 			});
 	}
 
-	function _packVoyageOptions() {
-		let filteredRoster = STTApi.roster.filter(crew => {
+	function getAvailableCrew() {
+		return STTApi.roster.filter(crew => {
 			// Filter out buy-back crew
 			if (crew.buyback) {
 				return false;
@@ -280,11 +299,15 @@ export const VoyageCrewSelect = (props: {
 
 			return true;
 		});
+	}
+
+	function _packVoyageOptions() {
+		let filteredRoster = getAvailableCrew();
 
 		return {
 			searchDepth: searchDepth,
 			extendsTarget: extendsTarget,
-			shipAM: bestShips.find((s) => s.ship.id == selectedShip)!.score,
+			shipAM: bestShips.find((s) => s.ship.id == selectedShipId)!.score,
 			skillPrimaryMultiplier: 3.5,
 			skillSecondaryMultiplier: 2.5,
 			skillMatchingMultiplier: 1.1,
@@ -314,6 +337,52 @@ export const VoyageCrewSelect = (props: {
 				});
 			}
 		);
+	}
+
+	function calcVoyageLength() {
+		const numSlots = STTApi.playerData.character.voyage_descriptions[0].crew_slots.length;
+		if (calcState.crewSelection.length < numSlots) {
+			return;
+		}
+		const assignedRoster: CrewData[] = calcState.crewSelection.map(cs => cs.choice);
+		const assignedCrewIds: number[] = calcState.crewSelection.map(cs => cs.choice.id);
+
+		//TODO: need to do any validation here to prevent the native code from crashing
+		if (assignedRoster.length == 0) {
+			console.log('Unable to estimate; roster is empty');
+			return;
+		}
+
+		let options: CalcRemainingOptions = {
+			// first three not needed for estimate calculation
+			searchDepth: 0,
+			extendsTarget: 0,
+			shipAM: 0,
+			skillPrimaryMultiplier: 3.5,
+			skillSecondaryMultiplier: 2.5,
+			skillMatchingMultiplier: 1.1,
+			traitScoreBoost: 200,
+			voyage_description: STTApi.playerData.character.voyage_descriptions[0],
+			roster: assignedRoster,
+			// Estimate-specific parameters
+			voyage_duration: 0,
+			remainingAntiMatter: bestShips.find((s) => s.ship.id == selectedShipId)!.score,
+			assignedCrew: assignedCrewIds
+		};
+
+		setCalcState({
+			crewSelection: calcState.crewSelection,
+			estimatedDuration: calcState.estimatedDuration,
+			state: 'inprogress'
+		});
+
+		estimateVoyageRemaining(options, (minutesLeft) => {
+			setCalcState({
+				crewSelection: calcState.crewSelection,
+				estimatedDuration: minutesLeft / 60,
+				state: 'done'
+			});
+		});
 	}
 
 	// #!if ENV === 'electron'
@@ -451,8 +520,15 @@ export const VoyageCrewSelect = (props: {
 	// #!endif
 }
 
-const BestCrew = (props : { state: string | undefined, crewSelection: CalcChoice[]}) => {
-	if (props.state === 'inprogress' || props.state === 'done') {
+const BestCrew = (props : {
+	state: string,
+	crewSelection: CalcChoice[],
+	crewAvailable: CrewData[],
+	crewUpdated: (selection: CalcChoice[]) => void
+}) => {
+	const [selectSlotId, setSelectSlotId] = React.useState(undefined as number | undefined);
+
+	if (props.state === 'inprogress' || props.state === 'done' || props.state === 'open') {
 		let crewSpans: any[] = [];
 		props.crewSelection.forEach((entry) => {
 			if (entry.choice) {
@@ -467,7 +543,7 @@ const BestCrew = (props : { state: string | undefined, crewSelection: CalcChoice
 				let traitMatch = entry.choice.rawTraits.find(t => t === trait);
 
 				let status = entry.choice.frozen > 0 ? 'Frozen' : entry.choice.active_id ? isShuttle ? 'On Shuttle' : 'On Voyage' : 'Available';
-				let crew = (
+				let crewCard =
 					<Card key={entry.choice.crew_id || entry.choice.id} color={status === 'Frozen' ? 'red' : status === 'Available' ? 'green' : 'yellow'}>
 						<Card.Content>
 							<Image floated='right' size='mini' src={entry.choice.iconUrl} />
@@ -478,27 +554,83 @@ const BestCrew = (props : { state: string | undefined, crewSelection: CalcChoice
 							</Card.Meta>
 							<Card.Description>
 								<RarityStars max={entry.choice.max_rarity} value={entry.choice.rarity} colored={true} />
-								<div>{formatCrewStats(entry.choice)}</div>
+								<div>{formatCrewStatsVoy(entry.choice)}</div>
 							</Card.Description>
 						</Card.Content>
-						<Card.Content extra>Status: {status}</Card.Content>
-					</Card>
-				);
+						<Card.Content extra>
+							Status: {status} <Button onClick={() => setSelectSlotId(selectSlotId !== undefined ? undefined : entry.slotId)} style={{float:'right'}} content='Select'/>
+						</Card.Content>
+					</Card>;
 
-				crewSpans[entry.slotId] = crew;
+				crewSpans[entry.slotId] = crewCard;
 			} else {
 				console.error(entry);
 			}
 		});
 
-		return (
-			<div>
+		const numSlots = STTApi.playerData.character.voyage_descriptions[0].crew_slots.length;
+		for (let s=0; s<numSlots; ++s) {
+			if (!crewSpans[s]) {
+				let trait = STTApi.playerData.character.voyage_descriptions[0].crew_slots[s].trait;
+				crewSpans[s] = <Card key={s} color={'red'}>
+					<Card.Content>
+						<Card.Header>{}</Card.Header>
+						<Card.Meta>
+							{STTApi.playerData.character.voyage_descriptions[0].crew_slots[s].name}<br />
+							{trait}
+						</Card.Meta>
+						<Card.Description>
+						</Card.Description>
+					</Card.Content>
+					<Card.Content extra>
+						Status: Open <Button onClick={() => setSelectSlotId(selectSlotId !== undefined ? undefined : s) } style={{ float: 'right' }} content='Select' />
+					</Card.Content>
+				</Card>
+			}
+		}
+
+		return <div>
 				<br />
 				{props.state === 'inprogress' && <div className='ui medium centered text active inline loader'>Still calculating...</div>}
+				{selectSlotId !== undefined &&
+					<Dropdown
+					fluid
+					selection
+					options={buildOptions(selectSlotId)}
+					onChange={(e, { value }) => setChoice(selectSlotId, value as number)}
+					// value={}
+					/>
+				}
 				<Card.Group>{crewSpans}</Card.Group>
-			</div>
-		);
+			</div>;
+
 	} else {
 		return <span />;
+	}
+
+	function buildOptions(slotId: number) : DropdownItemProps[] {
+		const slotTrait = STTApi.playerData.character.voyage_descriptions[0].crew_slots[slotId].trait;
+		const slotSkill = STTApi.playerData.character.voyage_descriptions[0].crew_slots[slotId].skill;
+		const available = props.crewAvailable.filter(c => c.skills[slotSkill].voy > 0);
+		return available.sort((a, b) => {
+			const av = Object.keys(CONFIG.SKILLS).map(k => a.skills[k].voy).reduce((acc, c) => acc + c, 0);
+			const bv = Object.keys(CONFIG.SKILLS).map(k => b.skills[k].voy).reduce((acc, c) => acc + c, 0);
+			return bv - av;
+		}).map(c => ({
+			content: <span>{c.name} <CrewSkills crew={c} useIcon={true} asVoyScore={true} addVoyTotal={true} /> {
+				c.rawTraits.find(t => t === slotTrait) ? <b>{slotTrait}</b> : ''}</span>,
+			image: c.iconUrl,
+			value: c.crew_id
+		} as DropdownItemProps));
+	}
+
+	function setChoice(slotId: number, crewId: number) {
+		let newSelection = props.crewSelection.filter(cc => cc.slotId !== slotId && cc.choice.crew_id !== crewId);
+		newSelection.push({
+			slotId,
+			choice: props.crewAvailable.find(c => c.crew_id === crewId)!
+		});
+		props.crewUpdated(newSelection);
+		setSelectSlotId(undefined);
 	}
 }

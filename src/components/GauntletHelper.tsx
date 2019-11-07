@@ -10,7 +10,7 @@ import { getTheme } from '@uifabric/styling';
 import Logger from '../utils/logger';
 // #!endif
 
-import STTApi, { CONFIG, formatTimeSeconds, formatCrewStats, download } from '../api';
+import STTApi, { CONFIG, formatTimeSeconds, formatCrewStatsVoy, download } from '../api';
 import {
 	GauntletRoundOdds, GauntletData,
 	loadGauntlet, gauntletCrewSelection, gauntletRoundOdds, payToGetNewOpponents,
@@ -155,10 +155,8 @@ const GauntletStat = (props:{
 	label: string,
 	classAdd?: string
 }) => {
-	let classSize = '';
-	if (props.windowWidth < 1200) { classSize = 'small'; }
+	let classSize = 'small';
 	if (props.windowWidth < 800) { classSize = 'tiny'; }
-	if (props.windowWidth < 500) { classSize = 'mini'; }
 	return <div className={`${props.classAdd ? props.classAdd : ''} ui ${classSize} statistic`}>
 		<div className="value" style={{ color: props.classAdd || 'unset' }}>{props.value}</div>
 		<div className="label" style={{ color: 'unset' }}>{props.label}</div>
@@ -661,7 +659,7 @@ const GauntletSelectCrew = (props: {
 				imageUrl={crew.iconUrl}
 				text={crew.name}
 				secondaryText={crew.short_name}
-				tertiaryText={formatCrewStats(crew)}
+				tertiaryText={formatCrewStatsVoy(crew)}
 				size={PersonaSize.large}
 				presence={(crew.frozen === 0) ? PersonaPresence.online : PersonaPresence.away} />
 

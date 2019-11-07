@@ -279,13 +279,13 @@ async function loadFrozen(crewSymbol: string, frozenCount: number): Promise<Crew
 	return roster;
 }
 
-export function formatCrewStats(crew: CrewData): string {
+export function formatCrewStatsVoy(crew: CrewData): string {
 	let result = '';
 	for (let skillName in CONFIG.SKILLS) {
 		let skill = crew.skills[skillName];
 
-		if (skill && skill.core && (skill.core > 0)) {
-			result += `${CONFIG.SKILLS_SHORT[skillName]} (${Math.floor(skill.core + (skill.min + skill.max) / 2)}) `;
+		if (skill && skill.voy && (skill.voy > 0)) {
+			result += `${CONFIG.SKILLS_SHORT[skillName]} (${Math.floor(skill.voy)}) `;
 		}
 	}
 	return result;

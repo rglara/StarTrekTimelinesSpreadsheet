@@ -48,10 +48,10 @@ interface CalcCrewData {
     skillData: number[];
 }
 
-function parseResults(result: { buffer: ArrayBuffer }, callback: (choices: CalcChoice[], score:number) => void) : void {
+function parseResults(result: { buffer: ArrayBuffer }, callback: (choices: CalcChoice[], hoursLeft:number) => void) : void {
     let dv = new DataView(result.buffer);
 
-    let score = dv.getFloat32(0, true);
+    let hoursLeft = dv.getFloat32(0, true);
 
     let entries: CalcChoice[] = [];
     for (let i = 0; i < 12; i++) {
@@ -70,7 +70,7 @@ function parseResults(result: { buffer: ArrayBuffer }, callback: (choices: CalcC
         entries.push(entry);
     }
 
-    callback(entries, score);
+    callback(entries, hoursLeft);
 }
 
 // remove non-ascii and replace double-quotes in names with single quotes. Must be done when transmitting
@@ -198,8 +198,8 @@ function invokeNative(dataToExport: CalcExportData,
 }
 
 export function calculateVoyage(options: CalcOptions,
-        progressCallback: (choices: CalcChoice[], score: number) => void,
-        doneCallback: (choices: CalcChoice[], score: number) => void) : void {
+        progressCallback: (choices: CalcChoice[], hoursLeft: number) => void,
+        doneCallback: (choices: CalcChoice[], hoursLeft: number) => void) : void {
     let dataToExport = exportVoyageData(options);
     invokeNative(dataToExport, (progressResult: { buffer: ArrayBuffer}) => {
         parseResults(progressResult, progressCallback);
@@ -208,7 +208,7 @@ export function calculateVoyage(options: CalcOptions,
     });
 }
 
-export function estimateVoyageRemaining(options: CalcRemainingOptions, callback: (score:number) => void) : void {
+export function estimateVoyageRemaining(options: CalcRemainingOptions, callback: (minutesLeft:number) => void) : void {
     let dataToExport = exportVoyageData(options);
 
     let binaryConfigBuffer = new ArrayBuffer(52);
