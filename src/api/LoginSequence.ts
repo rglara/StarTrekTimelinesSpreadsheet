@@ -94,7 +94,9 @@ export async function loginSequence(onProgress: (description: string) => void, l
     for (let rosterCrew of roster) {
         if (rosterCrew.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getCrewImageUrl(rosterCrew, false).then((found: IFoundResult) => {
-                onProgress('Caching crew images... (' + current++ + '/' + total + ')');
+                current++;
+                if (current % 10 == 0)
+                    onProgress('Caching crew images... (' + current + '/' + total + ')');
                 rosterCrew.iconUrl = found.url;
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
@@ -107,7 +109,9 @@ export async function loginSequence(onProgress: (description: string) => void, l
 
         if (rosterCrew.iconBodyUrl === '') {
             iconPromises.push(STTApi.imageProvider.getCrewImageUrl(rosterCrew, true).then((found: IFoundResult) => {
-                onProgress('Caching crew images... (' + current++ + '/' + total + ')');
+                current++;
+                if (current % 10 == 0)
+                    onProgress('Caching crew images... (' + current + '/' + total + ')');
                 rosterCrew.iconBodyUrl = found.url;
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
@@ -126,7 +130,9 @@ export async function loginSequence(onProgress: (description: string) => void, l
         avatar.iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
         if (avatar.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getCrewImageUrl(avatar, false).then((found: IFoundResult) => {
-                onProgress('Caching crew images... (' + current++ + '/' + total + ')');
+                current++;
+                if (current % 10 == 0)
+                    onProgress('Caching crew images... (' + current + '/' + total + ')');
                 avatar.iconUrl = found.url;
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
@@ -187,7 +193,9 @@ export async function loginSequence(onProgress: (description: string) => void, l
 
         if (item.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getItemImageUrl(item, item.id).then((found: IFoundResult) => {
-                onProgress('Caching item images... (' + current++ + '/' + total + ')');
+                current++;
+                if (current % 10 == 0)
+                    onProgress('Caching item images... (' + current + '/' + total + ')');
                 let item = STTApi.playerData.character.items.find((item: any) => item.id === found.id);
                 if (item) {
                     item.iconUrl = found.url;
@@ -257,7 +265,10 @@ export async function loginSequence(onProgress: (description: string) => void, l
         crew.iconUrl = STTApi.imageProvider.getCrewCached(crew, false);
         if (crew.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getCrewImageUrl(crew, false).then((found: IFoundResult) => {
-                onProgress('Caching crew images... (' + current++ + '/' + total + ')');
+                current++;
+                if (current % 10 === 0) {
+                    onProgress('Caching crew images... (' + current + '/' + total + ')');
+                }
                 crew.iconUrl = found.url;
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
@@ -296,7 +307,10 @@ export async function loginSequence(onProgress: (description: string) => void, l
         equipment.iconUrl = STTApi.imageProvider.getCached(equipment);
         if (equipment.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getItemImageUrl(equipment, equipment.id).then((found: IFoundResult) => {
-                onProgress('Caching equipment images... (' + current++ + '/' + total + ')');
+                current++;
+                if (current % 10 == 0) {
+                    onProgress('Caching equipment images... (' + current + '/' + total + ')');
+                }
                 let item = STTApi.itemArchetypeCache.archetypes.find((item) => item.id === found.id);
                 if (item) {
                     item.iconUrl = found.url;
