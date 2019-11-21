@@ -38,15 +38,18 @@ export const SkillCell = (props: {
 export const CrewSkills = (props: {
 	crew: CrewData,
 	useIcon?: boolean,
+	hideProf?: boolean,
 	asVoyScore?: boolean,
 	addVoyTotal?: boolean
+	addScore?: number
 }) => {
 	const crew = props.crew;
 	return <span key={crew.id}>
 		<RarityStars max={crew.max_rarity} value={crew.rarity} asSpan={true} colored={true} />
 		&nbsp;
 		{ Object.keys(CONFIG.SKILLS).map(s => {
-			if (crew.skills[s].voy <= 0) {
+			// BorrowedCrewDTO and CrewDTO will have missing skills or unknown voy skills
+			if (!crew.skills[s] || crew.skills[s].voy === undefined || crew.skills[s].voy <= 0) {
 				return <span key={s} />;
 			}
 			return <span key={s}>{
@@ -55,8 +58,11 @@ export const CrewSkills = (props: {
 					: <span>{' - '}{CONFIG.SKILLS_SHORT[s]}{' '}</span>
 				}
 				{
-					props.asVoyScore ? crew.skills[s].voy :
-					`{crew.skills[s].core} ({crew.skills[s].min}-{crew.skills[s].max})`
+					props.asVoyScore ?
+						crew.skills[s].voy :
+						(props.hideProf ?
+							crew.skills[s].core :
+							(crew.skills[s].core + ' (' + crew.skills[s].min + '-'  + crew.skills[s].max + ')'))
 				}
 				</span>;
 		})}
@@ -64,6 +70,9 @@ export const CrewSkills = (props: {
 			props.addVoyTotal && <span key='v'>{' - '}
 				Voy {Object.keys(CONFIG.SKILLS).map(s => crew.skills[s].voy).reduce((acc,c) => acc + c, 0)}
 			</span>
+		}
+		{
+			props.addScore !== undefined && <span key='s'>{' - '}{props.addScore}</span>
 		}
 	</span>;
 }

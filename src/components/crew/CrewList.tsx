@@ -17,89 +17,45 @@ import { ActiveCrewDialog } from './ActiveCrewDialog';
 import { ItemDisplay } from '../ItemDisplay';
 
 import STTApi, { CONFIG, RarityStars } from '../../api';
-import { CrewData, ItemArchetypeDTO } from '../../api/DTO';
+import { CrewData, ItemArchetypeDTO, CrewActionChargePhaseDTO } from '../../api/DTO';
 import { ReplicatorDialog } from '../replicator/ReplicatorDialog';
 
-export interface CrewListProps {
+export const CrewList = (props: {
 	data: CrewData[];
 	sortColumn?: string;
 	selectedIds?: Set<number>;
 	filterText?: string;
-	onSelectionChange?: (sel:Set<number>) => void;
+	onSelectionChange?: (sel: Set<number>) => void;
 	groupRarity?: boolean;
 	showBuyback?: boolean;
 	compactMode?: boolean;
 	duplicatelist?: boolean;
 	embedded?: boolean;
-}
+}) => {
+	const [items, setItems] = React.useState(props.data);
+	const [sorted, setSorted] = React.useState([{ id: props.sortColumn || 'max_rarity', desc: false }] as SortingRule[]);
+	const [selection, setSelection] = React.useState(props.selectedIds ? props.selectedIds : new Set<number>());
+	const [active, setActive] = React.useState({} as { activeId?: number; name?: string; });
+	const [replicatorTarget, setReplicatorTarget] = React.useState(undefined as ItemArchetypeDTO | undefined);
 
-interface CrewListState {
-	items: CrewData[];
-	selection: Set<number>;
-	sorted: SortingRule[];
-	active: {
-		activeId?: number;
-		name?: string;
-	}
-	replicatorTarget?: ItemArchetypeDTO;
-}
-
-export class CrewList extends React.Component<CrewListProps, CrewListState> {
-
-	// static defaultProps = {
-	// 	sortColumn: 'max_rarity',
-	// };
-
-	constructor(props:CrewListProps) {
-		super(props);
-
-		this.state = {
-			items: props.data,
-			sorted: [{ id: props.sortColumn || 'max_rarity', desc: false }],
-			selection: props.selectedIds ? props.selectedIds : new Set(),
-			active: { }
-		};
-
-		this._showActiveDialog = this._showActiveDialog.bind(this);
-		this._onRenderExpandedCard = this._onRenderExpandedCard.bind(this);
-		this._onRenderCompactCard = this._onRenderCompactCard.bind(this);
-		this._onSelectionChange = this._onSelectionChange.bind(this);
-		this._isSelected = this._isSelected.bind(this);
-	}
-
-	componentWillReceiveProps(nextProps:CrewListProps) {
-		if (nextProps.data !== this.state.items) {
-			this.setState({ items: nextProps.data });
+	function _onSelectionChange(id:number, isChecked:boolean | undefined) {
+		if (isChecked) {
+			selection.add(id);
+		} else {
+			selection.delete(id);
+		}
+		if (props.onSelectionChange) {
+			props.onSelectionChange(selection);
 		}
 
-		if (nextProps.selectedIds !== this.state.selection) {
-			this.setState({ selection: nextProps.selectedIds ? nextProps.selectedIds : new Set() });
-		}
+		setSelection(selection);
 	}
 
-	_onSelectionChange(id:any, isChecked:boolean | undefined) {
-		this.setState((prevState, props) => {
-			let selection = prevState.selection;
-
-			if (isChecked) {
-				selection.add(id);
-			} else {
-				selection.delete(id);
-			}
-
-			if (props.onSelectionChange) {
-				props.onSelectionChange(selection);
-			}
-
-			return { selection };
-		});
+	function _isSelected(id:number) {
+		return selection && selection.has(id);
 	}
 
-	_isSelected(id:number) {
-		return this.state.selection && this.state.selection.has(id);
-	}
-
-	_onRenderCompactCard(item:CrewData) {
+	function _onRenderCompactCard(item:CrewData) {
 		return <div className="ui items">
 			<div className="item">
 				<img src={item.iconBodyUrl} height={180} />
@@ -113,7 +69,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 		</div>;
 	}
 
-	_onRenderExpandedCard(item:CrewData) {
+	function _onRenderExpandedCard(item:CrewData) {
 		let equipment : {e?: ItemArchetypeDTO, have?: boolean }[] = [];
 		item.equipment_slots.forEach(es => {
 			equipment.push(
@@ -136,7 +92,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 									return (<td key={eq.e.name + ix}>
 										<ItemDisplay src={eq.e.iconUrl || ''}
 											size={100} maxRarity={eq.e.rarity} rarity={eq.e.rarity}
-											onClick={() => this.setState({ replicatorTarget: eq.e })} />
+											onClick={() => setReplicatorTarget(eq.e)} />
 										<span style={{ fontSize: '0.8rem', color: eq.have ? "" : "red" }}>{eq.e.name}</span>
 									</td>);
 								}
@@ -163,18 +119,18 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				<Label>Duration: {item.action.duration}s  Cooldown: {item.action.cooldown}s  Initial Cooldown: {item.action.initial_cooldown}s  </Label>
 				{item.action.limit && <Label>Limit: {item.action.limit} uses per battle</Label>}
 
-				{this.renderChargePhases(item.action.charge_phases)}
+				{renderChargePhases(item.action.charge_phases)}
 				</span>}
 			</div>
 		);
 	}
 
-	renderChargePhases(charge_phases: any) {
+	function renderChargePhases(charge_phases?: CrewActionChargePhaseDTO[]) {
 		if (!charge_phases) {
 			return <span />;
 		} else {
 			let phases :any[] = [];
-			charge_phases.forEach((cp:any, idx:number) => {
+			charge_phases.forEach((cp: CrewActionChargePhaseDTO, idx:number) => {
 				let phaseDescription = `Charge time: ${cp.charge_time}s`;
 
 				if (cp.ability_amount) {
@@ -205,54 +161,52 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 		}
 	}
 
-	render() {
-		let { items, sorted } = this.state;
-		let pivotBy : string[] = [];
+	let pivotBy : string[] = [];
 
-		if (this.props.groupRarity) {
-			pivotBy = ['max_rarity'];
-		}
-
-		let columns = this._getColumns(this.props.duplicatelist, this.props.showBuyback, this.props.compactMode, pivotBy.length > 0);
-
-		if (this.props.filterText) {
-			items = items.filter(i => this._filterCrew(i, this.props.filterText!.toLowerCase()))
-		}
-
-		return (
-			<div className={this.props.embedded ? 'embedded-crew-grid' : 'data-grid'} data-is-scrollable='true'>
-				<ReactTable
-					data={items}
-					columns={columns}
-					defaultPageSize={(items.length <= 50) ? items.length : 50}
-					pageSize={(items.length <= 50) ? items.length : 50}
-					sorted={sorted}
-					onSortedChange={sorted => this.setState({ sorted })}
-					showPagination={(items.length > 50)}
-					showPageSizeOptions={false}
-					className="-striped -highlight"
-					style={(!this.props.embedded && (items.length > 50)) ? { height: 'calc(100vh - 88px)' } : {}}
-					pivotBy={pivotBy}
-					getTrProps={(s:any, r:any) => {
-						return {
-							style: {
-								opacity: (r && r.original && r.original.isExternal) ? "0.5" : "inherit"
-							}
-						};
-					}}
-					getTdProps={(s: any, r: any) => {
-						return this.props.compactMode ? { style: { padding: "2px 3px" } } : {};
-					}}
-				/>
-				<ActiveCrewDialog activeId={this.state.active.activeId} name={this.state.active.name} />
-				<ReplicatorDialog targetArchetype={this.state.replicatorTarget}
-					onReplicate={() => this.setState({ replicatorTarget: undefined })}
-					onClose={() => this.setState({ replicatorTarget: undefined })} />
-			</div>
-		);
+	if (props.groupRarity) {
+		pivotBy = ['max_rarity'];
 	}
 
-	_getColumns(duplicatelist?: boolean, showBuyBack?: boolean, compactMode?: boolean, pivotRarity?: boolean) {
+	let columns = _getColumns(props.duplicatelist, props.showBuyback, props.compactMode, pivotBy.length > 0);
+
+	let filtered = items;
+	if (props.filterText) {
+		filtered = filtered.filter(i => _filterCrew(i, props.filterText!.toLowerCase()))
+	}
+
+	return (
+		<div className={props.embedded ? 'embedded-crew-grid' : 'data-grid'} data-is-scrollable='true'>
+			<ReactTable
+				data={filtered}
+				columns={columns}
+				defaultPageSize={(filtered.length <= 50) ? filtered.length : 50}
+				pageSize={(filtered.length <= 50) ? filtered.length : 50}
+				sorted={sorted}
+				onSortedChange={setSorted}
+				showPagination={(filtered.length > 50)}
+				showPageSizeOptions={false}
+				className="-striped -highlight"
+				style={(!props.embedded && (filtered.length > 50)) ? { height: 'calc(100vh - 88px)' } : {}}
+				pivotBy={pivotBy}
+				getTrProps={(s:any, r:any) => {
+					return {
+						style: {
+							opacity: (r && r.original && r.original.isExternal) ? "0.5" : "inherit"
+						}
+					};
+				}}
+				getTdProps={(s: any, r: any) => {
+					return props.compactMode ? { style: { padding: "2px 3px" } } : {};
+				}}
+			/>
+			<ActiveCrewDialog activeId={active.activeId} name={active.name} />
+			<ReplicatorDialog targetArchetype={replicatorTarget}
+				onReplicate={() => setReplicatorTarget(undefined)}
+				onClose={() => setReplicatorTarget(undefined)} />
+		</div>
+	);
+
+	function _getColumns(duplicatelist?: boolean, showBuyBack?: boolean, compactMode?: boolean, pivotRarity?: boolean) {
 		let _columns : Column<CrewData>[] = [];
 
 		if (duplicatelist) {
@@ -268,8 +222,8 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 
 					if (crew.crew_id)
 						return (<div><Checkbox label='Airlock'
-							checked={this._isSelected(crew.crew_id)}
-							onChange={(ev, isChecked) => this._onSelectionChange(crew.crew_id, isChecked)} />
+							checked={_isSelected(crew.crew_id)}
+							onChange={(ev, isChecked) => _onSelectionChange(crew.crew_id, isChecked)} />
 							{(crew.buyback && crew.expires_in === null) &&
 							<TooltipHost content={`${crew.short_name} is stuck in the airlock. You need to contact DB support to release them!`} calloutProps={{ gapSpace: 0 }}>
 							<p style={{color:'red'}}>ERROR!</p>
@@ -343,8 +297,8 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 								compactCardHeight: 180,
 								expandedCardHeight: 420,
 								renderData: cell.original,
-								onRenderExpandedCard: this._onRenderExpandedCard,
-								onRenderCompactCard: this._onRenderCompactCard,
+								onRenderExpandedCard: _onRenderExpandedCard,
+								onRenderCompactCard: _onRenderCompactCard,
 								styles: { root: { width: '520px' } }
 							}}
 							instantOpenOnClick={true}>
@@ -423,7 +377,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
 				resizable: false,
 				accessor: 'frozen',
-				Cell: (cell: any) => {
+				Cell: (cell) => {
 					if (cell && cell.value && cell.original) {
 						return <TooltipHost content={`You have ${(cell.value === 1) ? 'one copy' : `${cell.value} copies`} of ${cell.original.short_name} frozen (cryo-d)`} calloutProps={{ gapSpace: 0 }}>
 							{cell.value > 1 ? cell.value : ''}<Icon iconName='Snowflake' />
@@ -480,7 +434,9 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 							});
 							return isShuttle ? 'S' : 'V';
 						}
-						return <IconButton iconProps={{ iconName: 'Balloons' }} title='Active engagement' onClick={() => this._showActiveDialog(cell.original.active_id, cell.original.name)} />;
+						return <IconButton iconProps={{ iconName: 'Balloons' }}
+							title='Active engagement'
+							onClick={() => setActive({ activeId: cell.original.active_id, name: cell.original.name })} />;
 					} else {
 						return <span />;
 					}
@@ -583,7 +539,7 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 		return _columns;
 	}
 
-	_filterCrew(crew:CrewData, searchString:string) {
+	function _filterCrew(crew:CrewData, searchString:string) {
 		return searchString.split(';').some(segment => {
 			if (segment.trim().length == 0) return false;
 			return segment.split(' ').every(text => {
@@ -609,9 +565,5 @@ export class CrewList extends React.Component<CrewListProps, CrewListState> {
 				return false;
 			});
 		});
-	}
-
-	_showActiveDialog(activeId:any, name:string) {
-		this.setState({active: { activeId, name}});
 	}
 }

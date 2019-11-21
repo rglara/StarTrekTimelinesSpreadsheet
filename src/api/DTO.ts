@@ -31,6 +31,15 @@ export interface SkillDTO {
    range_min: number;
    range_max: number;
 }
+
+export interface CrewActionChargePhaseDTO {
+   charge_time: number;
+   ability_amount?: number;
+   bonus_amount?: number;
+   duration?: number;
+   cooldown?: number;
+}
+
 export interface CrewActionDTO {
    ability?: {
       amount: number;
@@ -39,13 +48,7 @@ export interface CrewActionDTO {
    };
    bonus_amount: number;
    bonus_type: number;
-   charge_phases?: {
-      charge_time: number;
-      ability_amount?: number;
-      bonus_amount?: number;
-      duration?: number;
-      cooldown?: number;
-   }[];
+   charge_phases?: CrewActionChargePhaseDTO[];
    cooldown: number;
    crew: number;
    duration: number;
