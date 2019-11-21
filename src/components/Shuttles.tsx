@@ -1,7 +1,7 @@
 import React from 'react';
 import { Item, Dropdown, Label } from 'semantic-ui-react';
 
-import STTApi, { CONFIG, formatTimeSeconds } from '../api';
+import STTApi, { CONFIG, formatTimeSeconds, CrewSkills } from '../api';
 import { CrewAvatarDTO, CrewData, PlayerShuttleDTO, EventDTO,
 	EVENT_TYPES, SkillDTO, BorrowedCrewDTO,
 	SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_OPENED } from '../api/DTO';
@@ -29,6 +29,7 @@ interface CrewItem {
 
 	// These three are needed for the item to appear in a combo
 	text?: string;
+	content?: any;
 	value?: number;
 	image?: string;
 }
@@ -228,6 +229,7 @@ export const Shuttles = (props:ShuttlesProps) => {
 
 				calcSlot.bestCrew.forEach((c) => {
 					c.text = `${c.crew.name} (${c.total})`;
+					c.content = <span>{c.crew.name} <CrewSkills crew={c.crew as CrewData} useIcon={true} addScore={c.total} hideProf={true} /></span>;
 					c.value = c.crew_id;
 					c.image = (c.crew as any).iconUrl;
 				});

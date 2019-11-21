@@ -27,6 +27,7 @@ interface BonusCrew {
    crew_id: number;
    skills: { [sk:string]:number };
    total: number;
+   chance: number;
    text?: string;
    value?: string;
    image?: string;
@@ -46,6 +47,22 @@ interface FarmListItem {
 }
 
 function parseAdventure(adventure: EventGatherPoolAdventureDTO, crew_bonuses: { [crew_symbol: string]: number }): ItemDemand[] {
+   function calcChance(skillValue: number) {
+      const cc = STTApi.serverConfig!.config.craft_config;
+      let midpointOffset = skillValue / STTApi.serverConfig!.config.craft_config.specialist_challenge_rating;
+
+      let val = Math.floor(
+         100 /
+         (1 +
+            Math.exp(
+               -STTApi.serverConfig!.config.craft_config.specialist_chance_formula.steepness *
+               (midpointOffset - STTApi.serverConfig!.config.craft_config.specialist_chance_formula.midpoint)
+            ))
+      );
+
+      return Math.min(val / 100, STTApi.serverConfig!.config.craft_config.specialist_maximum_success_chance);
+   };
+
    let demands: ItemDemand[] = [];
    adventure.demands.forEach((demand) => {
       let e = STTApi.itemArchetypeCache.archetypes.find(equipment => equipment.id === demand.archetype_id);
@@ -83,42 +100,31 @@ function parseAdventure(adventure: EventGatherPoolAdventureDTO, crew_bonuses: { 
          });
       }
 
-      let seen = new Set();
+      let seen = new Set<number>();
       calcSlot.bestCrew = calcSlot.bestCrew.filter((c) => c.total > 0).filter((c) => (seen.has(c.crew_id) ? false : seen.add(c.crew_id)));
-      calcSlot.bestCrew.sort((a, b) => a.total - b.total);
+
+      calcSlot.bestCrew.forEach(c => c.chance = calcChance(c.total));
+      if (e.recipe.jackpot.trait_bonuses) {
+         for (let trait in e.recipe.jackpot.trait_bonuses) {
+            let tv = e.recipe.jackpot.trait_bonuses[trait];
+            calcSlot.bestCrew.forEach(c => {
+               if (c.crew.rawTraits.includes(trait)) {
+                  c.chance += tv;
+               }
+            });
+         }
+      }
+
+      calcSlot.bestCrew.sort((a, b) => a.chance - b.chance);
       calcSlot.bestCrew = calcSlot.bestCrew.reverse();
+
+      let bestCrewChance = calcSlot.bestCrew[0].chance;
 
       calcSlot.bestCrew.forEach((c) => {
          c.text = `${c.crew.name} (${c.total})`;
          c.value = c.crew.symbol;
          c.image = c.crew.iconUrl;
       });
-
-      const calcChance = (skillValue: number) => {
-         const cc = STTApi.serverConfig!.config.craft_config;
-         let midpointOffset = skillValue / STTApi.serverConfig!.config.craft_config.specialist_challenge_rating;
-
-         let val = Math.floor(
-            100 /
-            (1 +
-               Math.exp(
-                  -STTApi.serverConfig!.config.craft_config.specialist_chance_formula.steepness *
-                  (midpointOffset - STTApi.serverConfig!.config.craft_config.specialist_chance_formula.midpoint)
-               ))
-         );
-
-         return Math.min(val / 100, STTApi.serverConfig!.config.craft_config.specialist_maximum_success_chance);
-      };
-
-      let bestCrewChance = calcChance(calcSlot.bestCrew[0].total);
-
-      if (e.recipe.jackpot.trait_bonuses) {
-         for (let trait in e.recipe.jackpot.trait_bonuses) {
-            if (calcSlot.bestCrew[0].crew.rawTraits.includes(trait)) {
-               bestCrewChance += e.recipe.jackpot.trait_bonuses[trait];
-            }
-         }
-      }
 
       bestCrewChance = Math.floor(Math.min(bestCrewChance, 1) * 100);
 
@@ -177,7 +183,8 @@ function getRosterWithBonuses(crew_bonuses: { [crew_symbol: string]: number }): 
          crew,
          crew_id: crew.id,
          skills,
-         total: 0
+         total: 0,
+         chance: 0
       });
    });
 
