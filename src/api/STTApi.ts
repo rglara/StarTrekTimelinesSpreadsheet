@@ -252,6 +252,7 @@ export class STTApiClass {
 			.where('key')
 			.equals('autoLogin')
 			.first();
+		//if (true) return false;
 		if (entry && entry.value === true) {
 			entry = await this._cache.config
 				.where('key')

@@ -149,8 +149,10 @@ export function buildCrewDataAll(allcrew: CrewDTO[]): CrewData[] {
 		}
 		STTApi.applyBuffConfig(crew);
 		let rosterEntry = crewToRoster(crew);
-		// external crew don't have a unique id, so supply one; make it less than one to distinguish internally
-		rosterEntry.crew_id = createFakeCrewId();
+		do {
+			// external crew don't have a unique id, so supply one; sometimes they collide, so pick multiple times
+			rosterEntry.crew_id = createFakeCrewId();
+		} while (rosterAll.find(r => r.crew_id === rosterEntry.crew_id));
 		rosterEntry.isExternal = true;
 		rosterEntry.status.external = true;
 
@@ -190,6 +192,15 @@ export async function buildCrewData(character: PlayerCharacterDTO): Promise<Crew
 		// TODO: does DB ever change the stats of crew? If yes, we may need to ocasionally clear the cache - perhaps based on record's age
 		let frozenPromises: Promise<CrewData>[] = [];
 
+		// to prevent frozen crew ids from colliding, precompute the required number and pass
+		// one in to each invocation of loadFrozen
+		let uids : number[] = [];
+		while (uids.length < character.stored_immortals.length) {
+			let uid = createFakeCrewId();
+			if (!uids.includes(uid))
+				uids.push(uid);
+		}
+
 		character.stored_immortals.forEach((imm) => {
 			const avatar = STTApi.getCrewAvatarById(imm.id);
 			if (!avatar) {
@@ -199,7 +210,7 @@ export async function buildCrewData(character: PlayerCharacterDTO): Promise<Crew
 			//let rosterEntry = getDefaultsInner(avatar);
 			//roster.push(rosterEntry);
 
-			frozenPromises.push(loadFrozen(avatar.symbol, imm.quantity));
+			frozenPromises.push(loadFrozen(avatar.symbol, imm.quantity, uids.pop()!));
 		});
 
 		await Promise.all(frozenPromises).then(datas => roster.splice(roster.length, 0, ...datas));
@@ -248,7 +259,7 @@ export async function buildCrewData(character: PlayerCharacterDTO): Promise<Crew
 	return roster;
 }
 
-async function loadFrozen(crewSymbol: string, frozenCount: number): Promise<CrewData> {
+async function loadFrozen(crewSymbol: string, frozenCount: number, uid: number): Promise<CrewData> {
 	let crew : CrewDTO | undefined = undefined;
 	let entry = await STTApi.immortals.where('symbol').equals(crewSymbol).first();
 	if (entry) {
@@ -266,8 +277,8 @@ async function loadFrozen(crewSymbol: string, frozenCount: number): Promise<Crew
 	}
 
 	let roster = crewToRoster(crew);
-	// frozen crew don't have a unique id, so supply one; make it less than one to distinguish internally
-	roster.crew_id = createFakeCrewId();
+	// frozen crew don't have a unique id, so supply one
+	roster.crew_id = uid;
 
 	roster.frozen = frozenCount;
 	roster.status.frozen = frozenCount;
