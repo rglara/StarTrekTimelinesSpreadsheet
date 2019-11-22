@@ -2,6 +2,20 @@ import STTApi from '../../api/index';
 import { mergeDeep } from '../../api/ObjectMerge';
 import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO } from '../../api/DTO';
 
+/**
+ * Worst-case voyage AM decay rate (if all hazards fail)
+ * One hazard every 80 seconds, skip every sixth (480s is loot);
+ * 30 AM loss per hazard, +3 AM loss for three ticks at 20, 40, 60
+ * = -33AM/80s
+ * = -.4125 AM/s
+ * Non-30 loss every 480s
+ * = 30AM/480s = .0625 AM/s
+ * Add 1 loss every 480s
+ * = 1/480 = .002083
+ * = -.4125 + .0625 + .002083 = -.347916 (*60 s/m) = 20.875 AM/m
+ */
+export const VOYAGE_AM_DECAY_PER_MINUTE = 20.875;
+
 export async function loadVoyage(voyageId: number, newOnly: boolean = true): Promise<VoyageNarrativeDTO[]> {
 	let data = await STTApi.executePostRequest('voyage/refresh', { voyage_status_id: voyageId, new_only: newOnly });
 	if (data) {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, List, Popup, Label } from 'semantic-ui-react';
+import { Label } from 'semantic-ui-react';
 
 import { ItemDisplay } from './ItemDisplay';
 import Moment from 'moment';
@@ -9,7 +9,8 @@ import { CONFIG, getChronitonCount, formatTimeSeconds, loadVoyage } from '../api
 import { loadGauntlet } from '../api/GauntletTools';
 
 import { openDevTools } from '../utils/pal';
-import { EVENT_TYPES, CrewData, SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_COMPLETE } from '../api/DTO';
+import { EVENT_TYPES, SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_COMPLETE } from '../api/DTO';
+import { VOYAGE_AM_DECAY_PER_MINUTE } from './voyage/VoyageTools';
 
 const Priority = Object.freeze({
 	INFO: 'info circle green',
@@ -313,17 +314,28 @@ export const HomePage = (props: HomePageProps) => {
 							</Label> tab or in the game.</p>
 					};
 				} else {
+					const secondsToNextDilemma = voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma;
+					const estSecondsLeft = voyage.hp / VOYAGE_AM_DECAY_PER_MINUTE * 60;
 					// TODO: check the chances to reach a dilemma and go red if 0%
 					newRecommendation ={
 						title: `Voyage ongoing`,
 						icon: Priority.CHECK,
 						content: (
-							<p style={{ margin: '0' }}>
-								<Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Voyage')}>Voyage</Label> has been
+							<div style={{ margin: '0' }}>
+								<Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Voyage')}>Voyage</Label>
+								&nbsp;has been
 								ongoing for {formatTimeSeconds(voyage.voyage_duration)} (new dilemma in{' '}
-								{formatTimeSeconds(voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma)}
-								{' '}at {Moment().add(voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma, 's').format('h:mma')})
-							</p>
+								{formatTimeSeconds(secondsToNextDilemma)}
+								&nbsp;at {Moment().add(secondsToNextDilemma, 's').format('h:mma')})
+								{
+									(estSecondsLeft < secondsToNextDilemma) &&
+									<span style={{fontWeight: 'bold'}}>
+										&nbsp;Voyage AM left ({voyage.hp}) might not be enough to reach the next dilemma.
+										&nbsp;By worst-case estimate, voyage loss in {formatTimeSeconds(estSecondsLeft)}
+										&nbsp;at {Moment().add(estSecondsLeft, 's').format('h:mma')}
+									</span>
+								}
+							</div>
 						)
 					};
 				}
