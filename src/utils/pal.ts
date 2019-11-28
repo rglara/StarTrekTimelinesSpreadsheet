@@ -17,11 +17,13 @@ export function getAppVersion(): string {
 // #!endif
 }
 
-// #!if ENV === 'electron'
 export function getAppPath(name: string): string {
+// #!if ENV === 'electron'
     return app.getPath(name);
-}
+// #!else
+    throw new Error('can not get app path on web');
 // #!endif
+}
 
 export function getOSDetails(): string {
 // #!if ENV === 'electron'

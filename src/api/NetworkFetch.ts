@@ -1,8 +1,13 @@
-// an implemention of NetworkInterface using the native browser fetch functionality
-import { NetworkInterface } from "./NetworkInterface";
 import CONFIG from "./CONFIG";
 
-export class NetworkFetch implements NetworkInterface {
+export class NetworkFetch {
+	// A proxy is necessary for the browser-based app to avoid STT CORS/CORB issues
+	private _urlProxy: string | undefined = undefined;
+
+	setProxy(urlProxy: string): void {
+		this._urlProxy = urlProxy;
+	}
+
 	_weirdUrlify(form: any): string {
 		// Arrays on DB's severs don't work with the usual "ids=1,2", they need the special "ids[]=1&ids[]=2" form
 		let searchParams: URLSearchParams = new URLSearchParams();
@@ -67,12 +72,6 @@ export class NetworkFetch implements NetworkInterface {
 			let data = await response.text();
 			throw new Error(`Network error; status ${response.status}; reply ${data}.`);
 		}
-	}
-
-	private _urlProxy: string | undefined = undefined;
-
-	setProxy(urlProxy: string): void {
-		this._urlProxy = urlProxy;
 	}
 
 	async get_proxy(uri: string, qs: any) : Promise<any> {

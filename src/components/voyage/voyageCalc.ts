@@ -182,7 +182,7 @@ function invokeNative(dataToExport: CalcExportData,
     const NativeExtension = require('electron').remote.require('stt-native');
     NativeExtension.calculateVoyageRecommendations(JSON.stringify(dataToExport), doneCallback, progressCallback);
 // #!else
-    let ComputeWorker = require("worker-loader?name=wasmWorker.js!../components/wasmWorker");
+    let ComputeWorker = require("worker-loader?name=wasmWorker.js!../../components/wasmWorker");
 
     const worker = new ComputeWorker();
     worker.addEventListener('message', (message: any) => {

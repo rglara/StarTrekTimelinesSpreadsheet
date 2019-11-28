@@ -15,7 +15,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-import { NetworkInterface } from './NetworkInterface';
 import { NetworkFetch } from './NetworkFetch';
 import { DexieCache, QuestsTable, EquipmentTable, ImmortalsDB, ConfigTable, WikiImageTable } from './Cache';
 import { IChallengeSuccess } from './MissionCrewSuccess';
@@ -35,7 +34,7 @@ import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerCo
 
 export class STTApiClass {
 	private _accessToken: string | undefined;
-	private _net: NetworkInterface;
+	private _net: NetworkFetch;
 	private _playerData?: { player: PlayerDTO; item_archetype_cache: { archetypes: ItemArchetypeDTO[]; id: number; }; };
 	private _starbaseData: {
 		starbase_rooms: FleetStarbaseRoomDTO[];
@@ -159,7 +158,7 @@ export class STTApiClass {
 		}
 	}
 
-	get networkHelper(): NetworkInterface {
+	get networkHelper(): NetworkFetch {
 		return this._net;
 	}
 
