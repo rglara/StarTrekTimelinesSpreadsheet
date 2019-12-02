@@ -43,7 +43,7 @@ export const VoyageLog = (props:{}) => {
    const [shipName, setShipName] = React.useState<string | undefined>(undefined);
    const [estimatedMinutesLeft, setEstimatedMinutesLeft] = React.useState<number | undefined>(undefined);
    //const [estimatedMinutesLeftRefill, setEstimatedMinutesLeftRefill] = React.useState(undefined as number | undefined);
-   const [nativeEstimate, setNativeEstimate] = React.useState<boolean | undefined>(undefined);
+   const [computingNativeEstimate, setComputingNativeEstimate] = React.useState<boolean>(false);
    const [voyageRewards, setVoyageRewards] = React.useState<RewardDTO[] | undefined>(undefined);
    const [voyageExport, setVoyageExport] = React.useState<VoyageExportData | undefined>(undefined);
    const [indexedNarrative, setIndexedNarrative] = React.useState<IndexedNarrative | undefined>(undefined);
@@ -83,7 +83,7 @@ export const VoyageLog = (props:{}) => {
          <VoyageState
             voyage={voyage}
             estimatedMinutesLeft={estimatedMinutesLeft}
-            nativeEstimate={nativeEstimate}
+            computingNativeEstimate={computingNativeEstimate}
             recall={recall} />
          <VoyageDilemma voyage={voyage} reload={reloadVoyageState} />
          <p>
@@ -403,7 +403,6 @@ export const VoyageLog = (props:{}) => {
          //setEstimatedMinutesLeftRefill(voyage.hp / VOYAGE_AM_DECAY_PER_MINUTE);
          setIndexedNarrative(indexedNarrative);
          setSkillChecks(skillChecks);
-         setNativeEstimate(false);
          setVoyageRewards(voyageRewards);
          setVoyageExport(voyageExport);
 
@@ -444,9 +443,11 @@ export const VoyageLog = (props:{}) => {
          assignedCrew
       };
 
+      setComputingNativeEstimate(true);
+
       estimateVoyageRemaining(options, (estimate) => {
          setEstimatedMinutesLeft(estimate);
-         setNativeEstimate(true);
+         setComputingNativeEstimate(false);
 
          if (!voyage || !voyage.max_hp) {
             return;
@@ -528,7 +529,7 @@ const VoyageCurrentCrew = (props: {
 const VoyageState = (props: {
    voyage?: VoyageDTO;
    estimatedMinutesLeft?: number;
-   nativeEstimate?: boolean;
+   computingNativeEstimate: boolean;
    recall: () => void;
 }) => {
    if (!props.voyage) {
@@ -579,7 +580,7 @@ const VoyageState = (props: {
             <div className='ui blue label'>
                Estimated time left: <b>{formatTimeSeconds(props.estimatedMinutesLeft * 60)}</b>
                {' '}at {Moment().add(props.estimatedMinutesLeft, 'm').format('h:mma')}
-               {' '}{!props.nativeEstimate && <i className='spinner loading icon' />}
+               {' '}{props.computingNativeEstimate && <i className='spinner loading icon' />}
             </div>
 
             <button className='ui mini button' onClick={() => props.recall()}>
