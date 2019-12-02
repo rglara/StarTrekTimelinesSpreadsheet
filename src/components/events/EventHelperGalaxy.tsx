@@ -165,7 +165,7 @@ function getRosterWithBonuses(crew_bonuses: { [crew_symbol: string]: number }): 
    // TODO: share some of this code with Shuttles
    let sortedRoster: BonusCrew[] = [];
    STTApi.roster.forEach(crew => {
-      if (crew.buyback || crew.frozen > 0 || crew.active_id) {
+      if (crew.buyback) { // || crew.frozen > 0 || crew.active_id) {
          return;
       }
 
@@ -199,6 +199,8 @@ const GalaxyAdventureDemand = (props: {
    let demand = props.demand;
    let canCraft = false;//!demand.itemDemands.some((id: any) => !id.item);
 
+   const crew = demand.calcSlot.bestCrew[0].crew;
+
    return (
       <Item>
          <Item.Image size='tiny' src={demand.equipment.iconUrl} />
@@ -216,7 +218,11 @@ const GalaxyAdventureDemand = (props: {
                   }
                </div>
                <div>
-                  Best crew: <img src={demand.calcSlot.bestCrew[0].crew.iconUrl} width='25' height='25' /> {demand.calcSlot.bestCrew[0].crew.name} ({demand.bestCrewChance}%)
+                  Best crew: <img src={crew.iconUrl}
+                  width='25' height='25' />&nbsp;
+                  {crew.name}&nbsp;({demand.bestCrewChance}%)
+                  {crew.frozen > 0 && <span>Frozen!</span>}
+                  {crew.active_id && <span>Active!</span>}
                </div>
             </Item.Description>
             {/* <Item.Extra>
