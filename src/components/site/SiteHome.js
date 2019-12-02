@@ -11,13 +11,13 @@ export class SiteHome extends React.Component {
         super(props);
 
         this.state = {
-            loading: true,
+            loading: false,
             activeItem: 'home'
         };
 
-        STTTools.initialize().then(() => {
-            this.setState({ loading: false });
-        });
+        // STTTools.initialize().then(() => {
+        //     this.setState({ loading: false });
+        // });
     }
 
     render() {
