@@ -49,6 +49,18 @@ export const CrewPage = (props: CrewPageProps) => {
             crewData = crewData.filter(crew => crew.level !== crew.max_level);
         }
 
+        // Add "big book" tier
+        crewData.forEach(crew => {
+            let bb = STTApi.bigbook.find((c: any) => c.symbol === crew.symbol);
+            if (bb) {
+                crew.bigbook_tier = bb.bigbook_tier;
+                crew.in_portal = bb.in_portal;
+            } else {
+                crew.bigbook_tier = undefined;
+                crew.in_portal = undefined;
+            }
+        });
+
         return crewData;
     }
 
@@ -147,7 +159,7 @@ export const CrewPage = (props: CrewPageProps) => {
 
     return <div>
         <SearchBox placeholder='Search by name or trait...'
-            onChange={(newValue) => setFilterText(newValue)}
+            onChange={(ev, newValue) => setFilterText(newValue || '')}
             onSearch={(newValue) => setFilterText(newValue)}
         />
         <CrewList data={crewData}

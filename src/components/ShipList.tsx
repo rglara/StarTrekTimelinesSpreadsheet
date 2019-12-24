@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactTable, { SortingRule, Column } from 'react-table';
-import { Button } from 'semantic-ui-react';
 
 import { RarityStars } from './RarityStars';
 
@@ -10,7 +9,7 @@ import { ShipDTO, ShipSchematicDTO } from '../api/DTO';
 
 export const ShipList = () => {
 	const [sorted, setSorted] = React.useState([{ id: 'name', desc: false },{id: 'sort_level', desc:false}] as SortingRule[]);
-	const [filterText, setFilterText] = React.useState('');
+	const [filterText, setFilterText] = React.useState<string>('');
 
 	let playerSchematics = STTApi.playerData.character.items.filter(item => item.type === 8);
 
@@ -186,7 +185,7 @@ export const ShipList = () => {
 	return (
 		<div className='tab-panel' data-is-scrollable='true'>
 			<SearchBox placeholder='Search by name or trait...'
-				onChange={(newValue) => setFilterText(newValue)}
+				onChange={(ev, newValue) => setFilterText(newValue || '')}
 				onSearch={(newValue) => setFilterText(newValue)}
 			/>
 			<ReactTable
@@ -199,7 +198,7 @@ export const ShipList = () => {
 				showPagination={items.length > 50}
 				showPageSizeOptions={false}
 				className='-striped -highlight'
-				style={(items.length > 50) ? { height: 'calc(100vh - 90px)' } : {}}
+				style={(items.length > 50) ? { height: 'calc(100vh - 94px)' } : {}}
 			/>
 		</div>
 	);

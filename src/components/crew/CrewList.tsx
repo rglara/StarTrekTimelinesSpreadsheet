@@ -186,7 +186,7 @@ export const CrewList = (props: {
 				showPagination={(filtered.length > 50)}
 				showPageSizeOptions={false}
 				className="-striped -highlight"
-				style={(!props.embedded && (filtered.length > 50)) ? { height: 'calc(100vh - 88px)' } : {}}
+				style={(!props.embedded && (filtered.length > 50)) ? { height: 'calc(100vh - 92px)' } : {}}
 				pivotBy={pivotBy}
 				getTrProps={(s:any, r:any) => {
 					return {
@@ -525,6 +525,16 @@ export const CrewList = (props: {
 				aggregate: aggAvg,
 				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
+            {
+                id: 'bigbook_tier',
+                Header: 'BBoB',
+                minWidth: 30,
+                maxWidth: 35,
+                resizable: false,
+                Cell: (cell) => cell.original ? <span style={{color: cell.original.in_portal ? "inherit" : "red"}}>{cell.original.bigbook_tier}</span> : <span />,
+                accessor: (c) => c.bigbook_tier ? Number(c.bigbook_tier) : 0,
+                Aggregated: row => <span />
+            },
 			{
 				id: 'traits',
 				Header: 'Traits',

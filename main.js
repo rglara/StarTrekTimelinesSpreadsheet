@@ -89,6 +89,7 @@ function createWindow() {
     height: mainWindowStateKeeper.height,
     show: false,
     contextIsolation: true,
+    autoHideMenuBar: true,
     icon: path.join(__dirname, 'src/assets/icons/ATFleet.ico'),
     webPreferences: { webSecurity: false, nodeIntegration: true }
   });
@@ -97,7 +98,6 @@ function createWindow() {
   mainWindowStateKeeper.track(mainWindow);
 
   mainWindow.setTitle('Star Trek Timelines Crew Management v' + app.getVersion());
-  mainWindow.setMenu(null);
 
   // and load the index.html of the app.
   let indexPath;

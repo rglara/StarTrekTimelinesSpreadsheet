@@ -223,7 +223,7 @@ export class ItemList extends React.Component<ItemListProps, ItemListState> {
 					showPagination={items.length > MAX_PAGE_SIZE}
 					showPageSizeOptions={false}
 					className='-striped -highlight'
-					style={items.length > MAX_PAGE_SIZE ? { height: 'calc(100vh - 88px)' } : {}}
+					style={items.length > MAX_PAGE_SIZE ? { height: 'calc(100vh - 92px)' } : {}}
 				/>
 
 				<ReplicatorDialog targetArchetype={this.state.replicatorTarget}

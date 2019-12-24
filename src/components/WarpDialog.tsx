@@ -62,12 +62,13 @@ export const WarpDialog = (props:{
     }
 
     const warp = async (warpCount: number) => {
-        while (warpCount > 10) {
-            let ephemerals = await STTApi.warpQuest(quest!.id, masteryLevel!, 10);
+        let warpTimes = (STTApi.playerData.vip_level > 3) ? 10 : 1;
+        while (warpCount > warpTimes) {
+            let ephemerals = await STTApi.warpQuest(quest!.id, masteryLevel!, warpTimes);
             // TODO: show rewards to the user somehow
             console.log(ephemerals);
 
-            warpCount -= 10;
+            warpCount -= warpTimes;
         }
 
         if (warpCount > 0) {

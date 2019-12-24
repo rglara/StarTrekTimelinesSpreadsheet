@@ -8,7 +8,7 @@ export class FileImageCache implements ImageCache {
 	allImages: Set<string>;
 
 	constructor() {
-		this.basePath = getAppPath('userData') + '/imagecache/';
+		this.basePath = getAppPath() + '/imagecache/';
 
 		if (!fs.existsSync(this.basePath)) {
 			fs.mkdirSync(this.basePath);

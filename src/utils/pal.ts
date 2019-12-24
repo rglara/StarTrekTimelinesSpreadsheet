@@ -17,9 +17,9 @@ export function getAppVersion(): string {
 // #!endif
 }
 
-export function getAppPath(name: string): string {
+export function getAppPath(): string {
 // #!if ENV === 'electron'
-    return app.getPath(name);
+    return app.getPath('userData');
 // #!else
     throw new Error('can not get app path on web');
 // #!endif

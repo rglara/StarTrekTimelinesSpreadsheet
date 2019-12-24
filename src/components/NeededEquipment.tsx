@@ -251,7 +251,7 @@ export const NeededEquipment = (props: {
 	}
 }
 
-const NeededEquipmentSources = (props: {
+export const NeededEquipmentSources = (props: {
 	entry: EquipNeed,
 	onWarp?: () => void;
 }) => {

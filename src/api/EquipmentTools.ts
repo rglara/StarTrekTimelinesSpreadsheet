@@ -238,7 +238,7 @@ export interface EquipNeed {
 	isCadetable: boolean;
 }
 
-interface UnparsedEquipment {
+export interface UnparsedEquipment {
 	archetype: number;
 	need: number;
 	crew: CrewData;
@@ -260,6 +260,11 @@ export class NeededEquipmentClass {
 		const neededEquipment = this._getNeededEquipment(filteredCrew, filters);
 		return neededEquipment;
 	}
+
+	filterNeededEquipmentFromList(unparsedEquipment: UnparsedEquipment[]): EquipNeed[] {
+        let mapUnowned = Array.from(this._calculateNeeds(unparsedEquipment, STTApi.itemArchetypeCache.archetypes).values());
+        return mapUnowned.sort((a,b) => a.have - b.have);
+    }
 
 	private _getFilteredCrew(filters: EquipNeedFilter, limitCrew: number[]): CrewData[] {
 		if (limitCrew.length === 0) {
