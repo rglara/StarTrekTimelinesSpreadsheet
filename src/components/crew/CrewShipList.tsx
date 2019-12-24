@@ -180,7 +180,7 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 					showPagination={(items.length > 50)}
 					showPageSizeOptions={false}
 					className="-striped -highlight"
-					style={((items.length > 50)) ? { height: 'calc(100vh - 88px)' } : {}}
+					style={((items.length > 50)) ? { height: 'calc(100vh - 92px)' } : {}}
 					getTrProps={(s:any, r:any) => {
 						return {
 							style: {

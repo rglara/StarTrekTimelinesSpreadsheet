@@ -78,9 +78,9 @@ export async function exportExcel(itemList) {
 		});
 
 		values.push([crew.id, crew.name, crew.short_name, crew.rarity, crew.max_rarity, crew.level, crew.frozen,
-			crew.command_skill.core, crew.command_skill.min, crew.command_skill.max, crew.diplomacy_skill.core, crew.diplomacy_skill.min, crew.diplomacy_skill.max,
-			crew.science_skill.core, crew.science_skill.min, crew.science_skill.max, crew.security_skill.core, crew.security_skill.min, crew.security_skill.max,
-			crew.engineering_skill.core, crew.engineering_skill.min, crew.engineering_skill.max, crew.medicine_skill.core, crew.medicine_skill.min, crew.medicine_skill.max,
+			crew.skills.command_skill.core, crew.skills.command_skill.min, crew.skills.command_skill.max, crew.skills.diplomacy_skill.core, crew.skills.diplomacy_skill.min, crew.skills.diplomacy_skill.max,
+			crew.skills.science_skill.core, crew.skills.science_skill.min, crew.skills.science_skill.max, crew.skills.security_skill.core, crew.skills.security_skill.min, crew.skills.security_skill.max,
+			crew.skills.engineering_skill.core, crew.skills.engineering_skill.min, crew.skills.engineering_skill.max, crew.skills.medicine_skill.core, crew.skills.medicine_skill.min, crew.skills.medicine_skill.max,
 			crew.buyback, crew.traits,
 			crew.ship_battle.accuracy, crew.ship_battle.crit_bonus, crew.ship_battle.crit_chance, crew.ship_battle.evasion, crew.action.name, crew.action.bonus_amount,
 			CONFIG.CREW_SHIP_BATTLE_BONUS_TYPE[crew.action.bonus_type], crew.action.duration, crew.action.cooldown, crew.action.initial_cooldown, crew.action.limit,

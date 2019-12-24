@@ -1,5 +1,4 @@
-import STTApi from '../api';
-
+import STTApi, { CONFIG } from '../api';
 import { simplejson2csv } from './simplejson2csv';
 
 export function exportCsv() {
@@ -37,75 +36,75 @@ export function exportCsv() {
 		},
 		{
 			label: 'Command core',
-			value: (row) => row.command_skill.core
+			value: (row) => row.skills.command_skill.core
 		},
 		{
 			label: 'Command min',
-			value: (row) => row.command_skill.min
+			value: (row) => row.skills.command_skill.min
 		},
 		{
 			label: 'Command max',
-			value: (row) => row.command_skill.max
+			value: (row) => row.skills.command_skill.max
 		},
 		{
 			label: 'Diplomacy core',
-			value: (row) => row.diplomacy_skill.core
+			value: (row) => row.skills.diplomacy_skill.core
 		},
 		{
 			label: 'Diplomacy min',
-			value: (row) => row.diplomacy_skill.min
+			value: (row) => row.skills.diplomacy_skill.min
 		},
 		{
 			label: 'Diplomacy max',
-			value: (row) => row.diplomacy_skill.max
+			value: (row) => row.skills.diplomacy_skill.max
 		},
 		{
 			label: 'Engineering core',
-			value: (row) => row.engineering_skill.core
+			value: (row) => row.skills.engineering_skill.core
 		},
 		{
 			label: 'Engineering min',
-			value: (row) => row.engineering_skill.min
+			value: (row) => row.skills.engineering_skill.min
 		},
 		{
 			label: 'Engineering max',
-			value: (row) => row.engineering_skill.max
+			value: (row) => row.skills.engineering_skill.max
 		},
 		{
 			label: 'Medicine core',
-			value: (row) => row.medicine_skill.core
+			value: (row) => row.skills.medicine_skill.core
 		},
 		{
 			label: 'Medicine min',
-			value: (row) => row.medicine_skill.min
+			value: (row) => row.skills.medicine_skill.min
 		},
 		{
 			label: 'Medicine max',
-			value: (row) => row.medicine_skill.max
+			value: (row) => row.skills.medicine_skill.max
 		},
 		{
 			label: 'Science core',
-			value: (row) => row.science_skill.core
+			value: (row) => row.skills.science_skill.core
 		},
 		{
 			label: 'Science min',
-			value: (row) => row.science_skill.min
+			value: (row) => row.skills.science_skill.min
 		},
 		{
 			label: 'Science max',
-			value: (row) => row.science_skill.max
+			value: (row) => row.skills.science_skill.max
 		},
 		{
 			label: 'Security core',
-			value: (row) => row.security_skill.core
+			value: (row) => row.skills.security_skill.core
 		},
 		{
 			label: 'Security min',
-			value: (row) => row.security_skill.min
+			value: (row) => row.skills.security_skill.min
 		},
 		{
 			label: 'Security max',
-			value: (row) => row.security_skill.max
+			value: (row) => row.skills.security_skill.max
 		},
 		{
 			label: 'Traits',
@@ -198,7 +197,7 @@ export function exportItemsCsv() {
 		},
 		{
 			label: 'Type',
-			value: (row) => row.typeName
+			value: (row) => CONFIG.REWARDS_ITEM_TYPE[row.type]
 		},
 		{
 			label: 'Symbol',
