@@ -27,7 +27,7 @@ export const SkirmishEvent = (props: {
    if (!props.event.content.bonus_crew) {
       let ref = <span>Crew Ship Details</span>;
       if (props.onTabSwitch) {
-         ref = <Label as='a' onClick={() => props.onTabSwitch!('Shuttles')}>Shuttle Details</Label>;
+         ref = <Label as='a' onClick={() => props.onTabSwitch!('CrewShip')}>Crew Ship Details</Label>;
       }
 
       return <div><h2>Skirmish Event Details</h2>

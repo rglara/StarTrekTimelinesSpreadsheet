@@ -7,13 +7,29 @@ import STTApi, { CONFIG, RarityStars, formatTimeSeconds, CollapsibleSection, dow
 import { loadVoyage, recallVoyage, resolveDilemma, VOYAGE_AM_DECAY_PER_MINUTE } from './VoyageTools';
 import { estimateVoyageRemaining, CalcRemainingOptions } from './voyageCalc';
 import { VoyageLogEntry } from './VoyageLogEntry';
-import { VoyageNarrativeDTO, VoyageDTO, CrewData, RewardDTO } from '../../api/DTO';
+import { VoyageNarrativeDTO, VoyageDTO, CrewData, RewardDTO, CrewDTO } from '../../api/DTO';
 import { CrewImageData } from '../images/ImageProvider';
 
 type VoyageExportData = {
    id: number;
-   skills: any;
-   skillAggregates: any[];
+   skills: { primary_skill: string; secondary_skill: string; };
+   slots: {
+      name: string;
+      skill: string;
+      symbol: string;
+      trait: string;
+   }[];
+   skillAggregates: {
+      skill: string;
+      core: number;
+      min: number;
+      max: number;
+      score: number;
+      attempts: number;
+      passed: number;
+      passedPercent: number;
+      attemptsPercent: number;
+   }[];
    stats: {
       skillChecks: {
          times: number[];
@@ -44,6 +60,7 @@ export const VoyageLog = (props:{}) => {
    const [estimatedMinutesLeft, setEstimatedMinutesLeft] = React.useState<number | undefined>(undefined);
    //const [estimatedMinutesLeftRefill, setEstimatedMinutesLeftRefill] = React.useState(undefined as number | undefined);
    const [computingNativeEstimate, setComputingNativeEstimate] = React.useState<boolean>(false);
+   const computingNativeEstimateTimerRef = React.createRef<number | undefined>();
    const [voyageRewards, setVoyageRewards] = React.useState<RewardDTO[] | undefined>(undefined);
    const [voyageExport, setVoyageExport] = React.useState<VoyageExportData | undefined>(undefined);
    const [indexedNarrative, setIndexedNarrative] = React.useState<IndexedNarrative | undefined>(undefined);
@@ -254,6 +271,7 @@ export const VoyageLog = (props:{}) => {
             id: voyage.id,
             skills: voyage.skills,
             skillAggregates: [],
+            slots: STTApi.playerData.character.voyage_descriptions[0].crew_slots,
             stats: {
                skillChecks: {
                   times: [],
@@ -444,6 +462,11 @@ export const VoyageLog = (props:{}) => {
       };
 
       setComputingNativeEstimate(true);
+
+      // after 5s, clear the spinner regardless of completion
+      setTimeout(() => {
+         setComputingNativeEstimate(false);
+      }, 5000);
 
       estimateVoyageRemaining(options, (estimate) => {
          setEstimatedMinutesLeft(estimate);

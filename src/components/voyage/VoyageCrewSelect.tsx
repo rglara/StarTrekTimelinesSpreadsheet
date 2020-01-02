@@ -398,7 +398,12 @@ export const VoyageCrewSelect = (props: {
 
 		setGeneratingVoyCrewRank(true);
 
-		let dataToExport = exportVoyageData(_packVoyageOptions());
+		let voyOpts = _packVoyageOptions();
+		// Clear trait score boost when generating voyage crew rankings. This improves stability
+		// on crew usage across voyage skill pairs over
+		voyOpts.traitScoreBoost = 0;
+
+		let dataToExport = exportVoyageData(voyOpts);
 
 		const NativeExtension = require('electron').remote.require('stt-native');
 		NativeExtension.calculateVoyageCrewRank(

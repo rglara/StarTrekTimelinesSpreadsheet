@@ -108,7 +108,7 @@ export function exportVoyageData(options: CalcOptions): CalcExportData {
 
     // Find unique traits used in the voyage slots
     let setTraits = new Set<string>();
-    voyage_description.crew_slots.forEach((slot: any) => {
+    voyage_description.crew_slots.forEach((slot) => {
         setTraits.add(slot.trait);
     });
 

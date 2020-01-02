@@ -32,6 +32,7 @@ export const ReplicatorDialog = (props:{
 	const [showDialog, setShowDialog] = React.useState(false);
 	const [fuelconfig, setFuelConfig] = React.useState('extraSchematics');
 	const [fuellist, setFuelList] = React.useState([] as ItemDTO[]);
+	const [fuelPageSize, setFuelPageSize] = React.useState<number>(10);
 	const [fueltank, setFuelTank] = React.useState([] as FuelTankItem[]);
 	const [fuelTankValue, setFuelTankValue] = React.useState(0);
 	const [fuelCost, setFuelCost] = React.useState(1000);
@@ -227,7 +228,7 @@ export const ReplicatorDialog = (props:{
 	}
 
 	let currentTheme = UserStore.get('theme');
-	const MAX_PAGE_SIZE = 10;
+	const MAX_PAGE_SIZE = fuelPageSize;
 
 	return <Dialog
 		hidden={!showDialog}
@@ -357,7 +358,8 @@ export const ReplicatorDialog = (props:{
 						]}
 						sorted={sortedAvailable}
 						onSortedChange={sorted => setSortedAvailable(sorted)}
-						showPageSizeOptions={false}
+						showPageSizeOptions={true}
+						onPageSizeChange={(sz, pg) => setFuelPageSize(sz)}
 						defaultPageSize={fuellist.length <= MAX_PAGE_SIZE ? fuellist.length : MAX_PAGE_SIZE}
 						pageSize={fuellist.length <= MAX_PAGE_SIZE ? fuellist.length : MAX_PAGE_SIZE}
 						showPagination={fuellist.length > MAX_PAGE_SIZE}
