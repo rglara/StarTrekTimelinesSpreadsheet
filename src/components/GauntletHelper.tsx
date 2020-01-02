@@ -21,16 +21,14 @@ import { CircularLabel } from './CircularLabel';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 import { CrewImageData } from './images/ImageProvider';
 
-interface GauntletCrewProps {
+// Shows a single Crew entry with gauntlet details (debuffs, etc.)
+const GauntletCrew = (props: {
 	crew: GauntletCrewDTO;
-	maxwidth: number;
 	showStats: boolean;
 	reviveCost: { currency: number; amount: number };
-	revive: (save:boolean) => void;
-}
-
-const GauntletCrew = (props: GauntletCrewProps) => {
-	//let curr = CONFIG.CURRENCIES[this.props.reviveCost.currency];
+	revive: (save: boolean) => void;
+}) => {
+	//let curr = CONFIG.CURRENCIES[props.reviveCost.currency];
 	let avatar = STTApi.getCrewAvatarBySymbol(props.crew.archetype_symbol);
 
 	return <div className="ui compact segments" style={{ textAlign: 'center', margin: '8px' }}>
@@ -39,15 +37,14 @@ const GauntletCrew = (props: GauntletCrewProps) => {
 		>{avatar ? avatar.name : ''}</h5>
 		<div className="ui attached segment" style={{ backgroundColor: getTheme().palette.themeLighter, padding: '0' }}>
 			<div style={{ position: 'relative', display: 'inline-block' }}>
-				<img src={avatar ? avatar.iconUrl : ''} className={props.crew.disabled ? 'image-disabled' : ''} height={Math.min(200, props.maxwidth)} />
+				<img src={avatar ? avatar.iconUrl : ''} className={props.crew.disabled ? 'image-disabled' : ''} height={100} />
 				<div style={{ position: 'absolute', right: '0', top: '0' }}>
 					<CircularLabel percent={props.crew.crit_chance} />
 				</div>
-
 			</div>
 		</div>
 		<div className="ui attached segment" style={{ backgroundColor: getTheme().palette.themeLighter, padding: '2px' }}>
-			{props.crew.debuff / 4} battles
+			{props.crew.disabled ? "Disabled" : (props.crew.debuff / 4) + ' battles'}
 		</div>
 		{props.showStats && <div className="ui attached segment" style={{ backgroundColor: getTheme().palette.themeLighter, padding: '2px' }}>
 			{props.crew.skills.map((skill) =>
@@ -65,27 +62,13 @@ const GauntletCrew = (props: GauntletCrewProps) => {
 	</div>;
 };
 
-interface GauntletMatchProps {
+// Owned crew vs opponent crew 1-on-1 matchup
+const GauntletMatch = (props: {
 	gauntlet: GauntletDTO;
 	match: Match;
 	consecutive_wins: number;
 	onNewData: (data: GauntletData, logPath: string | undefined, match: Match) => void;
-}
-
-const GauntletMatch = (props: GauntletMatchProps) => {
-	let _playMatch = (event:any) => {
-		playContest(props.gauntlet, props.match, props.consecutive_wins).
-			then((data) => {
-				let logPath = undefined;
-
-				// #!if ENV === 'electron'
-				logPath = Logger.logGauntletEntry(data, props.match, props.consecutive_wins);
-				// #!endif
-
-				props.onNewData(data, logPath, props.match);
-			});
-	}
-
+}) => {
 	//TODO: 320px hardcoded below!
 	let containerStyle = {
 		padding: '3px',
@@ -145,19 +128,29 @@ const GauntletMatch = (props: GauntletMatchProps) => {
 
 			<span style={{ gridArea: 'ocrewname', justifySelf: 'center' }}>{oppCrew ? oppCrew.short_name : "<unknown>"}</span>
 		</div>
-		<div className="ui bottom attached primary button" onClick={_playMatch}>Engage!</div>
+		<div className="ui bottom attached primary button" onClick={playMatch}>Engage!</div>
 	</div>;
+
+	function playMatch() {
+		playContest(props.gauntlet, props.match, props.consecutive_wins).
+			then((data) => {
+				let logPath = undefined;
+
+				// #!if ENV === 'electron'
+				logPath = Logger.logGauntletEntry(data, props.match, props.consecutive_wins);
+				// #!endif
+
+				props.onNewData(data, logPath, props.match);
+			});
+	}
 }
 
 const GauntletStat = (props:{
-	windowWidth: number,
 	value: number | string,
 	label: string,
 	classAdd?: string
 }) => {
-	let classSize = 'small';
-	if (props.windowWidth < 800) { classSize = 'tiny'; }
-	return <div className={`${props.classAdd ? props.classAdd : ''} ui ${classSize} statistic`}>
+	return <div className={`${props.classAdd ? props.classAdd : ''} ui tiny statistic`}>
 		<div className="value" style={{ color: props.classAdd || 'unset' }}>{props.value}</div>
 		<div className="label" style={{ color: 'unset' }}>{props.label}</div>
 	</div>;
@@ -211,18 +204,18 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 	}
 
 	updateWindowDimensions() {
-		this.setState({ windowWidth: window.innerWidth, windowHeight: window.innerHeight });
+		//this.setState({ windowWidth: window.innerWidth, windowHeight: window.innerHeight });
 	}
 
 	componentDidMount() {
 		this._updateCommandItems();
 
-		this.updateWindowDimensions();
-		window.addEventListener('resize', this.updateWindowDimensions);
+		//this.updateWindowDimensions();
+		//window.addEventListener('resize', this.updateWindowDimensions);
 	}
 
 	componentWillUnmount() {
-		window.removeEventListener('resize', this.updateWindowDimensions);
+		//window.removeEventListener('resize', this.updateWindowDimensions);
 	}
 
 	_updateCommandItems() {
@@ -508,7 +501,6 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 					<div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)' }} >
 						{this.state.gauntlet.contest_data.selected_crew.map((crew) => <GauntletCrew
 							showStats={this.state.showStats}
-							maxwidth={this.state.windowWidth / 6}
 							key={crew.crew_id}
 							crew={crew}
 							revive={(save) => this._payToReviveCrew(crew.crew_id, save)}
@@ -520,16 +512,16 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 
 					<div className="ui compact segments" style={{ margin: '8px' }}>
 						<div style={{display: 'flex', flexDirection: 'row'}}>
-							<div className="ui attached statistic" style={{ marginBottom: '0em', paddingBottom:'1em', width:'300px', backgroundColor: getTheme().palette.themeLighter }}>
+						<div className="ui attached" style={{ marginBottom: '0em', paddingBottom:'1em', width:'300px', backgroundColor: getTheme().palette.themeLighter }}>
 								<h5 className="ui top attached header" style={{ color: getTheme().palette.neutralDark, backgroundColor: getTheme().palette.themeLighter, textAlign: 'center', padding: '2px' }}>
 									The gauntlet ends in {formatTimeSeconds(this.state.gauntlet.seconds_to_end)}
 								</h5>
-								<GauntletStat windowWidth={this.state.windowWidth} label='Crew refresh' value={formatTimeSeconds(this.state.gauntlet.seconds_to_next_crew_refresh)} />
-								<GauntletStat windowWidth={this.state.windowWidth} label='Your rank' value={this.state.roundOdds.rank} />
-								<GauntletStat windowWidth={this.state.windowWidth} label='Consecutive wins' value={this.state.roundOdds.consecutive_wins} />
-								<GauntletStat windowWidth={this.state.windowWidth} label='Merits' value={STTApi.playerData.premium_earnable} />
+								<GauntletStat label='Crew refresh' value={formatTimeSeconds(this.state.gauntlet.seconds_to_next_crew_refresh)} />
+								<GauntletStat label='Your rank' value={this.state.roundOdds.rank} />
+								<GauntletStat label='Consecutive wins' value={this.state.roundOdds.consecutive_wins} />
+								<GauntletStat label='Merits' value={STTApi.playerData.premium_earnable} />
 								{this.state.lastResult &&
-									<GauntletStat windowWidth={this.state.windowWidth} label='Last round' value={((this.state.lastResult.win === true) ? 'WON' : 'LOST')} classAdd={(this.state.lastResult.win === true) ? 'green' : 'red'}/>}
+									<GauntletStat label='Last round' value={((this.state.lastResult.win === true) ? 'WON' : 'LOST')} classAdd={(this.state.lastResult.win === true) ? 'green' : 'red'}/>}
 							</div>
 							{this.state.lastResult && this.state.lastMatch && <div className="ui attached segment"
 								style={{ display: 'flex', flexFlow: 'row nowrap', backgroundColor: getTheme().palette.themeLighterAlt }}>
