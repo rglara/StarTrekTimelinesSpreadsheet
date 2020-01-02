@@ -1,9 +1,9 @@
-import XlsxPopulate from 'xlsx-populate';
+const XlsxPopulate = require('xlsx-populate');
 
-import STTApi from '../api';
-import { CONFIG } from '../api';
+import STTApi, {CONFIG} from '../api';
+import { ItemData } from '../api/DTO';
 
-export async function exportExcel(itemList) {
+export async function exportExcel(itemList: ItemData[]) {
 	let workbook = await XlsxPopulate.fromBlankAsync();
 	let worksheet = workbook.addSheet('Crew stats');
 
@@ -71,24 +71,24 @@ export async function exportExcel(itemList) {
 'action.trigger', 'action.ability', 'equipment.slot 1', 'equipment.slot 2', 'equipment.slot 3', 'equipment.slot 4']);
 
 	STTApi.roster.forEach((crew) => {
-		let equipment = [];
+		let equipment : any[] = [];
 		crew.equipment_slots.forEach(es => {
 			let arch = STTApi.itemArchetypeCache.archetypes.find(equipment => equipment.id === es.archetype);
 			equipment.push((arch ? arch.name : '!UNKNOWN!') + (es.have ? ' (1)' : ' (0)'));
 		});
 
 		values.push([crew.id, crew.name, crew.short_name, crew.rarity, crew.max_rarity, crew.level, crew.frozen,
-			crew.command_skill.core, crew.command_skill.min, crew.command_skill.max, crew.diplomacy_skill.core, crew.diplomacy_skill.min, crew.diplomacy_skill.max,
-			crew.science_skill.core, crew.science_skill.min, crew.science_skill.max, crew.security_skill.core, crew.security_skill.min, crew.security_skill.max,
-			crew.engineering_skill.core, crew.engineering_skill.min, crew.engineering_skill.max, crew.medicine_skill.core, crew.medicine_skill.min, crew.medicine_skill.max,
+			crew.skills.command_skill.core, crew.skills.command_skill.min, crew.skills.command_skill.max, crew.skills.diplomacy_skill.core, crew.skills.diplomacy_skill.min, crew.skills.diplomacy_skill.max,
+			crew.skills.science_skill.core, crew.skills.science_skill.min, crew.skills.science_skill.max, crew.skills.security_skill.core, crew.skills.security_skill.min, crew.skills.security_skill.max,
+			crew.skills.engineering_skill.core, crew.skills.engineering_skill.min, crew.skills.engineering_skill.max, crew.skills.medicine_skill.core, crew.skills.medicine_skill.min, crew.skills.medicine_skill.max,
 			crew.buyback, crew.traits,
 			crew.ship_battle.accuracy, crew.ship_battle.crit_bonus, crew.ship_battle.crit_chance, crew.ship_battle.evasion, crew.action.name, crew.action.bonus_amount,
 			CONFIG.CREW_SHIP_BATTLE_BONUS_TYPE[crew.action.bonus_type], crew.action.duration, crew.action.cooldown, crew.action.initial_cooldown, crew.action.limit,
 			crew.action.penalty ? CONFIG.CREW_SHIP_BATTLE_BONUS_TYPE[crew.action.penalty.type] : '',
 			crew.action.penalty ? crew.action.penalty.amount : '',
 			crew.action.charge_phases ? JSON.stringify(crew.action.charge_phases) : '',
-			crew.action.ability ? CONFIG.CREW_SHIP_BATTLE_TRIGGER[crew.action.ability.condition] : '',
-			crew.action.ability ? CONFIG.CREW_SHIP_BATTLE_ABILITY_TYPE[crew.action.ability.type].replace('%VAL%', crew.action.ability.amount) : '',
+			crew.action.ability ? CONFIG.CREW_SHIP_BATTLE_TRIGGER[crew.action.ability!.condition] : '',
+			crew.action.ability ? CONFIG.CREW_SHIP_BATTLE_ABILITY_TYPE[crew.action.ability!.type].replace('%VAL%', '' + crew.action.ability!.amount) : '',
 			equipment[0], equipment[1], equipment[2], equipment[3]
 		]);
 	});
@@ -141,8 +141,8 @@ export async function exportExcel(itemList) {
 
 	//worksheetShips.autoFilter = 'A1:J1';
 
-	const playerSchematics = STTApi.playerData.character.items.filter(item => item.type === 8);
-	const numberOfSchematics = (archetype_id) => {
+	const playerSchematics = STTApi.items.filter(item => item.type === 8);
+	const numberOfSchematics = (archetype_id: number) => {
 		const schematic = STTApi.shipSchematics.find(schematic => schematic.ship.archetype_id === archetype_id);
 		if (!schematic) {
 			return 0;
@@ -152,7 +152,13 @@ export async function exportExcel(itemList) {
 	}
 
 	STTApi.ships.forEach((ship) => {
-		values.push([ship.archetype_id, ship.name, (ship.level === 0) ? 'N/A' : (ship.level + 1), ship.max_level + 1, ship.rarity, ship.shields, ship.hull, ship.attack, ship.accuracy, ship.evasion, numberOfSchematics(ship.archetype_id), ship.traitNames]);
+		values.push([ship.archetype_id,
+			ship.name,
+			(ship.level === 0) ? 'N/A' : (ship.level + 1),
+			ship.max_level + 1,
+			ship.rarity, ship.shields, ship.hull, ship.attack, ship.accuracy,
+			ship.evasion,
+			numberOfSchematics(ship.archetype_id), ship.traitNames]);
 	});
 
 	worksheetShips.cell("A1").value(values);

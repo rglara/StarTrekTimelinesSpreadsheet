@@ -130,7 +130,7 @@ export const HomePage = (props: HomePageProps) => {
 		});
 	}
 
-	let itemCount = STTApi.playerData.character.items.length;
+	let itemCount = STTApi.items.length;
 	if (itemCount > STTApi.playerData.character.item_limit - 5) {
 		recommendations.push({
 			title: 'You are over the inventory limit and are losing items',
@@ -138,7 +138,7 @@ export const HomePage = (props: HomePageProps) => {
 			content: (
 				<div>
 					<p style={{ margin: '0' }}>
-						You have {STTApi.playerData.character.items.length} types of items in your inventory out of a maximum of{' '}
+						You have {STTApi.items.length} types of items in your inventory out of a maximum of{' '}
 						{STTApi.playerData.character.item_limit}; the game is randomly dismissing items.
 					</p>
 					<p style={{ margin: '0' }}>
@@ -155,7 +155,7 @@ export const HomePage = (props: HomePageProps) => {
 			content: (
 				<div>
 					<p style={{ margin: '0' }}>
-						You have {STTApi.playerData.character.items.length} types of items in your inventory out of a maximum of{' '}
+						You have {STTApi.items.length} types of items in your inventory out of a maximum of{' '}
 						{STTApi.playerData.character.item_limit}.
 					</p>
 					<p style={{ margin: '0' }}>
@@ -171,7 +171,7 @@ export const HomePage = (props: HomePageProps) => {
 			icon: Priority.INFO,
 			content: (
 				<p style={{ margin: '0' }}>
-					All good. You have {STTApi.playerData.character.items.length} types of items in your inventory out of a maximum of{' '}
+					All good. You have {STTApi.items.length} types of items in your inventory out of a maximum of{' '}
 					{STTApi.playerData.character.item_limit}.
 				</p>
 			)
@@ -233,7 +233,7 @@ export const HomePage = (props: HomePageProps) => {
 		});
 	}
 
-	let overflowingItems = STTApi.playerData.character.items.filter(item => item.quantity > 32000);
+	let overflowingItems = STTApi.items.filter(item => item.quantity > 32000);
 	if (overflowingItems.length > 0) {
 		recommendations.push({
 			title: 'Overflowing items',

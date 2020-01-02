@@ -9,7 +9,7 @@ import { ItemDisplay } from '../ItemDisplay';
 import UserStore from '../Styles';
 
 import STTApi, { CONFIG, RarityStars } from '../../api';
-import { ItemDTO, ItemArchetypeDTO } from '../../api/DTO';
+import { ItemData, ItemArchetypeDTO } from '../../api/DTO';
 import { ReplicatorFuel, computeExtraSchematics, computeExtraItems,
 	replicatorCurrencyCost, replicatorFuelCost, canReplicate,
 	replicatorFuelValue, canUseAsFuel, replicate } from './ReplicatorTools';
@@ -21,7 +21,7 @@ type FuelTankItem = {
 	id: number;
 	type: number;
 	rarity: number;
-	item: ItemDTO;
+	item: ItemData;
 };
 
 export const ReplicatorDialog = (props:{
@@ -31,7 +31,7 @@ export const ReplicatorDialog = (props:{
 }) => {
 	const [showDialog, setShowDialog] = React.useState(false);
 	const [fuelconfig, setFuelConfig] = React.useState('extraSchematics');
-	const [fuellist, setFuelList] = React.useState([] as ItemDTO[]);
+	const [fuellist, setFuelList] = React.useState([] as ItemData[]);
 	const [fuelPageSize, setFuelPageSize] = React.useState<number>(10);
 	const [fueltank, setFuelTank] = React.useState([] as FuelTankItem[]);
 	const [fuelTankValue, setFuelTankValue] = React.useState(0);
@@ -100,15 +100,15 @@ export const ReplicatorDialog = (props:{
 
 	function reloadItems(fuelConfig: string) {
 		if (fuelConfig === 'everything') {
-			setFuelList(STTApi.playerData.character.items);
+			setFuelList(STTApi.items);
 		} else if (fuelConfig === 'extraSchematics') {
 			setFuelList(computeExtraSchematics());
 		} else if (fuelConfig === 'extraItems') {
 			setFuelList(computeExtraItems());
 		} else if (fuelConfig === 'trainers') {
-			setFuelList(STTApi.playerData.character.items.filter(item => item.type === 7));
+			setFuelList(STTApi.items.filter(item => item.type === 7));
 		} else if (fuelConfig === 'rations') {
-			setFuelList(STTApi.playerData.character.items.filter(item => item.type === 9));
+			setFuelList(STTApi.items.filter(item => item.type === 9));
 		} else {
 			setFuelList([]);
 		}
@@ -125,7 +125,7 @@ export const ReplicatorDialog = (props:{
 	}
 
 	// Add the item to the tank and return the remaining needed fuel cost
-	function tankAdd(item: ItemDTO, amount: string | number | undefined) : {remainingCost:number; added:number;} {
+	function tankAdd(item: ItemData, amount: string | number | undefined) : {remainingCost:number; added:number;} {
 		let neededFuelCost = fuelCost - fuelTankValue;
 
 		if (neededFuelCost <= 0 || !canUseAsFuel(item.id)) {

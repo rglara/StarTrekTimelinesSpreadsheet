@@ -390,7 +390,7 @@ export class NeededEquipmentClass {
 			if (!equipment) {
 				console.warn(`This equipment has no recipe and no sources: '${eq.archetype}'`);
 			} else if (equipment.recipe && equipment.recipe.demands && equipment.recipe.demands.length > 0) {
-				let have = STTApi.playerData.character.items.find((item) => item.archetype_id === eq.archetype);
+				let have = STTApi.items.find((item) => item.archetype_id === eq.archetype);
 				// don't have any partially built, queue up to break into pieces
 				if (!have || have.quantity <= 0) {
 					// Add all children in the recipe to parse on the next loop iteration
@@ -462,7 +462,7 @@ export class NeededEquipmentClass {
 						found.counts.set(eq.crew.id, { crew: eq.crew, count: eq.need });
 					}
 				} else {
-					let have = STTApi.playerData.character.items.find((item) => item.archetype_id === eq.archetype);
+					let have = STTApi.items.find((item) => item.archetype_id === eq.archetype);
 					let isDisputeMissionObtainable = equipment.item_sources.filter((e) => e.type === 0).length > 0;
 					let isShipBattleObtainable = equipment.item_sources.filter((e) => e.type === 2).length > 0;
 					let isFactionObtainable = equipment.item_sources.filter((e) => e.type === 1).length > 0;

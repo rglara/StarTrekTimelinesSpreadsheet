@@ -5,7 +5,7 @@ import { Button, Item, Image, List, Accordion, Icon, AccordionTitleProps } from 
 import { ItemDisplay } from '../ItemDisplay';
 
 import STTApi, { CONFIG, RarityStars } from '../../api';
-import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES, ItemArchetypeDTO, ItemDTO, CrewData, ItemArchetypeDemandDTO } from '../../api/DTO';
+import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES, ItemArchetypeDTO, ItemData, CrewData, ItemArchetypeDemandDTO } from '../../api/DTO';
 import { EventCrewBonusTable } from './EventHelperPage';
 import ReactTable, { Column, SortingRule } from 'react-table';
 import { getMissionCostDetails, MissionCostDetails } from '../../api/EquipmentTools';
@@ -18,7 +18,7 @@ interface ItemDemand {
    have: number;
    itemDemands: {
       rd: ItemArchetypeDemandDTO;
-      item?: ItemDTO;
+      item?: ItemData;
    }[];
 }
 
@@ -41,7 +41,7 @@ interface CalcSlot {
 
 interface FarmListItem {
    archetype: ItemArchetypeDTO;
-   item?: ItemDTO;
+   item?: ItemData;
    uses: string;
    sources: (MissionCostDetails & { chance: number; quotient: number; title: string })[]
 }
@@ -128,16 +128,16 @@ function parseAdventure(adventure: EventGatherPoolAdventureDTO, crew_bonuses: { 
 
       bestCrewChance = Math.floor(Math.min(bestCrewChance, 1) * 100);
 
-      let itemDemands: { rd: ItemArchetypeDemandDTO, item?: ItemDTO }[] = [];
+      let itemDemands: { rd: ItemArchetypeDemandDTO, item?: ItemData }[] = [];
       for (let rd of e.recipe.demands) {
-         let item = STTApi.playerData.character.items.find(item => item.archetype_id === rd.archetype_id);
+         let item = STTApi.items.find(item => item.archetype_id === rd.archetype_id);
          itemDemands.push({
             rd,
             item
          });
       }
 
-      let have = STTApi.playerData.character.items.find(item => item.archetype_id === e!.id);
+      let have = STTApi.items.find(item => item.archetype_id === e!.id);
 
       let craftCost = 0;
       if (e.type === 3) {
@@ -210,19 +210,18 @@ const GalaxyAdventureDemand = (props: {
             </Item.Header>
             <Item.Description>
                <div>
+                  Best crew: <img src={crew.iconUrl} width='25' height='25' />&nbsp;
+                  {crew.name}&nbsp;({demand.bestCrewChance}%)
+                  {crew.frozen > 0 && <span> Frozen!</span>}
+                  {crew.active_id && <span> Active!</span>}
+               </div>
+               <div>
                   {demand.itemDemands.map((id, index, all) =>
                      <div key={index} ><ItemDisplay src={id.item!.iconUrl!} style={{display: 'inline'}}
                         size={50} maxRarity={id.item!.rarity} rarity={id.item!.rarity} />{id.rd.count}x {id.item ? id.item.name : 'NEED'} (have {id.item ? id.item.quantity : 0}){
                            index === all.length-1 ? '' : ', '
                         }</div>)
                   }
-               </div>
-               <div>
-                  Best crew: <img src={crew.iconUrl}
-                  width='25' height='25' />&nbsp;
-                  {crew.name}&nbsp;({demand.bestCrewChance}%)
-                  {crew.frozen > 0 && <span>Frozen!</span>}
-                  {crew.active_id && <span>Active!</span>}
                </div>
             </Item.Description>
             {/* <Item.Extra>
@@ -323,7 +322,7 @@ export const GalaxyEvent = (props: {
       if (e.recipe && e.recipe.jackpot && e.recipe.jackpot.trait_bonuses) {
          let itemDemands = [];
          for (let rd of e.recipe.demands) {
-            let item = STTApi.playerData.character.items.find(item => item.archetype_id === rd.archetype_id);
+            let item = STTApi.items.find(item => item.archetype_id === rd.archetype_id);
             let arc = STTApi.itemArchetypeCache.archetypes.find(a => a.id === rd.archetype_id);
 
             itemDemands.push({
@@ -334,7 +333,7 @@ export const GalaxyEvent = (props: {
             });
          }
 
-         let have = STTApi.playerData.character.items.find(item => item.archetype_id === e.id);
+         let have = STTApi.items.find(item => item.archetype_id === e.id);
 
          eventEquip.push({
             equip: e,
@@ -358,37 +357,18 @@ export const GalaxyEvent = (props: {
    farmingList.forEach((v, k) => {
       let archetype = STTApi.itemArchetypeCache.archetypes.find(a => a.id === k)!;
 
-      let missions = archetype.item_sources.filter(e => e.type === 0 || e.type === 2);
-      const sources = missions.map((entry, idx) => {
-         const chance = entry.chance_grade / 5;
-         const quotient = entry.energy_quotient;
-         const costDetails = getMissionCostDetails(entry.id, entry.mastery);
-         let title = '';
-         if (costDetails.mission && costDetails.quest && costDetails.cost) {
-            const qoff = costDetails.mission.quests.indexOf(costDetails.quest) + 1;
-            const missionTitle = costDetails.mission.description.length > costDetails.mission.episode_title.length ?
-               costDetails.mission.episode_title : costDetails.mission.description;
-            title = missionTitle + ' #' + qoff + ' ('+costDetails.quest.name+')[' + entry.chance_grade + '/5 @ ' + costDetails.cost + ' Chrons (q=' + (Math.round(entry.energy_quotient * 100) / 100) + ')]';
-         }
-         return {
-            ...costDetails,
-            chance,
-            quotient,
-            title
-         };
-      });
-      const filtered = sources.filter(s => s.title !== '');
+      const item = STTApi.items.find(item => item.archetype_id === k)!;
       farmList.push({
          archetype,
-         item: STTApi.playerData.character.items.find(item => item.archetype_id === k),
+         item,
          uses: v,
-         sources: filtered
+         sources: item.sources
       });
    });
 
    // TODO: compare with future galaxy events
    let toSave = farmList.map(fl => ({ equipment_id: fl.archetype.id, equipment_symbol: fl.archetype.symbol, uses: fl.uses }));
-   console.log(toSave);
+   //console.log(toSave);
 
    // this.state = { event: currEvent, crew_bonuses, activeIndex: -1, eventEquip, farmList };
    // } else {
@@ -443,7 +423,7 @@ export const GalaxyEvent = (props: {
                {eventEquip.map(e => (
                   <div key={e.equip.id}>
                      <h3>
-                        {e.equip.name} (have {e.have ? e.have.quantity : 0})
+                        {e.equip.name}
                      </h3>
                      <div>{e.itemDemands.map(id => `${id.item_name} x ${id.rd.count} (have ${id.item_quantity})`).join(', ')}</div>
                   </div>
@@ -562,7 +542,7 @@ const FarmList = (props: {
             minWidth: 50,
             maxWidth: 50,
             resizable: true,
-            accessor: (fli) => fli.sources.sort((a,b) => b.quotient - a.quotient)[0].quotient,
+            accessor: (fli) => fli.sources.length == 0 ? 0 : fli.sources.sort((a,b) => b.quotient - a.quotient)[0].quotient,
          },
          {
             id: 'sources',
@@ -573,6 +553,7 @@ const FarmList = (props: {
             sortable: false,
             Cell: (cell) => {
                let item: FarmListItem = cell.original;
+               if (item.sources.length == 0) return '';
                return item.sources.sort((a,b) => b.quotient - a.quotient)
                   .map((src, idx, all) => src.title + (idx === all.length-1 ? '' : ', '));
             }

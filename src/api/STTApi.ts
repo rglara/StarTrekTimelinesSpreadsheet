@@ -30,7 +30,7 @@ import { NeededEquipmentClass, EquipNeedFilter, EquipNeed } from './EquipmentToo
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
-import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO } from './DTO';
+import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData } from './DTO';
 
 export class STTApiClass {
 	private _accessToken: string | undefined;
@@ -82,6 +82,7 @@ export class STTApiClass {
 		slabel: string;
 	};
 	public roster: CrewData[];
+	public items: ItemData[];
 	public ships: ShipDTO[];
 	public missions: MissionDTO[];
 	public missionSuccess!: IChallengeSuccess[];
@@ -137,6 +138,7 @@ export class STTApiClass {
 		this.fleetData = undefined;
 		this._fleetMemberInfo = { members: [], squads: [] };
 		this.roster = [];
+		this.items = [];
 		this.ships = [];
 		this.missions = [];
 		this.missionSuccess = [];

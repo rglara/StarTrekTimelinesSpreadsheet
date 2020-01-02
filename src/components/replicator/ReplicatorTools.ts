@@ -1,5 +1,5 @@
 import STTApi from "../../api/index";
-import { ItemDTO } from "../../api/DTO";
+import { ItemData } from "../../api/DTO";
 
 export function replicatorCurrencyCost(archetypeType: number, rarity: number): number {
     return STTApi.platformConfig!.config.replicator_config.currency_costs[rarity].amount;
@@ -41,10 +41,10 @@ export async function replicate(targetArchetypeId: number, fuel: ReplicatorFuel[
     await STTApi.applyUpdates(data);
 }
 
-export function computeExtraSchematics() : ItemDTO[] {
-    let playerSchematics = STTApi.playerData.character.items.filter(item => item.type === 8);
+export function computeExtraSchematics() : ItemData[] {
+    let playerSchematics = STTApi.items.filter(item => item.type === 8);
 
-    let fuellist: ItemDTO[] = [];
+    let fuellist: ItemData[] = [];
     STTApi.ships.forEach(ship => {
         if (ship.level === ship.max_level) {
             const playerSchematic = playerSchematics.find(playerSchematic => playerSchematic.archetype_id === ship.schematic_id);
@@ -56,7 +56,7 @@ export function computeExtraSchematics() : ItemDTO[] {
     return fuellist;
 }
 
-export function computeExtraItems() : ItemDTO[] {
+export function computeExtraItems() : ItemData[] {
     let equipmentAlreadyOnCrew = new Set();
     STTApi.roster.forEach(crew => {
         if (crew.buyback) {
@@ -85,7 +85,7 @@ export function computeExtraItems() : ItemDTO[] {
         }
     });
 
-    return STTApi.playerData.character.items.filter(
+    return STTApi.items.filter(
         item => equipmentAlreadyOnCrew.has(item.archetype_id) && item.quantity === 1 && item.rarity > 1
     );
 }

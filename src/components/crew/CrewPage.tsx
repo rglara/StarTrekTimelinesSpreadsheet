@@ -66,7 +66,7 @@ export const CrewPage = (props: CrewPageProps) => {
                                 name: 'Export Excel...',
                                 iconProps: { iconName: 'ExcelLogo' },
                                 onClick: async () => {
-                                    let data = await exportExcel(STTApi.playerData.character.items);
+                                    let data = await exportExcel(STTApi.items);
                                     download('My Crew.xlsx', data, 'Export Star Trek Timelines crew roster', 'Export');
                                 }
                             },

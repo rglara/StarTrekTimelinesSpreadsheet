@@ -209,5 +209,5 @@ export function exportItemsCsv() {
 			value: (row) => row.flavor
 		}];
 
-	return simplejson2csv(STTApi.playerData.character.items, fields);
+	return simplejson2csv(STTApi.items, fields);
 }
