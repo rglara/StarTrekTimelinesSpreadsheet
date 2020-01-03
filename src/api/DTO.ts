@@ -460,6 +460,14 @@ export interface VoyageDescriptionDTO {
    symbol: string; // unused?
 }
 
+export interface PlayerResponseDTO {
+   player?: PlayerDTO;
+   item_archetype_cache: {
+      archetypes: ItemArchetypeDTO[];
+      id: number;
+   };
+};
+
 export interface PlayerDTO {
    character: PlayerCharacterDTO;
    chats: any;
