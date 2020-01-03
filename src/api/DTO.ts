@@ -460,6 +460,43 @@ export interface VoyageDescriptionDTO {
    symbol: string; // unused?
 }
 
+export interface VoyageExportData {
+   id: number;
+   skills: { primary_skill: string; secondary_skill: string; };
+   slots: {
+      name: string;
+      skill: string;
+      symbol: string;
+      trait: string;
+   }[];
+   skillAggregates: SkillAggregate[];
+   stats: {
+      skillChecks: {
+         times: number[];
+         average: number;
+      };
+      rewards: {
+         times: number[];
+         average: number;
+      };
+   };
+   narrative: VoyageNarrativeDTO[];
+   /** Used in data analytics, not export */
+   totalTimeSec?: number;
+}
+
+export interface SkillAggregate {
+   skill: string;
+   core: number;
+   min: number;
+   max: number;
+   score: number;
+   attempts: number;
+   passed: number;
+   passedPercent: number;
+   attemptsPercent: number;
+}
+
 export interface PlayerResponseDTO {
    player?: PlayerDTO;
    item_archetype_cache: {

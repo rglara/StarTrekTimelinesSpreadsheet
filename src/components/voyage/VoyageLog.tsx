@@ -7,41 +7,8 @@ import STTApi, { CONFIG, RarityStars, formatTimeSeconds, CollapsibleSection, dow
 import { loadVoyage, recallVoyage, resolveDilemma, VOYAGE_AM_DECAY_PER_MINUTE } from './VoyageTools';
 import { estimateVoyageRemaining, CalcRemainingOptions } from './voyageCalc';
 import { VoyageLogEntry } from './VoyageLogEntry';
-import { VoyageNarrativeDTO, VoyageDTO, CrewData, RewardDTO, CrewDTO } from '../../api/DTO';
+import { VoyageNarrativeDTO, VoyageDTO, CrewData, RewardDTO, CrewDTO, VoyageExportData } from '../../api/DTO';
 import { CrewImageData } from '../images/ImageProvider';
-
-type VoyageExportData = {
-   id: number;
-   skills: { primary_skill: string; secondary_skill: string; };
-   slots: {
-      name: string;
-      skill: string;
-      symbol: string;
-      trait: string;
-   }[];
-   skillAggregates: {
-      skill: string;
-      core: number;
-      min: number;
-      max: number;
-      score: number;
-      attempts: number;
-      passed: number;
-      passedPercent: number;
-      attemptsPercent: number;
-   }[];
-   stats: {
-      skillChecks: {
-         times: number[];
-         average: number;
-      };
-      rewards: {
-         times: number[];
-         average: number;
-      };
-   };
-   narrative: VoyageNarrativeDTO[],
-}
 
 type IndexedNarrative = {
    [index: number]: VoyageNarrativeDTO[]
