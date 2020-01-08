@@ -548,6 +548,7 @@ const BestCrew = (props : {
 				});
 
 				let trait = STTApi.playerData.character.voyage_descriptions[0].crew_slots[entry.slotId].trait;
+				let traitDisp = STTApi.getTraitName(trait);
 				let traitMatch = entry.choice.rawTraits.find(t => t === trait);
 
 				let status = entry.choice.frozen > 0 ? 'Frozen' : entry.choice.active_id ? isShuttle ? 'On Shuttle' : 'On Voyage' : 'Available';
@@ -558,7 +559,7 @@ const BestCrew = (props : {
 							<Card.Header>{entry.choice.name}</Card.Header>
 							<Card.Meta>
 								{STTApi.playerData.character.voyage_descriptions[0].crew_slots[entry.slotId].name}<br/>
-								{traitMatch ? <b>{trait}</b> : trait }
+								{traitMatch ? <b>{traitDisp} (Match)</b> : traitDisp }
 							</Card.Meta>
 							<Card.Description>
 								<RarityStars max={entry.choice.max_rarity} value={entry.choice.rarity} colored={true} />
@@ -587,12 +588,13 @@ const BestCrew = (props : {
 		for (let s=0; s<numSlots; ++s) {
 			if (!crewSpans[s]) {
 				let trait = STTApi.playerData.character.voyage_descriptions[0].crew_slots[s].trait;
+				let traitDisp = STTApi.getTraitName(trait);
 				crewSpans[s] = <Card key={s} color={'red'}>
 					<Card.Content>
 						<Card.Header>{}</Card.Header>
 						<Card.Meta>
 							{STTApi.playerData.character.voyage_descriptions[0].crew_slots[s].name}<br />
-							{trait}
+							{traitDisp}
 						</Card.Meta>
 						<Card.Description>
 						</Card.Description>
