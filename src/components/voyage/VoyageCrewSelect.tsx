@@ -533,6 +533,9 @@ const BestCrew = (props : {
 }) => {
 	const [selectSlotId, setSelectSlotId] = React.useState(undefined as number | undefined);
 
+	let skill_aggregates: { [sk: string]: { skill: string; core: number; range_min: number; range_max: number; } } = {};
+	Object.keys(CONFIG.SKILLS).forEach(sk => skill_aggregates[sk] = { skill : sk, core : 0, range_max: 0, range_min: 0});
+
 	if (props.state === 'inprogress' || props.state === 'done' || props.state === 'open') {
 		let crewSpans: any[] = [];
 		props.crewSelection.forEach((entry) => {
@@ -568,6 +571,13 @@ const BestCrew = (props : {
 					</Card>;
 
 				crewSpans[entry.slotId] = crewCard;
+
+				Object.keys(entry.choice.skills).forEach(sk => {
+					let sd = entry.choice.skills[sk];
+					skill_aggregates[sk].core += sd.core;
+					skill_aggregates[sk].range_min += sd.min;
+					skill_aggregates[sk].range_max += sd.max;
+				});
 			} else {
 				console.error(entry);
 			}
@@ -607,6 +617,24 @@ const BestCrew = (props : {
 					/>
 				}
 				<Card.Group>{crewSpans}</Card.Group>
+				<ul>
+					{ Object.keys(skill_aggregates).map(k => skill_aggregates[k]).map(skill => {
+						let isPri = skill.skill == STTApi.playerData.character.voyage_descriptions[0].skills.primary_skill;
+						let isSec = skill.skill == STTApi.playerData.character.voyage_descriptions[0].skills.secondary_skill;
+
+						return (
+							<li key={skill.skill}>
+								<span className='quest-mastery'>
+									<img src={CONFIG.SPRITES['icon_' + skill.skill].url} height={18} /> &nbsp; {skill.core} ({skill.range_min}-
+									{skill.range_max})&nbsp;[{skill.core + (skill.range_min + skill.range_max) / 2}]&nbsp;
+									{isPri ? ' (Pri) ' : ''}
+									{isSec ? ' (Sec) ' : ''}
+								</span>
+							</li>
+						);
+					})}
+				</ul>
+
 			</div>;
 
 	} else {
