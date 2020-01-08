@@ -522,6 +522,7 @@ export class STTApiClass {
 
 				if (data.character) {
 					this._playerData!.player!.character = mergeDeep(this._playerData!.player!.character, data.character);
+					this.itemRecount();
 				}
 
 				if (data.event) {
@@ -542,6 +543,7 @@ export class STTApiClass {
 							}
 						}
 					}
+					this.itemRecount();
 				} else if (
 					data.event &&
 					data.event.content.gather_pool &&
@@ -593,5 +595,25 @@ export class STTApiClass {
 
 	getEquipmentManager() : NeededEquipmentClass {
 		return this._neededEquipment;
+	}
+
+	itemRecount() : void {
+		// for (let itemDTO of this._playerData!.player!.character.items) {
+		// 	let item = this.items.find(id => id.id === itemDTO.id);
+		// 	if (item) {
+		// 		item.quantity = itemDTO.quantity;
+		// 	}
+		// }
+
+		// If item is still here, update quantity; otherwise remove the item data
+		for (let item of [...this.items]) {
+			let dto = this._playerData!.player!.character.items.find(id => id.id === item.id);
+			if (dto && item.quantity !== dto.quantity) {
+				item.quantity = dto.quantity;
+			}
+			else if (!dto) {
+				this.items = this.items.filter(itemData => itemData.id !== item.id);
+			}
+		}
 	}
 }
