@@ -6,7 +6,7 @@ import { ItemSources } from './ItemSources';
 import { CrewFullEquipTree } from './CrewFullEquipTree';
 
 import STTApi from '../../api';
-import STTTools from './api';
+import STTTools from './STTTools';
 import { CONFIG } from '../../api';
 import { parseRecipeDemands } from './utils';
 
@@ -93,7 +93,7 @@ export class ModalCrewDetails extends React.Component {
                             {this.renderItemStat(crew, 'security_skill')}
                         </div>
 
-                        <p><b>Traits: </b>{crew.traits_named.join(', ')}<span style={{ color: 'lightgray' }}>, {crew.traits_hidden.join(', ')}</span></p>
+                        <p><b>Traits: </b>{crew.traits.join(', ')}<span style={{ color: 'lightgray' }}>, {crew.traits_hidden.join(', ')}</span></p>
 
                         {(this.state.collections.length > 0) && <p><b>Collections: </b>{this.state.collections.map(c => c.name).join(', ')}</p>}
 

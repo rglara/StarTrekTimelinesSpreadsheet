@@ -3,7 +3,7 @@ import { Table, Rating } from 'semantic-ui-react'
 
 import { ModalCrewDetails } from './CrewDetails';
 
-import STTTools from './api';
+import STTTools from './STTTools';
 
 export class CrewTable extends React.Component {
     constructor(props) {

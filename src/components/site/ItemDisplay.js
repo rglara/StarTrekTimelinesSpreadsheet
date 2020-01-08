@@ -1,6 +1,6 @@
 import React from 'react'
 
-import STTTools from './api';
+import STTTools from './STTTools';
 import { CONFIG } from '../../api';
 
 export class ItemDisplay extends React.Component {

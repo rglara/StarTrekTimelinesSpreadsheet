@@ -4,7 +4,7 @@ import { Header, Popup, Modal, Grid, Icon } from 'semantic-ui-react'
 import { ItemDisplay } from './ItemDisplay';
 import { ItemSources } from './ItemSources';
 
-import STTTools from './api';
+import STTTools from './STTTools';
 import { CONFIG } from '../../api';
 import { parseRecipeDemands, estimateChronitonCost } from './utils';
 

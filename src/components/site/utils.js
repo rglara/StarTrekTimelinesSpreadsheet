@@ -1,4 +1,4 @@
-import STTTools from './api';
+import STTTools from './STTTools';
 
 export function parseRecipeDemands(recipeTree, archetype_id, count) {
     let equipment = STTTools.archetypeCache.find(a => a.id === archetype_id);
