@@ -198,7 +198,6 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 
 				<Dialog
 					hidden={this.state.hideErrorDialog}
-					onDismiss={() => { this.setState({ hideErrorDialog: true }); }}
 					dialogContentProps={{
 						type: DialogType.normal,
 						title: 'An error occured while loading data!',
@@ -208,7 +207,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 				>
 					<DialogFooter>
 						{/* <PrimaryButton onClick={() => { createIssue(false, this.state.errorMessage); }} text='Create bug report' /> */}
-						<DefaultButton onClick={() => { this.setState({ hideErrorDialog: true }); }} text='Cancel' />
+						<DefaultButton onClick={() => { this._onLogout(); }} text='Cancel' />
 					</DialogFooter>
 				</Dialog>
 
@@ -523,7 +522,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 		this.setState({ darkTheme: false }, () => { this._onSwitchTheme(true); });
 
 		STTApi.refreshEverything(true);
-        this.setState({ showLoginDialog: true, dataLoaded: false, captainName: '', spinnerLabel: 'Loading...' });
+		this.setState({ showLoginDialog: true, hideErrorDialog: true, dataLoaded: false, captainName: '', spinnerLabel: 'Loading...' });
 
         this.props.onLogout();
 	}
@@ -535,7 +534,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 	}
 
 	_onDataError(reason: any) {
-		this.setState({ errorMessage: reason, hideErrorDialog: false });
+		this.setState({ showSpinner: false, errorMessage: reason, hideErrorDialog: false });
 	}
 
 	async _onDataFinished() {
