@@ -36,26 +36,39 @@ export const SkillCell = (props: {
  * Show all nonzero crew skills by icon or text
  */
 export const CrewSkills = (props: {
-	crew: CrewData,
-	useIcon?: boolean,
-	hideProf?: boolean,
-	asVoyScore?: boolean,
-	addVoyTotal?: boolean
-	addScore?: number
+	crew: CrewData;
+	/** Use icon or text for skill types */
+	useIcon?: boolean;
+	/** Hide proficiencies */
+	hideProf?: boolean;
+	/** Show skill numbers as voyage score computed values, otherwise as base + prof */
+	asVoyScore?: boolean;
+	/** Add voyage total to the record */
+	addVoyTotal?: boolean;
+	/** If exists, an additional value added at the end of the record */
+	addScore?: number;
+	/** If true, line break after rarity stars, otherwise a space */
+	starBreakSpace?: boolean;
+	/** If true (and addVoyTotal is true), line break before voyage score, otherwise a space */
+	voyBreakSpace?: boolean;
 }) => {
 	const crew = props.crew;
+	let firstDash = props.starBreakSpace ? true : false;
 	return <span key={crew.id}>
-		<RarityStars max={crew.max_rarity} value={crew.rarity} asSpan={true} colored={true} />
-		&nbsp;
+		<RarityStars max={crew.max_rarity} value={crew.rarity} asSpan={true} colored={true} />{
+			props.starBreakSpace ? <br/> : <>&nbsp;</>
+		}
 		{ Object.keys(CONFIG.SKILLS).map(s => {
 			// BorrowedCrewDTO and CrewDTO will have missing skills or unknown voy skills
 			if (!crew.skills[s] || crew.skills[s].voy === undefined || crew.skills[s].voy <= 0) {
 				return <span key={s} />;
 			}
+			let wasFirstDash = firstDash;
+			firstDash = false;
 			return <span key={s}>{
 				props.useIcon ?
 					<img src={CONFIG.SPRITES['icon_' + s].url} height={18} />
-					: <span>{' - '}{CONFIG.SKILLS_SHORT[s]}{' '}</span>
+					: <span>{wasFirstDash ? '' : ' - '}{CONFIG.SKILLS_SHORT[s]}{' '}</span>
 				}
 				{
 					props.asVoyScore ?
@@ -67,7 +80,7 @@ export const CrewSkills = (props: {
 				</span>;
 		})}
 		{
-			props.addVoyTotal && <span key='v'>{' - '}
+			props.addVoyTotal && <span key='v'>{props.voyBreakSpace ? <br/> : ' - '}
 				Voy {Object.keys(CONFIG.SKILLS).map(s => crew.skills[s].voy).reduce((acc,c) => acc + c, 0)}
 			</span>
 		}

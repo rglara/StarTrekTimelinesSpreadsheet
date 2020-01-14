@@ -479,7 +479,7 @@ const VoyageCurrentCrew = (props: {
                                           <img src={crew.iconUrl} height={20} />{' '}
                                           &nbsp; {crew.name}
                                        </span>}
-                                       content={<CrewSkills crew={crew} useIcon={true} asVoyScore={true} addVoyTotal={true} />}
+                                       content={<CrewSkills crew={crew} useIcon={false} asVoyScore={true} addVoyTotal={true} />}
                                     />
                                  </span>
                               </li>

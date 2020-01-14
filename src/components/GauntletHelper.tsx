@@ -651,7 +651,7 @@ const GauntletSelectCrew = (props: {
 				imageUrl={crew.iconUrl}
 				text={crew.name}
 				secondaryText={crew.short_name}
-				tertiaryText={formatCrewStatsVoy(crew)}
+				tertiaryText={formatCrewStatsVoy(crew)} //FIXME: only need to show proficiencies, not voy scores
 				size={PersonaSize.large}
 				presence={(crew.frozen === 0) ? PersonaPresence.online : PersonaPresence.away} />
 

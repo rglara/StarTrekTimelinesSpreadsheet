@@ -1,7 +1,7 @@
 import React from 'react';
 import { Message, Dropdown, Header, Select, Checkbox, Form, Image, Card, Button, DropdownItem, DropdownItemProps } from 'semantic-ui-react';
 
-import STTApi, { CONFIG, formatCrewStatsVoy, bonusCrewForCurrentEvent, formatTimeSeconds, download, RarityStars, CrewSkills } from '../../api';
+import STTApi, { CONFIG, bonusCrewForCurrentEvent, formatTimeSeconds, download, CrewSkills } from '../../api';
 import { CrewData, VoyageDTO } from '../../api/DTO';
 import { bestVoyageShip, startVoyage } from './VoyageTools';
 import { calculateVoyage, exportVoyageData, CalcChoice, cleanCrewName, CalcRemainingOptions, estimateVoyageRemaining } from './voyageCalc';
@@ -562,8 +562,7 @@ const BestCrew = (props : {
 								{traitMatch ? <b>{traitDisp} (Match)</b> : traitDisp }
 							</Card.Meta>
 							<Card.Description>
-								<RarityStars max={entry.choice.max_rarity} value={entry.choice.rarity} colored={true} />
-								<div>{formatCrewStatsVoy(entry.choice)}</div>
+								<CrewSkills crew={entry.choice} useIcon={false} asVoyScore={true} addVoyTotal={true} starBreakSpace={true} voyBreakSpace={true} />
 							</Card.Description>
 						</Card.Content>
 						<Card.Content extra>
