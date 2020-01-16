@@ -27,7 +27,7 @@ export const VoyageLog = (props:{}) => {
    const [estimatedMinutesLeft, setEstimatedMinutesLeft] = React.useState<number | undefined>(undefined);
    //const [estimatedMinutesLeftRefill, setEstimatedMinutesLeftRefill] = React.useState(undefined as number | undefined);
    const [computingNativeEstimate, setComputingNativeEstimate] = React.useState<boolean>(false);
-   const computingNativeEstimateTimerRef = React.createRef<number | undefined>();
+   //const computingNativeEstimateTimerRef = React.createRef<number | undefined>();
    const [voyageRewards, setVoyageRewards] = React.useState<RewardDTO[] | undefined>(undefined);
    const [voyageExport, setVoyageExport] = React.useState<VoyageExportData | undefined>(undefined);
    const [indexedNarrative, setIndexedNarrative] = React.useState<IndexedNarrative | undefined>(undefined);

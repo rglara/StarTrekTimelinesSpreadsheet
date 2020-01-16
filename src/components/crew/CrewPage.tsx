@@ -10,11 +10,9 @@ import STTApi, { download } from '../../api';
 import { CrewData } from '../../api/DTO';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 
-export interface CrewPageProps {
+export const CrewPage = (props: {
     onCommandItemsUpdate?: (items: ICommandBarItemProps[]) => void;
-}
-
-export const CrewPage = (props: CrewPageProps) => {
+}) => {
     const [filterText, setFilterText] = React.useState('');
     const [showEveryone, setShowEveryone] = React.useState(false);
     const [showBuyback, setShowBuyback] = React.useState(false);

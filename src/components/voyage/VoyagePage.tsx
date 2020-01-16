@@ -14,7 +14,7 @@ export const VoyagePage = (props: VoyagePageProps) => {
       updateState({});
       updateCommandItems(); // when a voyage starts, command items need to update to show toggle
    }, []);
-   const [showCalcAnyway, setShowCalcAnyway] = React.useState(false);
+   const [showCalcAnyway, setShowCalcAnyway] = React.useState<boolean>(false);
 
    React.useEffect(() => updateCommandItems(), [showCalcAnyway]);
 
@@ -25,7 +25,7 @@ export const VoyagePage = (props: VoyagePageProps) => {
          if (activeVoyage) {
             props.onCommandItemsUpdate([
                {
-                  key: 'exportExcel',
+                  key: 'switchVoyDisplay',
                   name: showCalcAnyway ? 'Switch to log' : 'Switch to recommendations',
                   iconProps: { iconName: 'Switch' },
                   onClick: () => {

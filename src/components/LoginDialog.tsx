@@ -13,19 +13,37 @@ import STTApi from '../api';
 import { ipcRenderer } from 'electron';
 // #!endif
 
-export class LoginDialog extends React.Component {
-	constructor(props) {
+export interface LoginDialogProps {
+	onAccessToken: () => void;
+}
+
+export interface LoginDialogState {
+	hideDialog: boolean;
+	errorMessage?: string;
+	autoLogin: boolean;
+	showSpinner: boolean;
+	waitingForFacebook: boolean;
+	facebookImageUrl: string;
+	facebookStatus: string;
+	facebookAccessToken?: string;
+	facebookUserId?: string;
+	username: string;
+	password: string;
+}
+
+export class LoginDialog extends React.Component<LoginDialogProps, LoginDialogState> {
+	constructor(props: LoginDialogProps) {
 		super(props);
 		this.state = {
 			hideDialog: false,
-			errorMessage: null,
+			errorMessage: undefined,
 			autoLogin: true,
 			showSpinner: false,
 			waitingForFacebook: false,
 			facebookImageUrl: '',
 			facebookStatus: '',
-			facebookAccessToken: null,
-			facebookUserId: null,
+			facebookAccessToken: undefined,
+			facebookUserId: undefined,
 			username: '',
 			password: ''
 		};
@@ -60,23 +78,23 @@ export class LoginDialog extends React.Component {
 					<TextField
 						label='Username (e-mail)'
 						value={this.state.username}
-						onChange={(ev, value) => { this.setState({ username: value }) }}
+						onChange={(ev, value) => { this.setState({ username: value ?? ''}) }}
 					/>
 
 					<TextField
 						label='Password'
 						value={this.state.password}
 						type='password'
-						onChange={(ev, value) => { this.setState({ password: value }) }}
+						onChange={(ev, value) => { this.setState({ password: value ?? ''}) }}
 					/>
 				</PivotItem>
 				{/* #!if ENV === 'electron' */}
 				<PivotItem linkText='Facebook'>
-					<center style={{ marginTop: '5px' }} >
+					<div style={{ marginTop: '5px', alignContent: 'center' }} >
 						<PrimaryButton onClick={this._connectFacebook} text='Connect with Facebook' disabled={this.state.waitingForFacebook} />
 						<Image src={this.state.facebookImageUrl} height={200} />
 						<p>{this.state.facebookStatus}</p>
-					</center>
+					</div>
 				</PivotItem>
 				{/* #!endif */}
 			</Pivot>
@@ -84,7 +102,7 @@ export class LoginDialog extends React.Component {
 			<Checkbox
 				label='Stay logged in'
 				checked={this.state.autoLogin}
-				onChange={(ev, checked) => { this.setState({ autoLogin: checked }); }}
+				onChange={(ev, checked) => { this.setState({ autoLogin: checked ?? false }); }}
 			/>
 
 			<DialogFooter>
@@ -102,8 +120,10 @@ export class LoginDialog extends React.Component {
 			waitingForFacebook: true
 		});
 
-		ipcRenderer.on('fb_access_token', function (event, data) {
-			this.setState({
+		const thisLD = this;
+
+		ipcRenderer.on('fb_access_token', function (event:any, data:any) {
+			thisLD.setState({
 				waitingForFacebook: false,
 				facebookStatus: 'Authenticated with Facebook as ' + data.name + '. Press Login to connect to STT!',
 				facebookImageUrl: data.picture.data.url,
@@ -112,9 +132,9 @@ export class LoginDialog extends React.Component {
 			});
 		}.bind(this));
 
-		ipcRenderer.on('fb_closed', function (event, data) {
-			if (this.state.waitingForFacebook) {
-				this.setState({
+		ipcRenderer.on('fb_closed', function (event: any, data: any) {
+			if (thisLD.state.waitingForFacebook) {
+				thisLD.setState({
 					waitingForFacebook: false,
 					facebookStatus: 'Not authenticated with Facebook!'
 				});
@@ -126,10 +146,10 @@ export class LoginDialog extends React.Component {
 	// #!endif
 
 	_closeDialog() {
-		this.setState({ showSpinner: true, errorMessage: null });
+		this.setState({ showSpinner: true, errorMessage: undefined });
 
 		let promiseLogin;
-		if (this.state.facebookAccessToken) {
+		if (this.state.facebookAccessToken && this.state.facebookUserId) {
 			promiseLogin = STTApi.loginWithFacebook(this.state.facebookAccessToken, this.state.facebookUserId, this.state.autoLogin);
 		}
 		else {
