@@ -324,7 +324,7 @@ export const VoyageLog = (props:{}) => {
 
          // Group by index
          let indexedNarrative: IndexedNarrative = voyageNarrative.reduce((r, a) => {
-            r[a.index] = r[a.index] || [];
+            r[a.index] = r[a.index] ?? [];
             r[a.index].push(a);
             return r;
          }, Object.create(null) as IndexedNarrative);
@@ -403,7 +403,7 @@ export const VoyageLog = (props:{}) => {
          return;
       }
       const assignedCrew: number[] = voyage.crew_slots.map((slot) => slot.crew.id);
-      const assignedRoster: CrewData[] = STTApi.roster.filter(crew => assignedCrew.includes(crew.crew_id || crew.id));
+      const assignedRoster: CrewData[] = STTApi.roster.filter(crew => assignedCrew.includes(crew.crew_id ?? crew.id));
 
       //TODO: need to do any validation here to prevent the native code from crashing
       if (assignedRoster.length == 0) {
