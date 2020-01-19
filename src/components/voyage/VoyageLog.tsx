@@ -3,11 +3,11 @@ import Moment from 'moment';
 import { Button, Icon, Popup } from 'semantic-ui-react';
 import ReactTable, { SortingRule } from 'react-table';
 
-import STTApi, { CONFIG, RarityStars, formatTimeSeconds, CollapsibleSection, download, CrewSkills } from '../../api';
+import STTApi, { CONFIG, RarityStars, formatTimeSeconds, CollapsibleSection, download, CrewSkills, getItemDetailsLink } from '../../api';
 import { loadVoyage, recallVoyage, resolveDilemma, VOYAGE_AM_DECAY_PER_MINUTE } from './VoyageTools';
 import { estimateVoyageRemaining, CalcRemainingOptions } from './voyageCalc';
 import { VoyageLogEntry } from './VoyageLogEntry';
-import { VoyageNarrativeDTO, VoyageDTO, CrewData, RewardDTO, CrewDTO, VoyageExportData } from '../../api/DTO';
+import { VoyageNarrativeDTO, VoyageDTO, CrewData, RewardDTO, VoyageExportData } from '../../api/DTO';
 import { CrewImageData } from '../images/ImageProvider';
 
 type IndexedNarrative = {
@@ -144,7 +144,7 @@ export const VoyageLog = (props:{}) => {
             Cell: (p: any) => {
                let item = p.original;
                return (
-                  <a href={'https://stt.wiki/wiki/' + item.full_name.split(' ').join('_')} target='_blank'>
+                  <a href={getItemDetailsLink(item)} target='_blank'>
                      {item.full_name}
                   </a>
                );

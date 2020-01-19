@@ -30,7 +30,7 @@ import { NeededEquipmentClass, EquipNeedFilter, UnparsedEquipment, EquipNeed } f
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
-import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO } from './DTO';
+import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO } from './DTO';
 
 export class STTApiClass {
 	private _accessToken: string | undefined;
@@ -539,7 +539,7 @@ export class STTApiClass {
 				}
 
                 if (data.shuttle) {
-                    this._playerData!.player.character.shuttle_adventures.forEach((adv: PlayerShuttleAdventureDTO) => {
+                    this._playerData!.player!.character.shuttle_adventures.forEach((adv: PlayerShuttleAdventureDTO) => {
                         if (adv.shuttles[0].id === data.shuttle.id) {
                             adv.shuttles[0] = mergeDeep(adv.shuttles[0], data.shuttle);
                         }

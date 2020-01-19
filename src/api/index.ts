@@ -13,6 +13,7 @@ export { bonusCrewForCurrentEvent } from './EventTools';
 export { calculateQuestRecommendations } from './MissionCrewSuccess';
 export { formatTimeSeconds } from './MiscTools';
 export { refreshAllFactions, loadFactionStore } from './FactionTools';
+export { getCrewDetailsLink, getItemDetailsLink } from './LinkProvider';
 import CONFIG from "./CONFIG";
 export { CONFIG }
 

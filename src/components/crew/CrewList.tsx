@@ -16,7 +16,7 @@ import { SkillCell } from './SkillCell';
 import { ActiveCrewDialog } from './ActiveCrewDialog';
 import { ItemDisplay } from '../ItemDisplay';
 
-import STTApi, { CONFIG, RarityStars } from '../../api';
+import STTApi, { CONFIG, RarityStars, getCrewDetailsLink } from '../../api';
 import { CrewData, ItemArchetypeDTO, CrewActionChargePhaseDTO } from '../../api/DTO';
 import { ReplicatorDialog } from '../replicator/ReplicatorDialog';
 
@@ -274,7 +274,7 @@ export const CrewList = (props: {
 				accessor: 'short_name',
 				Cell: (cell) => {
 					if (cell && cell.original) {
-						return <a href={'https://stt.wiki/wiki/' + cell.original.name.split(' ').join('_')} target='_blank'>{cell.original.short_name}</a>;
+						return <a href={getCrewDetailsLink(cell.original)} target='_blank'>{cell.original.short_name}</a>;
 					} else {
 						return <span />;
 					}

@@ -1,9 +1,8 @@
 import React from 'react';
 
-import { Popup, List } from 'semantic-ui-react';
 import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
 import ReactTable, { Column, SortingRule } from 'react-table';
-import STTApi, { formatTimeSeconds, CONFIG, RarityStars } from '../../api';
+import STTApi, { formatTimeSeconds, CONFIG, RarityStars, getCrewDetailsLink } from '../../api';
 import { EventDTO, CrewData } from "../../api/DTO";
 import { GalaxyEvent } from './EventHelperGalaxy';
 import { ShuttleEvent } from './EventHelperShuttle';
@@ -169,7 +168,7 @@ export const EventCrewBonusTable = (props: EventCrewBonusTableProps) => {
             accessor: 'short_name',
             Cell: (cell) => {
                if (cell && cell.original) {
-                  return <a href={'https://stt.wiki/wiki/' + cell.original.name.split(' ').join('_')} target='_blank'>{cell.original.short_name}</a>;
+                  return <a href={getCrewDetailsLink(cell.original)} target='_blank'>{cell.original.short_name}</a>;
                } else {
                   return <span />;
                }

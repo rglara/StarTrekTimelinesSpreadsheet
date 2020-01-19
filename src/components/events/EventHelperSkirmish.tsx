@@ -4,7 +4,7 @@ import { Icon } from 'office-ui-fabric-react/lib/Icon';
 import { Label, Popup, List } from 'semantic-ui-react';
 import ReactTable, { Column } from 'react-table';
 import { EventDTO, EVENT_TYPES, CrewData } from "../../api/DTO";
-import STTApi, { RarityStars, CONFIG } from '../../api';
+import STTApi, { RarityStars, CONFIG, getCrewDetailsLink } from '../../api';
 
 type CrewBonus = {
    iconUrl: string,
@@ -166,7 +166,7 @@ const getColumns = () => {
          resizable: true,
          accessor: 'short_name',
          Cell: (cell) => {
-            return <a href={'https://stt.wiki/wiki/' + cell.original.name.split(' ').join('_')} target='_blank'>{cell.original.short_name}</a>;
+            return <a href={getCrewDetailsLink(cell.original)} target='_blank'>{cell.original.short_name}</a>;
          },
       },{
          id: 'name',
