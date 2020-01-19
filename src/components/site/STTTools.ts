@@ -1,6 +1,18 @@
 import STTApi from '../../api';
+import { CrewDTO } from '../../api/DTO';
 
 class STTToolsClass {
+    private _allcrew : CrewDTO[];
+    private _archetypeCache: any[];
+    private _platformConfigCache: undefined;
+    private _configCache: undefined;
+    private _cryoCollectionsCache: undefined;
+    private _missionsCache: undefined;
+
+    constructor() {
+        this._allcrew = [];
+    }
+
     get assetProvider() {
         return STTApi.imageProvider;
     }
@@ -40,7 +52,7 @@ class STTToolsClass {
         ]).then(() => {
             // Fix trait names
             this.allcrew.forEach(crew => {
-                crew.traits_named = crew.traits.map(trait => this.platformConfigCache.config.trait_names[trait]);
+                //crew.traits_named = crew.traits.map(trait => this.platformConfigCache.config.trait_names[trait]);
             });
         });
     }
@@ -108,10 +120,10 @@ class STTToolsClass {
             throw new Error(`Network error; status ${response.status}; reply ${data}.`);
         }
 
-        let allcrewRaw = await response.json();
+        let allcrewRaw : CrewDTO[] = await response.json();
 
-        let roster = [];
-        let dupeChecker = new Set();
+        let roster: CrewDTO[] = [];
+        let dupeChecker = new Set<string>();
         allcrewRaw.forEach(crew => {
             // Sometimes duplicates can sneak into our allcrew list, filter them out
             if (dupeChecker.has(crew.symbol)) {

@@ -34,6 +34,6 @@ export const ItemPage = (props: ItemPageProps) => {
             onChange={(ev, newValue) => setFilterText(newValue || '')}
             onSearch={(newValue) => setFilterText(newValue)}
         />
-        <ItemList data={STTApi.playerData.character.items} filterText={filterText} />
+        <ItemList data={STTApi.items} filterText={filterText} />
     </div>;
 }

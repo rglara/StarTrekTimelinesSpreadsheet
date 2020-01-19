@@ -7,25 +7,8 @@ import STTApi, { CONFIG, RarityStars, formatTimeSeconds, CollapsibleSection, dow
 import { loadVoyage, recallVoyage, resolveDilemma, VOYAGE_AM_DECAY_PER_MINUTE } from './VoyageTools';
 import { estimateVoyageRemaining, CalcRemainingOptions } from './voyageCalc';
 import { VoyageLogEntry } from './VoyageLogEntry';
-import { VoyageNarrativeDTO, VoyageDTO, CrewData, RewardDTO } from '../../api/DTO';
+import { VoyageNarrativeDTO, VoyageDTO, CrewData, RewardDTO, CrewDTO, VoyageExportData } from '../../api/DTO';
 import { CrewImageData } from '../images/ImageProvider';
-
-type VoyageExportData = {
-   id: number;
-   skills: any;
-   skillAggregates: any[];
-   stats: {
-      skillChecks: {
-         times: number[];
-         average: number;
-      };
-      rewards: {
-         times: number[];
-         average: number;
-      };
-   };
-   narrative: VoyageNarrativeDTO[],
-}
 
 type IndexedNarrative = {
    [index: number]: VoyageNarrativeDTO[]
@@ -43,7 +26,8 @@ export const VoyageLog = (props:{}) => {
    const [shipName, setShipName] = React.useState<string | undefined>(undefined);
    const [estimatedMinutesLeft, setEstimatedMinutesLeft] = React.useState<number | undefined>(undefined);
    //const [estimatedMinutesLeftRefill, setEstimatedMinutesLeftRefill] = React.useState(undefined as number | undefined);
-   const [nativeEstimate, setNativeEstimate] = React.useState<boolean | undefined>(undefined);
+   const [computingNativeEstimate, setComputingNativeEstimate] = React.useState<boolean>(false);
+   const computingNativeEstimateTimerRef = React.createRef<number | undefined>();
    const [voyageRewards, setVoyageRewards] = React.useState<RewardDTO[] | undefined>(undefined);
    const [voyageExport, setVoyageExport] = React.useState<VoyageExportData | undefined>(undefined);
    const [indexedNarrative, setIndexedNarrative] = React.useState<IndexedNarrative | undefined>(undefined);
@@ -83,7 +67,7 @@ export const VoyageLog = (props:{}) => {
          <VoyageState
             voyage={voyage}
             estimatedMinutesLeft={estimatedMinutesLeft}
-            nativeEstimate={nativeEstimate}
+            computingNativeEstimate={computingNativeEstimate}
             recall={recall} />
          <VoyageDilemma voyage={voyage} reload={reloadVoyageState} />
          <p>
@@ -254,6 +238,7 @@ export const VoyageLog = (props:{}) => {
             id: voyage.id,
             skills: voyage.skills,
             skillAggregates: [],
+            slots: STTApi.playerData.character.voyage_descriptions[0].crew_slots,
             stats: {
                skillChecks: {
                   times: [],
@@ -403,7 +388,6 @@ export const VoyageLog = (props:{}) => {
          //setEstimatedMinutesLeftRefill(voyage.hp / VOYAGE_AM_DECAY_PER_MINUTE);
          setIndexedNarrative(indexedNarrative);
          setSkillChecks(skillChecks);
-         setNativeEstimate(false);
          setVoyageRewards(voyageRewards);
          setVoyageExport(voyageExport);
 
@@ -444,9 +428,16 @@ export const VoyageLog = (props:{}) => {
          assignedCrew
       };
 
+      setComputingNativeEstimate(true);
+
+      // after 5s, clear the spinner regardless of completion
+      setTimeout(() => {
+         setComputingNativeEstimate(false);
+      }, 5000);
+
       estimateVoyageRemaining(options, (estimate) => {
          setEstimatedMinutesLeft(estimate);
-         setNativeEstimate(true);
+         setComputingNativeEstimate(false);
 
          if (!voyage || !voyage.max_hp) {
             return;
@@ -528,7 +519,7 @@ const VoyageCurrentCrew = (props: {
 const VoyageState = (props: {
    voyage?: VoyageDTO;
    estimatedMinutesLeft?: number;
-   nativeEstimate?: boolean;
+   computingNativeEstimate: boolean;
    recall: () => void;
 }) => {
    if (!props.voyage) {
@@ -579,7 +570,7 @@ const VoyageState = (props: {
             <div className='ui blue label'>
                Estimated time left: <b>{formatTimeSeconds(props.estimatedMinutesLeft * 60)}</b>
                {' '}at {Moment().add(props.estimatedMinutesLeft, 'm').format('h:mma')}
-               {' '}{!props.nativeEstimate && <i className='spinner loading icon' />}
+               {' '}{props.computingNativeEstimate && <i className='spinner loading icon' />}
             </div>
 
             <button className='ui mini button' onClick={() => props.recall()}>

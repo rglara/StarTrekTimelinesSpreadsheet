@@ -463,6 +463,51 @@ export interface VoyageDescriptionDTO {
    symbol: string; // unused?
 }
 
+export interface VoyageExportData {
+   id: number;
+   skills: { primary_skill: string; secondary_skill: string; };
+   slots: {
+      name: string;
+      skill: string;
+      symbol: string;
+      trait: string;
+   }[];
+   skillAggregates: SkillAggregate[];
+   stats: {
+      skillChecks: {
+         times: number[];
+         average: number;
+      };
+      rewards: {
+         times: number[];
+         average: number;
+      };
+   };
+   narrative: VoyageNarrativeDTO[];
+   /** Used in data analytics, not export */
+   totalTimeSec?: number;
+}
+
+export interface SkillAggregate {
+   skill: string;
+   core: number;
+   min: number;
+   max: number;
+   score: number;
+   attempts: number;
+   passed: number;
+   passedPercent: number;
+   attemptsPercent: number;
+}
+
+export interface PlayerResponseDTO {
+   player?: PlayerDTO;
+   item_archetype_cache: {
+      archetypes: ItemArchetypeDTO[];
+      id: number;
+   };
+};
+
 export interface PlayerDTO {
    character: PlayerCharacterDTO;
    chats: any;
@@ -765,13 +810,15 @@ export interface FactionDTO {
    reputation_icon: ImageDataDTO;
    reputation_item_icon: ImageDataDTO;
    shop_layout: string;
-   shuttle_mission_rewards: (PotentialRewardDTO | RewardDTO)[];
+   //These are populated when faction details are refreshed/fetched
+   shuttle_mission_rewards?: (PotentialRewardDTO | RewardDTO)[];
    shuttle_token_id: number;
    shuttle_token_preview_item: any;
+   //These are populated when faction store details are refreshed/fetched
+   storeItems?: FactionStoreItemDTO[];
 
    //HACK: added by app
    iconUrl?: string;
-   storeItems?: FactionStoreItemDTO[];
 }
 
 export interface FactionStoreItemDTO {
@@ -900,7 +947,7 @@ export interface ItemArchetypeSourceDTO {
    mission: number;
    name: string;
    place: string;
-   type: number; // 0: disputes, 1: faction transmission, 2: ship battle; others?
+   type: number; // 0: disputes, 1: faction transmission, 2: ship battle, 3: dispute crit reward; others?
 }
 
 export interface ItemDTO {
@@ -914,12 +961,27 @@ export interface ItemDTO {
    rarity: number;
    symbol: string;
    type: number;
+}
 
-   //HACK: added by app
-   iconUrl?: string;
-   //typeName?: string;
+// Used internaly by the app; not a DTO
+export interface ItemData extends ItemDTO {
+   iconUrl: string;
    cadetable?: string;
-   factions?: string;
+   factions: string[];
+   //typeName?: string;
+
+   sources: ItemDataSource[]
+}
+
+export interface ItemDataSource {
+   mission?: MissionDTO;
+   quest?: MissionQuestDTO;
+   questMastery?: MissionQuestMasteryLevelDTO;
+   cost?: number; // chrons
+   chance: number;
+   quotient: number;
+   title: string;
+   type: string; // 'faction' | 'dispute' | 'ship' | 'cadet'
 }
 
 export interface CryoCollectionDTO {

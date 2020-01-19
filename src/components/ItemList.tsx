@@ -4,17 +4,18 @@ import ReactTable, { SortingRule, Column } from 'react-table';
 import { ItemDisplay } from './ItemDisplay';
 import { RarityStars } from './RarityStars';
 import STTApi, { CONFIG } from '../api';
-import { PotentialRewardDTO, RewardDTO, ItemDTO, ItemArchetypeDTO } from '../api/DTO';
+import { PotentialRewardDTO, RewardDTO, ItemData, ItemArchetypeDTO, ItemDataSource } from '../api/DTO';
 import { ReplicatorDialog } from './replicator/ReplicatorDialog';
+import { HoverCard } from 'office-ui-fabric-react/lib/HoverCard';
 
 export interface ItemListProps {
-	data: ItemDTO[];
+	data: ItemData[];
 	filterText?: string;
 }
 
 export interface ItemListState {
-	columns: Column<ItemDTO>[];
-	items: ItemDTO[];
+	columns: Column<ItemData>[];
+	items: ItemData[];
 	sorted: SortingRule[];
 	//FIXME: can't open the same item twice, so need to add and handle onClose for the dialog
 	replicatorTarget?: ItemArchetypeDTO;
@@ -24,58 +25,6 @@ export interface ItemListState {
 export class ItemList extends React.Component<ItemListProps, ItemListState> {
 	constructor(props: ItemListProps) {
 		super(props);
-
-		let rewardItemIds = new Map<string, Set<number>>();
-		const scanRewards = (name: string, potential_rewards: (PotentialRewardDTO | RewardDTO)[]) => {
-			potential_rewards.forEach(reward => {
-				if ((reward as PotentialRewardDTO).potential_rewards) {
-					scanRewards(name, (reward as PotentialRewardDTO).potential_rewards);
-				} else if (reward.type === 2) {
-					rewardItemIds.get(name)!.add((reward as RewardDTO).id);
-				}
-			});
-		};
-
-		STTApi.playerData.character.factions.forEach(f => {
-			rewardItemIds.set(f.name, new Set());
-			scanRewards(f.name, f.shuttle_mission_rewards);
-		});
-
-		//FIXME: this should be done on init, not here on list render
-		this.props.data.forEach(item => {
-			let val = STTApi.getEquipmentManager().getCadetableItems().get(item.archetype_id);
-			item.cadetable = '';
-			item.factions = '';
-			if (val) {
-				val.forEach(v => {
-					let name = v.mission.episode_title;
-					let mastery = v.masteryLevel;
-
-					let questName = v.quest.action;
-					let questIndex = null;
-					v.mission.quests.forEach((q,i) => {
-						if (q.id === v.quest.id)
-							questIndex = i + 1;
-					});
-
-					if (item.cadetable)
-						item.cadetable += ' | ';
-					item.cadetable += name + ' : ' + questIndex + ' : ' + questName + ' : ' + CONFIG.MASTERY_LEVELS[mastery].name;
-				});
-			}
-
-			let iter = rewardItemIds.entries();
-			for (let n = iter.next(); !n.done; n = iter.next()) {
-				let e = n.value;
-				if (e[1].has(item.archetype_id)) {
-					if (item.factions)
-						item.factions += ' | ';
-					item.factions += e[0] + " ";
-				}
-				n = iter.next();
-			}
-		});
-
 
 		this.state = {
 			items: this.props.data,
@@ -168,6 +117,28 @@ export class ItemList extends React.Component<ItemListProps, ItemListState> {
 					}
 				},
 				{
+					id: 'sources',
+					Header: 'Sources',
+					minWidth: 50,
+					maxWidth: 50,
+					resizable: true,
+					accessor: 'sources',
+					Cell: (cell) => {
+						return <HoverCard id="nameHoverCard"
+							expandingCardProps={{
+								compactCardHeight: 180,
+								expandedCardHeight: 420,
+								renderData: cell.original,
+								//onRenderExpandedCard: _onRenderExpandedCard,
+								onRenderCompactCard: this._onRenderCompactCard,
+								styles: { root: { width: '520px' } }
+							}}
+							instantOpenOnClick={true}>
+							<span>{cell.original.sources.length}</span>
+						</HoverCard>;
+					},
+				},
+				{
 					id: 'image',
 					Header: 'Image',
 					minWidth: 250,
@@ -189,7 +160,12 @@ export class ItemList extends React.Component<ItemListProps, ItemListState> {
 					minWidth: 250,
 					maxWidth: 450,
 					resizable: true,
-					accessor: 'cadetable'
+					accessor: 'cadetable',
+					Cell: (p) => {
+						let item: ItemData = p.original;
+						return item.sources.filter(s => s.type === 'cadet')
+							.map((s, i, all) => s.title + (i == all.length-1 ? '' : ', '));
+					}
 				},
 				{
 					id: 'faction',
@@ -197,10 +173,41 @@ export class ItemList extends React.Component<ItemListProps, ItemListState> {
 					minWidth: 250,
 					maxWidth: 450,
 					resizable: true,
-					accessor: 'factions'
+					accessor: 'factions',
+					Cell: (p) => {
+						let item: ItemData = p.original;
+						return item.sources.filter(s => s.type === 'faction')
+							.map((s, i, all) => s.title + (i == all.length - 1 ? '' : ', '));
+					}
 				}
 			]
 		};
+	}
+
+	_onRenderCompactCard(item: ItemData) {
+		let fac = item.sources.filter(s => s.type === 'faction');
+		let cad = item.sources.filter(s => s.type === 'cadet');
+		let sp = item.sources.filter(s => s.type === 'ship').sort((a,b) => b.quotient - a.quotient);
+		let dis = item.sources.filter(s => s.type === 'dispute').sort((a, b) => b.quotient - a.quotient);
+		const row = (src: ItemDataSource) => <tr>{src.type} - {src.title}</tr>;
+
+		return <div className="ui items">
+			<div className="item">
+				<img src={item.iconUrl} height={40} />
+				<div className="content" style={{ padding: '12px' }}>
+					<div className="header">{item.name}</div>
+					<div className="description">Sources:
+					<table><tbody>
+							{ fac.map(row) }
+							{ cad.map(row)}
+							{sp.map(row)}
+							{dis.map(row)}
+					</tbody>
+					</table>
+					</div>
+				</div>
+			</div>
+		</div>;
 	}
 
 	render() {
@@ -233,36 +240,35 @@ export class ItemList extends React.Component<ItemListProps, ItemListState> {
 		);
 	}
 
-	_filterItem(item: ItemDTO, searchString: string): boolean {
-		return searchString.split(' ').every(text => {
-			// search the name first
-			if (item.name.toLowerCase().indexOf(text) > -1) {
-				return true;
-			}
+	_filterItem(item: ItemData, searchString: string): boolean {
+		return searchString.split(';').some(segment => {
+			if (segment.trim().length == 0) return false;
+			return segment.split(' ').every(text => {
+				// search the name first
+				if (item.name.toLowerCase().indexOf(text) > -1) {
+					return true;
+				}
 
-			// now search the traits
-			if (item.symbol && item.symbol.toLowerCase().indexOf(text) > -1) {
-				return true;
-			}
+				// now search the traits
+				if (item.symbol && item.symbol.toLowerCase().indexOf(text) > -1) {
+					return true;
+				}
 
-			// now search the raw traits
-			if (item.flavor && item.flavor.toLowerCase().indexOf(text) > -1) {
-				return true;
-			}
+				// now search the raw traits
+				if (item.flavor && item.flavor.toLowerCase().indexOf(text) > -1) {
+					return true;
+				}
 
-			if (item.icon && item.icon.file && item.icon.file.toLowerCase().indexOf(text) > -1) {
-				return true;
-			}
+				if (item.icon && item.icon.file && item.icon.file.toLowerCase().indexOf(text) > -1) {
+					return true;
+				}
 
-			if (item.cadetable && item.cadetable.toLowerCase().indexOf(text) > -1) {
-				return true;
-			}
+				if (item.sources.filter(s => s.title.toLowerCase().indexOf(text) > -1).length > 0) {
+					return true;
+				}
 
-			if (item.factions && item.factions.toLowerCase().indexOf(text) > -1) {
-				return true;
-			}
-
-			return false;
+				return false;
+			});
 		});
 	}
 

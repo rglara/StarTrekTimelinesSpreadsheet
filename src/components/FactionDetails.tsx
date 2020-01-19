@@ -73,8 +73,11 @@ const FactionDisplay = (props:FactionDisplayProps) => {
 	const [reputationIconUrl, setReputationIconUrl] = React.useState('');
 	const [showSpinner, setShowSpinner] = React.useState(true);
 
+	//TODO: this could be partially looked up from STTApi.items instead of recursively scanned here (but only for inventory items, not for those not in inventory)
 	let rewardItemIds = new Set();
-	const scanRewards = (potential_rewards: (PotentialRewardDTO | RewardDTO)[]) => {
+	const scanRewards = (potential_rewards?: (PotentialRewardDTO | RewardDTO)[]) => {
+		if (!potential_rewards)
+			return;
 		potential_rewards.forEach((reward: any) => {
 			if (reward.potential_rewards) {
 				scanRewards(reward.potential_rewards);
@@ -155,7 +158,7 @@ const FactionDisplay = (props:FactionDisplayProps) => {
 		return 'Unknown';
 	}
 
-	let token = STTApi.playerData.character.items.find(item => item.archetype_id === props.faction.shuttle_token_id);
+	let token = STTApi.items.find(item => item.archetype_id === props.faction.shuttle_token_id);
 	let tokens = token ? token.quantity : 0;
 
 	return (

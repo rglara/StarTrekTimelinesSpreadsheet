@@ -30,12 +30,12 @@ import { NeededEquipmentClass, EquipNeedFilter, UnparsedEquipment, EquipNeed } f
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
-import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, PlayerShuttleAdventureDTO } from './DTO';
+import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO } from './DTO';
 
 export class STTApiClass {
 	private _accessToken: string | undefined;
 	private _net: NetworkFetch;
-	private _playerData?: { player: PlayerDTO; item_archetype_cache: { archetypes: ItemArchetypeDTO[]; id: number; }; };
+	private _playerData?: PlayerResponseDTO;
 	private _starbaseData: {
 		starbase_rooms: FleetStarbaseRoomDTO[];
 		core?: {
@@ -82,6 +82,7 @@ export class STTApiClass {
 		slabel: string;
 	};
 	public roster: CrewData[];
+	public items: ItemData[];
 	public ships: ShipDTO[];
 	public missions: MissionDTO[];
 	public missionSuccess!: IChallengeSuccess[];
@@ -140,6 +141,7 @@ export class STTApiClass {
 		this.fleetData = undefined;
 		this._fleetMemberInfo = { members: [], squads: [] };
 		this.roster = [];
+		this.items = [];
 		this.ships = [];
 		this.missions = [];
 		this.missionSuccess = [];
@@ -190,7 +192,7 @@ export class STTApiClass {
 	}
 
 	get playerData(): PlayerDTO {
-		return this._playerData!.player;
+		return this._playerData!.player!;
 	}
 
 	get itemArchetypeCache(): { archetypes: ItemArchetypeDTO[]; } {
@@ -377,7 +379,7 @@ export class STTApiClass {
 	}
 
 	async loadPlayerData(): Promise<void> {
-		let data = await this.executeGetRequest('player');
+		let data : PlayerResponseDTO = await this.executeGetRequest('player');
 		if (data.player) {
 			this._playerData = data;
 
@@ -498,7 +500,7 @@ export class STTApiClass {
 
 	async refreshRoster(): Promise<void> {
 		// TODO: need to reload icon urls as well
-		this.roster = await buildCrewData(this._playerData!.player.character);
+		this.roster = await buildCrewData(this._playerData!.player!.character);
 	}
 
 	async applyUpdates(data: any): Promise<any[]> {
@@ -526,13 +528,13 @@ export class STTApiClass {
 				}
 
 				if (data.character) {
-					this._playerData!.player.character = mergeDeep(this._playerData!.player.character, data.character);
-                    this.refreshRoster();
+					this._playerData!.player!.character = mergeDeep(this._playerData!.player!.character, data.character);
+					this.itemRecount();
 				}
 
 				if (data.event) {
-					if(this._playerData!.player.character.events && this._playerData!.player.character.events.length === 1) {
-						this._playerData!.player.character.events[0] = mergeDeep(this._playerData!.player.character.events[0], data.event);
+					if(this._playerData!.player!.character.events && this._playerData!.player!.character.events.length === 1) {
+						this._playerData!.player!.character.events[0] = mergeDeep(this._playerData!.player!.character.events[0], data.event);
 					}
 				}
 
@@ -548,7 +550,7 @@ export class STTApiClass {
 				// For example, data.character.items, array with objects with just the id property in them
 
 				if (data.character) {
-					let pc :any = this._playerData!.player.character; // remove type info to allow object indexing
+					let pc :any = this._playerData!.player!.character; // remove type info to allow object indexing
 					for (let prop in data.character) {
 						if (Array.isArray(data.character[prop]) && Array.isArray(pc[prop])) {
 							for (let item of data.character[prop]) {
@@ -556,6 +558,7 @@ export class STTApiClass {
 							}
 						}
 					}
+					this.itemRecount();
 				} else if (
 					data.event &&
 					data.event.content.gather_pools &&
@@ -563,7 +566,7 @@ export class STTApiClass {
 					data.event.content.gather_pools[0].adventures &&
 					data.event.content.gather_pools[0].adventures.length === 1
 				) {
-					this._playerData!.player.character.events[0].content.gather_pools[0].adventures = this._playerData!.player.character.events[0].content.gather_pools[0].adventures.filter(
+					this._playerData!.player!.character.events[0].content.gather_pools[0].adventures = this._playerData!.player!.character.events[0].content.gather_pools[0].adventures.filter(
 						(itm) => itm.id !== data.event.content.gather_pools[0].adventures[0].id
 					);
 				} else {
@@ -611,5 +614,25 @@ export class STTApiClass {
 
 	getEquipmentManager() : NeededEquipmentClass {
 		return this._neededEquipment;
+	}
+
+	itemRecount() : void {
+		// for (let itemDTO of this._playerData!.player!.character.items) {
+		// 	let item = this.items.find(id => id.id === itemDTO.id);
+		// 	if (item) {
+		// 		item.quantity = itemDTO.quantity;
+		// 	}
+		// }
+
+		// If item is still here, update quantity; otherwise remove the item data
+		for (let item of [...this.items]) {
+			let dto = this._playerData!.player!.character.items.find(id => id.id === item.id);
+			if (dto && item.quantity !== dto.quantity) {
+				item.quantity = dto.quantity;
+			}
+			else if (!dto) {
+				this.items = this.items.filter(itemData => itemData.id !== item.id);
+			}
+		}
 	}
 }

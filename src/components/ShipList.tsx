@@ -11,7 +11,7 @@ export const ShipList = () => {
 	const [sorted, setSorted] = React.useState([{ id: 'name', desc: false },{id: 'sort_level', desc:false}] as SortingRule[]);
 	const [filterText, setFilterText] = React.useState<string>('');
 
-	let playerSchematics = STTApi.playerData.character.items.filter(item => item.type === 8);
+	let playerSchematics = STTApi.items.filter(item => item.type === 8);
 
 	interface ShipObj {
 		ship: ShipDTO;

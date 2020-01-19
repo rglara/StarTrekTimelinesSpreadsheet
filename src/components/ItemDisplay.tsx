@@ -1,23 +1,23 @@
 import React from 'react';
 import { Header } from 'semantic-ui-react';
 import STTApi, { CONFIG } from '../api';
-import { ItemDTO } from '../api/DTO';
+import { ItemDTO, ItemData } from '../api/DTO';
 
-export interface ItemDisplayProps {
+export const ItemDisplay = (props: {
     size: number;
     hideRarity?: boolean;
     rarity: number;
     maxRarity: number;
+    // May be supplied to display inventory quantity
     itemId?: number;
-    item?: ItemDTO;
+    // May be supplied to display inventory quantity
+    item?: ItemData;
     style?: any;
     src: string;
     sources?: any; // JSX element
     onClick?: () => void;
     onDoubleClick?: () => void;
-}
-
-export const ItemDisplay = (props: ItemDisplayProps) => {
+}) => {
     let borderWidth = Math.ceil(props.size / 34);
     let starSize = Math.floor(props.size / 6);
     let bottomStar = Math.floor(props.size / 23);
@@ -38,7 +38,7 @@ export const ItemDisplay = (props: ItemDisplayProps) => {
     if (props.itemId || props.item) {
         let have = props.item;
         if (!have && props.itemId) {
-            have = STTApi.playerData.character.items.find(item => item.archetype_id === props.itemId);
+            have = STTApi.items.find(item => item.archetype_id === props.itemId);
         }
         if (have && have.quantity > 0) {
             count = have.quantity;
