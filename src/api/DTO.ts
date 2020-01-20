@@ -202,6 +202,9 @@ export interface CrewData {
    voyage_score: number;
    gauntlet_score: number;
    skills: { [sk: string]: SkillData; };
+
+   bigbook_tier?: number;
+   in_portal?: boolean;
 }
 
 export interface BorrowedCrewDTO {

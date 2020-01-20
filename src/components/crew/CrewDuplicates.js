@@ -34,6 +34,13 @@ export class CrewDuplicates extends React.Component {
                     onClick: () => {
                         this._openConfirmationDialog();
                     }
+                }, {
+                    key: 'deselect',
+                    text: `Clear selection`,
+                    iconProps: { iconName: 'Clear' },
+                    onClick: () => {
+                        this._onSelectionChange(new Set());
+                    }
                 }]);
             }
         } else {
@@ -60,6 +67,18 @@ export class CrewDuplicates extends React.Component {
             if ((crew.level === 1) && (crew.rarity === 1)) {
                 // TODO: only if player already has it FFFE
                 selectedIds.add(crew.crew_id);
+            }
+        });
+
+        // Add "big book" tier
+        duplicates.forEach(crew => {
+            let bb = STTApi.bigbook.find(c => c.symbol === crew.symbol);
+            if (bb) {
+                crew.bigbook_tier = bb.bigbook_tier;
+                crew.in_portal = bb.in_portal;
+            } else {
+                crew.bigbook_tier = undefined;
+                crew.in_portal = undefined;
             }
         });
 

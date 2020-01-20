@@ -7,7 +7,7 @@ import { ItemDisplay } from './ItemDisplay';
 import { ReplicatorDialog } from './replicator/ReplicatorDialog';
 import { WarpDialog } from './WarpDialog';
 
-import STTApi, { CONFIG, CollapsibleSection, download } from '../api';
+import STTApi, { CONFIG, CollapsibleSection, download, getItemDetailsLink } from '../api';
 
 import { simplejson2csv } from '../utils/simplejson2csv';
 import { EquipNeedFilter, EquipNeed, getMissionCost } from '../api/EquipmentTools';
@@ -232,7 +232,7 @@ export const NeededEquipment = (props: {
 						<button style={{ marginBottom: '8px' }} className="ui button" onClick={() => setReplicatorTarget(entry.equipment)}>Replicate...</button>
 					</div>
 					<div style={{ gridArea: 'name', alignSelf: 'start', margin: '0' }}>
-						<h4><a href={'https://stt.wiki/wiki/' + entry.equipment.name.split(' ').join('_')} target='_blank'>{entry.equipment.name}</a>
+						<h4><a href={getItemDetailsLink(entry.equipment)} target='_blank'>{entry.equipment.name}</a>
 						{` (need ${entry.needed}, have ${entry.have})`}</h4>
 					</div>
 					<div style={{ gridArea: 'details', alignSelf: 'start' }}>
@@ -251,7 +251,7 @@ export const NeededEquipment = (props: {
 	}
 }
 
-const NeededEquipmentSources = (props: {
+export const NeededEquipmentSources = (props: {
 	entry: EquipNeed,
 	onWarp?: () => void;
 }) => {

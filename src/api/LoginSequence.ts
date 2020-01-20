@@ -28,6 +28,10 @@ export async function loginSequence(onProgress: (description: string) => void) {
             description: 'ship information'
         },
         {
+            loader: STTApi.loadBigBook.bind(STTApi),
+            description: 'big book'
+        },
+        {
             loader: STTApi.loadPlayerData.bind(STTApi),
             description: 'player data'
         }

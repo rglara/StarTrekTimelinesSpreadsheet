@@ -26,11 +26,11 @@ import { ServerImageProvider } from '../components/images/ServerImageProvider';
 import { FileImageCache } from '../components/images/FileImageCache';
 import { ImageProviderChain, WikiImageProvider } from '../components/images/WikiImageTools';
 import { AssetImageProvider } from '../components/images/AssetImageProvider';
-import { NeededEquipmentClass, EquipNeedFilter, EquipNeed } from './EquipmentTools';
+import { NeededEquipmentClass, EquipNeedFilter, UnparsedEquipment, EquipNeed } from './EquipmentTools';
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
-import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO } from './DTO';
+import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO } from './DTO';
 
 export class STTApiClass {
 	private _accessToken: string | undefined;
@@ -90,8 +90,10 @@ export class STTApiClass {
 	public imageProvider!: ImageProvider;
 	public inWebMode: boolean;
 	public allcrew!: CrewData[];
+	public bigbook!: any;
 
 	public serverAddress: string = 'http://localhost/';
+	private bigbookAddress: string = 'https://datacore.app/structured/botcrew.json';
 
 	// Used with Moment when adding an offset. Does not need to be used when
 	// doing a fresh request for data such as for gauntlet or voyage status
@@ -117,6 +119,7 @@ export class STTApiClass {
 			// In web mode, we don't hardcode the server, but simply load from the domain root
 			if (!keepServerAddress) {
 				this.serverAddress = '/';
+				this.bigbookAddress = '/botcrew.json';
 			}
 
 			this._net.setProxy(this.serverAddress + 'proxy');
@@ -491,6 +494,10 @@ export class STTApiClass {
 	// 	return this._net.get(CONFIG.URL_GITHUBRELEASES, {});
 	// }
 
+	async loadBigBook(): Promise<void> {
+        this.bigbook = await this._net.get(this.bigbookAddress, undefined);
+    }
+
 	async refreshRoster(): Promise<void> {
 		// TODO: need to reload icon urls as well
 		this.roster = await buildCrewData(this._playerData!.player!.character);
@@ -530,6 +537,14 @@ export class STTApiClass {
 						this._playerData!.player!.character.events[0] = mergeDeep(this._playerData!.player!.character.events[0], data.event);
 					}
 				}
+
+                if (data.shuttle) {
+                    this._playerData!.player!.character.shuttle_adventures.forEach((adv: PlayerShuttleAdventureDTO) => {
+                        if (adv.shuttles[0].id === data.shuttle.id) {
+                            adv.shuttles[0] = mergeDeep(adv.shuttles[0], data.shuttle);
+                        }
+                    });
+                }
 			} else if (data.action === 'delete') {
 				// TODO
 				// For example, data.character.items, array with objects with just the id property in them
@@ -546,8 +561,8 @@ export class STTApiClass {
 					this.itemRecount();
 				} else if (
 					data.event &&
-					data.event.content.gather_pool &&
-					data.event.content.gather_pool.length === 1 &&
+					data.event.content.gather_pools &&
+					data.event.content.gather_pools.length === 1 &&
 					data.event.content.gather_pools[0].adventures &&
 					data.event.content.gather_pools[0].adventures.length === 1
 				) {
@@ -592,6 +607,10 @@ export class STTApiClass {
 	getNeededEquipment(filters: EquipNeedFilter, limitCrew: number[]): EquipNeed[] {
 		return this._neededEquipment.filterNeededEquipment(filters, limitCrew);
 	}
+	
+    getNeededEquipmentFromList(unparsedEquipment: UnparsedEquipment[]): EquipNeed[] {
+        return this._neededEquipment.filterNeededEquipmentFromList(unparsedEquipment);
+    }
 
 	getEquipmentManager() : NeededEquipmentClass {
 		return this._neededEquipment;

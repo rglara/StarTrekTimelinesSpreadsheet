@@ -3,8 +3,8 @@ import ReactTable, { SortingRule, Column } from 'react-table';
 
 import { ItemDisplay } from './ItemDisplay';
 import { RarityStars } from './RarityStars';
-import STTApi, { CONFIG } from '../api';
-import { PotentialRewardDTO, RewardDTO, ItemData, ItemArchetypeDTO, ItemDataSource } from '../api/DTO';
+import STTApi, { CONFIG, getItemDetailsLink } from '../api';
+import { ItemData, ItemArchetypeDTO, ItemDataSource } from '../api/DTO';
 import { ReplicatorDialog } from './replicator/ReplicatorDialog';
 import { HoverCard } from 'office-ui-fabric-react/lib/HoverCard';
 
@@ -62,7 +62,7 @@ export class ItemList extends React.Component<ItemListProps, ItemListState> {
 					Cell: (cell) => {
 						let item = cell.original;
 						return (
-							<a href={'https://stt.wiki/wiki/' + item.name.split(' ').join('_')} target='_blank'>
+							<a href={getItemDetailsLink(item)} target='_blank'>
 								{item.name}
 							</a>
 						);
@@ -230,7 +230,7 @@ export class ItemList extends React.Component<ItemListProps, ItemListState> {
 					showPagination={items.length > MAX_PAGE_SIZE}
 					showPageSizeOptions={false}
 					className='-striped -highlight'
-					style={items.length > MAX_PAGE_SIZE ? { height: 'calc(100vh - 88px)' } : {}}
+					style={items.length > MAX_PAGE_SIZE ? { height: 'calc(100vh - 92px)' } : {}}
 				/>
 
 				<ReplicatorDialog targetArchetype={this.state.replicatorTarget}

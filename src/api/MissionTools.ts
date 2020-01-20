@@ -108,6 +108,10 @@ export async function loadMissionData(accepted_missions: {symbol?:string, id:num
 				quests: []
 			};
 
+            if (mission.episode && mission.episode > 0) {
+                missionData.episode_title =`Episode ${mission.episode} : ${mission.episode_title}`;
+            }
+
 			mission.quests.forEach((quest: any) => {
 				if ((!quest.locked) && quest.name) {
 					if (quest.quest_type === 'ConflictQuest') {

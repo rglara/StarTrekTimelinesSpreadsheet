@@ -1,14 +1,14 @@
 import React from 'react';
 
-import { Button, Item, Image, List, Accordion, Icon, AccordionTitleProps } from 'semantic-ui-react';
+import { Item, Image, List, Accordion, Icon, AccordionTitleProps } from 'semantic-ui-react';
 
 import { ItemDisplay } from '../ItemDisplay';
 
-import STTApi, { CONFIG, RarityStars } from '../../api';
+import STTApi, { CONFIG, RarityStars, getItemDetailsLink } from '../../api';
 import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES, ItemArchetypeDTO, ItemData, CrewData, ItemArchetypeDemandDTO } from '../../api/DTO';
 import { EventCrewBonusTable } from './EventHelperPage';
 import ReactTable, { Column, SortingRule } from 'react-table';
-import { getMissionCostDetails, MissionCostDetails } from '../../api/EquipmentTools';
+import { MissionCostDetails } from '../../api/EquipmentTools';
 
 interface ItemDemand {
    equipment: ItemArchetypeDTO;
@@ -502,7 +502,7 @@ const FarmList = (props: {
             Cell: (cell) => {
                let item: FarmListItem = cell.original;
                return (
-                  <a href={'https://stt.wiki/wiki/' + item.archetype.name.split(' ').join('_')} target='_blank'>
+                  <a href={getItemDetailsLink(item.archetype)} target='_blank'>
                      {item.archetype.name}
                   </a>
                );

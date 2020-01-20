@@ -4,19 +4,15 @@ import React from 'react';
 import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
 import { Label } from 'office-ui-fabric-react/lib/Label';
 import { Icon } from 'office-ui-fabric-react/lib/Icon';
-import { IconButton, DefaultButton } from 'office-ui-fabric-react/lib/Button';
 import { HoverCard } from 'office-ui-fabric-react/lib/HoverCard';
 import { TooltipHost } from 'office-ui-fabric-react/lib/Tooltip';
-import { Checkbox } from 'office-ui-fabric-react/lib/Checkbox';
 
 import ReactTable, { SortingRule, Column } from 'react-table';
 import { isMobile } from 'react-device-detect';
 
-import { SkillCell } from './SkillCell';
-import { ActiveCrewDialog } from './ActiveCrewDialog';
 import { ItemDisplay } from '../ItemDisplay';
 
-import STTApi, { CONFIG, RarityStars } from '../../api';
+import STTApi, { CONFIG, RarityStars, getCrewDetailsLink } from '../../api';
 import { CrewData, ItemArchetypeDTO } from '../../api/DTO';
 
 export interface CrewShipListProps {
@@ -180,7 +176,7 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 					showPagination={(items.length > 50)}
 					showPageSizeOptions={false}
 					className="-striped -highlight"
-					style={((items.length > 50)) ? { height: 'calc(100vh - 88px)' } : {}}
+					style={((items.length > 50)) ? { height: 'calc(100vh - 92px)' } : {}}
 					getTrProps={(s:any, r:any) => {
 						return {
 							style: {
@@ -226,7 +222,7 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 				accessor: 'short_name',
 				Cell: (cell) => {
 					if (cell && cell.original) {
-						return <a href={'https://stt.wiki/wiki/' + cell.original.name.split(' ').join('_')} target='_blank'>{cell.original.short_name}</a>;
+						return <a href={getCrewDetailsLink(cell.original)} target='_blank'>{cell.original.short_name}</a>;
 					} else {
 						return <span />;
 					}

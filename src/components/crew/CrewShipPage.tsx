@@ -24,7 +24,7 @@ export const CrewShipPage = (props: CrewShipPageProps) => {
 
     return <div>
         <SearchBox placeholder='Search by name or trait...'
-            onChange={(newValue) => setFilterText(newValue)}
+            onChange={(ev, newValue) => setFilterText(newValue || '')}
             onSearch={(newValue) => setFilterText(newValue)}
         />
         <CrewShipList data={crewData}

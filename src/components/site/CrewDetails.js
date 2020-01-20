@@ -7,7 +7,7 @@ import { CrewFullEquipTree } from './CrewFullEquipTree';
 
 import STTApi from '../../api';
 import STTTools from './STTTools';
-import { CONFIG } from '../../api';
+import { CONFIG, getCrewDetailsLink } from '../../api';
 import { parseRecipeDemands } from './utils';
 
 export class ModalCrewDetails extends React.Component {
@@ -75,7 +75,7 @@ export class ModalCrewDetails extends React.Component {
                 <Modal.Header>{crew.name} <Rating defaultRating={crew.max_rarity} maxRating={5} icon='star' size='large' disabled />
                     <Button.Group floated='right'>
                         <Button compact onClick={() => window.open('http://memory-alpha.wikia.com/wiki/' + crew.short_name.split(' ').join('_'), '_blank')} >Memory Alpha</Button>
-                        <Button compact onClick={() => window.open('https://stt.wiki/wiki/' + crew.name.split(' ').join('_'), '_blank')} >STT Wiki</Button>
+                        <Button compact onClick={() => window.open(getCrewDetailsLink(crew), '_blank')} >STT Wiki</Button>
                     </Button.Group>
                 </Modal.Header>
                 <Modal.Content image scrolling>

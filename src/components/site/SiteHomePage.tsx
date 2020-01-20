@@ -54,7 +54,7 @@ export const SiteHomePage = (props: {
         setShowSpinner(true);
         setErrorMessage(undefined);
 
-        let promiseLogin = STTApi.login(username, password, autoLogin, true);
+        let promiseLogin = STTApi.login(username, password, autoLogin);
 
         promiseLogin.then(() => {
             setShowSpinner(false);

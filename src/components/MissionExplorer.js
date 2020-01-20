@@ -186,7 +186,7 @@ export class MissionDetails extends React.Component {
                     crewSuccess.push(<Persona
                         key={crewpathcrew.crew.name + index}
                         imageUrl={crewpathcrew.crew.iconUrl}
-                        text={'(' + crewpath.path[index] + ') ' + crewpathcrew.crew.name}
+                        text={`(${crewpath.path[index]}) ${crewpathcrew.crew.name}${(crewpath.crew.frozen > 0) ? ' - FROZEN' : ''}`}
                         size={PersonaSize.extraExtraSmall}
                         presence={PersonaPresence.none} />);
                 });
@@ -295,7 +295,7 @@ export class MissionExplorer extends React.Component {
 
     loadOptions(onlyIncomplete) {
         let options = [];
-        STTApi.missions.forEach(function (mission) {
+        STTApi.missions.forEach((mission) => {
             if (mission.quests.length == 0) return;
             if (onlyIncomplete && (mission.stars_earned == mission.total_stars)) return;
 
@@ -304,7 +304,7 @@ export class MissionExplorer extends React.Component {
 
             options.push({ key: mission.episode_title + mission.id, text: missionLabel, itemType: DropdownMenuItemType.Header });
             var any = false;
-            mission.quests.forEach(function (quest) {
+            mission.quests.forEach((quest) => {
                 if (quest.quest_type == 'ConflictQuest') {
                     if (onlyIncomplete) {
                         let goals = quest.mastery_levels[0].progress.goals + quest.mastery_levels[1].progress.goals + quest.mastery_levels[2].progress.goals;
@@ -342,7 +342,7 @@ export class MissionExplorer extends React.Component {
                         selectedKey={this.state.selectedItem && this.state.selectedItem.key}
                         onChange={(evt, item) => { this.setState({ selectedItem: item }); this.refs.missionDetails.loadMissionDetails(item.data.questId); }}
                         onRenderTitle={this._onRenderTitle}
-                        placeHolder='Select a mission'
+                        placeholder='Select a mission'
                         options={this.state.options}
                     />
                     <MissionDetails questId={this.state.selectedItem} ref='missionDetails' />

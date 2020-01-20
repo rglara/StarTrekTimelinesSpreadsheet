@@ -12,7 +12,7 @@ export class LoggerClass {
     exportFields;
 
     constructor() {
-        this.basePath = getAppPath('userData') + '/logs/';
+        this.basePath = getAppPath() + '/logs/';
 
         if (!fs.existsSync(this.basePath)) {
             fs.mkdirSync(this.basePath);
