@@ -185,7 +185,7 @@ export const ShipList = () => {
 	return (
 		<div className='tab-panel' data-is-scrollable='true'>
 			<SearchBox placeholder='Search by name or trait...'
-				onChange={(ev, newValue) => setFilterText(newValue || '')}
+				onChange={(ev, newValue) => setFilterText(newValue ?? '')}
 				onSearch={(newValue) => setFilterText(newValue)}
 			/>
 			<ReactTable

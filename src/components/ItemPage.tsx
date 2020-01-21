@@ -31,7 +31,7 @@ export const ItemPage = (props: ItemPageProps) => {
 
     return <div>
         <SearchBox placeholder='Search by name or description...'
-            onChange={(ev, newValue) => setFilterText(newValue || '')}
+            onChange={(ev, newValue) => setFilterText(newValue ?? '')}
             onSearch={(newValue) => setFilterText(newValue)}
         />
         <ItemList data={STTApi.items} filterText={filterText} />

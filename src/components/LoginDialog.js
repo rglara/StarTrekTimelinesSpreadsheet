@@ -60,14 +60,14 @@ export class LoginDialog extends React.Component {
 					<TextField
 						label='Username (e-mail)'
 						value={this.state.username}
-                        onChange={(ev, value) => { this.setState({ username: value }) }}
+						onChange={(ev, value) => { this.setState({ username: value }) }}
 					/>
 
 					<TextField
 						label='Password'
 						value={this.state.password}
 						type='password'
-                        onChange={(ev, value) => { this.setState({ password: value }) }}
+						onChange={(ev, value) => { this.setState({ password: value }) }}
 					/>
 				</PivotItem>
 				{/* #!if ENV === 'electron' */}

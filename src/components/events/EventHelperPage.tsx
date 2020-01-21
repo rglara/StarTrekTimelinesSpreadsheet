@@ -340,7 +340,7 @@ export const EventCrewBonusTable = (props: EventCrewBonusTableProps) => {
    return (<span>
       Owned Event Bonus Crew: {bonusCrewCount}
       <SearchBox placeholder='Search by name or trait...'
-         onChange={(ev, newValue) => setFilterText(newValue || '')}
+         onChange={(ev, newValue) => setFilterText(newValue ?? '')}
          onSearch={(newValue) => setFilterText(newValue)}
       />
       <div className='data-grid' data-is-scrollable='true'>

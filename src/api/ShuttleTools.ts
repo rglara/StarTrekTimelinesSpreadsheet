@@ -1,4 +1,5 @@
 import STTApi from "./index";
+import { SHUTTLE_STATE_NAMES } from "./DTO";
 
 export async function shuttleComplete(id: number): Promise<any> {
     return await STTApi.executePostRequestWithUpdates("shuttle/complete", { id });
@@ -138,16 +139,5 @@ export function getShuttleCrewChoices(adventure: any, toWin: boolean): any[] {
 }
 
 export function getShuttleState(state: number): string {
-    switch (state) {
-        case 0:
-            return 'Opened';
-        case 1:
-            return 'In progress';
-        case 2:
-            return 'Complete';
-        case 3:
-            return 'Expired';
-        default:
-            return 'UNKNOWN';
-    }
+    return SHUTTLE_STATE_NAMES[state] ?? 'UNKNOWN';
 }

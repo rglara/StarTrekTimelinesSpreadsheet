@@ -49,13 +49,13 @@ export class ShareDialog extends React.Component {
 								<TextField
 									label='Title:'
 									value={this.state.title}
-                                    onChange={(ev, value) => { this.setState({ title: value }) }}
+									onChange={(ev, value) => { this.setState({ title: value }) }}
 								/>
 
 								<TextField
 									label='Description:'
 									value={this.state.description}
-                                    onChange={(ev, value) => { this.setState({ description: value }) }}
+									onChange={(ev, value) => { this.setState({ description: value }) }}
 									multiline autoAdjustHeight
 								/>
 							</td>
