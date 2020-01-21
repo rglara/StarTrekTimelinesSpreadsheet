@@ -102,6 +102,11 @@ export class ServerImageProvider implements ImageProvider {
             return { id, url: cachedUrl };
         }
 
+        //HACK: ignore server image fetch until asset bundle extraction is fixed
+        if (true) {
+            return { id: undefined, url: undefined };
+        }
+
         let assetUrl = await STTApi.networkHelper.get(this._serverURL + 'asset/get', {
             "client_platform": CONFIG.CLIENT_PLATFORM,
             "client_version": CONFIG.CLIENT_VERSION,
