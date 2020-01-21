@@ -5,6 +5,9 @@ dist/
 builds/
 tscout/
 server/build/
+server/public/
+server/logs/
+server/cache/
 /.vs
 /notes.txt
 native/bin/
