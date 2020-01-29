@@ -446,6 +446,17 @@ export const HomePage = (props: HomePageProps) => {
 				</div>
 			});
 		}
+		else if (eventData.content.content_type === EVENT_TYPES.EXPEDITION) {
+			recommendations.push({
+				title: `Expedition Event ` + msg,
+				icon: Priority.INFO,
+				content: <div style={{ margin: '0' }}>
+					{!hasEnded &&
+						<Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Events')}>Event Details</Label>
+					}
+				</div>
+			});
+		}
 		else{
 			recommendations.push({
 				title: `Event ` + msg,

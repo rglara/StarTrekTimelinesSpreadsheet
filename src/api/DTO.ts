@@ -1157,7 +1157,8 @@ export interface PotentialRewardDTO {
 export const EVENT_TYPES = {
    GATHER: 'gather',
    SHUTTLES: 'shuttles',
-   SKIRMISH: 'skirmish'
+   SKIRMISH: 'skirmish',
+   EXPEDITION: 'expedition'
 }
 
 export interface EventContentGatherDTO {
@@ -1208,16 +1209,24 @@ export interface EventContentShuttlesDTO {
    shuttles: EventShuttleDTO[];
 }
 
-export interface EventContentExpedetionDTO {
-   content_type: 'expedetion?';
-
+export interface EventContentExpeditionDTO {
+   content_type: 'expedition';
+   crew_debuffs: any[];
+   description: string;
+   has_vote: boolean;
+   mission_id: number;
+   modifier_per_debuff: number;
+   phase_summary?: any; // null
+   portrait: { file: string; };
+   rules: string;
+   speaker: string;
    special_crew: string[];
 };
 
 export interface EventDTO {
    bonus_text: string;
    bonus_victory_points?: number;
-   content: EventContentGatherDTO & EventContentSkirmishDTO & EventContentShuttlesDTO & EventContentExpedetionDTO
+   content: EventContentGatherDTO & EventContentSkirmishDTO & EventContentShuttlesDTO & EventContentExpeditionDTO
    description: string;
    featured_crew: {
       action: CrewActionDTO;

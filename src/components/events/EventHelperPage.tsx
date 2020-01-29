@@ -7,11 +7,11 @@ import { EventDTO, CrewData } from "../../api/DTO";
 import { GalaxyEvent } from './EventHelperGalaxy';
 import { ShuttleEvent } from './EventHelperShuttle';
 import { SkirmishEvent } from './EventHelperSkirmish';
+import { ExpeditionEvent } from './EventHelperExpedition';
 import { isMobile } from 'react-device-detect';
 import { Icon } from 'office-ui-fabric-react/lib/Icon';
 import { TooltipHost } from 'office-ui-fabric-react/lib/Tooltip';
 import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
-
 import { SkillCell } from '../crew/SkillCell';
 
 export const EventHelperPage = (props: {
@@ -70,15 +70,16 @@ export const EventHelperPage = (props: {
          <GalaxyEvent event={currEvent} />
          <ShuttleEvent event={currEvent} onTabSwitch={props.onTabSwitch} />
          <SkirmishEvent event={currEvent} onTabSwitch={props.onTabSwitch} />
+         <ExpeditionEvent event={currEvent} onTabSwitch={props.onTabSwitch} />
       </div>
    );
 }
 
-export interface EventCrewBonusTableProps {
+export const EventCrewBonusTable = (props: {
    bonuses: { [crew_symbol: string]: number; };
-}
-
-export const EventCrewBonusTable = (props: EventCrewBonusTableProps) => {
+   onlyBonusCrew?: boolean;
+   hideBonus?: boolean;
+}) => {
    const [sorted, setSorted] = React.useState([{ id: 'name', desc: false }] as SortingRule[]);
    const [filterText, setFilterText] = React.useState('');
 
@@ -126,13 +127,15 @@ export const EventCrewBonusTable = (props: EventCrewBonusTableProps) => {
 
    let bonusCrewCount = items.length;
 
-   let allCrew = STTApi.roster.filter(c => !c.buyback);
-   allCrew.forEach(owned => {
-      let found = items.find(c => c.id === owned.id);
-      if (!found) {
-         items.push(owned);
-      }
-   });
+   if (!props.onlyBonusCrew) {
+      let allCrew = STTApi.roster.filter(c => !c.buyback);
+      allCrew.forEach(owned => {
+         let found = items.find(c => c.id === owned.id);
+         if (!found) {
+            items.push(owned);
+         }
+      });
+   }
 
    if (filterText) {
       items = items.filter(i => filterCrew(i, filterText!.toLowerCase()))
@@ -262,8 +265,9 @@ export const EventCrewBonusTable = (props: EventCrewBonusTableProps) => {
                   return <span />;
                }
             },
-         },
-         {
+         });
+      if (!props.hideBonus) {
+         _columns.push({
             id: 'bonus',
             Header: 'Bonus',
             minWidth: 50,
@@ -272,7 +276,9 @@ export const EventCrewBonusTable = (props: EventCrewBonusTableProps) => {
             accessor: 'bonus',
             style: { 'textAlign': 'center' },
             Cell: cell => <span>{cell.value ? cell.value + 'x' : ''}</span>
-         },
+         });
+      }
+      _columns.push(
          {
             id: 'active_id',
             Header: () => <Icon iconName='Balloons' />,
