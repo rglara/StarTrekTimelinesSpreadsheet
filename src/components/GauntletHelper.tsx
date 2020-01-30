@@ -592,7 +592,7 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 
 					<div style={{ display: 'grid', gridGap: '10px', margin: '8px', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))' }}>
 						{matches.map((match) =>
-							<GauntletMatch key={match.crewOdd.archetype_symbol + match.opponent.player_id}
+							<GauntletMatch key={match.crewOdd.crew_id + '_' + match.opponent.player_id}
 								match={match}
 								gauntlet={gaunt}
 								consecutive_wins={consecutiveWins}
@@ -647,7 +647,7 @@ const GauntletSelectCrew = (props: {
 			}
 
 			let crewSpan = <Persona
-				key={crew.name}
+				key={crew.crew_id}
 				imageUrl={crew.iconUrl}
 				text={crew.name}
 				secondaryText={crew.short_name}
@@ -688,7 +688,7 @@ const GauntletSelectCrew = (props: {
 					return;
 				}
 
-				crew_ids.push(crew.id);
+				crew_ids.push(crew.crew_id);
 			});
 
 			if (crew_ids.length === 5) {
