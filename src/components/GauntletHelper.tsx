@@ -714,7 +714,7 @@ const GauntletSelectCrew = (props: {
 
 				<div className="two column row">
 					<div className="column">
-						<SpinButton value='{this.state.featuredSkillBonus}' label='Featured skill bonus:' min={0} max={100} step={1}
+						<SpinButton value={String(featuredSkillBonus)} label='Featured skill bonus:' min={0} max={100} step={1}
 							onIncrement={(value) => { setFeaturedSkillBonus(+value + 1); }}
 							onDecrement={(value) => { setFeaturedSkillBonus(+value - 1); }}
 							onValidate={(value: string) => {
@@ -734,7 +734,7 @@ const GauntletSelectCrew = (props: {
 
 				<div className="two column row">
 					<div className="column">
-						<SpinButton value='{this.state.critBonusDivider}' label='Crit bonus divider:' min={0.1} max={100} step={0.1}
+						<SpinButton value={String(critBonusDivider)} label='Crit bonus divider:' min={0.1} max={100} step={0.1}
 							onIncrement={(value) => { setCritBonusDivider(+value + 0.1); }}
 							onDecrement={(value) => { setCritBonusDivider(+value - 0.1); }}
 							onValidate={(value: string) => {

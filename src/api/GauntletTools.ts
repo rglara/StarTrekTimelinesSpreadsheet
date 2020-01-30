@@ -312,10 +312,8 @@ export function gauntletCrewSelection(
 			skills: {}
 		};
 
-		let crw :any = crew;
-
 		for (let skill in CONFIG.SKILLS) {
-			newCrew.skills[skill] = crw[skill].min + crw[skill].max;
+			newCrew.skills[skill] = crew.skills[skill].min + crew.skills[skill].max;
 		}
 
 		newCrew.skills[currentGauntlet.contest_data.featured_skill] =
