@@ -9,21 +9,47 @@ import { exportCsv } from '../../utils/csvExporter';
 import STTApi, { download } from '../../api';
 import { CrewData } from '../../api/DTO';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
+import { ButtonGroup, Button, ToggleButton } from 'react-bootstrap';
 
 export const CrewPage = (props: {
     onCommandItemsUpdate?: (items: ICommandBarItemProps[]) => void;
 }) => {
-    const [filterText, setFilterText] = React.useState('');
-    const [showEveryone, setShowEveryone] = React.useState(false);
-    const [showBuyback, setShowBuyback] = React.useState(false);
-    const [showCanTrain, setShowCanTrain] = React.useState(false);
-    const [groupRarity, setGroupRarity] = React.useState(false);
-    const [compactMode, setCompactMode] = React.useState(true);
+    const [filterText, setFilterText] = React.useState<string>('');
+    const [showEveryone, setShowEveryone] = React.useState<boolean>(false);
+    const [showBuyback, setShowBuyback] = React.useState<boolean>(false);
+    const [showCanTrain, setShowCanTrain] = React.useState<boolean>(false);
+    const [groupRarity, setGroupRarity] = React.useState<boolean>(false);
+    const [compactMode, setCompactMode] = React.useState<boolean>(true);
+    const [displayMode, setDisplayMode] = React.useState<string>('Base');
     const [crewData, setCrewData] = React.useState(loadCrewData(false,false,false));
 
     React.useEffect(() => {
         _updateCommandItems();
     }, [showEveryone, showBuyback, showCanTrain, groupRarity, compactMode]);
+
+    const displayModes = ['Base', 'Gauntlet', 'Voyage'];
+    return <div>
+        <div className="mx-auto" style={{ display: 'block', width: '250px' }}>
+            <ButtonGroup toggle>
+                {
+                    displayModes.map(dm =>
+                        <ToggleButton key={dm} type="radio" value={dm} checked={displayMode === dm}
+                            onClick={() => setDisplayMode(dm)}>{dm}</ToggleButton>
+                    )
+                }
+            </ButtonGroup>
+        </div>
+        <SearchBox placeholder='Search by name or trait...'
+            onChange={(ev, newValue) => setFilterText(newValue || '')}
+            onSearch={(newValue) => setFilterText(newValue)}
+        />
+        <CrewList data={crewData}
+            groupRarity={groupRarity}
+            showBuyback={showBuyback}
+            compactMode={compactMode}
+            filterText={filterText}
+            displayMode={displayMode} />
+    </div>;
 
     function loadCrewData(showEveryone: boolean, showBuyback: boolean, showCanTrain: boolean) : CrewData[] {
         let crewData = STTApi.roster;
@@ -142,16 +168,4 @@ export const CrewPage = (props: {
             ]);
         }
     }
-
-    return <div>
-        <SearchBox placeholder='Search by name or trait...'
-            onChange={(ev, newValue) => setFilterText(newValue || '')}
-            onSearch={(newValue) => setFilterText(newValue)}
-        />
-        <CrewList data={crewData}
-            groupRarity={groupRarity}
-            showBuyback={showBuyback}
-            compactMode={compactMode}
-            filterText={filterText} />
-    </div>;
 }

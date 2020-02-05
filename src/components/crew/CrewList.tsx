@@ -23,6 +23,7 @@ export const CrewList = (props: {
 	sortColumn?: string;
 	selectedIds?: Set<number>;
 	filterText?: string;
+	displayMode?: string;
 	onSelectionChange?: (sel: Set<number>) => void;
 	groupRarity?: boolean;
 	showBuyback?: boolean;
@@ -184,7 +185,7 @@ export const CrewList = (props: {
 				showPagination={(filtered.length > 50)}
 				showPageSizeOptions={false}
 				className="-striped -highlight"
-				style={(!props.embedded && (filtered.length > 50)) ? { height: 'calc(100vh - 92px)' } : {}}
+				style={(!props.embedded && (filtered.length > 50)) ? { height: 'calc(100vh - 92px - 34px)' } : {}}
 				pivotBy={pivotBy}
 				getTrProps={(s:any, r:any) => {
 					return {
@@ -307,17 +308,6 @@ export const CrewList = (props: {
 					}
 				},
 				Aggregated: (row) => <span />
-			},
-			{
-				id: 'usage_value',
-				Header: 'Value',
-				minWidth: 50,
-				maxWidth: 70,
-				resizable: true,
-				accessor: 'usage_value',
-				Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.usage_value}</div> : <span />,
-				aggregate: (vals) => vals.reduce((a:any, b:any) => (a || 0) + (b || 0), 0) / vals.length,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
 				id: 'level',
@@ -499,40 +489,93 @@ export const CrewList = (props: {
 		}
 		colsVoy.sort((a, b) => (a.Header as string).localeCompare(b.Header as string));
 
-		_columns.push(...colsCore, ...colsProf, ...colsVoy);
+		if (!props.displayMode || props.displayMode === 'Base') {
+			_columns.push(...colsCore);
+		}
+		if (!props.displayMode || props.displayMode === 'Gauntlet') {
+			_columns.push(...colsProf);
+		}
+		if (!props.displayMode || props.displayMode === 'Voyage') {
+			_columns.push(...colsVoy);
+		}
+
 		_columns.push(
 			{
-				id: 'voyage_score',
-				Header: 'VOY',
+				id: 'usage_value',
+				Header: 'Value',
 				minWidth: 50,
 				maxWidth: 70,
 				resizable: true,
-				accessor: 'voyage_score',
-				Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.voyage_score}</div> : <span />,
-				aggregate: aggAvg,
+				accessor: 'usage_value',
+				Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.usage_value}</div> : <span />,
+				aggregate: (vals) => vals.reduce((a: any, b: any) => (a || 0) + (b || 0), 0) / vals.length,
 				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
 			},
 			{
-				id: 'gauntlet_score',
-				Header: 'Gauntlet',
-				minWidth: 50,
-				maxWidth: 70,
-				resizable: true,
-				accessor: 'gauntlet_score',
-				Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.gauntlet_score}</div> : <span />,
-				aggregate: aggAvg,
-				Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
-			},
-            {
-                id: 'bigbook_tier',
-                Header: 'BBoB',
-                minWidth: 30,
-                maxWidth: 35,
-                resizable: false,
+				id: 'bigbook_tier',
+				Header: 'BBoB',
+				minWidth: 30,
+				maxWidth: 35,
+				resizable: false,
 				Cell: (cell) => cell.original ? <span style={{ color: cell.original.datacore?.in_portal ? "inherit" : "red" }}>{cell.original.datacore?.bigbook_tier ?? ''}</span> : <span />,
 				accessor: (c) => c.datacore?.bigbook_tier ? Number(c.datacore.bigbook_tier) : 0,
-                Aggregated: row => <span />
-            },
+				Aggregated: row => <span />
+			}
+		);
+
+		if (!props.displayMode || props.displayMode === 'Voyage') {
+			_columns.push(
+				{
+					id: 'voyage_score',
+					Header: 'V Score',
+					minWidth: 50,
+					maxWidth: 70,
+					resizable: true,
+					accessor: 'voyage_score',
+					Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.voyage_score}</div> : <span />,
+					aggregate: aggAvg,
+					Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
+				},
+				{
+					id: 'voyage_rank',
+					Header: 'V Rank',
+					minWidth: 50,
+					maxWidth: 70,
+					resizable: true,
+					accessor: (c) => c.datacore?.ranks.voyRank ?? 0,
+					Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.datacore?.ranks.voyRank ?? ''}</div> : <span />,
+					aggregate: aggAvg,
+					Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
+				}
+			);
+		}
+		if (!props.displayMode || props.displayMode === 'Gauntlet') {
+			_columns.push(
+				{
+					id: 'gauntlet_score',
+					Header: 'G Score',
+					minWidth: 50,
+					maxWidth: 70,
+					resizable: true,
+					accessor: 'gauntlet_score',
+					Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.gauntlet_score}</div> : <span />,
+					aggregate: aggAvg,
+					Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
+				},
+				{
+					id: 'gauntlet_rank',
+					Header: 'G Rank',
+					minWidth: 50,
+					maxWidth: 70,
+					resizable: true,
+					accessor: (c) => c.datacore?.ranks.gauntletRank ?? 0,
+					Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.datacore?.ranks.gauntletRank ?? ''}</div> : <span />,
+					aggregate: aggAvg,
+					Aggregated: (row) => <span>{Math.floor(row.value)} (avg)</span>
+				}
+			);
+		}
+		_columns.push(
 			{
 				id: 'traits',
 				Header: 'Traits',

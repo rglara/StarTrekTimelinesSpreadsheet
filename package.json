@@ -103,7 +103,9 @@
 	"dependencies": {
 		"@types/history": "^4.7.4",
 		"@types/react": "^16.9.9",
+		"@types/react-bootstrap": "^0.32.20",
 		"@types/react-table": "^6.8.6",
+		"bootstrap": "^4.4.1",
 		"dexie": "^2.0.4",
 		"electron-settings": "^3.2.0",
 		"fb": "^2.0.0",
@@ -111,6 +113,7 @@
 		"lz4js": "^0.2.0",
 		"moment": "^2.24.0",
 		"node-abi": "^2.13.0",
+		"react-bootstrap": "^1.0.0-beta.16",
 		"react-device-detect": "^1.9.9",
 		"react-table": "^6.10.3",
 		"semantic-ui-react": "^0.88.2",

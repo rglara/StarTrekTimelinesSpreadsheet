@@ -19,6 +19,7 @@ import '../assets/css/App.css';
 import React from 'react';
 
 import 'react-table/react-table.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 // #!if ENV === 'electron'
 // #!else
