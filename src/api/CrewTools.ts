@@ -1,6 +1,6 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
-import { CrewAvatarDTO, CrewData, CrewDTO, PlayerCharacterDTO, SkillData, CrewActionDTO, CrewEquipmentSlotData } from './DTO'
+import { CrewAvatarDTO, CrewData, CrewDTO, PlayerCharacterDTO, SkillData, CrewActionDTO, CrewEquipmentSlotData, DatacoreCrewDTO } from './DTO'
 
 export interface BuffStat {
 	multiplier: number;
@@ -37,6 +37,9 @@ export function calculateBuffConfig(): { [index: string]: BuffStat } {
 	return buffConfig;
 }
 
+/**
+ * This is the place where a crew DTO is converted to a CrewData and per-crew computations and caching are performed
+ */
 function crewToRoster(dto: CrewDTO) : CrewData {
 	let voyage_score = 0;
 	let gauntlet_score = 0;
@@ -62,13 +65,13 @@ function crewToRoster(dto: CrewDTO) : CrewData {
 		gauntlet_score += profAvg;
 	}
 
-	let equipment_slots : CrewEquipmentSlotData[] = dto.equipment_slots as CrewEquipmentSlotData[];
+	let equipment_slots : CrewEquipmentSlotData[] = (dto.equipment_slots ?? []) as CrewEquipmentSlotData[];
 
 	equipment_slots.forEach((equipment) => {
 		equipment.have = false;
 	});
 
-	dto.equipment.forEach(equipment => {
+	(dto.equipment ?? []).forEach(equipment => {
 		equipment_slots[equipment[0]].have = true;
 	});
 
@@ -131,6 +134,35 @@ function crewToRoster(dto: CrewDTO) : CrewData {
 function createFakeCrewId() : number {
 	let val = Math.random() * 100_000 + 2_000_000_000;
 	return Math.round(val);
+}
+
+export function buildCrewDataAllFromDatacore(allcrew: DatacoreCrewDTO[]) : CrewData[] {
+	const mapped = allcrew.map(dc => {
+		let crew : CrewDTO = {
+			archetype_id: dc.archetype_id,
+			base_skills: dc.base_skills,
+			favorite: false,
+			full_body: { file: dc.imageUrlPortrait },
+			icon: { file: dc.imageUrlPortrait },
+			level: 100,
+			max_level: 100,
+			max_rarity: dc.max_rarity,
+			name: dc.name,
+			portrait: { file: dc.imageUrlPortrait },
+			rarity: dc.max_rarity,
+			short_name: dc.short_name,
+			skills: dc.base_skills,
+			symbol: dc.symbol,
+			traits: dc.traits_named,
+			traits_hidden: dc.traits_hidden
+		} as CrewDTO;
+
+		return crew;
+	});
+
+	let crewdata = buildCrewDataAll(mapped);
+	crewdata.forEach(c => c.status.external = true);
+	return crewdata;
 }
 
 export function buildCrewDataAll(allcrew: CrewDTO[]): CrewData[] {

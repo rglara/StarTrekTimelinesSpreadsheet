@@ -119,6 +119,14 @@ export class STTApiClass {
 			// In web mode, we don't hardcode the server, but simply load from the domain root
 			if (!keepServerAddress) {
 				this.serverAddress = '/';
+
+				//TODO: get datacore to load for web app
+				// #!if ENV === 'electron'
+				//addr = "file:/?/StarTrekTimelinesSpreadsheet/src/utils/" + 'allcrew.json';
+				// #!else
+				//addr = this.serverAddress + 'allcrew.json';
+				// #!endif
+
 				this.datacoreAddress = '/botcrew.json';
 			}
 

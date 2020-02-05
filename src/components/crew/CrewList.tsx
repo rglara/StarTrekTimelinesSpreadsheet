@@ -31,11 +31,12 @@ export const CrewList = (props: {
 	duplicatelist?: boolean;
 	embedded?: boolean;
 }) => {
-	const [items, setItems] = React.useState(props.data);
 	const [sorted, setSorted] = React.useState([{ id: props.sortColumn || 'max_rarity', desc: false }] as SortingRule[]);
 	const [selection, setSelection] = React.useState(props.selectedIds ? props.selectedIds : new Set<number>());
 	const [active, setActive] = React.useState({} as { activeId?: number; name?: string; });
 	const [replicatorTarget, setReplicatorTarget] = React.useState(undefined as ItemArchetypeDTO | undefined);
+
+	const items = props.data;
 
 	function _onSelectionChange(id:number, isChecked:boolean | undefined) {
 		if (isChecked) {

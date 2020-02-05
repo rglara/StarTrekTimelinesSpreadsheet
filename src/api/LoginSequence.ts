@@ -1,6 +1,6 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
-import { buildCrewData, buildCrewDataAll } from './CrewTools';
+import { buildCrewData, buildCrewDataAll, buildCrewDataAllFromDatacore } from './CrewTools';
 import { matchShips } from './ShipTools';
 import { loadMissionData } from './MissionTools';
 import { loadFullTree, fixupAllCrewIds, getMissionCostDetails } from './EquipmentTools';
@@ -371,9 +371,7 @@ export async function loginSequence(onProgress: (description: string) => void) {
     onProgress('Loading crew cache...');
 
     try {
-        let allcrew : CrewDTO[] | undefined = undefined;
-        allcrew = await STTApi.networkHelper.get(STTApi.serverAddress + 'allcrew.json', undefined);
-        STTApi.allcrew = buildCrewDataAll(allcrew || []);
+        STTApi.allcrew = buildCrewDataAllFromDatacore(STTApi.datacore ?? []);
     }
     catch (e) {
         console.error(e);

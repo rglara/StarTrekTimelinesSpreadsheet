@@ -21,7 +21,11 @@ export const CrewPage = (props: {
     const [groupRarity, setGroupRarity] = React.useState<boolean>(false);
     const [compactMode, setCompactMode] = React.useState<boolean>(true);
     const [displayMode, setDisplayMode] = React.useState<string>('Base');
-    const [crewData, setCrewData] = React.useState(loadCrewData(false,false,false));
+    const [crewData, setCrewData] = React.useState<CrewData[]>([]);
+
+    React.useEffect(() => {
+        setCrewData(loadCrewData());
+    }, [showEveryone, showBuyback, showCanTrain]);
 
     React.useEffect(() => {
         _updateCommandItems();
@@ -51,10 +55,10 @@ export const CrewPage = (props: {
             displayMode={displayMode} />
     </div>;
 
-    function loadCrewData(showEveryone: boolean, showBuyback: boolean, showCanTrain: boolean) : CrewData[] {
+    function loadCrewData() : CrewData[] {
         let crewData = STTApi.roster;
         if (showEveryone) {
-            const isFFFE = (crew:CrewData) => (crew.frozen > 0) || ((crew.rarity === crew.max_rarity) && (crew.level === 100));
+            const isFFFE = (crew: CrewData) => (crew.frozen > 0) || ((crew.rarity === crew.max_rarity) && (crew.level === 100));
             const notOwned = (crew: CrewData) => {
                 let rc = STTApi.roster.find((rosterCrew) => !rosterCrew.buyback && (rosterCrew.symbol === crew.symbol));
 
@@ -102,8 +106,9 @@ export const CrewPage = (props: {
                                     let csv = exportCsv();
                                     download('My Crew.csv', csv, 'Export Star Trek Timelines crew roster', 'Export');
                                 }
-                            }]
-                        }
+                            }
+                        ]
+                    }
                 },
                 {
                     key: 'settings',
@@ -127,21 +132,21 @@ export const CrewPage = (props: {
                             isChecked: showBuyback,
                             onClick: () => {
                                 let isChecked = !showBuyback;
-                                setCrewData(loadCrewData(showEveryone, isChecked, showCanTrain));
                                 setShowBuyback(isChecked);
+                                setCrewData(loadCrewData());
                             }
                         },
-                          {
+                        {
                             key: 'showCanTrain',
                             text: 'Show crew that can receive training',
                             canCheck: true,
                             isChecked: showCanTrain,
                             onClick: () => {
-                              let isChecked = !showCanTrain;
-                              setCrewData(loadCrewData(showEveryone, showBuyback, isChecked));
-                              setShowCanTrain(isChecked);
+                                let isChecked = !showCanTrain;
+                                setShowCanTrain(isChecked);
+                                setCrewData(loadCrewData());
                             }
-                          },
+                        },
                         {
                             key: 'compactMode',
                             text: 'Compact mode',
@@ -154,13 +159,13 @@ export const CrewPage = (props: {
                         },
                         {
                             key: 'showEveryone',
-                            text: '(EXPERIMENTAL) Show stats for all crew',
+                            text: 'Show stats for all crew',
                             canCheck: true,
                             isChecked: showEveryone,
                             onClick: () => {
                                 let isChecked = !showEveryone;
-                                setCrewData(loadCrewData(isChecked, showBuyback, showCanTrain));
                                 setShowEveryone(isChecked);
+                                setCrewData(loadCrewData());
                             }
                         }]
                     }
