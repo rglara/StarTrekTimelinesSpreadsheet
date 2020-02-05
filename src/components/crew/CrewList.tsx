@@ -1,5 +1,3 @@
-import 'react-table/react-table.css';
-
 import React from 'react';
 import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
 import { Label } from 'office-ui-fabric-react/lib/Label';
@@ -531,8 +529,8 @@ export const CrewList = (props: {
                 minWidth: 30,
                 maxWidth: 35,
                 resizable: false,
-                Cell: (cell) => cell.original ? <span style={{color: cell.original.in_portal ? "inherit" : "red"}}>{cell.original.bigbook_tier}</span> : <span />,
-                accessor: (c) => c.bigbook_tier ? Number(c.bigbook_tier) : 0,
+				Cell: (cell) => cell.original ? <span style={{ color: cell.original.datacore?.in_portal ? "inherit" : "red" }}>{cell.original.datacore?.bigbook_tier ?? ''}</span> : <span />,
+				accessor: (c) => c.datacore?.bigbook_tier ? Number(c.datacore.bigbook_tier) : 0,
                 Aggregated: row => <span />
             },
 			{

@@ -81,6 +81,9 @@ function crewToRoster(dto: CrewDTO) : CrewData {
 		rawTraits.splice(nh, 1, 'alient');
 	}
 
+	// Add datacore "big book" details
+	let datacore = STTApi.datacore.find((c: any) => c.symbol === dto.symbol);
+
 	return {
 		id: dto.archetype_id,
 		avatar_id: dto.archetype_id,
@@ -120,7 +123,8 @@ function crewToRoster(dto: CrewDTO) : CrewData {
 
 		voyage_score,
 		gauntlet_score,
-		usage_value: 0
+		usage_value: 0,
+		datacore
 	};
 }
 

@@ -28,8 +28,8 @@ export async function loginSequence(onProgress: (description: string) => void) {
             description: 'ship information'
         },
         {
-            loader: STTApi.loadBigBook.bind(STTApi),
-            description: 'big book'
+            loader: STTApi.loadDatacore.bind(STTApi),
+            description: 'datacore'
         },
         {
             loader: STTApi.loadPlayerData.bind(STTApi),
@@ -97,8 +97,8 @@ export async function loginSequence(onProgress: (description: string) => void) {
         if (rosterCrew.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getCrewImageUrl(rosterCrew, false).then((found: IFoundResult) => {
                 current++;
-                if (current % 10 == 0)
-                    onProgress('Caching crew images... (' + current + '/' + total + ')');
+                // if (current % 10 == 0)
+                //     onProgress('Caching crew images... (' + current + '/' + total + ')');
                 rosterCrew.iconUrl = found.url;
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
@@ -112,8 +112,8 @@ export async function loginSequence(onProgress: (description: string) => void) {
         if (rosterCrew.iconBodyUrl === '') {
             iconPromises.push(STTApi.imageProvider.getCrewImageUrl(rosterCrew, true).then((found: IFoundResult) => {
                 current++;
-                if (current % 10 == 0)
-                    onProgress('Caching crew images... (' + current + '/' + total + ')');
+                // if (current % 10 == 0)
+                //     onProgress('Caching crew images... (' + current + '/' + total + ')');
                 rosterCrew.iconBodyUrl = found.url;
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
@@ -133,8 +133,8 @@ export async function loginSequence(onProgress: (description: string) => void) {
         if (avatar.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getCrewImageUrl(avatar, false).then((found: IFoundResult) => {
                 current++;
-                if (current % 10 == 0)
-                    onProgress('Caching crew images... (' + current + '/' + total + ')');
+                // if (current % 10 == 0)
+                //     onProgress('Caching crew images... (' + current + '/' + total + ')');
                 avatar.iconUrl = found.url;
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
@@ -163,7 +163,7 @@ export async function loginSequence(onProgress: (description: string) => void) {
         ship.iconUrl = STTApi.imageProvider.getCached(ship);
         if (ship.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getShipImageUrl(ship).then((found: IFoundResult) => {
-                onProgress('Caching ship images... (' + current++ + '/' + total + ')');
+                //onProgress('Caching ship images... (' + current++ + '/' + total + ')');
                 let ship = STTApi.ships.find((ship) => ship.name === found.id);
                 if (ship) {
                     ship.iconUrl = found.url;
@@ -228,8 +228,8 @@ export async function loginSequence(onProgress: (description: string) => void) {
             if (item.iconUrl === '') {
                 iconPromises.push(STTApi.imageProvider.getItemImageUrl(item, item.id).then((found: IFoundResult) => {
                     current++;
-                    if (current % 10 == 0)
-                        onProgress('Caching item images... (' + current + '/' + total + ')');
+                    // if (current % 10 == 0)
+                    //     onProgress('Caching item images... (' + current + '/' + total + ')');
                     //let foundDTO = STTApi.playerData.character.items.find((item) => item.id === found.id);
                     let foundItem = STTApi.items.find((item) => item.id === found.id);
                     if (foundItem) {
@@ -347,7 +347,7 @@ export async function loginSequence(onProgress: (description: string) => void) {
 
         if (!faction.iconUrl || faction.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getFactionImageUrl(faction, faction.id).then((found: IFoundResult) => {
-                onProgress('Caching faction images... (' + current++ + '/' + total + ')');
+                // onProgress('Caching faction images... (' + current++ + '/' + total + ')');
                 let faction = STTApi.playerData.character.factions.find((faction) => faction.id === found.id);
                 if (faction) {
                     faction.iconUrl = found.url;
@@ -386,9 +386,9 @@ export async function loginSequence(onProgress: (description: string) => void) {
         if (crew.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getCrewImageUrl(crew, false).then((found: IFoundResult) => {
                 current++;
-                if (current % 10 === 0) {
-                    onProgress('Caching crew images... (' + current + '/' + total + ')');
-                }
+                // if (current % 10 === 0) {
+                //     onProgress('Caching crew images... (' + current + '/' + total + ')');
+                // }
                 crew.iconUrl = found.url;
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {
@@ -428,9 +428,9 @@ export async function loginSequence(onProgress: (description: string) => void) {
         if (equipment.iconUrl === '') {
             iconPromises.push(STTApi.imageProvider.getItemImageUrl(equipment, equipment.id).then((found: IFoundResult) => {
                 current++;
-                if (current % 10 == 0) {
-                    onProgress('Caching equipment images... (' + current + '/' + total + ')');
-                }
+                // if (current % 10 == 0) {
+                //     onProgress('Caching equipment images... (' + current + '/' + total + ')');
+                // }
                 let item = STTApi.itemArchetypeCache.archetypes.find((item) => item.id === found.id);
                 if (item) {
                     item.iconUrl = found.url;
@@ -457,7 +457,7 @@ export async function loginSequence(onProgress: (description: string) => void) {
         CONFIG.SPRITES[sprite].url = STTApi.imageProvider.getSpriteCached(CONFIG.SPRITES[sprite].asset, sprite);
         if (CONFIG.SPRITES[sprite].url === '') {
             iconPromises.push(STTApi.imageProvider.getSprite(CONFIG.SPRITES[sprite].asset, sprite, sprite).then((found: IFoundResult) => {
-                onProgress('Caching misc images... (' + current++ + '/' + total + ')');
+                // onProgress('Caching misc images... (' + current++ + '/' + total + ')');
                 CONFIG.SPRITES[found.id].url = found.url;
             }).catch((error: any) => { /*console.warn(error);*/ }));
         } else {

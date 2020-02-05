@@ -1,5 +1,3 @@
-import 'react-table/react-table.css';
-
 import React from 'react';
 import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
 import { Label } from 'office-ui-fabric-react/lib/Label';

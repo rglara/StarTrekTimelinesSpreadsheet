@@ -18,7 +18,7 @@
 import '../assets/css/App.css';
 import React from 'react';
 
-import { Portal } from 'semantic-ui-react';
+import 'react-table/react-table.css';
 
 // #!if ENV === 'electron'
 // #!else

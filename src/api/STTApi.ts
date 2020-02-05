@@ -30,7 +30,7 @@ import { NeededEquipmentClass, EquipNeedFilter, UnparsedEquipment, EquipNeed } f
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
-import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO } from './DTO';
+import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO, DatacoreCrewDTO } from './DTO';
 
 export class STTApiClass {
 	private _accessToken: string | undefined;
@@ -90,10 +90,10 @@ export class STTApiClass {
 	public imageProvider!: ImageProvider;
 	public inWebMode: boolean;
 	public allcrew!: CrewData[];
-	public bigbook!: any;
+	public datacore!: DatacoreCrewDTO[];
 
 	public serverAddress: string = 'http://localhost/';
-	private bigbookAddress: string = 'https://datacore.app/structured/botcrew.json';
+	private datacoreAddress: string = 'https://datacore.app/structured/botcrew.json';
 
 	// Used with Moment when adding an offset. Does not need to be used when
 	// doing a fresh request for data such as for gauntlet or voyage status
@@ -119,7 +119,7 @@ export class STTApiClass {
 			// In web mode, we don't hardcode the server, but simply load from the domain root
 			if (!keepServerAddress) {
 				this.serverAddress = '/';
-				this.bigbookAddress = '/botcrew.json';
+				this.datacoreAddress = '/botcrew.json';
 			}
 
 			this._net.setProxy(this.serverAddress + 'proxy');
@@ -494,9 +494,14 @@ export class STTApiClass {
 	// 	return this._net.get(CONFIG.URL_GITHUBRELEASES, {});
 	// }
 
-	async loadBigBook(): Promise<void> {
-        this.bigbook = await this._net.get(this.bigbookAddress, undefined);
-    }
+	async loadDatacore(): Promise<void> {
+		this.datacore = [];
+		try {
+			this.datacore = await this._net.get(this.datacoreAddress, undefined);
+		} catch (e) {
+			console.log('Failed loading data from datacore.app' + e);
+		}
+	}
 
 	async refreshRoster(): Promise<void> {
 		// TODO: need to reload icon urls as well
@@ -607,7 +612,7 @@ export class STTApiClass {
 	getNeededEquipment(filters: EquipNeedFilter, limitCrew: number[]): EquipNeed[] {
 		return this._neededEquipment.filterNeededEquipment(filters, limitCrew);
 	}
-	
+
     getNeededEquipmentFromList(unparsedEquipment: UnparsedEquipment[]): EquipNeed[] {
         return this._neededEquipment.filterNeededEquipmentFromList(unparsedEquipment);
     }

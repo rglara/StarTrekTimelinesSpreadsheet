@@ -70,18 +70,6 @@ export class CrewDuplicates extends React.Component {
             }
         });
 
-        // Add "big book" tier
-        duplicates.forEach(crew => {
-            let bb = STTApi.bigbook.find(c => c.symbol === crew.symbol);
-            if (bb) {
-                crew.bigbook_tier = bb.bigbook_tier;
-                crew.in_portal = bb.in_portal;
-            } else {
-                crew.bigbook_tier = undefined;
-                crew.in_portal = undefined;
-            }
-        });
-
         return {duplicates, selectedIds};
     }
 
