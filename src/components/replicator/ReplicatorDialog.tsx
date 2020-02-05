@@ -79,7 +79,7 @@ export const ReplicatorDialog = (props:{
 		setFuelCost(fuelCost);
 		setCurrencyCost(currencyCost);
 
-		if (props.targetArchetype.type !== 2 && props.targetArchetype.type !== 3) {
+		if (props.targetArchetype.type !== 2 && props.targetArchetype.type !== 3 && props.targetArchetype.type !== 9) {
 			setErrorMessage('Item might not replicate, type is ' + CONFIG.REWARDS_ITEM_TYPE[props.targetArchetype.type]);
 		}
 
