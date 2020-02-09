@@ -74,7 +74,7 @@ export const CrewPage = (props: {
         }
 
         if (showCanTrain) {
-            crewData = crewData.filter(crew => crew.level !== crew.max_level);
+            crewData = crewData.filter(crew => crew.level !== 100);
         }
 
         return crewData;

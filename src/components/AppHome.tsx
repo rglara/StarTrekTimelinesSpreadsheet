@@ -8,6 +8,7 @@ import { Checkbox } from 'office-ui-fabric-react/lib/Checkbox';
 import { TooltipHost, TooltipDelay, DirectionalHint } from 'office-ui-fabric-react/lib/Tooltip';
 import { initializeIcons } from 'office-ui-fabric-react/lib/Icons';
 import { History, createBrowserHistory } from 'history';
+import { ColorClassNames, ITheme } from '@uifabric/styling';
 
 // #!if ENV === 'electron' || ENV === 'exp'
 import { LoginDialog } from './LoginDialog';
@@ -17,6 +18,7 @@ import { ShipList } from './ShipList';
 import { ItemPage } from './ItemPage';
 import { CrewPage } from './crew/CrewPage';
 import { CrewShipPage } from './crew/CrewShipPage';
+import { CrewTopPage } from './crew/CrewTopPage';
 import { GauntletHelper } from './GauntletHelper';
 import { MissionExplorer } from './MissionExplorer';
 import { AboutAndHelp } from './AboutAndHelp';
@@ -39,7 +41,6 @@ import { loginSequence } from '../api';
 // import { createIssue } from '../utils/githubUtils';
 import { openShellExternal, getAppVersion } from '../utils/pal';
 
-import { ColorClassNames, ITheme } from '@uifabric/styling';
 
 // #!if ENV === 'electron'
 // import { rcompare } from 'semver';
@@ -232,12 +233,12 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 						<br />
 					</div>
 					<DialogFooter>
-						<PrimaryButton onClick={() => { openShellExternal('https://github.com/IAmPicard/StarTrekTimelinesSpreadsheet/blob/master/README.md'); }} text='Read more...' />
+						{/* <PrimaryButton onClick={() => { openShellExternal('https://github.com/IAmPicard/StarTrekTimelinesSpreadsheet/blob/master/README.md'); }} text='Read more...' /> */}
 						<DefaultButton onClick={() => { this._onDismissBootMessage(); }} text='Ok' />
 					</DialogFooter>
 				</Dialog>
 
-                {/* #!if ENV === 'electron' || ENV === 'exp' */}
+				{/* #!if ENV === 'electron' || ENV === 'exp' */}
 				{this.state.showLoginDialog && <LoginDialog onAccessToken={this._onAccessToken} />}
 				{/* #!endif */}
 
@@ -260,6 +261,9 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 		switch (this.state.currentTab) {
 			case 'Crew':
 				return <CrewPage onCommandItemsUpdate={commandItemsUpdater} />;
+
+			case 'CrewTop':
+				return <CrewTopPage onCommandItemsUpdate={commandItemsUpdater} />;
 
 			case 'CrewShip':
 				return <CrewShipPage onCommandItemsUpdate={commandItemsUpdater} />;
@@ -431,6 +435,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 			this._tabMenuItem({ key: 'FactionDetails', name: 'Factions', itemIcon: 'Teamwork' }),
 			this._tabMenuItem({ key: 'Shuttles', name: 'Shuttles', itemIcon: 'Sections' }),
 			this._tabMenuItem({ key: 'CryoCollections', name: 'Cryo collections', itemIcon: 'CheckList' }),
+			this._tabMenuItem({ key: 'CrewTop', name: 'Top Crew', itemIcon: 'Teamwork' }),
 			this._tabMenuItem({ key: 'CrewShip', name: 'Crew Ship Abilities', itemIcon: 'Teamwork' }),
 			this._tabMenuItem({ key: 'Experiments', name: 'Experiments', itemIcon: 'TestAutoSolid', disabled: true })];
 	}
@@ -524,7 +529,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 		STTApi.refreshEverything(true);
 		this.setState({ showLoginDialog: true, hideErrorDialog: true, dataLoaded: false, captainName: '', spinnerLabel: 'Loading...' });
 
-        this.props.onLogout();
+		this.props.onLogout();
 	}
 
 	_onRefresh() {

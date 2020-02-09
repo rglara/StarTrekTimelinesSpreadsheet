@@ -107,6 +107,7 @@ function crewToRoster(dto: CrewDTO) : CrewData {
 			expires_in: dto.expires_in,
 			active: !dto.in_buy_back_state,
 			external: false,
+			fe: equipment_slots.length > 0 && equipment_slots.every(eq => eq.have)
 		},
 
 		rarity: dto.rarity,

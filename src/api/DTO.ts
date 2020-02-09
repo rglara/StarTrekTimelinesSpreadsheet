@@ -170,6 +170,7 @@ export interface CrewData {
       expires_in?: number;
       // Is this from 'allcrew' or local
       external: boolean;
+      fe: boolean;
    }
    full_body: ImageDataDTO;
    iconUrl?: string;
@@ -181,6 +182,7 @@ export interface CrewData {
    isExternal: boolean;
    level: number;
 
+   /** note: this is not 100; this represents the max trainable level according to the current equipment */
    max_level: number;
    max_rarity: number;
    name: string;
@@ -202,6 +204,9 @@ export interface CrewData {
    voyage_score: number;
    gauntlet_score: number;
    skills: { [sk: string]: SkillData; };
+
+   /** each index is a skill name, e.g. 'command_skill' */
+   // shuttle_skill_pairs: { [sk_pri: string]: { [sk_sec: string] : number }; };
 
    datacore?: DatacoreCrewDTO;
 }
