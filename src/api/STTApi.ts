@@ -127,7 +127,7 @@ export class STTApiClass {
 				//addr = this.serverAddress + 'allcrew.json';
 				// #!endif
 
-				this.datacoreAddress = '/botcrew.json';
+				//this.datacoreAddress = '/botcrew.json';
 			}
 
 			this._net.setProxy(this.serverAddress + 'proxy');
@@ -505,7 +505,7 @@ export class STTApiClass {
 	async loadDatacore(): Promise<void> {
 		this.datacore = [];
 		try {
-			this.datacore = await this._net.get(this.datacoreAddress, undefined);
+			this.datacore = await this._net.get_proxy(this.datacoreAddress, undefined);
 		} catch (e) {
 			console.log('Failed loading data from datacore.app' + e);
 		}

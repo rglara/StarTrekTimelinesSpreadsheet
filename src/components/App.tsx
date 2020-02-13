@@ -38,18 +38,21 @@ export const App = () => {
 	// let [helloLang, setHelloLang] = React.useState('Hello');
 	let [anonymousUser, setAnonymousUser] = React.useState(false);
 
-	// #!if ENV === 'electron' || ENV === 'exp'
-	STTApi.setWebMode(false, false);
-	// #!elseif ENV === 'webtest'
-	STTApi.setWebMode(true, true);
-	// #!else
-	STTApi.setWebMode(true, false);
-	// #!endif
+	React.useEffect(() => {
+		// #!if ENV === 'electron' || ENV === 'exp'
+		STTApi.setWebMode(false, false);
+		// #!elseif ENV === 'webtest'
+		STTApi.setWebMode(true, false);
+		// #!else
+		STTApi.setWebMode(true, false);
+		// #!endif
 
-	STTApi.loginWithCachedAccessToken().then(success => {
-		setPreBoot(false);
-		setAnonymousUser(!success);
-	});
+		STTApi.loginWithCachedAccessToken().then(success => {
+			setPreBoot(false);
+			setAnonymousUser(!success);
+		});
+
+	}, []);
 
 	// // #!if ENV === 'webtest' || ENV === 'web'
 	// if (window.location.hostname !== 'eu.iampicard.com') {
