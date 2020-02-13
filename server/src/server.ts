@@ -6,7 +6,8 @@ import bodyParser from 'body-parser';
 import expressWinston from 'express-winston';
 
 import { AssetController, ProxyController, MotdController } from './controllers';
-import { AssetCache, Logger } from './logic';
+import { Logger } from './logic/logger';
+import { AssetCache } from './logic/assetcache';
 
 import fs from 'fs';
 import https from 'https';
@@ -17,18 +18,18 @@ import https from 'https';
 const app: express.Application = express();
 
 // Certificate
-const privateKey = fs.readFileSync('/home/stt/stt/certs/privkey.pem', 'utf8');
-const certificate = fs.readFileSync('/home/stt/stt/certs/cert.pem', 'utf8');
-const ca = fs.readFileSync('/home/stt/stt/certs/ca.pem', 'utf8');
+// const privateKey = fs.readFileSync('/home/stt/stt/certs/privkey.pem', 'utf8');
+// const certificate = fs.readFileSync('/home/stt/stt/certs/cert.pem', 'utf8');
+// const ca = fs.readFileSync('/home/stt/stt/certs/ca.pem', 'utf8');
 
-const credentials = {
-	key: privateKey,
-	cert: certificate,
-	ca: ca
-};
+// const credentials = {
+	// key: privateKey,
+	// cert: certificate,
+	// ca: ca
+// };
 
 // The port the express app will listen on
-const port: number = 443;
+const port: number = 8060;
 
 let nocache = (req: Request, res: Response, next: any) => {
     res.setHeader('Surrogate-Control', 'no-store');
@@ -50,7 +51,7 @@ app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 
 // Add CORS support
 let corsOptions: any = {
-  origin: 'https://iampicard.com',
+  // origin: 'http://localhost:8050', //TODO: will need origin if deployed anywhere reachable
   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 };
 
@@ -68,13 +69,13 @@ app.use('/assets', express.static(AssetCache.AssetPath));
 app.use(express.static('static'))
 
 // use like this without SSL:
-/*app.listen(port, () => {
-    // Success callback
-    console.log(`Listening at http://localhost:${port}/`);
-});*/
-
-const httpsServer = https.createServer(credentials, app);
-
-httpsServer.listen(port, () => {
-	console.log(`HTTPS Server running on port ${port}`);
+app.listen(port, () => {
+  // Success callback
+  console.log(`Listening at ${port}/`);
 });
+
+// const httpsServer = https.createServer(credentials, app);
+
+// httpsServer.listen(port, () => {
+// 	console.log(`HTTPS Server running on port ${port}`);
+// });

@@ -3,6 +3,7 @@ import { URLSearchParams } from 'url';
 import fetch from 'node-fetch';
 
 import { Logger } from './logger';
+import { PlayerResponseDTO, ItemArchetypeDTO, CrewDTO } from '../../../src/api/DTO';
 
 export class ProxyResult {
     Status: number = 200;
@@ -10,7 +11,7 @@ export class ProxyResult {
 }
 
 export class ProxyClass {
-    private _item_archetype_cache: any[];
+    private _item_archetype_cache: ItemArchetypeDTO[];
 
     constructor() {
         if (!fs.existsSync('cache/')) {
@@ -52,7 +53,7 @@ export class ProxyClass {
 
         if (response.ok && (uri === 'https://stt.disruptorbeam.com/player')) {
             // Additional processing for player data to save on number of requests
-            let playerData = await response.json();
+            let playerData : PlayerResponseDTO = await response.json();
             let originalStatus = response.status;
 
             await this.preProcessPlayerData(playerData, ip);
@@ -104,7 +105,7 @@ export class ProxyClass {
 
         if (response.ok && (uri === 'https://stt.disruptorbeam.com/stasis_vault/immortal_restore_info')) {
             // Additional processing for immortal restore
-            let frozenData = await response.json();
+            let frozenData : { crew: CrewDTO } = await response.json();
             let originalStatus = response.status;
 
             await this.processFrozenData(frozenData);
@@ -122,7 +123,7 @@ export class ProxyClass {
     }
 
     // TODO: the immortals should be loaded from cache instead of stored on the client (but with the right buffs applied to skills)
-    private async processFrozenData(frozenData: any) {
+    private async processFrozenData(frozenData: { crew: CrewDTO }) {
         // TODO: this should probably live in memory instead (or at least the Set / list of symbols should)
         if (!fs.existsSync(`cache/${frozenData.crew.symbol}.json`)) {
             await new Promise((resolve, reject) => {
@@ -137,31 +138,33 @@ export class ProxyClass {
         }
     }
 
-    private async preProcessPlayerData(playerData: any, ip: string) {
+    private async preProcessPlayerData(playerData: PlayerResponseDTO, ip: string) {
         let promises: Promise<void>[] = [];
-        playerData.player.character.crew.forEach((crew: any) => {
-            if ((crew.level === 100) && (crew.rarity === crew.max_rarity)) {
-                // Add this to the immortal list
-                promises.push(this.processFrozenData({ crew }));
-            }
-        });
+        if (playerData && playerData.player) {
+            playerData.player.character.crew.forEach((crew) => {
+                if ((crew.level === 100) && (crew.rarity === crew.max_rarity)) {
+                    // Add this to the immortal list
+                    promises.push(this.processFrozenData({ crew }));
+                }
+            });
+        }
 
         await Promise.all(promises);
     }
 
     // TODO: equipment details for frozen crew not loaded
-    private async processPlayerData(playerData: any, qs: any, stack: number) {
+    private async processPlayerData(playerData: PlayerResponseDTO, qs: any, stack: number) {
         let mapEquipment = new Set();
         let missingEquipment = new Set();
 
-        playerData.item_archetype_cache.archetypes.forEach((equipment: any) => {
+        playerData.item_archetype_cache.archetypes.forEach((equipment) => {
             mapEquipment.add(equipment.id);
         });
 
         // Search for all equipment in the recipe tree
-        playerData.item_archetype_cache.archetypes.forEach((equipment: any) => {
+        playerData.item_archetype_cache.archetypes.forEach((equipment) => {
             if (equipment.recipe && equipment.recipe.demands && (equipment.recipe.demands.length > 0)) {
-                equipment.recipe.demands.forEach((item: any) => {
+                equipment.recipe.demands.forEach((item) => {
                     if (!mapEquipment.has(item.archetype_id)) {
                         missingEquipment.add(item.archetype_id);
                     }
@@ -170,8 +173,8 @@ export class ProxyClass {
         });
 
         // Search for all equipment currently assigned to crew
-        playerData.player.character.crew.forEach((crew: any) => {
-            crew.equipment_slots.forEach((es: any) => {
+        playerData.player!.character.crew.forEach((crew) => {
+            crew.equipment_slots.forEach((es) => {
                 if (!mapEquipment.has(es.archetype)) {
                     missingEquipment.add(es.archetype);
                 }
@@ -195,7 +198,7 @@ export class ProxyClass {
 
             if (missingEquipment.size > 0) {
                 // After adding everything in the cache, there is still equipment we don't know about, let's load it from DB's servers
-                let loadedArchetypes: any[] = [];
+                let loadedArchetypes: ItemArchetypeDTO[] = [];
 
                 let equipmentIds = Array.from(missingEquipment);
                 while (equipmentIds.length > 0) {
@@ -206,7 +209,7 @@ export class ProxyClass {
                     searchParams.set('client_api', qs.client_api);
                     searchParams.set('access_token', qs.access_token);
                     toLoad.forEach((id) => {
-                        searchParams.append('ids[]', id);
+                        searchParams.append('ids[]', id + '');
                     });
 
                     let response = await fetch('https://stt.disruptorbeam.com/item/description?' + searchParams.toString());
@@ -234,7 +237,7 @@ export class ProxyClass {
         }
     }
 
-    private async updateArchetypeCache(archetypes: any) {
+    private async updateArchetypeCache(archetypes: ItemArchetypeDTO[]) {
         this._item_archetype_cache = archetypes;
 
         return new Promise((resolve, reject) => {

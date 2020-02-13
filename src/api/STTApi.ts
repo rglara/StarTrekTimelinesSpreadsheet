@@ -98,7 +98,7 @@ export class STTApiClass {
 	public allcrew!: CrewData[];
 	public datacore!: DatacoreCrewDTO[];
 
-	public serverAddress: string = 'http://localhost/';
+	public serverAddress: string = 'http://localhost:8060/stt/server';
 	private datacoreAddress: string = 'https://datacore.app/structured/botcrew.json';
 
 	// Used with Moment when adding an offset. Does not need to be used when
@@ -124,7 +124,7 @@ export class STTApiClass {
 		if (this.inWebMode) {
 			// In web mode, we don't hardcode the server, but simply load from the domain root
 			if (!keepServerAddress) {
-				this.serverAddress = '/';
+				this.serverAddress = '/stt/server/';
 
 				//TODO: get datacore to load for web app
 				// #!if ENV === 'electron'

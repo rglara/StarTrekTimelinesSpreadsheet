@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { parseAssetBundle } from 'unitiyfs-asset-parser';
+import { parseAssetBundle } from '../unitiyfs-asset-parser';
 import fetch from 'node-fetch';
 import pngjs from 'pngjs';
 
@@ -56,6 +56,11 @@ export class AssetCacheClass {
             urlAsset += asset_file ? asset_file : sprite_name;
         }
 
+        const k = true;
+        if (k) {
+            throw new Error(`Failed to parse '${urlAsset}'`);
+        }
+
         Logger.info('Downloading new asset', { urlAsset });
 
         let headers = {
@@ -82,12 +87,12 @@ export class AssetCacheClass {
 
         let pngImage: Buffer;
         if (sprite_name && asset_file) {
-            let sprite = assetBundle.sprites.find((sprite) => sprite.spriteName === sprite_name);
+            let sprite = assetBundle.sprites.find((sprite) => sprite['spriteName'] === sprite_name);
             if (!sprite) {
                 throw new Error(`Failed to find sprite '${sprite_name}' in asset '${urlAsset}'`);
             }
-            let png = new pngjs.PNG({ width: sprite.spriteBitmap.width, height: sprite.spriteBitmap.height });
-            png.data = sprite.spriteBitmap.data;
+            let png = new pngjs.PNG({ width: sprite['spriteBitmap']['width'], height: sprite['spriteBitmap']['height'] });
+            png.data = sprite['spriteBitmap']['data'];
             pngImage = pngjs.PNG.sync.write(png);
         } else {
             let png = new pngjs.PNG({ width: assetBundle.imageBitmap.width, height: assetBundle.imageBitmap.height });
