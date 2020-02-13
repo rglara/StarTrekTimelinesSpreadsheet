@@ -297,3 +297,13 @@
       opacity: 0;
     }
 }
+
+/* override bootstrap */
+button,
+button:hover,
+button:active,
+button:visited,
+button:focus {
+  outline: none !important;
+  border: none;
+}
