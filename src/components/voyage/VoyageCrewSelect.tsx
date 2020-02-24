@@ -46,22 +46,31 @@ export const VoyageCrewSelect = (props: {
 	const [bestShips, setBestShips] = React.useState(bestVoyageShips);
 	const [selectedShipId, setSelectedShipId] = React.useState(bestVoyageShips[0].ship.id as number | undefined);
 
-		let peopleListVal: VoyageCrewEntry[] = [];
-		STTApi.roster.forEach(crew => {
+	let peopleListVal: VoyageCrewEntry[] = [];
+	STTApi.roster.forEach(crew => {
+		if (includeFrozen || crew.status.frozen <= 0) {
 			peopleListVal.push({
 				key: crew.crew_id || crew.id,
 				value: crew.crew_id || crew.id,
 				image: { avatar: true, src: crew.iconUrl },
 				text: crew.name
 			});
-		});
-		peopleListVal.sort((a, b) => (a.text < b.text) ? -1 : ((a.text > b.text) ? 1 : 0));
-	const [peopleList, setPeopleList] = React.useState(peopleListVal);
+		}
+	});
+	peopleListVal.sort((a, b) => (a.text < b.text) ? -1 : ((a.text > b.text) ? 1 : 0));
+	//const [peopleList, setPeopleList] = React.useState(peopleListVal);
+	const peopleList = peopleListVal;
 
 		// See which crew is needed in the event to give the user a chance to remove them from consideration
-		let result = bonusCrewForCurrentEvent();
-	const [activeEvent, setActiveEvent] = React.useState(result ? result.eventName : undefined);
+	let result = bonusCrewForCurrentEvent(includeFrozen);
+	//const [activeEvent, setActiveEvent] = React.useState(result ? result.eventName : undefined);
+	const activeEvent = result ? result.eventName : undefined;
 	const [currentSelectedItems, setCurrentSelectedItems] = React.useState(result ? result.crewIds : []);
+
+	React.useEffect(() => {
+		let result = bonusCrewForCurrentEvent(includeFrozen);
+		setCurrentSelectedItems(result ? result.crewIds : []);
+	}, [includeFrozen]);
 
 	// function getIndexBySlotName(slotName: any) : number | undefined {
 	// 	const crewSlots = STTApi.playerData.character.voyage_descriptions[0].crew_slots;

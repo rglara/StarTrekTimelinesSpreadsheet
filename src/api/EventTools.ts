@@ -5,7 +5,7 @@ export interface BonusCrew {
     crewIds: number[];
 };
 
-export function bonusCrewForCurrentEvent(): BonusCrew | undefined {
+export function bonusCrewForCurrentEvent(includeFrozen: boolean): BonusCrew | undefined {
     let result : BonusCrew = {
         eventName : '',
         crewIds: []
@@ -50,7 +50,9 @@ export function bonusCrewForCurrentEvent(): BonusCrew | undefined {
         for (let symbol in eventCrew) {
             let foundCrew = STTApi.roster.find(crew => crew.symbol === symbol);
             if (foundCrew) {
-                result.crewIds.push(foundCrew.crew_id || foundCrew.id);
+                if (includeFrozen || foundCrew.status.frozen <= 0) {
+                    result.crewIds.push(foundCrew.crew_id || foundCrew.id);
+                }
             }
         }
 

@@ -4,7 +4,7 @@ import { Button, Icon, Popup } from 'semantic-ui-react';
 import ReactTable, { SortingRule } from 'react-table';
 
 import STTApi, { CONFIG, RarityStars, formatTimeSeconds, CollapsibleSection, download, CrewSkills, getItemDetailsLink } from '../../api';
-import { loadVoyage, recallVoyage, resolveDilemma, VOYAGE_AM_DECAY_PER_MINUTE } from './VoyageTools';
+import { loadVoyage, recallVoyage, resolveDilemma, VOYAGE_AM_DECAY_PER_MINUTE, voyDuration } from './VoyageTools';
 import { estimateVoyageRemaining, CalcRemainingOptions } from './voyageCalc';
 import { VoyageLogEntry } from './VoyageLogEntry';
 import { VoyageNarrativeDTO, VoyageDTO, CrewData, RewardDTO, VoyageExportData } from '../../api/DTO';
@@ -62,11 +62,17 @@ export const VoyageLog = (props:{}) => {
 
    const rewardTableColumns = getColumns();
 
+   let voyRunTime = 0;
+   if (voyageExport && voyageExport.narrative) {
+      voyRunTime = voyDuration(voyageExport);
+   }
+
    return <div style={{ userSelect: 'initial' }}>
          <h3>Voyage on the {shipName}</h3>
          <VoyageState
             voyage={voyage}
             estimatedMinutesLeft={estimatedMinutesLeft}
+            voyRunTime={voyRunTime}
             computingNativeEstimate={computingNativeEstimate}
             recall={recall} />
          <VoyageDilemma voyage={voyage} reload={reloadVoyageState} />
@@ -520,6 +526,7 @@ const VoyageState = (props: {
    voyage?: VoyageDTO;
    estimatedMinutesLeft?: number;
    computingNativeEstimate: boolean;
+   voyRunTime: number;
    recall: () => void;
 }) => {
    if (!props.voyage) {
@@ -528,9 +535,12 @@ const VoyageState = (props: {
    if (props.voyage.state === 'recalled') {
       return (
          <p>
-            Voyage has lasted for {formatTimeSeconds(props.voyage.voyage_duration)} and it's currently returning (
-               {formatTimeSeconds(props.voyage.recall_time_left)} left).
-            </p>
+            Voyage ran for {formatTimeSeconds(props.voyRunTime)} (including recall: {formatTimeSeconds(props.voyage.voyage_duration)})
+            and
+            {(props.voyage.recall_time_left ?? 0) > 0 ?
+            <> it's currently returning ({formatTimeSeconds(props.voyage.recall_time_left)} left).</> : <> it has returned</>
+            }
+         </p>
       );
    } else if (props.voyage.state === 'failed') {
       return (

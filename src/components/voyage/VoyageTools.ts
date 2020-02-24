@@ -1,6 +1,6 @@
 import STTApi from '../../api/index';
 import { mergeDeep } from '../../api/ObjectMerge';
-import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO } from '../../api/DTO';
+import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO, VoyageExportData } from '../../api/DTO';
 
 /**
  * Worst-case voyage AM decay rate (if all hazards fail)
@@ -15,6 +15,9 @@ import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO } from '../../ap
  * = -.4125 + .0625 + .002083 = -.347916 (*60 s/m) = 20.875 AM/m
  */
 export const VOYAGE_AM_DECAY_PER_MINUTE = 20.875;
+
+export const SECONDS_PER_TICK: number = 20;
+export const TICKS_PER_DILEMMA: number = 360; // sec/min(60) * tick/sec(1/20) * min/hr(60) * hr/dilemma(2) = 360
 
 export async function loadVoyage(voyageId: number, newOnly: boolean = true): Promise<VoyageNarrativeDTO[]> {
 	let data = await STTApi.executePostRequest('voyage/refresh', { voyage_status_id: voyageId, new_only: newOnly });
@@ -154,4 +157,28 @@ export function bestVoyageShip(): {ship: ShipDTO, score: number }[] {
 	consideredShips = consideredShips.sort((a, b) => b.score - a.score);
 
 	return consideredShips;
+}
+
+export function voyDuration(narr: VoyageExportData) {
+	let maxLogIndex: number = narr.narrative[narr.narrative.length - 1].index;
+	let dilemmaCount = Math.floor(maxLogIndex / TICKS_PER_DILEMMA);
+	let lastDilemmaTick = dilemmaCount * TICKS_PER_DILEMMA;
+
+	let tailTickCount = maxLogIndex - lastDilemmaTick;
+
+	//console.log('max ' + maxLogIndex + " dil count" + dilemmaCount + ' tail ' + tailTickCount);
+
+	if (tailTickCount > 0) {
+		let firstAfter: VoyageNarrativeDTO | undefined = narr.narrative.find(entry => entry.index === (lastDilemmaTick + 1));
+		if (firstAfter) {
+			let tailTime = narr.narrative[narr.narrative.length - 1].event_time - firstAfter.event_time;
+			let tailTicks = tailTime / SECONDS_PER_TICK + 1; // add one back because the subtraction was to the "first after"
+
+			let totalTime = (dilemmaCount * TICKS_PER_DILEMMA + tailTicks) * SECONDS_PER_TICK;
+			//console.log('tailticks: ' + tailTicks + ' total time: ' + formatTimeSeconds(totalTime, true));
+			return totalTime;
+		}
+	}
+
+	return dilemmaCount * TICKS_PER_DILEMMA * SECONDS_PER_TICK;
 }
