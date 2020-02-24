@@ -13,11 +13,12 @@ import { MissionCostDetails } from '../../api/EquipmentTools';
 interface ItemDemand {
    equipment: ItemArchetypeDTO;
    bestCrewChance: number;
-   calcSlot: any;
+   calcSlot: CalcSlot;
    craftCost: number;
    have: number;
    itemDemands: {
       rd: ItemArchetypeDemandDTO;
+      archetype?: ItemArchetypeDTO;
       item?: ItemData;
    }[];
 }
@@ -46,116 +47,128 @@ interface FarmListItem {
    sources: (MissionCostDetails & { chance: number; quotient: number; title: string })[]
 }
 
-function parseAdventure(adventure: EventGatherPoolAdventureDTO, crew_bonuses: { [crew_symbol: string]: number }): ItemDemand[] {
-   function calcChance(skillValue: number) {
-      const cc = STTApi.serverConfig!.config.craft_config;
-      let midpointOffset = skillValue / STTApi.serverConfig!.config.craft_config.specialist_challenge_rating;
-
-      let val = Math.floor(
-         100 /
-         (1 +
-            Math.exp(
-               -STTApi.serverConfig!.config.craft_config.specialist_chance_formula.steepness *
-               (midpointOffset - STTApi.serverConfig!.config.craft_config.specialist_chance_formula.midpoint)
+// Compute craft success chance based on formula steepness, challenge rating, etc.
+function calcChance(skillValue: number) {
+   let midpointOffset = skillValue / STTApi.serverConfig!.config.craft_config.specialist_challenge_rating;
+   let val = Math.floor(
+      100 /
+      (1 +
+         Math.exp(
+            -STTApi.serverConfig!.config.craft_config.specialist_chance_formula.steepness *
+            (midpointOffset - STTApi.serverConfig!.config.craft_config.specialist_chance_formula.midpoint)
             ))
       );
+   return Math.min(val / 100, STTApi.serverConfig!.config.craft_config.specialist_maximum_success_chance);
+   // const cc = STTApi.serverConfig!.config.craft_config;
+   // let midpointOffset = skillValue / cc.specialist_challenge_rating;
+   // let val = Math.floor(100 / (1 + Math.exp(cc.specialist_chance_formula.steepness * (midpointOffset - cc.specialist_chance_formula.midpoint))));
+   // return Math.min(val / 100, cc.specialist_maximum_success_chance);
+};
 
-      return Math.min(val / 100, STTApi.serverConfig!.config.craft_config.specialist_maximum_success_chance);
+function processArchetype(arch: ItemArchetypeDTO | undefined, bestCrew: BonusCrew[]) : ItemDemand | undefined {
+   if (!arch || !arch.recipe || !arch.recipe.jackpot) {
+      return undefined;
+   }
+
+   let skills = arch.recipe.jackpot.skills;
+
+   let calcSlot: CalcSlot = {
+      bestCrew: bestCrew.map(bc => { return {...bc}}),
+      skills: []
    };
 
+   if (skills.length === 1) {
+      // AND or single
+      calcSlot.skills = skills[0].split(',');
+      if (calcSlot.skills.length === 1) {
+         calcSlot.type = 'SINGLE';
+         calcSlot.bestCrew.forEach((c) => {
+            c.total = c.skills[calcSlot.skills[0]];
+         });
+      } else {
+         calcSlot.type = 'AND';
+         calcSlot.bestCrew.forEach((c) => {
+            c.total = Math.floor((c.skills[calcSlot.skills[0]] + c.skills[calcSlot.skills[1]]) / 2);
+         });
+      }
+   } else {
+      // OR
+      calcSlot.type = 'OR';
+      calcSlot.skills = skills;
+      calcSlot.bestCrew.forEach((c) => {
+         c.total = Math.max(c.skills[calcSlot.skills[0]], c.skills[calcSlot.skills[1]]);
+      });
+   }
+
+   let seen = new Set<number>();
+   calcSlot.bestCrew = calcSlot.bestCrew.filter((c) => c.total > 0).filter((c) => (seen.has(c.crew_id) ? false : seen.add(c.crew_id)));
+
+   calcSlot.bestCrew.forEach(c => c.chance = calcChance(c.total));
+   if (arch.recipe.jackpot.trait_bonuses) {
+      for (let trait in arch.recipe.jackpot.trait_bonuses) {
+         let tv = arch.recipe.jackpot.trait_bonuses[trait];
+         calcSlot.bestCrew.forEach(c => {
+            if (c.crew.rawTraits.includes(trait)) {
+               c.chance += tv;
+            }
+         });
+      }
+   }
+
+   calcSlot.bestCrew.sort((a, b) => a.chance - b.chance);
+   calcSlot.bestCrew = calcSlot.bestCrew.reverse();
+
+   let bestCrewChance = calcSlot.bestCrew[0].chance;
+
+   calcSlot.bestCrew.forEach((c) => {
+      c.text = `${c.crew.name} (${c.total})`;
+      c.value = c.crew.symbol;
+      c.image = c.crew.iconUrl;
+      c.chance = Math.floor(Math.min(c.chance, 1) * 100);
+   });
+
+   bestCrewChance = calcSlot.bestCrew[0].chance;//Math.floor(Math.min(bestCrewChance, 1) * 100);
+
+   let itemDemands: { rd: ItemArchetypeDemandDTO, archetype?: ItemArchetypeDTO, item?: ItemData }[] = [];
+   for (let rd of arch.recipe.demands) {
+      const item = STTApi.items.find(item => item.archetype_id === rd.archetype_id);
+      const archetype = STTApi.itemArchetypeCache.archetypes.find(arch => arch.id === rd.archetype_id);
+      itemDemands.push({
+         rd,
+         archetype,
+         item
+      });
+   }
+
+   let have = STTApi.items.find(item => item.archetype_id === arch!.id);
+
+   let craftCost = 0;
+   if (arch.type === 3) {
+      craftCost = STTApi.serverConfig!.config.craft_config.cost_by_rarity_for_component[arch.rarity].amount;
+   } else if (arch.type === 2) {
+      craftCost = STTApi.serverConfig!.config.craft_config.cost_by_rarity_for_equipment[arch.rarity].amount;
+   } else {
+      console.warn('Equipment of unknown type', arch);
+   }
+
+   return {
+      equipment: arch,
+      bestCrewChance,
+      calcSlot,
+      craftCost,
+      have: have ? have.quantity : 0,
+      itemDemands
+   };
+}
+
+function processAdventureDemands(adventure: EventGatherPoolAdventureDTO, bonusCrew: BonusCrew[]): ItemDemand[] {
    let demands: ItemDemand[] = [];
    adventure.demands.forEach((demand) => {
-      let e = STTApi.itemArchetypeCache.archetypes.find(equipment => equipment.id === demand.archetype_id);
-      if (!e || !e.recipe || !e.recipe.jackpot) {
-         return;
+      let arch = STTApi.itemArchetypeCache.archetypes.find(equipment => equipment.id === demand.archetype_id);
+      const archDemand = processArchetype(arch, bonusCrew);
+      if (archDemand) {
+         demands.push(archDemand);
       }
-
-      let skills = e.recipe.jackpot.skills;
-
-      let calcSlot: CalcSlot = {
-         bestCrew: getRosterWithBonuses(crew_bonuses),
-         skills: []
-      };
-
-      if (skills.length === 1) {
-         // AND or single
-         calcSlot.skills = skills[0].split(',');
-         if (calcSlot.skills.length === 1) {
-            calcSlot.type = 'SINGLE';
-            calcSlot.bestCrew.forEach((c) => {
-               c.total = c.skills[calcSlot.skills[0]];
-            });
-         } else {
-            calcSlot.type = 'AND';
-            calcSlot.bestCrew.forEach((c) => {
-               c.total = Math.floor((c.skills[calcSlot.skills[0]] + c.skills[calcSlot.skills[1]]) / 2);
-            });
-         }
-      } else {
-         // OR
-         calcSlot.type = 'OR';
-         calcSlot.skills = skills;
-         calcSlot.bestCrew.forEach((c) => {
-            c.total = Math.max(c.skills[calcSlot.skills[0]], c.skills[calcSlot.skills[1]]);
-         });
-      }
-
-      let seen = new Set<number>();
-      calcSlot.bestCrew = calcSlot.bestCrew.filter((c) => c.total > 0).filter((c) => (seen.has(c.crew_id) ? false : seen.add(c.crew_id)));
-
-      calcSlot.bestCrew.forEach(c => c.chance = calcChance(c.total));
-      if (e.recipe.jackpot.trait_bonuses) {
-         for (let trait in e.recipe.jackpot.trait_bonuses) {
-            let tv = e.recipe.jackpot.trait_bonuses[trait];
-            calcSlot.bestCrew.forEach(c => {
-               if (c.crew.rawTraits.includes(trait)) {
-                  c.chance += tv;
-               }
-            });
-         }
-      }
-
-      calcSlot.bestCrew.sort((a, b) => a.chance - b.chance);
-      calcSlot.bestCrew = calcSlot.bestCrew.reverse();
-
-      let bestCrewChance = calcSlot.bestCrew[0].chance;
-
-      calcSlot.bestCrew.forEach((c) => {
-         c.text = `${c.crew.name} (${c.total})`;
-         c.value = c.crew.symbol;
-         c.image = c.crew.iconUrl;
-      });
-
-      bestCrewChance = Math.floor(Math.min(bestCrewChance, 1) * 100);
-
-      let itemDemands: { rd: ItemArchetypeDemandDTO, item?: ItemData }[] = [];
-      for (let rd of e.recipe.demands) {
-         let item = STTApi.items.find(item => item.archetype_id === rd.archetype_id);
-         itemDemands.push({
-            rd,
-            item
-         });
-      }
-
-      let have = STTApi.items.find(item => item.archetype_id === e!.id);
-
-      let craftCost = 0;
-      if (e.type === 3) {
-         craftCost = STTApi.serverConfig!.config.craft_config.cost_by_rarity_for_component[e.rarity].amount;
-      } else if (e.type === 2) {
-         craftCost = STTApi.serverConfig!.config.craft_config.cost_by_rarity_for_equipment[e.rarity].amount;
-      } else {
-         console.warn('Equipment of unknown type', e);
-      }
-
-      demands.push({
-         equipment: e,
-         bestCrewChance,
-         calcSlot,
-         craftCost,
-         have: have ? have.quantity : 0,
-         itemDemands
-      });
    });
 
    return demands;
@@ -216,11 +229,18 @@ const GalaxyAdventureDemand = (props: {
                   {crew.active_id && <span> Active!</span>}
                </div>
                <div>
-                  {demand.itemDemands.map((id, index, all) =>
-                     <div key={index} ><ItemDisplay src={id.item!.iconUrl!} style={{display: 'inline'}}
-                        size={50} maxRarity={id.item!.rarity} rarity={id.item!.rarity} />{id.rd.count}x {id.item ? id.item.name : 'NEED'} (have {id.item ? id.item.quantity : 0}){
-                           index === all.length-1 ? '' : ', '
-                        }</div>)
+                  {demand.itemDemands.map((id, index, all) => {
+                     if (!id.archetype) {
+                        return <div key={index} ><ItemDisplay src={''} style={{ display: 'inline' }}
+                           size={50} maxRarity={0} rarity={0} />{id.rd.count}x {'UNKNOWN-NEEDED'} (have 0){
+                              index === all.length - 1 ? '' : ', '
+                           }</div>;
+                     }
+                     return <div key={index} ><ItemDisplay src={id.archetype.iconUrl!} style={{display: 'inline'}}
+                        size={50} maxRarity={id.archetype.rarity} rarity={id.archetype.rarity} />{id.rd.count}x {id.archetype.name}
+                         (have {id.item ? id.item.quantity : 0}){ index === all.length-1 ? '' : ', '}
+                        </div>;
+                     })
                   }
                </div>
             </Item.Description>
@@ -238,7 +258,7 @@ const GalaxyAdventureDemand = (props: {
 
 const GalaxyAdventure = (props: {
    adventure: EventGatherPoolAdventureDTO;
-   crew_bonuses: { [crew_symbol: string]: number };
+   bonusCrew: BonusCrew[]
 }) => {
    let adventure_name = '';
    let adventure_demands : ItemDemand[] = [];
@@ -248,7 +268,7 @@ const GalaxyAdventure = (props: {
 
    if (!props.adventure.golden_octopus) {
       adventure_name = props.adventure.name;
-      adventure_demands = parseAdventure(props.adventure, props.crew_bonuses);
+      adventure_demands = processAdventureDemands(props.adventure, props.bonusCrew);
    }
 
    // function _completeAdventure() {
@@ -296,6 +316,7 @@ export const GalaxyEvent = (props: {
    let eventEquip = [];
    let farmList: FarmListItem[] = [];
    let currEvent: EventDTO = props.event;
+   const bonusCrew: BonusCrew[] = getRosterWithBonuses(currEvent!.content.crew_bonuses!);
 
    if (!props.event ||
       !props.event.content ||
@@ -318,27 +339,32 @@ export const GalaxyEvent = (props: {
       });
    }
 
-   for (let e of STTApi.itemArchetypeCache.archetypes) {
-      if (e.recipe && e.recipe.jackpot && e.recipe.jackpot.trait_bonuses) {
+   // Look through all archetypes for items that apply to the event (i.e. the ones with jackpot)
+   for (let arch of STTApi.itemArchetypeCache.archetypes) {
+      if (arch.recipe && arch.recipe.jackpot && arch.recipe.jackpot.trait_bonuses) {
+         const demand = processArchetype(arch, [...bonusCrew])!;
+         //TODO: re-use demand instead of this additional DTO; ALSO re-use calculation and dont do it more than once
          let itemDemands = [];
-         for (let rd of e.recipe.demands) {
+         for (let rd of arch.recipe.demands) {
             let item = STTApi.items.find(item => item.archetype_id === rd.archetype_id);
-            let arc = STTApi.itemArchetypeCache.archetypes.find(a => a.id === rd.archetype_id);
+            let arc = STTApi.itemArchetypeCache.archetypes.find(a => a.id === rd.archetype_id)!;
 
             itemDemands.push({
                rd,
+               archetype: arc,
                item,
                item_name: item ? item.name : arc ? arc.name : '',
                item_quantity: item ? item.quantity : 0
             });
          }
 
-         let have = STTApi.items.find(item => item.archetype_id === e.id);
+         let have = STTApi.items.find(item => item.archetype_id === arch.id);
 
          eventEquip.push({
-            equip: e,
+            equip: arch,
             have,
-            itemDemands
+            itemDemands,
+            bestCrew: demand.calcSlot.bestCrew,
          });
       }
    }
@@ -362,7 +388,7 @@ export const GalaxyEvent = (props: {
          archetype,
          item,
          uses: v,
-         sources: item.sources
+         sources: item ? (item.sources ?? []) : []
       });
    });
 
@@ -425,7 +451,20 @@ export const GalaxyEvent = (props: {
                      <h3>
                         {e.equip.name}
                      </h3>
-                     <div>{e.itemDemands.map(id => `${id.item_name} x ${id.rd.count} (have ${id.item_quantity})`).join(', ')}</div>
+                     <div>{e.itemDemands.map(id => <span key={id.item_name}>
+                        <ItemDisplay src={id.archetype.iconUrl!} style={{ display: 'inline' }}
+                           size={25} maxRarity={id.archetype.rarity} rarity={id.archetype.rarity} />
+                        {id.item_name} x{id.rd.count} (have {id.item_quantity})&nbsp;</span>
+                        )}</div>
+
+                     <div>Best crew: {e.bestCrew.slice(0,3).map(bc => <span key={bc.crew.crew_id}>
+                        <img src={bc.crew.iconUrl} width='25' height='25' />&nbsp;
+                        {bc.crew.name}&nbsp;({bc.chance}%)
+                        {bc.crew.frozen > 0 && <span> Frozen!</span>}
+                        {bc.crew.active_id && <span> Active!</span>}
+                        </span>
+                           )}
+                     </div>
                   </div>
                ))}
             </Accordion.Content>
@@ -442,10 +481,10 @@ export const GalaxyEvent = (props: {
             </Accordion.Title>
             <Accordion.Content active={activeIndex === 4}>
                {adventures && adventures.filter(ad => !ad.golden_octopus).map((adventure) => (
-                  <GalaxyAdventure key={adventure.name} adventure={adventure} crew_bonuses={currEvent!.content.crew_bonuses!} />
+                  <GalaxyAdventure key={adventure.name} adventure={adventure} bonusCrew={[...bonusCrew]} />
                ))}
                {adventures && adventures.filter(ad => ad.golden_octopus).map((adventure) => (
-                  <GalaxyAdventure key={adventure.name} adventure={adventure} crew_bonuses={currEvent!.content.crew_bonuses!} />
+                  <GalaxyAdventure key={adventure.name} adventure={adventure} bonusCrew={[...bonusCrew]} />
                ))}
             </Accordion.Content>
          </Accordion>
