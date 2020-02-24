@@ -29,12 +29,20 @@ export class AssetCacheClass {
 
     private formatImageName(asset_file: string, sprite_name: string): string {
         if (!asset_file) {
+            //Logger.info('Unformatted sprite name: ' + asset_file + ', ' + sprite_name + ' -> ' + sprite_name);
+            if (sprite_name.startsWith('atlas') || sprite_name.startsWith('images'))
+                return sprite_name.substr(1);
             return sprite_name;
         }
 
         let imageName = (asset_file + ((sprite_name && (sprite_name.length > 0)) ? ('_' + sprite_name) : '')).replace(new RegExp('/', 'g'), '_').replace('.png', '');
 
-        return imageName.startsWith('_') ? imageName.substr(1) : imageName;
+        let rv = imageName.startsWith('_') ? imageName.substr(1) : imageName;
+        //HACK: to correct a different bug; these image files are missing the first letter
+        if (rv.startsWith('atlas') || rv.startsWith('images'))
+            rv = rv.substr(1);
+        //Logger.info('Formatted image name: ' + asset_file + ', ' + sprite_name + ' -> ' + rv);
+        return rv;
     }
 
     list(): string[] {
