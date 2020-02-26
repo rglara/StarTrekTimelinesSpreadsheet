@@ -80,7 +80,7 @@ export const EventCrewBonusTable = (props: {
    onlyBonusCrew?: boolean;
    hideBonus?: boolean;
 }) => {
-   const [sorted, setSorted] = React.useState([{ id: 'name', desc: false }] as SortingRule[]);
+   const [sorted, setSorted] = React.useState([{ id: 'bonus', desc: true }] as SortingRule[]);
    const [filterText, setFilterText] = React.useState('');
 
    let columns = getColumns();
