@@ -316,7 +316,6 @@ export const GalaxyEvent = (props: {
    let eventEquip = [];
    let farmList: FarmListItem[] = [];
    let currEvent: EventDTO = props.event;
-   const bonusCrew: BonusCrew[] = getRosterWithBonuses(currEvent!.content.crew_bonuses!);
 
    if (!props.event ||
       !props.event.content ||
@@ -326,6 +325,7 @@ export const GalaxyEvent = (props: {
       return <span />;
    }
 
+   const bonusCrew: BonusCrew[] = getRosterWithBonuses(currEvent!.content.crew_bonuses!);
    for (let cb in currEvent.content.crew_bonuses!) {
       let avatar = STTApi.getCrewAvatarBySymbol(cb);
       if (!avatar) {
