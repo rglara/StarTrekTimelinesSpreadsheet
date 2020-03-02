@@ -7,7 +7,6 @@ import { loadFullTree, fixupAllCrewIds, getMissionCostDetails } from './Equipmen
 import { refreshAllFactions, loadFactionStore } from './FactionTools';
 import { calculateMissionCrewSuccess, calculateMinimalComplementAsync } from './MissionCrewSuccess';
 import { CrewData, CrewDTO, ItemData, PotentialRewardDTO, RewardDTO } from "./DTO";
-import { IFoundResult } from "../components/images/ImageProvider";
 
 export async function loginSequence(onProgress: (description: string) => void) {
     let mainResources = [
@@ -95,33 +94,39 @@ export async function loginSequence(onProgress: (description: string) => void) {
 
     for (let rosterCrew of roster) {
         if (rosterCrew.iconUrl === '') {
-            iconPromises.push(STTApi.imageProvider.getCrewImageUrl(rosterCrew, false).then((found: IFoundResult) => {
-                current++;
-                // if (current % 10 == 0)
-                //     onProgress('Caching crew images... (' + current + '/' + total + ')');
-                rosterCrew.iconUrl = found.url;
-            }).catch((error: any) => { /*console.warn(error);*/ }));
-        } else {
-            // Image is already cached
+            rosterCrew.iconUrl = STTApi.imageProvider.getCrewCached(rosterCrew, false);
+            if (rosterCrew.iconUrl === '') {
+                iconPromises.push(STTApi.imageProvider.getCrewImageUrl(rosterCrew, false).then((found) => {
+                    current++;
+                    // if (current % 10 == 0)
+                    //     onProgress('Caching crew images... (' + current + '/' + total + ')');
+                    rosterCrew.iconUrl = found.url;
+                }).catch((error: any) => { /*console.warn(error);*/ }));
+            } else {
+                // Image is already cached
 
-            current++;
-            // If we leave this in, stupid React will re-render everything, even though we're in a tight synchronous loop and no one gets to see the updated value anyway
-            //onProgress('Caching crew images... (' + current++ + '/' + total + ')');
+                current++;
+                // If we leave this in, stupid React will re-render everything, even though we're in a tight synchronous loop and no one gets to see the updated value anyway
+                //onProgress('Caching crew images... (' + current++ + '/' + total + ')');
+            }
         }
 
         if (rosterCrew.iconBodyUrl === '') {
-            iconPromises.push(STTApi.imageProvider.getCrewImageUrl(rosterCrew, true).then((found: IFoundResult) => {
-                current++;
-                // if (current % 10 == 0)
-                //     onProgress('Caching crew images... (' + current + '/' + total + ')');
-                rosterCrew.iconBodyUrl = found.url;
-            }).catch((error: any) => { /*console.warn(error);*/ }));
-        } else {
-            // Image is already cached
+            rosterCrew.iconBodyUrl = STTApi.imageProvider.getCrewCached(rosterCrew, true);
+            if (rosterCrew.iconBodyUrl === '') {
+                iconPromises.push(STTApi.imageProvider.getCrewImageUrl(rosterCrew, true).then((found) => {
+                    current++;
+                    // if (current % 10 == 0)
+                    //     onProgress('Caching crew images... (' + current + '/' + total + ')');
+                    rosterCrew.iconBodyUrl = found.url;
+                }).catch((error: any) => { /*console.warn(error);*/ }));
+            } else {
+                // Image is already cached
 
-            current++;
-            // If we leave this in, stupid React will re-render everything, even though we're in a tight synchronous loop and no one gets to see the updated value anyway
-            //onProgress('Caching crew images... (' + current++ + '/' + total + ')');
+                current++;
+                // If we leave this in, stupid React will re-render everything, even though we're in a tight synchronous loop and no one gets to see the updated value anyway
+                //onProgress('Caching crew images... (' + current++ + '/' + total + ')');
+            }
         }
     }
 
@@ -131,7 +136,7 @@ export async function loginSequence(onProgress: (description: string) => void) {
     for (let avatar of STTApi.crewAvatars) {
         avatar.iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
         if (avatar.iconUrl === '') {
-            iconPromises.push(STTApi.imageProvider.getCrewImageUrl(avatar, false).then((found: IFoundResult) => {
+            iconPromises.push(STTApi.imageProvider.getCrewImageUrl(avatar, false).then((found) => {
                 current++;
                 // if (current % 10 == 0)
                 //     onProgress('Caching crew images... (' + current + '/' + total + ')');
@@ -162,7 +167,7 @@ export async function loginSequence(onProgress: (description: string) => void) {
     for (let ship of ships) {
         ship.iconUrl = STTApi.imageProvider.getCached(ship);
         if (ship.iconUrl === '') {
-            iconPromises.push(STTApi.imageProvider.getShipImageUrl(ship).then((found: IFoundResult) => {
+            iconPromises.push(STTApi.imageProvider.getShipImageUrl(ship).then((found) => {
                 //onProgress('Caching ship images... (' + current++ + '/' + total + ')');
                 let ship = STTApi.ships.find((ship) => ship.name === found.id);
                 if (ship) {
@@ -226,7 +231,7 @@ export async function loginSequence(onProgress: (description: string) => void) {
             //itemDTO.symbol = itemDTO.icon.file.replace("/items", "").split("/")[2];
 
             if (item.iconUrl === '') {
-                iconPromises.push(STTApi.imageProvider.getItemImageUrl(item, item.id).then((found: IFoundResult) => {
+                iconPromises.push(STTApi.imageProvider.getItemImageUrl(item, item.id).then((found) => {
                     current++;
                     // if (current % 10 == 0)
                     //     onProgress('Caching item images... (' + current + '/' + total + ')');
@@ -346,7 +351,7 @@ export async function loginSequence(onProgress: (description: string) => void) {
         faction.iconUrl = STTApi.imageProvider.getCached(faction);
 
         if (!faction.iconUrl || faction.iconUrl === '') {
-            iconPromises.push(STTApi.imageProvider.getFactionImageUrl(faction, faction.id).then((found: IFoundResult) => {
+            iconPromises.push(STTApi.imageProvider.getFactionImageUrl(faction, faction.id).then((found) => {
                 // onProgress('Caching faction images... (' + current++ + '/' + total + ')');
                 let faction = STTApi.playerData.character.factions.find((faction) => faction.id === found.id);
                 if (faction) {
@@ -382,7 +387,7 @@ export async function loginSequence(onProgress: (description: string) => void) {
     for (let crew of STTApi.allcrew) {
         crew.iconUrl = STTApi.imageProvider.getCrewCached(crew, false);
         if (crew.iconUrl === '') {
-            iconPromises.push(STTApi.imageProvider.getCrewImageUrl(crew, false).then((found: IFoundResult) => {
+            iconPromises.push(STTApi.imageProvider.getCrewImageUrl(crew, false).then((found) => {
                 current++;
                 // if (current % 10 === 0) {
                 //     onProgress('Caching crew images... (' + current + '/' + total + ')');
@@ -424,7 +429,7 @@ export async function loginSequence(onProgress: (description: string) => void) {
     for (let equipment of STTApi.itemArchetypeCache.archetypes) {
         equipment.iconUrl = STTApi.imageProvider.getCached(equipment);
         if (equipment.iconUrl === '') {
-            iconPromises.push(STTApi.imageProvider.getItemImageUrl(equipment, equipment.id).then((found: IFoundResult) => {
+            iconPromises.push(STTApi.imageProvider.getItemImageUrl(equipment, equipment.id).then((found) => {
                 current++;
                 // if (current % 10 == 0) {
                 //     onProgress('Caching equipment images... (' + current + '/' + total + ')');
@@ -454,7 +459,7 @@ export async function loginSequence(onProgress: (description: string) => void) {
     for (let sprite in CONFIG.SPRITES) {
         CONFIG.SPRITES[sprite].url = STTApi.imageProvider.getSpriteCached(CONFIG.SPRITES[sprite].asset, sprite);
         if (CONFIG.SPRITES[sprite].url === '') {
-            iconPromises.push(STTApi.imageProvider.getSprite(CONFIG.SPRITES[sprite].asset, sprite, sprite).then((found: IFoundResult) => {
+            iconPromises.push(STTApi.imageProvider.getSprite(CONFIG.SPRITES[sprite].asset, sprite, sprite).then((found) => {
                 // onProgress('Caching misc images... (' + current++ + '/' + total + ')');
                 CONFIG.SPRITES[found.id].url = found.url;
             }).catch((error: any) => { /*console.warn(error);*/ }));

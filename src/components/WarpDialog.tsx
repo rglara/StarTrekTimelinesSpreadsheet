@@ -33,7 +33,7 @@ export const WarpDialog = (props:{
             if (quest) {
                 let mastery = quest.mastery_levels[props.masteryLevel];
 
-                STTApi.imageProvider.getImageUrl(quest.timeline_icon.file, quest).then((found) => {
+                STTApi.imageProvider.getImageUrl(quest.timeline_icon.file, quest.id).then((found) => {
                     if (found.url) {
                         setIconUrl(found.url);
                     }

@@ -1,6 +1,6 @@
 import STTApi, { CONFIG }  from '../../api';
-import { ShipDTO, ImageDataDTO } from '../../api/DTO';
-import { CrewImageData, ImageProvider, IFoundResult } from './ImageProvider';
+import { ShipDTO, ImageDataDTO, FactionDTO } from '../../api/DTO';
+import { CrewImageData, ImageProvider, FoundResult, ItemImageData } from './ImageProvider';
 
 export class ServerImageProvider implements ImageProvider {
     _baseURLAsset: string;
@@ -58,23 +58,23 @@ export class ServerImageProvider implements ImageProvider {
         return this.internalGetCached(((assetName.length > 0) ? (assetName + '_') : '') + spriteName);
     }
 
-    getCrewImageUrl(crew: CrewImageData, fullBody: boolean, id: number = 0): Promise<IFoundResult> {
-        return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, id);
+    getCrewImageUrl(crew: CrewImageData, fullBody: boolean): Promise<FoundResult<CrewImageData>> {
+        return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, crew);
     }
 
-    getShipImageUrl(ship: ShipDTO): Promise<IFoundResult> {
+    getShipImageUrl(ship: ShipDTO): Promise<FoundResult<string>> {
         return this.getImageUrl(ship.icon.file, ship.name);
     }
 
-    getItemImageUrl(item: any, id: number): Promise<IFoundResult> {
+    getItemImageUrl(item: ItemImageData, id: number): Promise<FoundResult<number>> {
         return this.getImageUrl(item.icon.file, id);
     }
 
-    getFactionImageUrl(faction: any, id: any): Promise<IFoundResult> {
+    getFactionImageUrl(faction: FactionDTO, id: number): Promise<FoundResult<number>> {
         return this.getImageUrl(faction.icon.file, id);
     }
 
-    async getSprite(assetName: string, spriteName: string, id: string): Promise<IFoundResult> {
+    async getSprite(assetName: string, spriteName: string, id: string): Promise<FoundResult<string>> {
         let cachedUrl = this.getSpriteCached(assetName, spriteName);
         if (cachedUrl) {
             return { id, url: cachedUrl };
@@ -93,9 +93,9 @@ export class ServerImageProvider implements ImageProvider {
         return { id, url: this._baseURLAsset + assetUrl };
     }
 
-    async getImageUrl(iconFile: string, id: any): Promise<IFoundResult> {
+    async getImageUrl<T>(iconFile: string, id: T): Promise<FoundResult<T>> {
         if (!iconFile) {
-            return { id: undefined, url: undefined};
+            return { id, url: undefined};
         }
         let cachedUrl = this.internalGetCached(iconFile);
         if (cachedUrl) {
@@ -104,7 +104,7 @@ export class ServerImageProvider implements ImageProvider {
 
         //HACK: ignore server image fetch until asset bundle extraction is fixed
         if (true) {
-            return { id: undefined, url: undefined };
+            return { id, url: undefined };
         }
 
         let assetUrl = await STTApi.networkHelper.get(this._serverURL + 'asset/get', {

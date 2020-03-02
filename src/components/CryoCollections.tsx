@@ -28,7 +28,7 @@ class CryoCollection extends React.Component<CryoCollectionProps, CryoCollection
         super(props);
 
         if (!this.props.collection.iconUrl) {
-            STTApi.imageProvider.getImageUrl(this.props.collection.image, this.props.collection).then((found) => {
+            STTApi.imageProvider.getImageUrl(this.props.collection.image, this.props.collection.id).then((found) => {
                 this.props.collection.iconUrl = found.url;
 
                 this.setState({ imageUrl: found.url });

@@ -32,7 +32,11 @@ export class FileImageCache implements ImageCache {
 	}
 
 	formatUrl(url: string): string {
-		return this.basePath + url.substr(1).replace(new RegExp('/', 'g'), '_') + '.png';
+		//HACK: strip first char if startsiwth some cases to account for previous bug
+		let rv = this.basePath + ((url.startsWith('/') || url.startsWith('atlas') || url.startsWith('images')) ? url.substr(1) : url)
+			.replace(new RegExp('/', 'g'), '_')
+			+ (url.endsWith('.png') ? '' : '.png');
+		return rv;
 	}
 
 	getImage(url: string) : Promise<string | undefined> {

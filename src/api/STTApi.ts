@@ -30,7 +30,7 @@ import { NeededEquipmentClass, EquipNeedFilter, UnparsedEquipment, EquipNeed } f
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
-import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO, DatacoreCrewDTO } from './DTO';
+import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO, DatacoreCrewDTO, PlayerInspectDTO } from './DTO';
 
 export class STTApiClass {
 	private _accessToken: string | undefined;
@@ -135,7 +135,7 @@ export class STTApiClass {
 		}
 		else {
 			let cache : ImageCache = new FileImageCache();
-			this.imageProvider = new ImageProviderChain(cache, new AssetImageProvider(cache), new WikiImageProvider());
+			this.imageProvider = new ImageProviderChain(cache, new AssetImageProvider(cache), new WikiImageProvider(cache));
 		}
 	}
 
@@ -489,10 +489,10 @@ export class STTApiClass {
 		}
 	}
 
-	async inspectPlayer(playerId: string | number): Promise<any> {
+	async inspectPlayer(playerId: string | number): Promise<PlayerInspectDTO> {
 		let data = await this.executeGetRequest('player/inspect/' + playerId);
 		if (data.player) {
-			return data.player;
+			return data.player as PlayerInspectDTO;
 		} else {
 			throw new Error('Invalid data for player!');
 		}

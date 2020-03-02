@@ -1,8 +1,8 @@
 import STTApi from "../../api/index";
 import CONFIG from "../../api/CONFIG";
-import { ImageProvider, ImageCache, IBitmap, IFoundResult, CrewImageData } from './ImageProvider';
+import { ImageProvider, ImageCache, IBitmap, FoundResult, CrewImageData, ItemImageData } from './ImageProvider';
 import { WorkerPool } from '../../api/WorkerPool';
-import { ShipDTO, ImageDataDTO } from "../../api/DTO";
+import { ShipDTO, ImageDataDTO, FactionDTO } from "../../api/DTO";
 
 export class AssetImageProvider implements ImageProvider {
     private _imageCache: ImageCache;
@@ -40,34 +40,38 @@ export class AssetImageProvider implements ImageProvider {
         return this._imageCache.getCached(((assetName.length > 0) ? (assetName + '_') : '') + spriteName);
     }
 
-    getCrewImageUrl(crew: CrewImageData, fullBody: boolean, id: number = 0): Promise<IFoundResult> {
+    getCrewImageUrl(crew: CrewImageData, fullBody: boolean): Promise<FoundResult<CrewImageData>> {
         if (!crew) {
-            return this.getImageUrl("", id);
+            return this.getImageUrl("", crew);
         }
-        return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, id);
+        return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, crew);
     }
 
-    getShipImageUrl(ship: ShipDTO): Promise<IFoundResult> {
+    getShipImageUrl(ship: ShipDTO): Promise<FoundResult<string>> {
         return this.getImageUrl(ship.icon.file, ship.name); //schematic_icon
     }
 
-    getItemImageUrl(item: any, id: number): Promise<IFoundResult> {
+    getItemImageUrl(item: ItemImageData, id: number): Promise<FoundResult<number>> {
         return this.getImageUrl(item.icon.file, id);
     }
 
-    getFactionImageUrl(faction: any, id: any): Promise<IFoundResult> {
+    getFactionImageUrl(faction: FactionDTO, id: number): Promise<FoundResult<number>> {
         return this.getImageUrl(faction.icon.file, id); //faction.reputation_item_icon.file and faction.shuttle_token_preview_item.icon.file
     }
 
-    async getSprite(assetName: string, spriteName: string, id: any): Promise<IFoundResult> {
+    async getSprite(assetName: string, spriteName: string, id: string): Promise<FoundResult<string>> {
         let cachedUrl = await this._imageCache.getImage(((assetName.length > 0) ? (assetName + '_') : '') + spriteName);
         if (cachedUrl) {
             return { id: id, url: cachedUrl };
         }
 
+        //HACK; don't bother until the asset bundle can be processed again;
+        if (true) {
+            throw new Error('Failed to load image');
+        }
         let data = await STTApi.networkHelper.getRaw(this.baseURLAsset + ((assetName.length > 0) ? assetName : spriteName) + '.sd', undefined)
         if (!data) {
-            throw new Error('Fail to load image');
+            throw new Error('Failed to load image');
         }
 
         let rawBitmap = await new Promise<any>((resolve, reject) => { this._workerPool.addWorkerTask({ data, label: id, resolve, assetName, spriteName }); });
@@ -75,7 +79,7 @@ export class AssetImageProvider implements ImageProvider {
         return { id, url };
     }
 
-    async getImageUrl(iconFile: string, id: any): Promise<IFoundResult> {
+    async getImageUrl<T>(iconFile: string, id: T): Promise<FoundResult<T>> {
         if (!iconFile) {
             return {id, url: undefined };
         }
@@ -106,7 +110,7 @@ export class AssetImageProvider implements ImageProvider {
         return this.processData(iconFile, id, data);
     }
 
-    private async processData(iconFile: string, id: any, data: any): Promise<IFoundResult> {
+    private async processData<T>(iconFile: string, id: T, data: any): Promise<FoundResult<T>> {
         if (!data) {
             throw new Error('Fail to load image');
         }

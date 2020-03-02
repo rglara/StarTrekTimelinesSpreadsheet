@@ -526,23 +526,7 @@ export interface PlayerDTO {
    //    master_limit: { chance: number; period_minutes: number; }
    //    stt_cadet_warp: { chance: number; period_minutes: number; }
    // }
-   fleet: {
-      created: number;
-      cursize: number;
-      enrollment: string;
-      epoch_time: number;
-      id: number;
-      maxsize: number;
-      nicon_index: number;
-      nleader_login: number;
-      nleader_player_dbid: number;
-      nmin_level: number;
-      nstarbase_level: number;
-      rank: string;
-      rlevel: number;
-      sinsignia: string;
-      slabel: string;
-   };
+   fleet: FleetDTO;
    fleet_invite: any;
    honor: number;
    id: number;
@@ -697,6 +681,27 @@ export interface PlayerCharacterDTO {
    xp_for_next_level: number;
 }
 
+export interface PlayerInspectDTO {
+   character: {
+      /** Crew in current ship displayed to others in the game */
+      crew: any[];
+      /** Same as PlayerDTO crew_avatar */
+      crew_avatar: any;
+      current_ship: any;
+      display_name: string;
+      id: number;
+      level: number;
+      location: any;
+      using_default_name: boolean;
+   };
+   dbid: number;
+   display_name: string;
+   fleet: FleetDTO;
+   fleet_eligible: boolean;
+   friend_status: any;
+   online_status: { online: boolean; lastSeen: number; }
+}
+
 export interface FleetMemberDTO {
    crew_avatar: {
       default_avatar: boolean;
@@ -757,9 +762,64 @@ export interface FleetStarbaseRoomDTO {
    short_description: string;
    symbol: string;
    upgrade_finish_in: number;
-   upgrades: any[];
+   upgrades: FleetStarbaseRoomUpgradeDTO[];
+
+   //HACK: added by app
+   iconUrl: string | undefined;
+   backgroundUrl: string | undefined;
 }
 
+export interface FleetStarbaseRoomUpgradeDTO {
+   buffs: FleetStarbaseRoomUpgradeBuffDTO[];
+   cost: {
+      item_symbol: string;
+      points: number;
+      quantity: number;
+   }[];
+   description: string;
+   items: {
+      flavor: string;
+      icon: ImageDataDTO;
+      id: number;
+      item_sources: any[];
+      name: string;
+      rarity: number;
+      symbol: string;
+      type: number;
+   }[];
+   name: string;
+   short_description: string;
+   time_to_upgrade: number;
+}
+
+export interface FleetStarbaseRoomUpgradeBuffDTO {
+   flavor: string;
+   icon: ImageDataDTO;
+   id: number;
+   item_sources: any[];
+   name: string;
+   rarity: number;
+   symbol: string;
+   type: number;
+}
+
+export interface FleetDTO {
+   created: number;
+   cursize: number;
+   enrollment: string;
+   epoch_time?: number;
+   id: number;
+   maxsize: number;
+   nicon_index: number;
+   nleader_login: number;
+   nleader_player_dbid: number;
+   nmin_level: number;
+   nstarbase_level: number;
+   rank: string;
+   rlevel: number;
+   sinsignia: string;
+   slabel: string;
+}
 export interface PlayerShuttleAdventureDTO {
    challenge_rating: number;
    completes_in_seconds: number;

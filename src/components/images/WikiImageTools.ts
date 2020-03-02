@@ -1,12 +1,36 @@
 import STTApi from "../../api/index";
 import CONFIG from "../../api/CONFIG";
-import { ImageProvider, IFoundResult, ImageCache, CrewImageData } from './ImageProvider';
-import { ShipDTO, ImageDataDTO } from "../../api/DTO";
+import { ImageProvider, FoundResult, ImageCache, CrewImageData, ItemImageData } from './ImageProvider';
+import { ShipDTO, ImageDataDTO, FactionDTO } from "../../api/DTO";
 
-async function getWikiImageUrl(fileName: string, id: any): Promise<IFoundResult> {
+const fs = require('fs');
+const request = require('request');
+var saveImageToDisk = function (uri:string, filename:string, callback:() => void) {
+	request.head(uri, function (err:any, res:any, body:any) {
+		request(uri).pipe(fs.createWriteStream(filename)).on('close', callback);
+	});
+};
+
+// download and cache wiki images with asset bundle images and load the same way
+async function getWikiImageUrl<T>(fileName: string, id: T, path?: string | undefined): Promise<FoundResult<T>> {
 	let entry = await STTApi.wikiImages.where('fileName').equals(fileName).first();
 	if (entry) {
 		if (entry.url) {
+			if (path) {
+				// let path = '/home/local/CITD/paul.bilnoski/Documents/stt/imagecache/';
+				// if (file) {
+				// 	if (file.startsWith('/'))
+				// 		file = file.substr(1);
+				// 	file = file.replace(new RegExp('/', 'g'), '_')
+				// 	if (!file.endsWith('.png'))
+				// 		file += '.png'
+				// 	path += file;
+				// }
+				// else {
+				// 	path += id + '.png';
+				// }
+				saveImageToDisk(entry.url, path, () => { console.log('Cached new image: ' + path)});
+			}
 			return { id, url: entry.url };
 		} else {
 			if ((Date.now() - entry.lastQueried) / 3600000 < CONFIG.HOURS_TO_RECOVERY) {
@@ -50,17 +74,22 @@ async function getWikiImageUrl(fileName: string, id: any): Promise<IFoundResult>
 }
 
 export class WikiImageProvider implements ImageProvider {
-	getCrewImageUrl(crew: CrewImageData, fullBody: boolean): Promise<IFoundResult> {
+	private _imageCache: ImageCache;
+
+	constructor(imageCache: ImageCache) {
+		this._imageCache = imageCache;
+	}
+	getCrewImageUrl(crew: CrewImageData, fullBody: boolean): Promise<FoundResult<CrewImageData>> {
 		let fileName = crew.name.split(' ').join('_') + (fullBody ? '' : '_Head') + '.png';
-		return getWikiImageUrl(fileName, 0);
+		return getWikiImageUrl(fileName, crew, this._imageCache.formatUrl(fullBody ? crew.full_body.file : crew.portrait.file));
 	}
 
-	getShipImageUrl(ship: ShipDTO): Promise<IFoundResult> {
+	getShipImageUrl(ship: ShipDTO): Promise<FoundResult<string>> {
 		let fileName = ship.name.split(' ').join('_').split('.').join('').split('\'').join('') + '.png';
-		return getWikiImageUrl(fileName, ship.name);
+		return getWikiImageUrl(fileName, ship.name, this._imageCache.formatUrl(ship.icon.file));
 	}
 
-	getItemImageUrl(item: any, id: number): Promise<IFoundResult> {
+	getItemImageUrl(item: ItemImageData, id: number): Promise<FoundResult<number>> {
 		let fileName : string = item.name;
 		//HACK: for particular images that the wiki has as nonstandard names
 		if (item.symbol === 'energy' && item.type === 3) {
@@ -75,19 +104,19 @@ export class WikiImageProvider implements ImageProvider {
 			}
 			fileName = fileName.replace(/[ ']/g, '');
 		}
-		return getWikiImageUrl(fileName, id);
+		return getWikiImageUrl(fileName, id, this._imageCache.formatUrl(item.icon.file));
 	}
 
-	getFactionImageUrl(faction: any, id: any): Promise<IFoundResult> {
+	getFactionImageUrl(faction: FactionDTO, id: number): Promise<FoundResult<number>> {
 		let fileName = 'Icon' + faction.name.split(' ').join('') + '.png';
-		return getWikiImageUrl(fileName, id);
+		return getWikiImageUrl(fileName, id, this._imageCache.formatUrl(faction.icon.file));
 	}
 
-	getSprite(assetName: string, spriteName: string, id: any): Promise<IFoundResult> {
+	getSprite(assetName: string, spriteName: string, id: string): Promise<FoundResult<string>> {
 		return Promise.reject('Not implemented');
 	}
 
-	getImageUrl(iconFile: string, id: any): Promise<IFoundResult> {
+	getImageUrl<T>(iconFile: string, id: T): Promise<FoundResult<T>> {
 		let fileName = iconFile + '.png';
 		return getWikiImageUrl(fileName, id);
 	}
@@ -116,9 +145,9 @@ export class ImageProviderChain implements ImageProvider {
 		this.ext = ext;
 	}
 
-	async getCrewImageUrl(crew: CrewImageData, fullBody: boolean): Promise<IFoundResult> {
+	async getCrewImageUrl(crew: CrewImageData, fullBody: boolean): Promise<FoundResult<CrewImageData>> {
 		if (!crew) {
-			return this.getImageUrl("", 0);
+			return this.getImageUrl("", crew);
 		}
 		// let cached = this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, 0);
 
@@ -129,7 +158,7 @@ export class ImageProviderChain implements ImageProvider {
 		return result;
 	}
 
-	async getShipImageUrl(ship: ShipDTO): Promise<IFoundResult> {
+	async getShipImageUrl(ship: ShipDTO): Promise<FoundResult<string>> {
 		let result = await this.base.getShipImageUrl(ship);
 		if (this.ext && (!result.url || result.url === '')) {
 			return this.ext.getShipImageUrl(ship);
@@ -137,7 +166,7 @@ export class ImageProviderChain implements ImageProvider {
 		return result;
 	}
 
-	async getItemImageUrl(item: any, id: number): Promise<IFoundResult> {
+	async getItemImageUrl(item: ItemImageData, id: number): Promise<FoundResult<number>> {
 		let result = await this.base.getItemImageUrl(item, id);
 		if (this.ext && (!result.url || result.url === '')) {
 			return this.ext.getItemImageUrl(item, id);
@@ -145,7 +174,7 @@ export class ImageProviderChain implements ImageProvider {
 		return result;
 	}
 
-	async getFactionImageUrl(faction: any, id: any): Promise<IFoundResult> {
+	async getFactionImageUrl(faction: FactionDTO, id: number): Promise<FoundResult<number>> {
 		let result = await this.base.getFactionImageUrl(faction, id);
 		if (this.ext && (!result.url || result.url === '')) {
 			return this.ext.getFactionImageUrl(faction, id);
@@ -153,7 +182,7 @@ export class ImageProviderChain implements ImageProvider {
 		return result;
 	}
 
-	async getSprite(assetName: string, spriteName: string, id: string): Promise<IFoundResult> {
+	async getSprite(assetName: string, spriteName: string, id: string): Promise<FoundResult<string>> {
 		let result = await this.base.getSprite(assetName, spriteName, id);
 		if (this.ext && (!result.url || result.url === '')) {
 			return this.ext.getSprite(assetName, spriteName, id);
@@ -161,7 +190,7 @@ export class ImageProviderChain implements ImageProvider {
 		return result;
 	}
 
-	async getImageUrl(iconFile: string, id: any): Promise<IFoundResult> {
+	async getImageUrl<T>(iconFile: string, id: T): Promise<FoundResult<T>> {
 		if (!iconFile) {
 			return { id, url: undefined };
 		}

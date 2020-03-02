@@ -98,7 +98,7 @@ const FactionDisplay = (props:FactionDisplayProps) => {
 	});
 
 	STTApi.imageProvider
-		.getImageUrl(props.faction.reputation_item_icon.file, props.faction)
+		.getImageUrl(props.faction.reputation_item_icon.file, props.faction.id)
 		.then(found => {
 			if (found.url)
 				setReputationIconUrl(found.url);
