@@ -6,14 +6,29 @@ import STTApi from '../api';
 import { ItemList } from './ItemList';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 
-export interface ItemPageProps {
+export const ItemPage = (props: {
     onCommandItemsUpdate?: (items: ICommandBarItemProps[]) => void;
-}
-
-export const ItemPage = (props: ItemPageProps) => {
+}) => {
     const [filterText, setFilterText] = React.useState('');
+    const [onlyShip, setOnlyShip] = React.useState<boolean>(false);
 
-    React.useEffect(() => {
+    React.useEffect(() => updateCommandItems(), []);
+    React.useEffect(() => updateCommandItems(), [onlyShip]);
+
+    let items = STTApi.items;
+    if (onlyShip) {
+        items = items.filter(it => it.sources.some(src => src.type === 'ship'));
+    }
+
+    return <div>
+        <SearchBox placeholder='Search by name or description...'
+            onChange={(ev, newValue) => setFilterText(newValue ?? '')}
+            onSearch={(newValue) => setFilterText(newValue)}
+        />
+        <ItemList data={items} filterText={filterText} />
+    </div>;
+
+    function updateCommandItems() {
         if (props.onCommandItemsUpdate) {
             props.onCommandItemsUpdate([
                 {
@@ -24,16 +39,25 @@ export const ItemPage = (props: ItemPageProps) => {
                         let csv = exportItemsCsv();
                         download('My Items.csv', csv, 'Export Star Trek Timelines item inventory', 'Export');
                     }
+                },
+                {
+                    key: 'settings',
+                    text: 'Settings',
+                    iconProps: { iconName: 'Equalizer' },
+                    subMenuProps: {
+                        items: [{
+                            key: 'onlyShip',
+                            text: 'Ship Battle Rewards',
+                            canCheck: true,
+                            isChecked: onlyShip,
+                            onClick: () => {
+                                let isChecked = !onlyShip;
+                                setOnlyShip(isChecked);
+                            }
+                        }]
+                    }
                 }
             ]);
         }
-    }, []);
-
-    return <div>
-        <SearchBox placeholder='Search by name or description...'
-            onChange={(ev, newValue) => setFilterText(newValue ?? '')}
-            onSearch={(newValue) => setFilterText(newValue)}
-        />
-        <ItemList data={STTApi.items} filterText={filterText} />
-    </div>;
+    }
 }
