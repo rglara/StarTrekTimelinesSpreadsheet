@@ -223,8 +223,12 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 					modalProps={{ isBlocking: true }}
 				>
 					<div>
-						<p>In order to avoid synchronization issues, please only have <b>one active client at a time</b> (this includes the game on any platform and/or the tool). Close / shut down all other clients, or restart them upon making changes somewhere else.</p>
-						<p><i>Note:</i>If you're only using the tool to look at stats (and are ok with potentially out of date info), and don't use the Gauntlet or Voyage features, you can keep it running alongside the game.</p>
+						<p>In order to avoid synchronization issues, please only have <b>one active client at a time</b> (this includes the
+							game on any platform and/or the tool). Close / shut down all other clients, or restart them upon making changes somewhere else.</p>
+						<p><i>Note:</i> If you're only using the tool to look at stats (and are ok with potentially out of date info), and
+							don't use any active sync features (such as interacting with Gauntlet or Voyage), you can keep it running alongside the game.</p>
+						<p><b>Note:</b> If you have the app open at the same time as a ship battle (or skirmish battle) and it reaches out to the server, your
+							current ship battle state may be invalidated!</p>
 
 						<Checkbox checked={!this.state.showBootMessage} label="Don't show again"
 							onChange={(e, isChecked) => { this.setState({ showBootMessage: !isChecked }); }}

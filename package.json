@@ -1,14 +1,13 @@
 {
 	"name": "startrektimelinestool",
 	"productName": "Star Trek Timelines Crew Management",
-	"version": "0.8.4",
+	"version": "0.9.0",
 	"description": "Tool for managing Star Trek Timelines crew",
-	"author": "IAmPicard",
+	"author": "paulbilnoski",
 	"contributors": [
 		"paulbilnoski",
 		"TemporalAgent7"
 	],
-	"copyright": "Copyright (c) 2018-2019 IAmPicard",
 	"homepage": "https://github.com/paulbilnoski/StarTrekTimelinesSpreadsheet",
 	"repository": {
 		"type": "git",
