@@ -35,6 +35,17 @@ export const SkirmishEvent = (props: {
       </div>;
    }
 
+   if (props.event.content.bonus_crew.length === 0) {
+      let ref = <span>Crew Ship Details</span>;
+      if (props.onTabSwitch) {
+         ref = <Label as='a' onClick={() => props.onTabSwitch!('CrewShip')}>Crew Ship Details</Label>;
+      }
+
+      return <div><h2>Mini (Skirmish) Event Details</h2>
+               <div>{props.event.bonus_text}</div>
+      </div>;
+   }
+
    let crew_bonuses: CrewBonus[] = [];
    props.event.content.bonus_crew.forEach(bcSymbol => {
       let avatar = STTApi.getCrewAvatarBySymbol(bcSymbol);
@@ -61,9 +72,11 @@ export const SkirmishEvent = (props: {
    let crew_bonuses_minor: CrewBonus[] = [];
    let items : CrewData[] = [];
    STTApi.roster.forEach(crew => {
-      if (!crew.rawTraits.some(tr => props.event.content.bonus_traits.includes(tr))) {
-         if (!props.event.content.bonus_crew.includes(crew.symbol)) {
-            return;
+      if (props.event.content.bonus_traits.length > 0) {
+         if (!crew.rawTraits.some(tr => props.event.content.bonus_traits.includes(tr))) {
+            if (!props.event.content.bonus_crew.includes(crew.symbol)) {
+               return;
+            }
          }
       }
 
@@ -85,7 +98,6 @@ export const SkirmishEvent = (props: {
       <div style={{ margin: '0' }}>
          <span>
             <div>{props.event.bonus_text}</div>
-            {/* <EventCrewBonusTable bonuses={props.event.content. shuttles[0].crew_bonuses} /> */}
             <div>Bonus Event Crew (Major Bonus): {props.event.content.bonus_crew.join(', ')}</div>
             Owned bonus crew: <List horizontal>{crew_bonuses.map(cb => <CrewBonusEntry cb={cb} />)}</List>
             {/* TODO: use event helper page renderCrewBonus and remove from HomePage */}

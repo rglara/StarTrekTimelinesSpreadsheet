@@ -985,7 +985,8 @@ export interface ItemDataSource {
    chance: number;
    quotient: number;
    title: string;
-   type: string; // 'faction' | 'dispute' | 'ship' | 'cadet'
+   /** 'faction' | 'dispute' | 'ship' | 'cadet' */
+   type: string;
 }
 
 export interface CryoCollectionDTO {
@@ -1178,10 +1179,14 @@ export interface EventContentGatherDTO {
 
 //NOTE: until the skirmish starts, the DTO is empty except for content_type
 export interface EventContentSkirmishDTO {
+   /** The current battle in the skirmish if one is in progress */
    battle_index: number;
+   /** Traits granting minor bonus per battle in the skirmish */
    battle_traits: { traits: string[] }[];
-   bonus_crew: string[]; // these are the "primary" event crew symbols, "dukat_breen_crew", "laforge_interfaced_crew", etc.
-   bonus_traits: string[]; // these are trait identifiers for secondary event crew: "laforge", "dukat", "weyoun", etc.
+   /** The "primary" event crew symbols, "dukat_breen_crew", "laforge_interfaced_crew", etc. */
+   bonus_crew: string[];
+   /** trait identifiers for bonus event crew: "laforge", "dukat", "weyoun", etc. */
+   bonus_traits: string[];
    configs: {
       normal: any;
       elite: any;

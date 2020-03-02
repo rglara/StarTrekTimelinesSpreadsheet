@@ -64,7 +64,9 @@ export const EventHelperPage = (props: {
       <div className='tab-panel' data-is-scrollable='true'>
          <h2>Event {msg}</h2>
          <h2>{currEvent.name}</h2>
-         <Image height='200px' src={eventImageUrl} />
+         { eventImageUrl &&
+            <Image height='200px' src={eventImageUrl} />
+         }
          <p>{currEvent.description}</p>
 
          <GalaxyEvent event={currEvent} />
