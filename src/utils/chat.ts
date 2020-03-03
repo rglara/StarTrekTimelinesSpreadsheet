@@ -1,5 +1,5 @@
-const PubNub = require('pubnub');
-const uuidv4 = require('uuid/v4');
+import PubNub from 'pubnub';
+import { v4 as uuidv4 } from 'uuid';
 
 import STTApi from '../api';
 
@@ -21,7 +21,7 @@ function loadChannels() {
 	});
 }
 
-export function publishChatMessage(token)
+export function publishChatMessage(token: any)
 {
 	//https://stt.disruptorbeam.com/notification/publish_chat
 	//POST
@@ -33,7 +33,7 @@ export function publishChatMessage(token)
 	//client_api:8
 }
 
-export function loginPubNub()
+export function loginPubNub() : Promise<{subscribedChannels:any, pubnub:any}>
 {
 	return loadSubscriberDetails().then((data) => {
 		let subscriberDetails = data;
@@ -51,11 +51,11 @@ export function loginPubNub()
 			});
 
 			// Get list of channels
-			var subscribedChannels = {
+			var subscribedChannels : any = {
 				player: subscriberDetails.playerForRealmChannel
 			};
 
-			channelList.forEach(function (channel) {
+			channelList.forEach(function (channel: any) {
 				if (channel.chatType == 'SQUAD.GENERAL')
 					subscribedChannels.squad = channel.channel;
 
@@ -67,7 +67,7 @@ export function loginPubNub()
 
 			// verify we're connected
 			return new Promise(function (resolve, reject) {
-				pubnub.time(function (status, response) {
+				pubnub.time(function (status:any, response:any) {
 					if (status.error) {
 						// handle error if something went wrong based on the status object
 						reject(status.error);

@@ -11,7 +11,11 @@
 		"allowSyntheticDefaultImports": true,
 		"strictPropertyInitialization": false,
 		"allowJs": true,
-		"outDir": "dist"
+		"outDir": "dist",
+		"typeRoots": [
+			"./src/modules/declaredtypes.d.ts",
+			"./node_modules/@types"
+		],
 	},
 	"exclude": [
 		"node_modules",
