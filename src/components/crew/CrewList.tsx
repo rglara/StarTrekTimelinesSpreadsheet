@@ -69,7 +69,7 @@ export const CrewList = (props: {
 		</div>;
 	}
 
-	function _onRenderExpandedCard(item:CrewData) {
+	function _onRenderExpandedCard(item: CrewData) {
 		let equipment : {e?: ItemArchetypeDTO, have?: boolean }[] = [];
 		item.equipment_slots.forEach(es => {
 			equipment.push(
@@ -105,9 +105,18 @@ export const CrewList = (props: {
 				</table>
 			</div>);
 		}
+		const collectionTrait = STTApi.playerData.character.cryo_collections.filter(c => item.rawTraits.some(t => c.traits.includes(t)));
+		const collectionMember = STTApi.playerData.character.cryo_collections.filter(c => c.extra_crew.includes(item.avatar_id));
 
 		return (
 			<div style={{ padding: '10px' }}>
+				{(collectionTrait.length > 0 || collectionMember.length > 0) &&
+					<div>
+						<h4 className="ui header">Collections</h4>
+						{collectionTrait.map((c, i, all) => <div>{c.name} - {c.traits.map(t => STTApi.getTraitName(t)).join()}</div>)}
+						{collectionMember.map((c, i, all) => <div>{c.name}</div>)}
+					</div>
+				}
 				{eqTable}
 				{item.action && item.ship_battle && <span>
 				<h4 className="ui header">Ship abilitiy '{item.action.name}'</h4>
