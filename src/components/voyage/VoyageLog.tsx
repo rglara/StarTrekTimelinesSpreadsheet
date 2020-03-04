@@ -64,7 +64,7 @@ export const VoyageLog = (props:{}) => {
 
    let voyRunTime = 0;
    if (voyageExport && voyageExport.narrative) {
-      voyRunTime = voyDuration(voyageExport);
+      voyRunTime = voyDuration(voyageExport.narrative);
    }
 
    return <div style={{ userSelect: 'initial' }}>

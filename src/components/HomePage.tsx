@@ -10,7 +10,7 @@ import { loadGauntlet } from '../api/GauntletTools';
 
 import { openDevTools } from '../utils/pal';
 import { EVENT_TYPES, SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_COMPLETE } from '../api/DTO';
-import { VOYAGE_AM_DECAY_PER_MINUTE } from './voyage/VoyageTools';
+import { VOYAGE_AM_DECAY_PER_MINUTE, voyDuration } from './voyage/VoyageTools';
 
 const Priority = Object.freeze({
 	INFO: 'info circle green',
@@ -272,7 +272,7 @@ export const HomePage = (props: HomePageProps) => {
 
 			setRecVoy([newRecommendation]);
 		} else {
-			loadVoyage(STTApi.playerData.character.voyage[0].id, true).then(narrative => {
+			loadVoyage(STTApi.playerData.character.voyage[0].id, false).then(narrative => {
 				let newRecommendation = undefined;
 				let voyage = STTApi.playerData.character.voyage[0];
 
@@ -283,7 +283,8 @@ export const HomePage = (props: HomePageProps) => {
 							icon: Priority.CHECK,
 							content: (
 								<p style={{ margin: '0' }}>
-									Voyage has lasted for {formatTimeSeconds(voyage.voyage_duration)} and it's currently returning (
+									<Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Voyage')}>Voyage
+									</Label> ran for {formatTimeSeconds(voyDuration(narrative))} and it's currently returning (
 									{formatTimeSeconds(voyage.recall_time_left)} at {Moment().add(voyage.recall_time_left, 's').format('h:mma')}).
 								</p>
 							)
@@ -292,7 +293,8 @@ export const HomePage = (props: HomePageProps) => {
 						newRecommendation = {
 							title: 'Voyage has returned',
 							icon: Priority.EXCLAMATION,
-							content: <p style={{ margin: '0' }}>The voyage is back. Claim your rewards in the game.</p>
+							content: <p style={{ margin: '0' }}>The <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Voyage')}>voyage
+								</Label> is back. Claim your rewards in the game.</p>
 						};
 					}
 				} else if (voyage.state === 'failed') {
@@ -310,8 +312,8 @@ export const HomePage = (props: HomePageProps) => {
 					newRecommendation = {
 						title: 'Voyage is waiting on your dilemma decision',
 						icon: Priority.EXCLAMATION,
-						content: <p style={{ margin: '0' }}>Resolve the dilemma in the <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Voyage')}>Voyage
-							</Label> tab or in the game.</p>
+						content: <p style={{ margin: '0' }}>Resolve the <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Voyage')}>Voyage
+							</Label> dilemma.</p>
 					};
 				} else {
 					const secondsToNextDilemma = voyage.seconds_between_dilemmas - voyage.seconds_since_last_dilemma;

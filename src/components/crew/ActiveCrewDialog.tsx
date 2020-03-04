@@ -105,7 +105,7 @@ interface VoyageProps {
 }
 
 const Voyage = (props:VoyageProps) => {
-    let [loaded, setLoaded] = React.useState({} as { done: boolean, currVoyage: VoyageDTO, currVoyageNarr: VoyageNarrativeDTO[][]});
+    let [loaded, setLoaded] = React.useState({} as { done: boolean, currVoyage: VoyageDTO, currVoyageNarr?: VoyageNarrativeDTO[][]});
 
     //TODO: if narrative is not displayed, no need to load it here
     React.useEffect(() => {
@@ -114,23 +114,23 @@ const Voyage = (props:VoyageProps) => {
                 loadVoyage(voyage.id, false).then((voyageNarrative) => {
 
                     // Group by index
-                    let voyageNarrative2 = voyageNarrative.reduce(function (r, a) {
-                        r[a.index] = r[a.index] || [];
-                        r[a.index].push(a);
-                        return r;
-                    }, Object.create(null));
+                    // let voyageNarrative2 = voyageNarrative.reduce(function (r, a) {
+                    //     r[a.index] = r[a.index] || [];
+                    //     r[a.index].push(a);
+                    //     return r;
+                    // }, Object.create(null));
 
                     setLoaded({
                         done: true,
                         currVoyage: voyage,
-                        currVoyageNarr: voyageNarrative2
+                        // currVoyageNarr: voyageNarrative2
                     })
                 });
             }
         });
     }, []);
 
-    let {done, currVoyage, currVoyageNarr} = loaded;
+    let {done, currVoyage } = loaded;
 
     function renderVoyageState() {
         if (currVoyage.state == "recalled") {

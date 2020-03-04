@@ -159,8 +159,10 @@ export function bestVoyageShip(): {ship: ShipDTO, score: number }[] {
 	return consideredShips;
 }
 
-export function voyDuration(narr: VoyageExportData) {
-	let maxLogIndex: number = narr.narrative[narr.narrative.length - 1].index;
+export function voyDuration(narrative: VoyageNarrativeDTO[]) : number {
+	if (!narrative || narrative.length == 0)
+		return 0;
+	let maxLogIndex: number = narrative[narrative.length - 1].index;
 	let dilemmaCount = Math.floor(maxLogIndex / TICKS_PER_DILEMMA);
 	let lastDilemmaTick = dilemmaCount * TICKS_PER_DILEMMA;
 
@@ -169,9 +171,9 @@ export function voyDuration(narr: VoyageExportData) {
 	//console.log('max ' + maxLogIndex + " dil count" + dilemmaCount + ' tail ' + tailTickCount);
 
 	if (tailTickCount > 0) {
-		let firstAfter: VoyageNarrativeDTO | undefined = narr.narrative.find(entry => entry.index === (lastDilemmaTick + 1));
+		let firstAfter: VoyageNarrativeDTO | undefined = narrative.find(entry => entry.index === (lastDilemmaTick + 1));
 		if (firstAfter) {
-			let tailTime = narr.narrative[narr.narrative.length - 1].event_time - firstAfter.event_time;
+			let tailTime = narrative[narrative.length - 1].event_time - firstAfter.event_time;
 			let tailTicks = tailTime / SECONDS_PER_TICK + 1; // add one back because the subtraction was to the "first after"
 
 			let totalTime = (dilemmaCount * TICKS_PER_DILEMMA + tailTicks) * SECONDS_PER_TICK;
