@@ -15,12 +15,15 @@ const defaultInclude = [SRC_DIR];
 
 module.exports = function(targetEnv, devEnv) {
 	let devElectron = targetEnv === 'electron' && devEnv;
+	let isWeb = targetEnv === 'web' || targetEnv === 'webtest';
+	//console.log('t:' + targetEnv + ' d?:' + devEnv + ' de:' + devElectron + ' w:' + isWeb);
 
 	let config = {
 		entry: SRC_DIR + '/index.js',
 		output: {
 			path: OUTPUT_DIR,
-			publicPath: devEnv ? '' : './',
+			//publicPath: devEnv ? '' : './',
+			publicPath: isWeb ? '/stt/' : (devEnv ? '' : './'),
 			filename: 'bundle.js',
 			globalObject: 'this'
 		},
