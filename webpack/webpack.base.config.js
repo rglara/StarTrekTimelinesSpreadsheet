@@ -86,7 +86,9 @@ module.exports = function(targetEnv, devEnv) {
 	}
 
 	if (targetEnv !== 'electron') {
-		config.node = { fs: 'empty' };
+		config.node = {
+			fs: 'empty'
+		};
 	}
 
 	return config;

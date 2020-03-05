@@ -2,7 +2,7 @@ const path = require('path');
 const merge = require('webpack-merge');
 const WebpackCdnPlugin = require('webpack-cdn-plugin');
 const baseConfig = require('./webpack.base.config.js');
-const WebappWebpackPlugin = require('webapp-webpack-plugin');
+const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
 
 // Config directories
 const SRC_DIR = path.resolve(__dirname, '../src');
@@ -12,7 +12,7 @@ const OUTPUT_DIR = path.resolve(__dirname, '../dist');
 
 module.exports = merge(baseConfig('webtest', true), {
 	plugins: [
-		new WebappWebpackPlugin({
+		new FaviconsWebpackPlugin({
 			logo: SRC_DIR + '/assets/logo.png',
 			prefix: 'img/',
 			emitStats: false,
