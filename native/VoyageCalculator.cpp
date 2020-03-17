@@ -223,7 +223,7 @@ void VoyageCalculator::calculate() noexcept
 	}
 
 	for (unsigned int iteration = 1;;++iteration) {
-		log << "iteration " << iteration << std::endl;
+		//log << "iteration " << iteration << std::endl;
 
 		float prevBest = bestscore;
 
@@ -235,8 +235,7 @@ void VoyageCalculator::calculate() noexcept
 			continue;
 		} else {
 			float vt = calculateDuration(bestconsidered, false);
-			log << "final result: " << vt << std::endl;
-			log << "stopping after " << iteration << " iterations" << std::endl;
+			log << "final result (" << iteration << " iterations): " << vt << std::endl;
 			break;
 		}
 	}

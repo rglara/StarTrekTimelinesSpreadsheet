@@ -33,7 +33,7 @@ struct Timer
 	using duration = decltype(clock::now()-clock::now());
 
 	Timer() = delete;
-	Timer(std::string name = "", bool start = true) : running(start), name(name) {}
+	Timer(std::string name = "", bool start = true, bool println = true) : running(start), println(println), name(name) {}
 	~Timer() { if (running) Pause(); Print(); }
 
 	void Pause()
@@ -55,10 +55,15 @@ struct Timer
 
 	void Print()
 	{
-		log << name << " took " << std::chrono::duration_cast<std::chrono::milliseconds>(total).count() << " ms" << std::endl;;
+		log << name << " took " << std::chrono::duration_cast<std::chrono::milliseconds>(total).count() << " ms";
+		if (println)
+			log << std::endl;
+		else
+			log << ' ';
 	}
 
 	bool running;
+	bool println;
 	std::string name;
 	duration total{0};
 	timepoint start = clock::now();
@@ -166,8 +171,8 @@ private:
 	float bestscore{0.0};
 
 	Timer totalTime{"voyage calculation"};
-	Timer voyageCalcTime{"actual calc", false};
-	Timer scoreUpdateTime{"score update", false};
+	Timer voyageCalcTime{"actual calc", false, false};
+	Timer scoreUpdateTime{"score update", false, false};
 };
 
 } //namespace VoyageTools

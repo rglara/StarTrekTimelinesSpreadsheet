@@ -74,7 +74,7 @@ export class LoginDialog extends React.Component<LoginDialogProps, LoginDialogSt
 			)}
 
 			<Pivot>
-				<PivotItem linkText='Username and password'>
+				<PivotItem headerText='Username and password'>
 					<TextField
 						label='Username (e-mail)'
 						value={this.state.username}
@@ -89,7 +89,7 @@ export class LoginDialog extends React.Component<LoginDialogProps, LoginDialogSt
 					/>
 				</PivotItem>
 				{/* #!if ENV === 'electron' */}
-				<PivotItem linkText='Facebook'>
+				<PivotItem headerText='Facebook'>
 					<div style={{ marginTop: '5px', alignContent: 'center' }} >
 						<PrimaryButton onClick={this._connectFacebook} text='Connect with Facebook' disabled={this.state.waitingForFacebook} />
 						<Image src={this.state.facebookImageUrl} height={200} />
