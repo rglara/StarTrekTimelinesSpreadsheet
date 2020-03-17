@@ -5,21 +5,28 @@ import { SpinButton } from 'office-ui-fabric-react/lib/SpinButton';
 import { Checkbox } from 'office-ui-fabric-react/lib/Checkbox';
 import { Persona, PersonaSize, PersonaPresence } from 'office-ui-fabric-react/lib/Persona';
 import { getTheme } from '@uifabric/styling';
+import { isMobile } from 'react-device-detect';
 
 // #!if ENV === 'electron'
 import Logger from '../utils/logger';
 // #!endif
 
-import STTApi, { CONFIG, formatTimeSeconds, formatCrewStatsVoy, download } from '../api';
+import STTApi, { CONFIG, formatTimeSeconds, formatCrewStatsVoy, download, getCrewDetailsLink, RarityStars } from '../api';
 import {
 	GauntletRoundOdds, GauntletData,
 	loadGauntlet, gauntletCrewSelection, gauntletRoundOdds, payToGetNewOpponents,
 	payToReviveCrew, playContest, enterGauntlet, Match
 } from '../api/GauntletTools';
-import { GauntletDTO, GauntletCrewDTO, GauntletContestDTO, GauntletContestLootDTO } from '../api/DTO';
+import { GauntletDTO, GauntletCrewDTO, GauntletContestDTO, GauntletContestLootDTO, CrewData } from '../api/DTO';
 import { CircularLabel } from './CircularLabel';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 import { CrewImageData } from './images/ImageProvider';
+import ReactTable, { SortingRule, Column } from 'react-table';
+import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
+import { Icon } from 'office-ui-fabric-react/lib/Icon';
+import { SkillCell } from './crew/SkillCell';
+import { TooltipHost } from 'office-ui-fabric-react/lib/Tooltip';
+import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
 
 // Shows a single Crew entry with gauntlet details (debuffs, etc.)
 const GauntletCrew = (props: {
@@ -163,16 +170,15 @@ export interface GauntletHelperProps {
 interface GauntletHelperState {
 	gauntlet?: GauntletDTO;
 	roundOdds?: GauntletRoundOdds;
-	traits?: string[];
 	lastResult?: GauntletContestDTO;
 	lastMatch?: Match;
 	startsIn?: string;
-	featuredSkill?: string;
 	lastErrorMessage?: string;
 	rewards?: {loot: GauntletContestLootDTO[]};
 	logPath?: string;
 	showSpinner: boolean;
 	showStats: boolean;
+	showCrewSelect: boolean;
 	windowWidth: number;
 	windowHeight: number;
 	bestFirst?: boolean;
@@ -190,6 +196,7 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 			logPath: undefined,
 			showSpinner: true,
 			showStats: false,
+			showCrewSelect: false,
 			windowWidth: 0,
 			windowHeight: 0
 		};
@@ -229,6 +236,15 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 					onClick: (evt:any) => this._exportLog()
 				});
 			}
+
+			commandItems.push({
+				key: 'switchGauntletDisplay',
+				name: this.state.showCrewSelect ? 'Switch to Gauntlet' : 'Switch to Crew Select',
+				iconProps: { iconName: 'Switch' },
+				onClick: () => {
+					this.setState({showCrewSelect: !this.state.showCrewSelect}, () => this._updateCommandItems());
+				}
+			});
 
 			commandItems.push({
 				key: 'settings',
@@ -299,8 +315,6 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 				lastErrorMessage: undefined,
 				lastResult: undefined,
 				startsIn: formatTimeSeconds(data.gauntlet.seconds_to_join),
-				featuredSkill: data.gauntlet.contest_data.featured_skill,
-				traits: data.gauntlet.contest_data.traits.map(function (trait:string) { return STTApi.getTraitName(trait); }.bind(this))
 			});
 		}
 		else if (data.gauntlet.state == 'STARTED') {
@@ -360,12 +374,12 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 
 			Promise.all(iconPromises).then(() => this.forceUpdate());
 		}
-		else if (data.gauntlet.state == 'UNSTARTED') {
-			// You joined a gauntled and are waiting for opponents
-		}
-		else if (data.gauntlet.state == 'ENDED_WITH_REWARDS') {
-			// The gauntlet ended and you got some rewards
-		}
+		// else if (data.gauntlet.state == 'UNSTARTED') {
+		// 	// You joined a gauntled and are waiting for opponents
+		// }
+		// else if (data.gauntlet.state == 'ENDED_WITH_REWARDS') {
+		// 	// The gauntlet ended and you got some rewards
+		// }
 		else {
 			this.setState({
 				gauntlet: data.gauntlet
@@ -428,12 +442,10 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 			</div>;
 		}
 
-		if (this.state.gauntlet && (this.state.gauntlet.state == 'NONE')) {
+		if (this.state.gauntlet && (this.state.gauntlet.state == 'NONE' || this.state.showCrewSelect)) {
 			return <GauntletSelectCrew
 				gauntlet={this.state.gauntlet}
 				startsIn={this.state.startsIn}
-				featuredSkill={this.state.featuredSkill!}
-				traits={this.state.traits}
 				gauntletLoaded={this._gauntletDataRecieved}
 			/>;
 		}
@@ -484,11 +496,10 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 				backgroundColor: getTheme().palette.themeLighter,
 				display: 'grid',
 				gridTemplateColumns: '100px auto auto 100px',
-				gridTemplateRows: '20px 150px 50px',
+				gridTemplateRows: '2em 13em',
 				gridTemplateAreas: `
 					"pcrewname pcrewname ocrewname ocrewname"
-					"pcrewimage stats stats ocrewimage"
-					"pcrewimage chance chance ocrewimage"`};
+					"pcrewimage stats stats ocrewimage"`};
 
 			const stEm = { textAlign: 'center', verticalAlign: 'middle', fontSize: '1.2rem', fontWeight: 700, lineHeight: '1.2em' };
 			const stNorm = { textAlign: 'center', verticalAlign: 'middle' };
@@ -565,11 +576,15 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 										<div>
 											Rewards:
 											<div>
-											{rewards.loot.map((loot, index) =>
-												<span key={index} style={{ color: loot.rarity ? CONFIG.RARITIES[loot.rarity].color : '#000' }}
+											{rewards.loot.map((loot, index) => {
+												if (!loot.iconUrl) {
+													loot.iconUrl = STTApi.imageProvider.getCached(loot);
+												}
+
+												return <span key={index} style={{ color: loot.rarity ? CONFIG.RARITIES[loot.rarity].color : '#000' }}
 												><img src={loot.iconUrl || ''} width='50' height='50' /><br/>{loot.quantity} {(loot.rarity == null) ? '' : CONFIG.RARITIES[loot.rarity].name} {loot.full_name}
-													{index < rewards.loot.length - 1 ? ', ' : ''}</span>
-											)}
+													{index < rewards.loot.length - 1 ? ', ' : ''}</span>;
+											})}
 											</div>
 										</div>
 									}
@@ -623,8 +638,6 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 const GauntletSelectCrew = (props: {
 	gauntlet: GauntletDTO;
 	startsIn?: string;
-	featuredSkill: string;
-	traits?: string[];
 	gauntletLoaded: (data: { gauntlet: GauntletDTO}) => void;
 }) => {
 	const [crewSelection, setCrewSelection] = React.useState(undefined as unknown as number[]);
@@ -658,7 +671,7 @@ const GauntletSelectCrew = (props: {
 			crewSpans.push(crewSpan);
 		});
 
-		return (<div>
+		return (<div style={{paddingLeft: '5px' }}>
 			<h3>Best crew</h3>
 			{calculating && <div className="ui medium centered text active inline loader">Still calculating...</div>}
 			<div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap' }}>
@@ -697,23 +710,28 @@ const GauntletSelectCrew = (props: {
 		}
 	}
 
+	const isActive = props.gauntlet.state !== 'NONE';
+	const fs = props.gauntlet.contest_data.featured_skill;
+
 	return (
-		<div>
-			<Label>Next gauntlet starts in {props.startsIn}.</Label>
-			{props.featuredSkill &&
-				<span className='quest-mastery'>Featured skill: <img src={CONFIG.SPRITES['icon_' + props.featuredSkill].url} height={18} /> {CONFIG.SKILLS[props.featuredSkill]}</span>
+		<div><Label>
+			{!isActive && <>Next gauntlet starts in {props.startsIn}.</>}
+			{isActive && <>Gauntlet is active.</>}
+			</Label>
+			{props.gauntlet.contest_data.featured_skill &&
+				<span className='quest-mastery'>Featured skill: <img src={CONFIG.SPRITES['icon_' + fs].url} height={18} /> {CONFIG.SKILLS[fs]}</span>
 			}
-			<Label>Featured traits: {props.traits && props.traits.join(', ')}</Label>
+			<Label>Featured traits: {props.gauntlet.contest_data.traits && props.gauntlet.contest_data.traits.map(t => STTApi.getTraitName(t)).join(', ')}</Label>
 
 			{renderBestCrew()}
 
-			<div className="ui grid" style={{ maxWidth: '600px' }}>
+			<div className="container" style={{ maxWidth: '600px', margin: '10px 0 10px 0', paddingLeft: '5px' }}>
 				<div className="row">
-					<div className="column"><h4>Algorithm settings</h4></div>
+					<div className="col"><h4>Algorithm settings</h4></div>
 				</div>
 
-				<div className="two column row">
-					<div className="column">
+				<div className="row">
+					<div className="col">
 						<SpinButton value={String(featuredSkillBonus)} label='Featured skill bonus:' min={0} max={100} step={1}
 							onIncrement={(value) => { setFeaturedSkillBonus(+value + 1); }}
 							onDecrement={(value) => { setFeaturedSkillBonus(+value - 1); }}
@@ -727,13 +745,13 @@ const GauntletSelectCrew = (props: {
 							}}
 						/>
 					</div>
-					<div className="column">
+					<div className="col">
 						The higher this number, the more bias applied towards the featured skill during crew selection
 							</div>
 				</div>
 
-				<div className="two column row">
-					<div className="column">
+				<div className="row">
+					<div className="col">
 						<SpinButton value={String(critBonusDivider)} label='Crit bonus divider:' min={0.1} max={100} step={0.1}
 							onIncrement={(value) => { setCritBonusDivider(+value + 0.1); }}
 							onDecrement={(value) => { setCritBonusDivider(+value - 0.1); }}
@@ -747,13 +765,13 @@ const GauntletSelectCrew = (props: {
 							}}
 						/>
 					</div>
-					<div className="column">
+					<div className="col">
 						The lower this number, the more bias applied towards crew with higher crit bonus rating during selection
-							</div>
+					</div>
 				</div>
 
 				<div className="row">
-					<div className="column">
+					<div className="col">
 						<Checkbox checked={includeFrozen} label="Include frozen crew"
 							onChange={(e, isChecked) => { setIncludeFrozen(isChecked || false ); }}
 						/>
@@ -765,8 +783,302 @@ const GauntletSelectCrew = (props: {
 
 			<div style={{ display: 'grid', gridGap: '5px', width: 'fit-content', gridTemplateColumns: 'max-content max-content' }}>
 				<div className={"ui primary button" + (calculating ? ' disabled' : '')} onClick={_calculateSelection}>Calculate best crew selection</div>
-				<div className={"ui primary button" + (!crewSelection ? ' disabled' : '')} onClick={_startGauntlet}>Start gauntlet with recommendations</div>
+				<div className={"ui primary button" + ((!crewSelection || isActive) ? ' disabled' : '')} onClick={_startGauntlet}>Start gauntlet with recommendations</div>
 			</div>
+
+			<GauntletCrewBonusTable gauntlet={props.gauntlet} />
 		</div>
 	);
 }
+
+const GauntletCrewBonusTable = (props: {
+	gauntlet: GauntletDTO;
+}) => {
+	const [sorted, setSorted] = React.useState([{ id: 'bonus', desc: true }] as SortingRule[]);
+	const [filterText, setFilterText] = React.useState('');
+
+	const columns = getColumns();
+	const bonusValues = [0, 25, 45, 65];
+
+	let items: CrewData[] = []; // array of CrewData with additional 'bonus' field
+	STTApi.roster.forEach(crew => {
+
+		const bonuses = crew.rawTraits.filter(t => props.gauntlet.contest_data.traits.includes(t)).length;
+		let bonus = bonusValues[bonuses] ?? 0;
+
+		let bonusCrew = {
+			...crew,
+			// additional properties not in CrewData
+			bonus
+		};
+
+		items.push(bonusCrew);
+	});
+
+	let bonusCrewCount = items.length;
+
+	//if (!props.onlyBonusCrew)
+	{
+		let allCrew = STTApi.roster.filter(c => !c.buyback);
+		allCrew.forEach(owned => {
+			let found = items.find(c => c.id === owned.id);
+			if (!found) {
+				items.push(owned);
+			}
+		});
+	}
+
+	if (filterText) {
+		items = items.filter(i => filterCrew(i, filterText!.toLowerCase()))
+	}
+
+	function getColumns(showBuyBack?: boolean) {
+		let _columns: Column<CrewData>[] = [];
+		let compactMode = true;
+
+		_columns.push({
+			id: 'icon',
+			Header: '',
+			minWidth: compactMode ? 28 : 60,
+			maxWidth: compactMode ? 28 : 60,
+			resizable: false,
+			accessor: 'name',
+			Cell: (cell) => {
+				if (cell && cell.original) {
+					return <Image src={cell.original.iconUrl} width={compactMode ? 22 : 50} height={compactMode ? 22 : 50} imageFit={ImageFit.contain} shouldStartVisible={true} />;
+				} else {
+					return <span />;
+				}
+			},
+		});
+
+		if (!isMobile) {
+			_columns.push({
+				id: 'short_name',
+				Header: 'Name',
+				minWidth: 90,
+				maxWidth: 110,
+				resizable: true,
+				accessor: 'short_name',
+				Cell: (cell) => {
+					if (cell && cell.original) {
+						return <a href={getCrewDetailsLink(cell.original)} target='_blank'>{cell.original.short_name}</a>;
+					} else {
+						return <span />;
+					}
+				},
+			});
+		}
+
+		_columns.push({
+				id: 'name',
+				Header: 'Full name',
+				minWidth: 110,
+				maxWidth: 190,
+				resizable: true,
+				accessor: 'name',
+			},
+			{
+				id: 'level',
+				Header: 'Level',
+				minWidth: 40,
+				maxWidth: 45,
+				resizable: false,
+				accessor: 'level',
+				style: { 'textAlign': 'center' }
+			},
+			{
+				id: 'rarity',
+				Header: 'Rarity',
+				// Sort all by max fusion level, then fractional part by current fusion level
+				accessor: (obj) => obj.max_rarity + (obj.rarity / obj.max_rarity),
+				minWidth: 75,
+				maxWidth: 85,
+				resizable: false,
+				Cell: (cell) => {
+					if (cell && cell.original) {
+						return <RarityStars min={1} max={cell.original.max_rarity} value={cell.original.rarity ? cell.original.rarity : null} />;
+					} else {
+						return <span />;
+					}
+				},
+			});
+
+		if (!isMobile) {
+			_columns.push({
+				id: 'favorite',
+				Header: () => <Icon iconName='FavoriteStar' />,
+				minWidth: 30,
+				maxWidth: 30,
+				style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
+				resizable: false,
+				accessor: 'favorite',
+				Cell: (cell) => {
+					if (cell && cell.original && cell.value) {
+						return <Icon iconName='FavoriteStar' />;
+					} else {
+						return <span />;
+					}
+				},
+			});
+		}
+
+		let colsProf: Column<CrewData>[] = [];
+		for (let sk in CONFIG.SKILLS_SHORT) {
+			let head = CONFIG.SKILLS_SHORT[sk];
+			colsProf.push({
+				id: sk,
+				Header: head,
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: (crew) => crew.skills[sk].max,
+				Cell: (cell) => cell.original ? <SkillCell skill={cell.original.skills[sk]} proficiency={true} compactMode={compactMode} /> : <span />,
+			});
+		}
+		colsProf.sort((a, b) => (a.Header as string).localeCompare(b.Header as string));
+
+		_columns.push(
+			{
+				id: 'frozen',
+				Header: () => <Icon iconName='Snowflake' />,
+				minWidth: 30,
+				maxWidth: 30,
+				style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
+				resizable: false,
+				accessor: 'frozen',
+				Cell: (cell: any) => {
+					if (cell && cell.value && cell.original) {
+						return <TooltipHost content={`You have ${(cell.value === 1) ? 'one copy' : `${cell.value} copies`} of ${cell.original.short_name} frozen (cryo-d)`} calloutProps={{ gapSpace: 0 }}>
+							{cell.value > 1 ? cell.value : ''}<Icon iconName='Snowflake' />
+						</TooltipHost>;
+					} else {
+						return <span />;
+					}
+				},
+			});
+		_columns.push({
+			id: 'bonus',
+			Header: 'Crit Bonus',
+			minWidth: 50,
+			maxWidth: 70,
+			resizable: true,
+			accessor: 'bonus',
+			style: { 'textAlign': 'center' },
+			Cell: cell => <span>{cell.value ? cell.value + '%' : ''}</span>
+		});
+		_columns.push(
+			{
+				id: 'active_id',
+				Header: () => <Icon iconName='Balloons' />,
+				minWidth: 30,
+				maxWidth: 30,
+				style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
+				resizable: false,
+				accessor: 'active_id',
+				Cell: (cell) => {
+					if (cell && cell.original && cell.original.active_id) {
+						let isShuttle = false;
+						STTApi.playerData.character.shuttle_adventures.forEach((shuttle) => {
+							if (shuttle.shuttles[0].id === cell.original.active_id) {
+								isShuttle = true;
+							}
+						});
+						return isShuttle ? 'S' : 'V';
+					} else {
+						return <span />;
+					}
+				},
+			},
+			...colsProf,
+			{
+				id: 'gauntlet_score',
+				Header: 'G Score',
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: 'gauntlet_score',
+				Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.gauntlet_score}</div> : <span />,
+			},
+			{
+				id: 'gauntlet_rank',
+				Header: 'G Rank',
+				minWidth: 50,
+				maxWidth: 70,
+				resizable: true,
+				accessor: (c) => c.datacore?.ranks.gauntletRank ?? 0,
+				Cell: (cell) => cell.original ? <div className='skill-stats-div'>{cell.original.datacore?.ranks.gauntletRank ?? ''}</div> : <span />,
+			},
+			{
+				id: 'traits',
+				Header: 'Traits',
+				minWidth: 140,
+				resizable: true,
+				accessor: 'traits',
+				Cell: (cell) => cell.original ? <div style={compactMode ? { overflow: 'hidden', textOverflow: 'ellipsis', height: '22px' } : { whiteSpace: 'normal', height: '50px' }}>{cell.original.traits.replace(/,/g, ', ')}</div> : <span />,
+			});
+
+		return _columns;
+	}
+
+	function filterCrew(crew: CrewData, searchString: string) {
+		return searchString.split(';').some(segment => {
+			if (segment.trim().length == 0) return false;
+			return segment.split(' ').every(text => {
+				if (text.trim().length == 0) return false;
+				// search the name first
+				if (crew.name.toLowerCase().indexOf(text) > -1) {
+					return true;
+				}
+
+				// now search the traits
+				if (crew.traits.toLowerCase().indexOf(text) > -1) {
+					return true;
+				}
+
+				// now search the raw traits
+				if (crew.rawTraits.find(trait => trait.toLowerCase().indexOf(text) > -1)) {
+					return true;
+				}
+
+				if ((crew as any).bonus) {
+					return ((crew as any).bonus == text);
+				}
+
+				return false;
+			});
+		});
+	}
+
+	return (<div style={{ marginTop: '15px' }}>
+		<SearchBox placeholder='Search by name or trait...'
+			onChange={(ev, newValue) => setFilterText(newValue ?? '')}
+			onSearch={(newValue) => setFilterText(newValue)}
+		/>
+		<div className='data-grid' data-is-scrollable='true'>
+			<ReactTable
+				data={items}
+				columns={columns}
+				defaultPageSize={(items.length <= 50) ? items.length : 50}
+				pageSize={(items.length <= 50) ? items.length : 50}
+				sorted={sorted}
+				onSortedChange={sorted => setSorted(sorted)}
+				showPagination={(items.length > 50)}
+				showPageSizeOptions={false}
+				className="-striped -highlight"
+				style={(items.length > 50) ? { height: 'calc(100vh - 200px)' } : {}}
+				getTrProps={(s: any, r: any) => {
+					return {
+						style: {
+							opacity: (r && r.original && r.original.isExternal) ? "0.5" : "inherit"
+						}
+					};
+				}}
+				getTdProps={(s: any, r: any) => {
+					return { style: { padding: "2px 3px" } };
+				}}
+			/>
+		</div>
+	</div>
+	);
+};

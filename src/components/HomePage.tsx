@@ -360,7 +360,8 @@ export const HomePage = (props: HomePageProps) => {
 					icon: Priority.EXCLAMATION,
 					content: (
 						<p style={{ margin: '0' }}>
-							You're not currently in a gauntlet; join one in the 'Gauntlet' tab, you're missing out on rewards. Next gauntlet starts in{' '}
+							You're not currently in a gauntlet; join one in
+							the <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Gauntlet')}>Gauntlet</Label> tab, you're missing out on rewards. Next gauntlet starts in{' '}
 							{formatTimeSeconds(gauntlet.seconds_to_join)}.
 						</p>
 					)
@@ -369,7 +370,8 @@ export const HomePage = (props: HomePageProps) => {
 				newRecommendation = {
 					title: `Gauntlet has ended (your rank is ${gauntlet.rank})`,
 					icon: Priority.EXCLAMATION,
-					content: <p style={{ margin: '0' }}>The gauntlet has ended; claim your rewards in the game or in the 'Gauntlet' tab.</p>
+					content: <p style={{ margin: '0' }}>The gauntlet has ended; claim your rewards in the game or in
+					the <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Gauntlet')}>Gauntlet</Label> tab.</p>
 				};
 			} else if (gauntlet.state === 'STARTED') {
 				const anyEnabled = gauntlet.contest_data.selected_crew.some(c => !c.disabled);

@@ -272,6 +272,7 @@ export interface GauntletDTO {
    seconds_to_join?: number; // only if gauntlet has not started
    seconds_to_next_crew_refresh: number;
    seconds_to_next_opponent_refresh: number;
+   /** 'NONE' | 'STARTED' | 'UNSTARTED' | 'ENDED_WITH_REWARDS' */
    state: string;
    refresh_cost: { currency: number; amount: number };
    revive_and_save_cost: { currency: number; amount: number };
