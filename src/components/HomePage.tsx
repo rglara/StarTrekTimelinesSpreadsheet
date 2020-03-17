@@ -272,12 +272,13 @@ export const HomePage = (props: HomePageProps) => {
 
 			setRecVoy([newRecommendation]);
 		} else {
-			loadVoyage(STTApi.playerData.character.voyage[0].id, false).then(narrative => {
+			loadVoyage(STTApi.playerData.character.voyage[0].id, true).then(async empty => {
 				let newRecommendation = undefined;
 				let voyage = STTApi.playerData.character.voyage[0];
 
 				if (voyage.state === 'recalled') {
 					if (voyage.recall_time_left! > 0) {
+						const narrative = await loadVoyage(STTApi.playerData.character.voyage[0].id, false);
 						newRecommendation = {
 							title: `Voyage returning`,
 							icon: Priority.CHECK,

@@ -569,6 +569,8 @@ const VoyageState = (props: {
          return (100 - Math.min(Math.max(chanceDilemma, 0), 100)).toFixed();
       };
 
+      const estRecallDurationSec = 0.4 * (props.voyage.voyage_duration + (props.estimatedMinutesLeft * 60));
+
       return (
          <div>
             <p>
@@ -577,16 +579,18 @@ const VoyageState = (props: {
                {' '}at {Moment().add(props.voyage.seconds_between_dilemmas - props.voyage.seconds_since_last_dilemma, 's').format('h:mma')}).
                </p>
 
-            <div className='ui blue label'>
+            <div>
                Estimated time left: <b>{formatTimeSeconds(props.estimatedMinutesLeft * 60)}</b>
-               {' '}at {Moment().add(props.estimatedMinutesLeft, 'm').format('h:mma')}
+               {' '}at {Moment().add(props.estimatedMinutesLeft, 'm').format('h:mma')} (including recall time: {
+               formatTimeSeconds(estRecallDurationSec)} at {Moment().add(props.estimatedMinutesLeft, 'm').add(estRecallDurationSec, 's').format('h:mma')})
                {' '}{props.computingNativeEstimate && <i className='spinner loading icon' />}
+
+               <button className='ui mini button' onClick={() => props.recall()}>
+                  <i className='icon undo' />
+                  Recall now
+               </button>
             </div>
 
-            <button className='ui mini button' onClick={() => props.recall()}>
-               <i className='icon undo' />
-               Recall now
-               </button>
 
             <p>There is an estimated {getDilemmaChance(props.estimatedMinutesLeft)}% chance for the voyage to reach next dilemma.</p>
          </div>
