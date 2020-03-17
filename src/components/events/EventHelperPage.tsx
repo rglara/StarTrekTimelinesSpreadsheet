@@ -182,13 +182,13 @@ export const EventCrewBonusTable = (props: {
       }
 
       _columns.push({
-         id: 'name',
-         Header: 'Full name',
-         minWidth: 110,
-         maxWidth: 190,
-         resizable: true,
-         accessor: 'name',
-      },
+            id: 'name',
+            Header: 'Full name',
+            minWidth: 110,
+            maxWidth: 190,
+            resizable: true,
+            accessor: 'name',
+         },
          {
             id: 'level',
             Header: 'Level',

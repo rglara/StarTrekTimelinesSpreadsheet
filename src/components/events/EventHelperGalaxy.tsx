@@ -16,11 +16,23 @@ interface ItemDemand {
    calcSlot: CalcSlot;
    craftCost: number;
    have: number;
-   itemDemands: {
-      rd: ItemArchetypeDemandDTO;
-      archetype?: ItemArchetypeDTO;
-      item?: ItemData;
-   }[];
+   itemDemands: ItemDemandData[];
+}
+
+interface ItemDemandData {
+   rd: ItemArchetypeDemandDTO;
+   archetype?: ItemArchetypeDTO;
+   item?: ItemData;
+   item_name?: string;
+   item_quantity?: number;
+   cost?: number;
+}
+
+interface EquipListItem {
+   equip: ItemArchetypeDTO;
+   have: ItemData | undefined;
+   itemDemands: ItemDemandData[];
+   bestCrew: BonusCrew[];
 }
 
 interface BonusCrew {
@@ -313,7 +325,7 @@ export const GalaxyEvent = (props: {
    let [activeIndex, setActiveIndex] = React.useState(-1);
 
    let crew_bonuses = [];
-   let eventEquip = [];
+   let eventEquip: EquipListItem[] = [];
    let farmList: FarmListItem[] = [];
    let currEvent: EventDTO = props.event;
 
@@ -344,7 +356,7 @@ export const GalaxyEvent = (props: {
       if (arch.recipe && arch.recipe.jackpot && arch.recipe.jackpot.trait_bonuses) {
          const demand = processArchetype(arch, [...bonusCrew])!;
          //TODO: re-use demand instead of this additional DTO; ALSO re-use calculation and dont do it more than once
-         let itemDemands = [];
+         let itemDemands: ItemDemandData[] = [];
          for (let rd of arch.recipe.demands) {
             let item = STTApi.items.find(item => item.archetype_id === rd.archetype_id);
             let arc = STTApi.itemArchetypeCache.archetypes.find(a => a.id === rd.archetype_id)!;
@@ -354,7 +366,8 @@ export const GalaxyEvent = (props: {
                archetype: arc,
                item,
                item_name: item ? item.name : arc ? arc.name : '',
-               item_quantity: item ? item.quantity : 0
+               item_quantity: item ? item.quantity : 0,
+               cost: item ? (item.sources.length == 0 ? 0 : item.sources.sort((a, b) => b.quotient - a.quotient)[0].quotient) : undefined,
             });
          }
 
@@ -451,11 +464,32 @@ export const GalaxyEvent = (props: {
                      <h3>
                         {e.equip.name}
                      </h3>
-                     <div>{e.itemDemands.map(id => <span key={id.item_name}>
-                        <ItemDisplay src={id.archetype.iconUrl!} style={{ display: 'inline' }}
-                           size={25} maxRarity={id.archetype.rarity} rarity={id.archetype.rarity} />
-                        {id.item_name} x{id.rd.count} (have {id.item_quantity})&nbsp;</span>
-                        )}</div>
+                     <div>{e.itemDemands.map((id, index) => {
+                        if (!id.archetype) {
+                           return <span key={index} ><ItemDisplay src={''} style={{ display: 'inline' }}
+                              size={50} maxRarity={0} rarity={0} />UNKNOWN-NEEDED x{id.rd.count} (have 0)&nbsp;</span>;
+                        }
+
+                        let style = {};
+                        let cost = id.cost ?? 0;
+                        cost = Math.round(cost * 100) / 100;
+                        let costStr = String(cost);
+                        if (cost <= 0) {
+                           costStr = '';
+                        }
+                        if (costStr.length > 0 && cost < 0.07) {
+                           style = {
+                              fontWeight: cost < 0.07 ? 'bold' : 'normal',
+                              color: cost < 0.07 ? 'red' : ''
+                           };
+                        }
+
+                        return <span key={id.item_name} style={style}>
+                           <ItemDisplay src={id.archetype.iconUrl ?? ''} style={{ display: 'inline' }}
+                              size={25} maxRarity={id.archetype.rarity} rarity={id.archetype.rarity} />
+                           {id.item_name} x{id.rd.count} (have {id.item_quantity}) (cost: {costStr})&nbsp;</span>;
+                        }
+                     )}</div>
 
                      <div>Best crew: {e.bestCrew.slice(0,3).map(bc => <span key={bc.crew.crew_id}>
                         <img src={bc.crew.iconUrl} width='25' height='25' />&nbsp;
