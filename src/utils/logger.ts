@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 import STTApi from '../api';
 import { CONFIG } from '../api';
@@ -6,10 +6,21 @@ import { CONFIG } from '../api';
 import { getAppPath } from './pal';
 
 import { simplejson2csv } from './simplejson2csv';
+import { GauntletData, Match } from '../api/GauntletTools';
+
+interface LogDTO {
+    data: GauntletData;
+    match: Match;
+    consecutive_wins: number;
+    time: number;
+}
 
 export class LoggerClass {
-    basePath;
-    exportFields;
+    basePath: string;
+    exportFields: {
+        label: string;
+        value: (r: LogDTO) => any;
+    }[];
 
     constructor() {
         this.basePath = getAppPath() + '/logs/';
@@ -37,107 +48,107 @@ export class LoggerClass {
             },
             {
                 label: 'Player 1',
-                value: (row) => row.data.lastResult.player_rolls[0]
+                value: (row) => row.data.lastResult!.player_rolls[0]
             },
             {
                 label: 'PCrit 1',
-                value: (row) => row.data.lastResult.player_crit_rolls[0]
+                value: (row) => row.data.lastResult!.player_crit_rolls[0]
             },
             {
                 label: 'Player 2',
-                value: (row) => row.data.lastResult.player_rolls[1]
+                value: (row) => row.data.lastResult!.player_rolls[1]
             },
             {
                 label: 'PCrit 2',
-                value: (row) => row.data.lastResult.player_crit_rolls[1]
+                value: (row) => row.data.lastResult!.player_crit_rolls[1]
             },
             {
                 label: 'Player 3',
-                value: (row) => row.data.lastResult.player_rolls[2]
+                value: (row) => row.data.lastResult!.player_rolls[2]
             },
             {
                 label: 'PCrit 3',
-                value: (row) => row.data.lastResult.player_crit_rolls[2]
+                value: (row) => row.data.lastResult!.player_crit_rolls[2]
             },
             {
                 label: 'Player 4',
-                value: (row) => row.data.lastResult.player_rolls[3]
+                value: (row) => row.data.lastResult!.player_rolls[3]
             },
             {
                 label: 'PCrit 4',
-                value: (row) => row.data.lastResult.player_crit_rolls[3]
+                value: (row) => row.data.lastResult!.player_crit_rolls[3]
             },
             {
                 label: 'Player 5',
-                value: (row) => row.data.lastResult.player_rolls[4]
+                value: (row) => row.data.lastResult!.player_rolls[4]
             },
             {
                 label: 'PCrit 5',
-                value: (row) => row.data.lastResult.player_crit_rolls[4]
+                value: (row) => row.data.lastResult!.player_crit_rolls[4]
             },
             {
                 label: 'Player 6',
-                value: (row) => row.data.lastResult.player_rolls[5]
+                value: (row) => row.data.lastResult!.player_rolls[5]
             },
             {
                 label: 'PCrit 6',
-                value: (row) => row.data.lastResult.player_crit_rolls[5]
+                value: (row) => row.data.lastResult!.player_crit_rolls[5]
             },
             {
                 label: 'Opponent 1',
-                value: (row) => row.data.lastResult.opponent_rolls[0]
+                value: (row) => row.data.lastResult!.opponent_rolls[0]
             },
             {
                 label: 'OCrit 1',
-                value: (row) => row.data.lastResult.opponent_crit_rolls[0]
+                value: (row) => row.data.lastResult!.opponent_crit_rolls[0]
             },
             {
                 label: 'Opponent 2',
-                value: (row) => row.data.lastResult.opponent_rolls[1]
+                value: (row) => row.data.lastResult!.opponent_rolls[1]
             },
             {
                 label: 'OCrit 2',
-                value: (row) => row.data.lastResult.opponent_crit_rolls[1]
+                value: (row) => row.data.lastResult!.opponent_crit_rolls[1]
             },
             {
                 label: 'Opponent 3',
-                value: (row) => row.data.lastResult.opponent_rolls[2]
+                value: (row) => row.data.lastResult!.opponent_rolls[2]
             },
             {
                 label: 'OCrit 3',
-                value: (row) => row.data.lastResult.opponent_crit_rolls[2]
+                value: (row) => row.data.lastResult!.opponent_crit_rolls[2]
             },
             {
                 label: 'Opponent 4',
-                value: (row) => row.data.lastResult.opponent_rolls[3]
+                value: (row) => row.data.lastResult!.opponent_rolls[3]
             },
             {
                 label: 'OCrit 4',
-                value: (row) => row.data.lastResult.opponent_crit_rolls[3]
+                value: (row) => row.data.lastResult!.opponent_crit_rolls[3]
             },
             {
                 label: 'Opponent 5',
-                value: (row) => row.data.lastResult.opponent_rolls[4]
+                value: (row) => row.data.lastResult!.opponent_rolls[4]
             },
             {
                 label: 'OCrit 5',
-                value: (row) => row.data.lastResult.opponent_crit_rolls[4]
+                value: (row) => row.data.lastResult!.opponent_crit_rolls[4]
             },
             {
                 label: 'Opponent 6',
-                value: (row) => row.data.lastResult.opponent_rolls[5]
+                value: (row) => row.data.lastResult!.opponent_rolls[5]
             },
             {
                 label: 'OCrit 6',
-                value: (row) => row.data.lastResult.opponent_crit_rolls[5]
+                value: (row) => row.data.lastResult!.opponent_crit_rolls[5]
             },
             {
                 label: 'Won round',
-                value: (row) => row.data.lastResult.win ? 'Yes' : 'No'
+                value: (row) => row.data.lastResult!.win ? 'Yes' : 'No'
             },
             {
                 label: 'loot_box_rarity',
-                value: (row) => row.data.lastResult.loot_box_rarity || 0
+                value: (row) => row.data.lastResult!.loot_box_rarity || 0
             },
             {
                 label: 'Skill 1',
@@ -149,7 +160,7 @@ export class LoggerClass {
             },
             {
                 label: 'Player crew',
-                value: (row) => STTApi.getCrewAvatarBySymbol(row.match.crewOdd.archetype_symbol).name
+                value: (row) => STTApi.getCrewAvatarBySymbol(row.match.crewOdd.archetype_symbol)!.name
             },
             {
                 label: 'Player crit chance',
@@ -177,7 +188,7 @@ export class LoggerClass {
             },
             {
                 label: 'Opponent crew',
-                value: (row) => STTApi.getCrewAvatarBySymbol(row.match.opponent.archetype_symbol).name
+                value: (row) => STTApi.getCrewAvatarBySymbol(row.match.opponent.archetype_symbol)!.name
             },
             {
                 label: 'Opponent crit chance',
@@ -210,11 +221,11 @@ export class LoggerClass {
         ];
     }
 
-    logGauntletEntry(data, match, consecutive_wins) {
+    logGauntletEntry(data: GauntletData, match: Match, consecutive_wins: number) {
         if (data && data.gauntlet && data.gauntlet.gauntlet_id) {
             let fileName = `${this.basePath}gauntlet_log_${data.gauntlet.gauntlet_id}.json`;
 
-            let results = {
+            let results : LogDTO = {
                 data: data,
                 match: match,
                 consecutive_wins: consecutive_wins,
@@ -226,7 +237,7 @@ export class LoggerClass {
                 if (exists) {
                     fs.readFile(fileName, (err, inFile) => {
                         if (!err) {
-                            let arr = JSON.parse(inFile);
+                            let arr = JSON.parse(inFile.toString());
                             arr.push(results);
                             fs.writeFile(fileName, JSON.stringify(arr), (err) => { if (err) console.error(err); });
                         }
@@ -242,7 +253,7 @@ export class LoggerClass {
         return undefined;
     }
 
-    hasGauntletLog(gauntlet_id) {
+    hasGauntletLog(gauntlet_id: number) {
         let fileName = `${this.basePath}gauntlet_log_${gauntlet_id}.json`;
 
         if (fs.existsSync(fileName)) {
@@ -252,14 +263,14 @@ export class LoggerClass {
         return undefined;
     }
 
-    exportGauntletLog(gauntlet_id) {
+    exportGauntletLog(gauntlet_id: number) {
         return new Promise((resolve, reject) => {
             let logPath = `${this.basePath}gauntlet_log_${gauntlet_id}.json`;
 
-            fs.readFile(logPath, (err, inFile) => {
+            fs.readFile(logPath, (err: any, inFile) => {
                 if (!err) {
                     // Format as CSV
-                    let csv = simplejson2csv(JSON.parse(inFile), this.exportFields);
+                    let csv = simplejson2csv(JSON.parse(inFile.toString()), this.exportFields);
                     resolve(csv);
                 } else { reject(err); }
             });
