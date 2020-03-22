@@ -74,6 +74,7 @@ const GauntletMatch = (props: {
 	gauntlet: GauntletDTO;
 	match: Match;
 	consecutive_wins: number;
+	doSpin: (sp: boolean) => void;
 	onNewData: (data: GauntletData, logPath: string | undefined, match: Match) => void;
 }) => {
 	//TODO: 320px hardcoded below!
@@ -139,8 +140,10 @@ const GauntletMatch = (props: {
 	</div>;
 
 	function playMatch() {
+		props.doSpin(true);
 		playContest(props.gauntlet, props.match, props.consecutive_wins).
 			then((data) => {
+				props.doSpin(false);
 				let logPath = undefined;
 
 				// #!if ENV === 'electron'
@@ -177,6 +180,7 @@ interface GauntletHelperState {
 	rewards?: {loot: GauntletContestLootDTO[]};
 	logPath?: string;
 	showSpinner: boolean;
+	showLoading: boolean;
 	showStats: boolean;
 	showCrewSelect: boolean;
 	windowWidth: number;
@@ -195,6 +199,7 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 			rewards: undefined,
 			logPath: undefined,
 			showSpinner: true,
+			showLoading: false,
 			showStats: false,
 			showCrewSelect: false,
 			windowWidth: 0,
@@ -206,7 +211,7 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 		this._payForNewOpponents = this._payForNewOpponents.bind(this);
 		this._payToReviveCrew = this._payToReviveCrew.bind(this);
 		this._exportLog = this._exportLog.bind(this);
-		this._reloadGauntletData();
+		this._reloadGauntletData(false);
 		this.updateWindowDimensions = this.updateWindowDimensions.bind(this);
 	}
 
@@ -278,15 +283,25 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 		}
 	}
 
-	_reloadGauntletData() {
-		loadGauntlet().then((data: GauntletDTO) => this._gauntletDataRecieved({ gauntlet: data }));
+	_reloadGauntletData(spin = true) {
+		if (spin) {
+			this.setState({showLoading: true});
+		}
+		loadGauntlet().then(data => {
+			if (spin) {
+				this.setState({ showLoading: false });
+			}
+			this._gauntletDataRecieved({ gauntlet: data });
+		});
 	}
 
 	_payForNewOpponents() {
 		if (!this.state.gauntlet) {
 			return;
 		}
+		this.setState({ showLoading: true });
 		payToGetNewOpponents().then((data) => {
+			this.setState({ showLoading: false });
 			if (data.gauntlet) {
 				this._gauntletDataRecieved({gauntlet: data.gauntlet});
 			} else if (data.message) {
@@ -503,6 +518,7 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 
 			const stEm = { textAlign: 'center', verticalAlign: 'middle', fontSize: '1.2rem', fontWeight: 700, lineHeight: '1.2em' };
 			const stNorm = { textAlign: 'center', verticalAlign: 'middle' };
+			const stLoad = this.state.showLoading ? { fontStyle: 'italic'} : {}
 
 			return (
 				<div className='tab-panel' data-is-scrollable='true'>
@@ -525,7 +541,7 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 						<div style={{display: 'flex', flexDirection: 'row'}}>
 						<div className="ui attached" style={{ marginBottom: '0em', paddingBottom:'1em', width:'300px', backgroundColor: getTheme().palette.themeLighter }}>
 								<h5 className="ui top attached header" style={{ color: getTheme().palette.neutralDark, backgroundColor: getTheme().palette.themeLighter, textAlign: 'center', padding: '2px' }}>
-									The gauntlet ends in {formatTimeSeconds(this.state.gauntlet.seconds_to_end)}
+									<span style={stLoad}>The gauntlet ends in {formatTimeSeconds(this.state.gauntlet.seconds_to_end)}</span>
 								</h5>
 								<GauntletStat label='Crew refresh' value={formatTimeSeconds(this.state.gauntlet.seconds_to_next_crew_refresh)} />
 								<GauntletStat label='Your rank' value={this.state.roundOdds.rank} />
@@ -596,7 +612,7 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 								<i className="money bill alternate outline icon"></i>
 								New opponents (50 merit)
 							</div>
-							<div className="ui button" onClick={this._reloadGauntletData}>
+							<div className="ui button" onClick={() => this._reloadGauntletData()}>
 								<i className="retweet icon"></i>
 								Reload data
 							</div>
@@ -611,6 +627,7 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 								match={match}
 								gauntlet={gaunt}
 								consecutive_wins={consecutiveWins}
+								doSpin={(sp) => this.setState({ showLoading: sp})}
 								onNewData={this._gauntletDataRecieved} />
 						)}
 					</div>
