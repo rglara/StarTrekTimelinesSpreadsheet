@@ -76,9 +76,6 @@ export const VoyageLog = (props:{}) => {
             computingNativeEstimate={computingNativeEstimate}
             recall={recall} />
          <VoyageDilemma voyage={voyage} reload={reloadVoyageState} />
-         <p>
-            Antimatter remaining: {voyage.hp} / {voyage.max_hp}.
-         </p>
          <VoyageCurrentCrew voyage={voyage} skillChecks={skillChecks} />
 
          {voyageRewards && <span>
@@ -570,33 +567,54 @@ const VoyageState = (props: {
       };
 
       const estRecallDurationSec = 0.4 * (props.voyage.voyage_duration + (props.estimatedMinutesLeft * 60));
+      const recallNowDurationSec = 0.4 * (props.voyage.voyage_duration);
 
       return (
          <div>
-            <p>
-               Voyage has been ongoing for <b>{formatTimeSeconds(props.voyage.voyage_duration)}</b> (new dilemma in
-                  {' '}{formatTimeSeconds(props.voyage.seconds_between_dilemmas - props.voyage.seconds_since_last_dilemma)}
-               {' '}at {Moment().add(props.voyage.seconds_between_dilemmas - props.voyage.seconds_since_last_dilemma, 's').format('h:mma')}).
-               </p>
-
             <div>
-               Estimated time left: <b>{formatTimeSeconds(props.estimatedMinutesLeft * 60)}</b>
-               {' '}at {Moment().add(props.estimatedMinutesLeft, 'm').format('h:mma')} (including recall time: {
-               formatTimeSeconds(estRecallDurationSec)} at {Moment().add(props.estimatedMinutesLeft, 'm').add(estRecallDurationSec, 's').format('h:mma')})
-               {' '}{props.computingNativeEstimate && <i className='spinner loading icon' />}
-
-               <button className='ui mini button' onClick={() => props.recall()}>
-                  <i className='icon undo' />
-                  Recall now
-               </button>
+               <VoyageStat label="Voyage Length" value={formatTimeSeconds(props.voyage.voyage_duration)} />
+               <VoyageStat label="Antimatter" value={props.voyage.hp + ' / ' + props.voyage.max_hp} />
+            </div>
+            <div>
+               <VoyageStat label="Dilemma In" value={formatTimeSeconds(props.voyage.seconds_between_dilemmas - props.voyage.seconds_since_last_dilemma)} />
+               <VoyageStat label="Dilemma At" value={Moment().add(props.voyage.seconds_between_dilemmas - props.voyage.seconds_since_last_dilemma, 's').format('h:mma')} />
+               <VoyageStat label="Dilemma Reach Chance" value={getDilemmaChance(props.estimatedMinutesLeft) + '%'} />
+            </div>
+            <div>
+               <VoyageStat label="Est Length" value={formatTimeSeconds(props.voyage.voyage_duration + props.estimatedMinutesLeft * 60)} />
+               <VoyageStat label="Est End In" value={formatTimeSeconds(props.estimatedMinutesLeft * 60)} />
+               <VoyageStat label="Est End At" value={Moment().add(props.estimatedMinutesLeft, 'm').format('h:mma')} />
+               <VoyageStat label="Est Recall Time" value={formatTimeSeconds(estRecallDurationSec)} />
+               <VoyageStat label="Est Recall End" value={Moment().add(props.estimatedMinutesLeft, 'm').add(estRecallDurationSec, 's').format('h:mma')} />
+               {props.computingNativeEstimate && <i className='spinner loading icon' />}
             </div>
 
-
-            <p>There is an estimated {getDilemmaChance(props.estimatedMinutesLeft)}% chance for the voyage to reach next dilemma.</p>
+            <div>
+               <VoyageStat label="Recall Time Now" value={formatTimeSeconds(recallNowDurationSec)} />
+               <VoyageStat label="Recall End" value={Moment().add(recallNowDurationSec, 's').format('h:mma')} />
+               <div className="ui statistic">
+                  <button className='ui mini button' onClick={() => props.recall()}>
+                     <i className='icon undo' />
+                     Recall now
+                  </button>
+               </div>
+            </div>
          </div>
       );
    }
 }
+
+const VoyageStat = (props: {
+   value: number | string,
+   label: string,
+   classAdd?: string
+}) => {
+   return <div className={`${props.classAdd ? props.classAdd : ''} ui tiny statistic`}>
+      <div className="label" style={{ color: 'unset' }}>{props.label}</div>
+      <div className="value" style={{ color: props.classAdd || 'unset' }}>{props.value}</div>
+   </div>;
+}
+
 
 const VoyageDilemma = (props: {
    voyage?: VoyageDTO;
@@ -619,7 +637,7 @@ const VoyageDilemma = (props: {
    }
    let voy = props.voyage;
 
-   if (voy.dilemma && voy.dilemma.id) {
+   if (voy.dilemma && voy.dilemma.id && voy.dilemma.resolutions) {
       return (
          <div>
             <h3 key={0} className='ui top attached header'>

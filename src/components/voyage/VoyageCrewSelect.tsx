@@ -1,4 +1,5 @@
 import React from 'react';
+import Moment from 'moment';
 import { Message, Dropdown, Header, Select, Checkbox, Form, Image, Card, Button, DropdownItem, DropdownItemProps } from 'semantic-ui-react';
 
 import STTApi, { CONFIG, bonusCrewForCurrentEvent, formatTimeSeconds, download, CrewSkills } from '../../api';
@@ -111,6 +112,9 @@ export const VoyageCrewSelect = (props: {
 		} secondary`;
 	}
 
+	const estDurationSec = (calcState.estimatedDuration ?? 0) * 60 * 60;
+	const estRecallDurationSec = 0.4 * (estDurationSec);
+
 	return (
 		<div style={{ margin: '5px' }}>
 			<Message attached>
@@ -203,10 +207,15 @@ export const VoyageCrewSelect = (props: {
 					/>
 				</Form.Group>
 
-				{(calcState.state === 'inprogress' || calcState.state === 'done') && (
+				{(calcState.state === 'inprogress' || calcState.state === 'done') && (<>
 					<h3>
-						Estimated duration: <b>{formatTimeSeconds(calcState.estimatedDuration! * 60 * 60)}</b>
+						Estimated duration: <b>{formatTimeSeconds(estDurationSec)}</b>
 					</h3>
+					<h5>
+					Including recall: {formatTimeSeconds(estDurationSec + estRecallDurationSec)} at {
+					Moment().add(estDurationSec + estRecallDurationSec, 's').format('h:mma')}
+					</h5>
+					</>
 				)}
 
 				<Form.Group>
