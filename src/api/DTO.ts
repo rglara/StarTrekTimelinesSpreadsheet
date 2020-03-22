@@ -1336,7 +1336,7 @@ export interface EventDTO {
    shop_layout: string;
    squadron_ranked_brackets: any[];
    status: number;
-   threshold_rewards: any[];
+   threshold_rewards: { points: number; rewards: any[]}[];
    unclaimed_threshold_rewards?: any[];
    victory_points?: number;
 }
@@ -1381,7 +1381,15 @@ export interface EventGatherPoolDTO {
       type: number;
    }[];
    id: number;
-   rewards: any[];
+   rewards: {
+      faction_id: number;
+      flavor: string;
+      icon: ImageDataDTO;
+      name: string;
+      quantity: number;
+      symbol: string;
+      type: number;
+   }[];
 }
 
 export interface DatacoreCrewDTO {

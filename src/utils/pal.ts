@@ -49,7 +49,7 @@ export function openShellExternal(url: string): void {
 	// #!endif
 }
 
-export function download(filename: string, text: any, title: string, buttonLabel: string, openOnSave = true) {
+export function download(filename: string, text: any, title: string, buttonLabel: string, openOnSave = true, path?: string) {
 	let extension: string = filename.split('.').pop()!;
 	// #!if ENV === 'electron'
 	let extName = '';
@@ -63,22 +63,31 @@ export function download(filename: string, text: any, title: string, buttonLabel
 		extName = 'HTML file (*.html)';
 	}
 
-	dialog
-		.showSaveDialog({
-			filters: [{ name: extName, extensions: [extension] }],
-			title: title,
-			defaultPath: filename,
-			buttonLabel: buttonLabel
-		})
-		.then(({ filePath }) => {
-			if (filePath === undefined) return;
+	if (!path) {
+		dialog
+			.showSaveDialog({
+				filters: [{ name: extName, extensions: [extension] }],
+				title: title,
+				defaultPath: filename,
+				buttonLabel: buttonLabel
+			})
+			.then(({ filePath }) => {
+				if (filePath === undefined) return;
 
-			fs.writeFile(filePath, text, err => {
-				if (!err && openOnSave) {
-					shell.openItem(filePath);
-				}
+				fs.writeFile(filePath, text, err => {
+					if (!err && openOnSave) {
+						shell.openItem(filePath);
+					}
+				});
 			});
+	}
+	else {
+		fs.writeFile(path + filename, text, err => {
+			if (!err && openOnSave) {
+				shell.openItem(path + filename);
+			}
 		});
+	}
 	// #!else
 	let mimeType = '';
 	let isText = true;

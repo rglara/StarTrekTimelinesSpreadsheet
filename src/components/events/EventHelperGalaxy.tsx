@@ -173,19 +173,6 @@ function processArchetype(arch: ItemArchetypeDTO | undefined, bestCrew: BonusCre
    };
 }
 
-function processAdventureDemands(adventure: EventGatherPoolAdventureDTO, bonusCrew: BonusCrew[]): ItemDemand[] {
-   let demands: ItemDemand[] = [];
-   adventure.demands.forEach((demand) => {
-      let arch = STTApi.itemArchetypeCache.archetypes.find(equipment => equipment.id === demand.archetype_id);
-      const archDemand = processArchetype(arch, bonusCrew);
-      if (archDemand) {
-         demands.push(archDemand);
-      }
-   });
-
-   return demands;
-}
-
 function getRosterWithBonuses(crew_bonuses: { [crew_symbol: string]: number }): BonusCrew[] {
    // TODO: share some of this code with Shuttles
    let sortedRoster: BonusCrew[] = [];
@@ -216,107 +203,19 @@ function getRosterWithBonuses(crew_bonuses: { [crew_symbol: string]: number }): 
    return sortedRoster;
 }
 
-
-const GalaxyAdventureDemand = (props: {
-   onUpdate: () => void;
-   demand: ItemDemand;
+const GalaxyStat = (props: {
+   value: number | string,
+   label: string,
+   classAdd?: string
 }) => {
-   let demand = props.demand;
-   let canCraft = false;//!demand.itemDemands.some((id: any) => !id.item);
-
-   const crew = demand.calcSlot.bestCrew[0].crew;
-
-   return (
-      <Item>
-         <Item.Image size='tiny' src={demand.equipment.iconUrl} />
-         <Item.Content>
-            <Item.Header>
-               {demand.equipment.name} (have {demand.have})
-            </Item.Header>
-            <Item.Description>
-               <div>
-                  Best crew: <img src={crew.iconUrl} width='25' height='25' />&nbsp;
-                  {crew.name}&nbsp;({demand.bestCrewChance}%)
-                  {crew.frozen > 0 && <span> Frozen!</span>}
-                  {crew.active_id && <span> Active!</span>}
-               </div>
-               <div>
-                  {demand.itemDemands.map((id, index, all) => {
-                     if (!id.archetype) {
-                        return <div key={index} ><ItemDisplay src={''} style={{ display: 'inline' }}
-                           size={50} maxRarity={0} rarity={0} />{id.rd.count}x {'UNKNOWN-NEEDED'} (have 0){
-                              index === all.length - 1 ? '' : ', '
-                           }</div>;
-                     }
-                     return <div key={index} ><ItemDisplay src={id.archetype.iconUrl!} style={{display: 'inline'}}
-                        size={50} maxRarity={id.archetype.rarity} rarity={id.archetype.rarity} />{id.rd.count}x {id.archetype.name}
-                         (have {id.item ? id.item.quantity : 0}){ index === all.length-1 ? '' : ', '}
-                        </div>;
-                     })
-                  }
-               </div>
-            </Item.Description>
-            {/* <Item.Extra>
-               <Button
-                  floated='right'
-                  disabled={!canCraft}
-                  content={`Craft (${demand.craftCost} credits)`}
-               />
-            </Item.Extra> */}
-         </Item.Content>
-      </Item>
-   );
-}
-
-const GalaxyAdventure = (props: {
-   adventure: EventGatherPoolAdventureDTO;
-   bonusCrew: BonusCrew[]
-}) => {
-   let adventure_name = '';
-   let adventure_demands : ItemDemand[] = [];
-
-   const [, updateState] = React.useState();
-   const forceUpdate = React.useCallback(() => updateState({}), []);
-
-   if (!props.adventure.golden_octopus) {
-      adventure_name = props.adventure.name;
-      adventure_demands = processAdventureDemands(props.adventure, props.bonusCrew);
+   let value = props.value;
+   if (typeof value === 'number') {
+      value = Math.trunc(value * 100) / 100;
    }
-
-   // function _completeAdventure() {
-   //    let activeEvent = STTApi.playerData.character.events[0];
-
-   //    let pool = activeEvent.content.gather_pools[0].id;
-   //    let event_instance_id = activeEvent.instance_id;
-   //    let phase = activeEvent.opened_phase;
-   //    let adventure = activeEvent.content.gather_pools[0].adventures[0].id;
-
-   //    STTApi.executePostRequestWithUpdates('gather/complete', {
-   //       event_instance_id: 134,
-   //       phase: 0,
-   //       pool: 142,
-   //       adventure: 807
-   //    });
-   // }
-
-   if (props.adventure.golden_octopus) {
-      return <p>VP adventure TODO</p>;
-   }
-
-   return (
-      <div style={{ padding: '10px' }}>
-         <h4>{adventure_name}</h4>
-         <Item.Group style={{display: 'inline-flex'}}>
-            {adventure_demands.map(demand => (
-               <GalaxyAdventureDemand
-                  key={demand.equipment.name}
-                  demand={demand}
-                  onUpdate={() => forceUpdate()}
-               />
-            ))}
-         </Item.Group>
-      </div>
-   );
+   return <div className={`${props.classAdd ? props.classAdd : ''} ui tiny statistic`}>
+      <div className="label" style={{ color: 'unset' }}>{props.label}</div>
+      <div className="value" style={{ color: props.classAdd || 'unset' }}>{value}</div>
+   </div>;
 }
 
 export const GalaxyEvent = (props: {
@@ -336,6 +235,9 @@ export const GalaxyEvent = (props: {
    ) {
       return <span />;
    }
+
+   const adventures = currEvent.content.gather_pools.length > 0 ? currEvent.content.gather_pools[0].adventures : [];
+   const rewards = currEvent.content.gather_pools.length > 0 ? currEvent.content.gather_pools[0].rewards : [];
 
    const bonusCrew: BonusCrew[] = getRosterWithBonuses(currEvent!.content.crew_bonuses!);
    for (let cb in currEvent.content.crew_bonuses!) {
@@ -409,10 +311,6 @@ export const GalaxyEvent = (props: {
    let toSave = farmList.map(fl => ({ equipment_id: fl.archetype.id, equipment_symbol: fl.archetype.symbol, uses: fl.uses }));
    //console.log(toSave);
 
-   // this.state = { event: currEvent, crew_bonuses, activeIndex: -1, eventEquip, farmList };
-   // } else {
-   // 	this.state = { event: undefined };
-
    function _handleClick(titleProps: AccordionTitleProps) {
       const { index } = titleProps;
       //const { activeIndex } = this.state;
@@ -422,12 +320,75 @@ export const GalaxyEvent = (props: {
       setActiveIndex(newIndex);
    }
 
-   let adventures = currEvent.content.gather_pools.length > 0 ? currEvent.content.gather_pools[0].adventures : undefined;
+   const vpCurr = currEvent.victory_points ?? 0;
+   const vpTopThresh = currEvent.threshold_rewards[currEvent.threshold_rewards.length-1].points;
+   let rareArchetypeId : number | undefined = undefined;
+   let rareArchetype = undefined;
+   let rareTurninCount = undefined;
+   {
+      const gos = adventures.filter(ad => ad.golden_octopus);
+      if (gos.length > 0) {
+         const go = gos[0];
+         rareArchetypeId = go.demands[0].archetype_id;
+         rareTurninCount = go.demands[0].count;
+         //rareArchetype = STTApi.itemArchetypeCache.archetypes.find(a => a.id === rareArchetypeId);
+      }
+   }
+   const rareItem = STTApi.items.find(item => item.archetype_id === rareArchetypeId);
+   let rareCount = 0;
+   if (rareItem) {
+      rareCount = rareItem.quantity;
+   }
+   let vpPerTurnin = undefined;
+   if (rewards.length > 0) {
+      vpPerTurnin = rewards[0].quantity;
+   }
 
-   // const { activeIndex, farmList, eventEquip } = this.state;
+   let rawTurninsToGo = undefined;
+   if (vpPerTurnin) {
+      rawTurninsToGo = (vpTopThresh - vpCurr) / vpPerTurnin;
+   }
+   let rareVP = undefined;
+   if (rareTurninCount && vpPerTurnin) {
+      let rareTurninCountLeft = rareTurninCount;
+      //if (currEvent.opened_phase === 2) {
+         rareVP = 0;
+         //TODO: test this before turnins have occurred
+         // if (vpPerTurnin === 125 && rareTurninCountLeft > 0) {
+         //    rareVP += 125 * 1;
+         //    rareTurninCountLeft -= 1;
+         // }
+         // if (vpPerTurnin === 415 && rareTurninCountLeft > 0) {
+         //    let times = 3;
+         //    rareTurninCountLeft -= times;
+         //    if (rareTurninCountLeft < 0) {
+         //       times = times + rareTurninCountLeft;
+         //    }
+         //    rareVP += 415 * times;
+         //    rareTurninCountLeft -= times;
+         // }
+         rareVP = rareCount / rareTurninCount * 4850; // 4850 for 15x rare turnins
+      //}
+   }
+
+   let turninsIncludingRares = 0;
+   if (rareVP && vpPerTurnin) {
+      turninsIncludingRares = (vpTopThresh - vpCurr - rareVP) / vpPerTurnin;
+   }
+
    return (
       <div>
          <h3>Galaxy event: {currEvent.name}</h3>
+         <div>
+            <GalaxyStat label="Current VP" value={vpCurr} />
+            <GalaxyStat label="Current Rares" value={rareCount ?? 'unknown'} />
+            <GalaxyStat label="VP from Rares" value={rareVP ?? 'unknown'} />
+         </div>
+         {vpTopThresh > vpCurr && <div>
+            <GalaxyStat label="Top Threshold VP" value={vpTopThresh} />
+            <GalaxyStat label="Turnins without Rares" value={rawTurninsToGo ?? 'unknown'} />
+            <GalaxyStat label="Turnins with Rares" value={turninsIncludingRares ?? 'unknown'} />
+         </div>}
 
          <Accordion>
             <Accordion.Title active={activeIndex === 2} index={2} onClick={(e, titleProps) => _handleClick(titleProps)}>
@@ -459,18 +420,26 @@ export const GalaxyEvent = (props: {
                Event equipment requirements {eventEquip.length == 0 && '(Pending event start)'}
             </Accordion.Title>
             <Accordion.Content active={activeIndex === 1}>
-               {eventEquip.map(e => (
-                  <div key={e.equip.id}>
+               <div style={{ display: 'flex', flexDirection: 'column' }}>
+               {eventEquip.map(e => {
+                  const advs = adventures.filter(ad => ad.demands.some(d => d.archetype_id === e.equip.id));
+                  const adv = advs.length > 0 ? advs[0] : undefined;
+                  return <div key={e.equip.id} style={{display: 'inline-flex', marginBottom: '15px'}}>
                      <h3>
+                        <ItemDisplay src={e.equip.iconUrl ?? ''} style={{ display: 'inline' }}
+                           size={30} maxRarity={e.equip.rarity} rarity={e.equip.rarity} />
                         {e.equip.name}
+                        {adv && <span style={{fontStyle: 'italic'}}> - {adv.name}</span>}
                      </h3>
-                     <div>{e.itemDemands.map((id, index) => {
+                     <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '10px' }}>{e.itemDemands.map((id, index) => {
                         if (!id.archetype) {
-                           return <span key={index} ><ItemDisplay src={''} style={{ display: 'inline' }}
-                              size={50} maxRarity={0} rarity={0} />UNKNOWN-NEEDED x{id.rd.count} (have 0)&nbsp;</span>;
+                           return <span key={index} ><ItemDisplay src={''}
+                              style={{display: 'inline', fontWeight: 'bold', color: 'red' }}
+                              size={25} maxRarity={0} rarity={0} />UNKNOWN-NEEDED x{id.rd.count} (have 0)&nbsp;</span>;
                         }
 
-                        let style = {};
+                        let styleCost = {};
+                        let styleCount = {};
                         let cost = id.cost ?? 0;
                         cost = Math.round(cost * 100) / 100;
                         let costStr = String(cost);
@@ -478,29 +447,38 @@ export const GalaxyEvent = (props: {
                            costStr = '';
                         }
                         if (costStr.length > 0 && cost < 0.07) {
-                           style = {
+                           styleCost = {
                               fontWeight: cost < 0.07 ? 'bold' : 'normal',
                               color: cost < 0.07 ? 'red' : ''
                            };
                         }
+                        if (!id.item_quantity || id.item_quantity < 50) {
+                           styleCount = {
+                              fontWeight: 'bold',
+                              color: 'red'
+                           };
+                        }
 
-                        return <span key={id.item_name} style={style}>
+                        return <span key={id.item_name}>
                            <ItemDisplay src={id.archetype.iconUrl ?? ''} style={{ display: 'inline' }}
                               size={25} maxRarity={id.archetype.rarity} rarity={id.archetype.rarity} />
-                           {id.item_name} x{id.rd.count} (have {id.item_quantity}) (cost: {costStr})&nbsp;</span>;
+                           {id.item_name} x{id.rd.count} <span style={styleCount}>(have {id.item_quantity})</span> <span
+                           style={styleCost}>(cost: {costStr})</span>&nbsp;</span>;
                         }
                      )}</div>
-
-                     <div>Best crew: {e.bestCrew.slice(0,3).map(bc => <span key={bc.crew.crew_id}>
-                        <img src={bc.crew.iconUrl} width='25' height='25' />&nbsp;
-                        {bc.crew.name}&nbsp;({bc.chance}%)
-                        {bc.crew.frozen > 0 && <span> Frozen!</span>}
-                        {bc.crew.active_id && <span> Active!</span>}
-                        </span>
-                           )}
+                     <div style={{display: 'flex', flexDirection: 'column', marginLeft: '10px'}}>Best crew: {e.bestCrew.slice(0, 3).map(bc => {
+                        const isOccupied = bc.crew.frozen > 0 || bc.crew.active_id;
+                        return <span key={bc.crew.crew_id} style={{ fontStyle: isOccupied ? 'italic' : 'normal' }}>
+                           <img src={bc.crew.iconUrl} width='25' height='25' />&nbsp;
+                           {bc.crew.name}&nbsp;({bc.chance}%)
+                           {bc.crew.frozen > 0 && <span> Frozen!</span>}
+                           {bc.crew.active_id && <span> Active!</span>}
+                           </span>;
+                        })}
                      </div>
-                  </div>
-               ))}
+                  </div>;
+               })}
+               </div>
             </Accordion.Content>
             <Accordion.Title active={activeIndex === 0} index={0} onClick={(e, titleProps) => _handleClick(titleProps)}>
                <Icon name='dropdown' />
@@ -508,18 +486,6 @@ export const GalaxyEvent = (props: {
             </Accordion.Title>
             <Accordion.Content active={activeIndex === 0}>
                <FarmList farmList={farmList} />
-            </Accordion.Content>
-            <Accordion.Title active={activeIndex === 4} index={4} onClick={(e, titleProps) => _handleClick(titleProps)}>
-               <Icon name='dropdown' />
-               Active adventures in the pool
-            </Accordion.Title>
-            <Accordion.Content active={activeIndex === 4}>
-               {adventures && adventures.filter(ad => !ad.golden_octopus).map((adventure) => (
-                  <GalaxyAdventure key={adventure.name} adventure={adventure} bonusCrew={[...bonusCrew]} />
-               ))}
-               {adventures && adventures.filter(ad => ad.golden_octopus).map((adventure) => (
-                  <GalaxyAdventure key={adventure.name} adventure={adventure} bonusCrew={[...bonusCrew]} />
-               ))}
             </Accordion.Content>
          </Accordion>
       </div>
