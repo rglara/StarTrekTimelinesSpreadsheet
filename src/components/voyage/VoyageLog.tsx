@@ -530,21 +530,20 @@ const VoyageState = (props: {
       return <div />;
    }
    if (props.voyage.state === 'recalled') {
-      return (
-         <p>
-            Voyage ran for {formatTimeSeconds(props.voyRunTime)} (including recall: {formatTimeSeconds(props.voyage.voyage_duration)})
-            and
-            {(props.voyage.recall_time_left ?? 0) > 0 ?
-            <> it's currently returning ({formatTimeSeconds(props.voyage.recall_time_left)} left).</> : <> it has returned</>
-            }
-         </p>
-      );
+      return <div>
+         <VoyageStat label="Voyage Length" value={formatTimeSeconds(props.voyRunTime)} />
+         <VoyageStat label="Time With Recall" value={formatTimeSeconds(props.voyage.voyage_duration)} />
+         <VoyageStat label="Recall Time Left" value={formatTimeSeconds(props.voyage.recall_time_left ?? 0)} />
+         {(props.voyage.recall_time_left ?? 0) > 0 &&
+            <VoyageStat label="Recall End" value={Moment().add(props.voyage.recall_time_left, 's').format('h:mma')} />
+         }
+      </div>;
    } else if (props.voyage.state === 'failed') {
       return (
          <p>
             Voyage has run out of antimatter after {formatTimeSeconds(props.voyage.voyage_duration)} and it's waiting to be abandoned or
             replenished.
-            </p>
+         </p>
       );
    } else {
       if (props.voyage.seconds_between_dilemmas === undefined ||
@@ -569,6 +568,8 @@ const VoyageState = (props: {
       const estRecallDurationSec = 0.4 * (props.voyage.voyage_duration + (props.estimatedMinutesLeft * 60));
       const recallNowDurationSec = 0.4 * (props.voyage.voyage_duration);
 
+      //const srcDil = STTApi.imageProvider.getCached({ icon: { file: 'images/icons/dilemma_icon' } });
+
       return (
          <div>
             <div>
@@ -576,6 +577,9 @@ const VoyageState = (props: {
                <VoyageStat label="Antimatter" value={props.voyage.hp + ' / ' + props.voyage.max_hp} />
             </div>
             <div>
+               {/* TODO: get this div to look better <div>
+                  <img src={srcDil} height="30" />
+               </div> */}
                <VoyageStat label="Dilemma In" value={formatTimeSeconds(props.voyage.seconds_between_dilemmas - props.voyage.seconds_since_last_dilemma)} />
                <VoyageStat label="Dilemma At" value={Moment().add(props.voyage.seconds_between_dilemmas - props.voyage.seconds_since_last_dilemma, 's').format('h:mma')} />
                <VoyageStat label="Dilemma Reach Chance" value={getDilemmaChance(props.estimatedMinutesLeft) + '%'} />
