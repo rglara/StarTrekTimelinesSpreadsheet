@@ -1,12 +1,12 @@
 import React from 'react';
 import { Label } from 'semantic-ui-react';
 
-import { ItemDisplay } from './ItemDisplay';
+import { ItemDisplay } from '../utils/ItemDisplay';
 import Moment from 'moment';
 
 import STTApi from '../api';
 import { CONFIG, getChronitonCount, formatTimeSeconds, loadVoyage } from '../api';
-import { loadGauntlet } from '../api/GauntletTools';
+import { loadGauntlet } from './gauntlet/GauntletTools';
 
 import { openDevTools } from '../utils/pal';
 import { EVENT_TYPES, SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_COMPLETE } from '../api/DTO';

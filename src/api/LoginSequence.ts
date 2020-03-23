@@ -1,6 +1,6 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
-import { buildCrewData, buildCrewDataAll, buildCrewDataAllFromDatacore } from './CrewTools';
+import { buildCrewData, buildCrewDataAll, buildCrewDataAllFromDatacore } from '../components/crew/CrewTools';
 import { matchShips } from './ShipTools';
 import { loadMissionData } from './MissionTools';
 import { loadFullTree, fixupAllCrewIds, getMissionCostDetails } from './EquipmentTools';

@@ -3,7 +3,7 @@ import { getTheme } from '@uifabric/styling';
 
 import { Input, Dropdown, Grid } from 'semantic-ui-react';
 
-import { ItemDisplay } from './ItemDisplay';
+import { ItemDisplay } from '../utils/ItemDisplay';
 import { ReplicatorDialog } from './replicator/ReplicatorDialog';
 import { WarpDialog } from './WarpDialog';
 

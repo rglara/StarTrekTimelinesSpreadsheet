@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Item, Image, List, Accordion, Icon, AccordionTitleProps } from 'semantic-ui-react';
 
-import { ItemDisplay } from '../ItemDisplay';
+import { ItemDisplay } from '../../utils/ItemDisplay';
 
 import STTApi, { CONFIG, RarityStars, getItemDetailsLink } from '../../api';
 import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES, ItemArchetypeDTO, ItemData, CrewData, ItemArchetypeDemandDTO } from '../../api/DTO';

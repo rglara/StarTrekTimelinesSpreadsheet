@@ -19,7 +19,7 @@ import { ItemPage } from './ItemPage';
 import { CrewPage } from './crew/CrewPage';
 import { CrewShipPage } from './crew/CrewShipPage';
 import { CrewTopPage } from './crew/CrewTopPage';
-import { GauntletHelper } from './GauntletHelper';
+import { GauntletHelper } from './gauntlet/GauntletHelper';
 import { MissionExplorer } from './MissionExplorer';
 import { AboutAndHelp } from './AboutAndHelp';
 import { HomePage } from './HomePage';

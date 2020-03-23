@@ -1,8 +1,8 @@
 import React from 'react';
 import ReactTable, { SortingRule, Column } from 'react-table';
 
-import { ItemDisplay } from './ItemDisplay';
-import { RarityStars } from './RarityStars';
+import { ItemDisplay } from '../utils/ItemDisplay';
+import { RarityStars } from '../utils/RarityStars';
 import STTApi, { CONFIG, getItemDetailsLink } from '../api';
 import { ItemData, ItemArchetypeDTO, ItemDataSource } from '../api/DTO';
 import { ReplicatorDialog } from './replicator/ReplicatorDialog';

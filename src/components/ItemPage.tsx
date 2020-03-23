@@ -1,6 +1,6 @@
 import React from 'react';
 import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
-import { exportItemsCsv } from '../utils/csvExporter';
+import { exportItemsCsv } from './crew/csvExporter';
 import { download } from '../utils/pal';
 import STTApi from '../api';
 import { ItemList } from './ItemList';

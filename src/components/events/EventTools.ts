@@ -1,4 +1,4 @@
-import STTApi from "./index";
+import STTApi from "../../api/index";
 
 export interface BonusCrew {
     eventName: string;

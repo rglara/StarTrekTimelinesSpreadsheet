@@ -1,6 +1,6 @@
-import STTApi from './index';
-import CONFIG from './CONFIG';
-import { GauntletDTO, GauntletCrewDTO, CrewData, GauntletContestDTO, GauntletContestLootDTO } from './DTO';
+import STTApi from '../../api/index';
+import CONFIG from '../../api/CONFIG';
+import { GauntletDTO, GauntletCrewDTO, CrewData, GauntletContestDTO, GauntletContestLootDTO } from '../../api/DTO';
 
 export interface GauntletData {
 	gauntlet: GauntletDTO;

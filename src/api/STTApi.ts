@@ -18,7 +18,7 @@
 import { NetworkFetch } from './NetworkFetch';
 import { DexieCache, QuestsTable, EquipmentTable, ImmortalsDB, ConfigTable, WikiImageTable } from './Cache';
 import { IChallengeSuccess } from './MissionCrewSuccess';
-import { buildCrewData, calculateBuffConfig, BuffStat } from './CrewTools';
+import { buildCrewData, calculateBuffConfig, BuffStat } from '../components/crew/CrewTools';
 import { MinimalComplement } from './MinimalComplement';
 import { mergeDeep } from './ObjectMerge';
 import { ImageProvider, ImageCache } from '../components/images/ImageProvider';

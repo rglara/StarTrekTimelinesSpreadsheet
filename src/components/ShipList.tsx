@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactTable, { SortingRule, Column } from 'react-table';
 
-import { RarityStars } from './RarityStars';
+import { RarityStars } from '../utils/RarityStars';
 
 import STTApi from '../api';
 import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';

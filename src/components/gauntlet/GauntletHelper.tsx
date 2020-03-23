@@ -8,23 +8,23 @@ import { getTheme } from '@uifabric/styling';
 import { isMobile } from 'react-device-detect';
 
 // #!if ENV === 'electron'
-import Logger from '../utils/logger';
+import Logger from './logger';
 // #!endif
 
-import STTApi, { CONFIG, formatTimeSeconds, formatCrewStatsVoy, download, getCrewDetailsLink, RarityStars } from '../api';
+import STTApi, { CONFIG, formatTimeSeconds, formatCrewStatsVoy, download, getCrewDetailsLink, RarityStars } from '../../api';
 import {
 	GauntletRoundOdds, GauntletData,
 	loadGauntlet, gauntletCrewSelection, gauntletRoundOdds, payToGetNewOpponents,
 	payToReviveCrew, playContest, enterGauntlet, Match
-} from '../api/GauntletTools';
-import { GauntletDTO, GauntletCrewDTO, GauntletContestDTO, GauntletContestLootDTO, CrewData } from '../api/DTO';
-import { CircularLabel } from './CircularLabel';
+} from './GauntletTools';
+import { GauntletDTO, GauntletCrewDTO, GauntletContestDTO, GauntletContestLootDTO, CrewData } from '../../api/DTO';
+import { CircularLabel } from '../../utils/CircularLabel';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
-import { CrewImageData } from './images/ImageProvider';
+import { CrewImageData } from '../images/ImageProvider';
 import ReactTable, { SortingRule, Column } from 'react-table';
 import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
 import { Icon } from 'office-ui-fabric-react/lib/Icon';
-import { SkillCell } from './crew/SkillCell';
+import { SkillCell } from '../crew/SkillCell';
 import { TooltipHost } from 'office-ui-fabric-react/lib/Tooltip';
 import { SearchBox } from 'office-ui-fabric-react/lib/SearchBox';
 

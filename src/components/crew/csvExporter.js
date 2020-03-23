@@ -1,5 +1,5 @@
-import STTApi, { CONFIG } from '../api';
-import { simplejson2csv } from './simplejson2csv';
+import STTApi, { CONFIG } from '../../api';
+import { simplejson2csv } from '../../utils/simplejson2csv';
 
 export function exportCsv() {
 	let fields = [{

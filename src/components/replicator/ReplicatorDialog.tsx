@@ -5,7 +5,7 @@ import { PrimaryButton, DefaultButton } from 'office-ui-fabric-react/lib/Button'
 import { Dropdown } from 'office-ui-fabric-react/lib/Dropdown';
 import { ProgressIndicator } from 'office-ui-fabric-react/lib/ProgressIndicator';
 
-import { ItemDisplay } from '../ItemDisplay';
+import { ItemDisplay } from '../../utils/ItemDisplay';
 import UserStore from '../Styles';
 
 import STTApi, { CONFIG, RarityStars } from '../../api';

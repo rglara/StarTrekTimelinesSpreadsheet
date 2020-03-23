@@ -1,12 +1,12 @@
 import fs from 'fs';
 
-import STTApi from '../api';
-import { CONFIG } from '../api';
+import STTApi from '../../api';
+import { CONFIG } from '../../api';
 
-import { getAppPath } from './pal';
+import { getAppPath } from '../../utils/pal';
 
-import { simplejson2csv } from './simplejson2csv';
-import { GauntletData, Match } from '../api/GauntletTools';
+import { simplejson2csv } from '../../utils/simplejson2csv';
+import { GauntletData, Match } from './GauntletTools';
 
 interface LogDTO {
     data: GauntletData;

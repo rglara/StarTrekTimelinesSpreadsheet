@@ -2,7 +2,7 @@ import React from 'react';
 
 import { Button, Item, Image, List, Accordion, Icon, AccordionTitleProps } from 'semantic-ui-react';
 
-import { ItemDisplay } from './ItemDisplay';
+import { ItemDisplay } from '../utils/ItemDisplay';
 
 import STTApi from '../api';
 import { EventDTO, EventGatherPoolAdventureDTO } from '../api/DTO';

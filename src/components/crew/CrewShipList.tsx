@@ -8,7 +8,7 @@ import { TooltipHost } from 'office-ui-fabric-react/lib/Tooltip';
 import ReactTable, { SortingRule, Column } from 'react-table';
 import { isMobile } from 'react-device-detect';
 
-import { ItemDisplay } from '../ItemDisplay';
+import { ItemDisplay } from '../../utils/ItemDisplay';
 
 import STTApi, { CONFIG, RarityStars, getCrewDetailsLink } from '../../api';
 import { CrewData, ItemArchetypeDTO } from '../../api/DTO';

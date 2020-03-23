@@ -1,7 +1,7 @@
-import STTApi from '../api';
-import { CONFIG } from '../api';
+import STTApi from '../../api';
+import { CONFIG } from '../../api';
 
-import { getAppVersion, download, openShellExternal } from '../utils/pal';
+import { getAppVersion, download, openShellExternal } from '../../utils/pal';
 
 async function pastebinPost(data, exportType) {
 	let result = await STTApi.networkHelper.post('https://ptpb.pw/', { 'c': data }, undefined, false);

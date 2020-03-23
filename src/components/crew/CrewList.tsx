@@ -12,7 +12,7 @@ import { isMobile } from 'react-device-detect';
 
 import { SkillCell } from './SkillCell';
 import { ActiveCrewDialog } from './ActiveCrewDialog';
-import { ItemDisplay } from '../ItemDisplay';
+import { ItemDisplay } from '../../utils/ItemDisplay';
 
 import STTApi, { CONFIG, RarityStars, getCrewDetailsLink } from '../../api';
 import { CrewData, ItemArchetypeDTO, CrewActionChargePhaseDTO } from '../../api/DTO';
