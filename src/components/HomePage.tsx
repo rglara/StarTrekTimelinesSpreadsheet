@@ -103,7 +103,7 @@ export const HomePage = (props: HomePageProps) => {
 		});
 	}
 
-	let cadet = STTApi.playerData.character.cadet_schedule.missions.find((m:any) => m.id === STTApi.playerData.character.cadet_schedule.current);
+	let cadet = STTApi.playerData.character.cadet_schedule.missions.find(m => m.id === STTApi.playerData.character.cadet_schedule.current);
 	if (STTApi.playerData.character.cadet_tickets.current === 0) {
 		recommendations.push({
 			title: 'Cadet tickets used',
@@ -567,7 +567,7 @@ export const HomePage = (props: HomePageProps) => {
 					<p>
 						Location{' '}
 						{
-							STTApi.playerData.character.navmap.places.find((place:any) => place.symbol === STTApi.playerData.character.location.place)!
+							STTApi.playerData.character.navmap.places.find(place => place.symbol === STTApi.playerData.character.location.place)!
 								.display_name
 						}
 					</p>

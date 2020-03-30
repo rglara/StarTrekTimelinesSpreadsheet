@@ -73,6 +73,8 @@ However, if you're only interested in installing and running the tool, head on t
 
 ### Summary Page
 
+![Screenshot tool](/docs/homepage.png "Homepage screenshot")
+
 The first tab shows summary information, including your player name, DBID, and messages of the day from DB or your fleet.
 
 Notable features:
