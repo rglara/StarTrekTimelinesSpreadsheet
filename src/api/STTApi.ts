@@ -31,9 +31,15 @@ import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
 import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO, DatacoreCrewDTO, PlayerInspectDTO } from './DTO';
+// #!if ENV === 'electron'
+import fs from 'fs';
+import { getAppPath } from '../utils/pal';
+// #!endif
 
 export class STTApiClass {
 	private _accessToken: string | undefined;
+	// Change this to use mock data - JSON data from previously captured responses, edited as necessary to coerce particular behavior
+	private _usemock: boolean = false;
 	private _net: NetworkFetch;
 	private _playerData?: PlayerResponseDTO;
 	private _starbaseData: {
@@ -199,6 +205,10 @@ export class STTApiClass {
 		return this._accessToken != null;
 	}
 
+	get mockData(): boolean {
+		return this._usemock;
+	}
+
 	get playerData(): PlayerDTO {
 		return this._playerData!.player!;
 	}
@@ -260,6 +270,10 @@ export class STTApiClass {
 	}
 
 	async loginWithCachedAccessToken(): Promise<boolean> {
+		// if (this._usemock) {
+		// 	console.log('Using mock data!');
+		// 	return true;
+		// }
 		let entry = await this._cache.config
 			.where('key')
 			.equals('autoLogin')
@@ -315,9 +329,43 @@ export class STTApiClass {
 		}
 	}
 
+	getMockData(url: string): any {
+		// #!if ENV === 'electron'
+		const path = getAppPath() + '/mock/';
+
+		if (!fs.existsSync(path)) {
+			console.log("Cannot mock; no files found");
+		}
+		else {
+			const dirEntries: string[] = fs.readdirSync(path);
+			const fn = url.replace(/\//g, '.') + '.json';
+			if (dirEntries.includes(fn)) {
+				try {
+					const fileData = fs.readFileSync(path + fn, { encoding: 'utf8' });
+					console.log('loaded mock for '+url);
+					return JSON.parse(fileData);
+				}
+				catch (err) {
+					console.log(err);
+				}
+			}
+			else {
+				console.log('no mock found for '+url);
+			}
+		}
+		// #!endif
+		return undefined;
+	}
+
 	async executeGetRequest(resourceUrl: string, qs: any = {}): Promise<any> {
 		if (this._accessToken === undefined) {
 			throw new Error('Not logged in!');
+		}
+		if (this._usemock) {
+			const rv = this.getMockData(resourceUrl);
+			if (rv) {
+				return rv;
+			}
 		}
 
 		return this._net.get_proxy(
@@ -329,6 +377,12 @@ export class STTApiClass {
 	async executeGetRequestWithUpdates(resourceUrl: string, qs: any = {}): Promise<any> {
 		if (this._accessToken === undefined) {
 			throw new Error('Not logged in!');
+		}
+		if (this._usemock) {
+			const rv = this.getMockData(resourceUrl);
+			if (rv) {
+				return rv;
+			}
 		}
 
 		return this._net
@@ -343,6 +397,12 @@ export class STTApiClass {
 		if (this._accessToken === undefined) {
 			throw new Error('Not logged in!');
 		}
+		if (this._usemock) {
+			const rv = this.getMockData(resourceUrl);
+			if (rv) {
+				return rv;
+			}
+		}
 
 		return this._net.post_proxy(
 			CONFIG.URL_SERVER + resourceUrl,
@@ -354,6 +414,12 @@ export class STTApiClass {
 	async executePostRequestWithUpdates(resourceUrl: string, qs: any = {}): Promise<any> {
 		if (this._accessToken === undefined) {
 			throw new Error('Not logged in!');
+		}
+		if (this._usemock) {
+			const rv = this.getMockData(resourceUrl);
+			if (rv) {
+				return rv;
+			}
 		}
 
 		return this._net
