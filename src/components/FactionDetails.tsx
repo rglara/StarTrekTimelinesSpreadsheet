@@ -29,7 +29,7 @@ const StoreItem = (props: StoreItemProps) => {
 		}
 	}
 
-	let curr : any = CONFIG.CURRENCIES[props.storeItem.offer.cost.currency];
+	let curr = CONFIG.CURRENCIES[props.storeItem.offer.cost.currency];
 	let locked = props.storeItem.locked || props.storeItem.offer.purchase_avail === 0;
 
 	let iconUrl;

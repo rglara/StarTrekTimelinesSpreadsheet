@@ -62,8 +62,11 @@ const GauntletCrew = (props: {
 		</div>}
 		{(props.crew.debuff > 0 || props.crew.disabled) &&
 		<div className="ui bottom attached primary button" onClick={() => props.revive(props.crew.disabled)}>
-			<i className="money bill alternate outline icon"></i>
-			{props.crew.disabled ? 'Revive (' + props.reviveCost.amount + ' dil)' : 'Restore (' + props.reviveCost.amount + ' dil)'}
+			{props.crew.disabled ? <>Revive (<span style={{ display: 'inline-block' }}>
+				<img src={CONFIG.SPRITES[CONFIG.CURRENCIES.premium_purchasable.icon].url} height={20} />
+			</span> {props.reviveCost.amount} dil)</> : <>Restore (<span style={{ display: 'inline-block' }}>
+				<img src={CONFIG.SPRITES[CONFIG.CURRENCIES.premium_purchasable.icon].url} height={20} />
+			</span> {props.reviveCost.amount} dil)</>}
 		</div>
 		}
 	</div>;
@@ -77,6 +80,8 @@ const GauntletMatch = (props: {
 	doSpin: (sp: boolean) => void;
 	onNewData: (data: GauntletData, logPath: string | undefined, match: Match) => void;
 }) => {
+	const fleetmate = STTApi.fleetMembers.find(fm => fm.pid === props.match.opponent.player_id);
+
 	//TODO: 320px hardcoded below!
 	let containerStyle = {
 		padding: '3px',
@@ -136,7 +141,8 @@ const GauntletMatch = (props: {
 
 			<span style={{ gridArea: 'ocrewname', justifySelf: 'center' }}>{oppCrew ? oppCrew.short_name : "<unknown>"}</span>
 		</div>
-		<div className="ui bottom attached primary button" onClick={playMatch}>Engage!</div>
+		<div className="ui bottom attached primary button" style={fleetmate ? { backgroundColor: 'red' } : {}}
+			onClick={playMatch}>Engage {fleetmate ? ' Fleetmate' : ''}!</div>
 	</div>;
 
 	function playMatch() {
@@ -609,8 +615,9 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 						</div>
 						<div className="ui two bottom attached buttons">
 							<div className={'ui primary button' + ((this.state.roundOdds.matches.length > 0) ? '' : ' disabled')} onClick={this._payForNewOpponents}>
-								<i className="money bill alternate outline icon"></i>
-								New opponents (50 merit)
+								New opponents (<span style={{ display: 'inline-block' }}>
+									<img src={CONFIG.SPRITES[CONFIG.CURRENCIES.premium_earnable.icon].url} height={16} />
+								</span>50 merit)
 							</div>
 							<div className="ui button" onClick={() => this._reloadGauntletData()}>
 								<i className="retweet icon"></i>
