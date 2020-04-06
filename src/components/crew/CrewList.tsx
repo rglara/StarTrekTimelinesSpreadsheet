@@ -301,7 +301,7 @@ export const CrewList = (props: {
 				accessor: 'name',
 			Cell: (cell) => {
 					if (cell && cell.original) {
-						return <HoverCard id="nameHoverCard"
+						return <HoverCard id="nameHoverCard" key={cell.original.crew_id}
 							expandingCardProps={{
 								compactCardHeight: 180,
 								expandedCardHeight: 420,

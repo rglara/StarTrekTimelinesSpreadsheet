@@ -31,6 +31,7 @@ export class FileImageCache implements ImageCache {
 		}
 	}
 
+	//TODO: restructure image persistence to use directories instead of flattening them all - makes for very large directories
 	formatUrl(url: string): string {
 		//HACK: strip first char if startswith some cases to account for previous bug
 		let rv = ((url.startsWith('/') || url.startsWith('atlas') || url.startsWith('images')) ? url.substr(1) : url).replace(new RegExp('/', 'g'), '_');

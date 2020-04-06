@@ -304,9 +304,6 @@ export const VoyageCrewSelect = (props: {
 				return false;
 			}
 
-			// TODO: ignore crew crashes
-			// TODO: fix wasm
-
 			// Filter out crew the user has chosen not to include
 			if (
 				currentSelectedItems.length > 0 &&

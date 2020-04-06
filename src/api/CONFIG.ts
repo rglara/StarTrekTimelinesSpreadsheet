@@ -146,6 +146,14 @@ export default class CONFIG {
 		nonpremium: {
 			name: 'credits',
 			icon: 'images_currency_sc_currency_0'
+		},
+		season_points: {
+			name: 'accolades',
+			icon: 'atlas_stt_icons2_info'
+		},
+		quantum: {
+			name: 'quantum',
+			icon: '/items/artifacts/quantum_currency_0.png'
 		}
 	};
 

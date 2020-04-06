@@ -26,7 +26,6 @@ export async function loadVoyage(voyageId: number, newOnly: boolean = true): Pro
 
 		data.forEach((action: any) => {
 			if (action.character && action.character.voyage) {
-				// TODO: if DB adds support for more than one voyage at a time this hack won't work
 				let voy: VoyageUpdateDTO = action.character.voyage[0];
 
 				// Clear out the dilemma resolutions before load to avoid duplicates

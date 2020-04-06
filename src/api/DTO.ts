@@ -591,14 +591,57 @@ export interface PlayerCharacterDTO {
    crew: CrewDTO[];
    crew_avatar: any;
    crew_borrows: BorrowedCrewDTO[];
-   crew_collection_buffs: any[];
+   crew_collection_buffs: {
+      name: string,
+      short_name: string,
+      flavor: string,
+      icon: ImageDataDTO,
+      operator: string, // "percent_increase",
+      value: number,
+      stat: string, // skill key, e.g. "science_skill_core",
+      source: string, // "crew_collection",
+      symbol: string
+   }[];
    crew_limit: number;
    crew_limit_increase_per_purchase: number;
    crew_shares: any[];
    cryo_collections: CryoCollectionDTO[];
    current_ship_id: number;
-   daily_activities: any[];
-   daily_rewards_state: any;
+   daily_activities: {
+      id: number,
+      name: string,
+      description: string,
+      icon:
+      {
+         file: string,
+         atlas_info: string, //"atlas_stt_icons_info"
+      },
+      area: string,
+      weight: number,
+      category: number,
+      lifetime?: number, // 1= achievements; 0=daily mission; undefined=chron boost, daily reward
+      rewards?: RewardDTO[], // empty array if claimed
+      goal?: number,
+      min_level?: number,
+      rarity?: number,
+      progress?: number,
+      status?: string // goal status, "Top 1" for gauntlet, "1 / 3" for scans
+   }[];
+   daily_rewards_state: {
+      seconds_until_next_reward: number,
+      today_reward_day_index: number,
+      season_points_per_day: number,
+      quantum_per_day: number,
+      reward_days:
+      [
+         {
+            id: number,
+            double_at_vip: number,
+            symbol: string,
+            rewards: any[]
+         }
+      ]
+   };
    destination: any;
    display_name: string;
    dispute_histories: any[];
@@ -606,10 +649,31 @@ export interface PlayerCharacterDTO {
    event_tickets: any;
    events: EventDTO[];
    factions: FactionDTO[];
-   fleet_activities: any[];
+   /** Fleet Daily Targets */
+   fleet_activities: {
+      id: number,
+      name: string,
+      description: string,
+      icon:
+      {
+         file: string,
+         atlas_info: string,//"atlas_stt_icons_info"
+      },
+      area: string,
+      category: string,
+      total_points: number,
+      current_points: number,
+      milestones: {
+         goal: number,
+         rewards: RewardDTO[],
+         claimed: boolean,
+         claimable: boolean
+      }[],
+      claims_available_count: number
+   }[]; // size = 4
    freestanding_quests: any[];
    gauntlets?: GauntletDTO[]; // Does not come with initial fetch, but gauntlet update is within character
-   honor_reward_by_rarity: number[];
+   honor_reward_by_rarity: number[]; // [25,50,100,200,550 ]
    id: number;
    item_limit: number;
    items: ItemDTO[];
@@ -652,17 +716,51 @@ export interface PlayerCharacterDTO {
    replay_energy_max: number;
    replay_energy_overflow: number;
    replay_energy_rate: number;
-   reroll_descriptions: any[];
+   reroll_descriptions: {
+      id: number,
+      jackpot: number,
+      crew_required: number
+   }[];
    scan_speedups_today: number;
-   seasons: any;
+   /** "Campaign" data */
+   seasons: {
+      id: number,
+      symbol: string,
+      title: string,
+      description: string,
+      exclusive_crew: any[],
+      tiers: any[],
+      points_per_tier: number,
+      tier_dilithium_cost: number,
+      start_at: number,
+      end_at: number,
+      premium_tier_offer_store_symbol: string, // "seasons",
+      premium_tier_entitlement_symbol: string, // "game_feature",
+      premium_tier_entitlement_specialization: string, // "season_premium_rewards.rebirth_season",
+      opened: boolean,
+      points: number,
+      redeemed_points: number,
+      redeemed_premium: number,
+      acknowledged: boolean,
+      concluded: boolean
+   };
    seconds_from_last_boost_claim: number;
    seconds_from_replay_energy_basis: number;
    seconds_to_scan_cooldown: number;
    ships: ShipDTO[];
    shuttle_adventures: PlayerShuttleAdventureDTO[];
    shuttle_bays: number;
-   //TODO:
-   starbase_buffs: any[];
+   starbase_buffs: {
+      name: string,
+      short_name: string,
+      flavor: string,
+      icon: ImageDataDTO,
+      operator: string, // "multiplier",
+      value: number,
+      stat: string, // skill key, e.g. "science_skill_core",
+      source: string, // "starbase",
+      symbol: string
+   }[];
    stimpack?: {
       crew_xp_multiplier: number;
       ends_in: number;
@@ -852,6 +950,7 @@ export interface PlayerShuttleDTO {
 }
 
 export const SHUTTLE_STATE_OPENED = 0;
+export const SHUTTLE_STATE_INPROGRESS = 1;
 export const SHUTTLE_STATE_COMPLETE = 2;
 export const SHUTTLE_STATE_NAMES : {[i:number]:string} = {
    0: 'Opened',

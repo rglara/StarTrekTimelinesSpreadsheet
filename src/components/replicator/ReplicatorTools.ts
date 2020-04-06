@@ -11,7 +11,6 @@ export function replicatorFuelCost(archetypeType: number, rarity: number): numbe
 }
 
 export function canReplicate(archetypeId: number): boolean {
-    // TODO: latinum is not in this list, how are they validating it? (probably parsing the error message)
     return STTApi.platformConfig!.config.replicator_config.target_blacklist.indexOf(archetypeId) === -1;
 }
 
