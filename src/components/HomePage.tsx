@@ -246,7 +246,7 @@ const DailyMissionStatus = (props:{}) => {
 				Daily Reward - Claim reward in game client
 			</div>}
 			{fleetUnclaimed.map(fd => {
-				return <div>
+				return <div key={fd.id}>
 					Daily Fleet Reward ({fd.description}) - Claim fleet reward in game client
 				</div>;
 			})}
