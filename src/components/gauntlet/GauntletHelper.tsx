@@ -476,6 +476,11 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 				<p>Note: you won't see the rewards here, you'll go straight to crew selection. Claim rewards in the game client to see them!</p>
 			</div>;
 		}
+		if (this.state.gauntlet && (this.state.gauntlet.state == 'UNSTARTED')) {
+			return <div>
+				<h3>Gauntlet has not yet started. Try again soon.</h3>
+			</div>;
+		}
 
 		if (this.state.gauntlet && ((this.state.gauntlet.state == 'STARTED') && this.state.roundOdds)) {
 			let playerCrew, opponentCrew, playerRoll = 0, opponentRoll = 0, playerRollMsg = [], opponentRollMsg = [];
