@@ -1,3 +1,4 @@
+import Moment from 'moment';
 import STTApi from '../../api/index';
 import { mergeDeep } from '../../api/ObjectMerge';
 import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO, VoyageExportData } from '../../api/DTO';
@@ -38,6 +39,7 @@ export async function loadVoyage(voyageId: number, newOnly: boolean = true): Pro
 			}
 		});
 
+		STTApi.lastSyncVoyage = Moment();
 		return voyageNarrative;
 	} else {
 		throw new Error('Invalid data for voyage!');

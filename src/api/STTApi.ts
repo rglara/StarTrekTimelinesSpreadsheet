@@ -104,6 +104,8 @@ export class STTApiClass {
 	// Used with Moment when adding an offset. Does not need to be used when
 	// doing a fresh request for data such as for gauntlet or voyage status
 	public lastSync: Moment.Moment = Moment();
+	public lastSyncVoyage: Moment.Moment = Moment();
+	public lastSyncGauntlet: Moment.Moment = Moment();
 
 	constructor() {
 		this.refreshEverything(true);

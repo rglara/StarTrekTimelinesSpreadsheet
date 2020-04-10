@@ -235,7 +235,7 @@ const DailyMissionStatus = (props:{}) => {
 					{d.description}: {d.progress} / {d.goal}{complete && ' - Claim rewards in game client'}
 					{(isScan && cdata.seconds_to_scan_cooldown > 0) && <div style={{marginLeft:'20px'}}>
 						Next scan available in {formatTimeSeconds(cdata.seconds_to_scan_cooldown)} at {
-						Moment().add(cdata.seconds_to_scan_cooldown, 's').format('h:mma')}
+							Moment(STTApi.lastSync).add(cdata.seconds_to_scan_cooldown, 's').format('h:mma')}
 					</div>}
 					{(isScan && cdata.seconds_to_scan_cooldown <= 0) && <div style={{ marginLeft: '20px' }}>
 						A scan is available now
@@ -261,7 +261,7 @@ const DailyMissionStatus = (props:{}) => {
 			</div>}
 			<div>
 				Daily activities reset in {formatTimeSeconds(cdata.next_daily_activity_reset)} at {
-					Moment().add(cdata.next_daily_activity_reset, 's').format('h:mma')}
+					Moment(STTApi.lastSync).add(cdata.next_daily_activity_reset, 's').format('h:mma')}
 			</div>
 		</div>
 	</Recommendation>;
@@ -454,7 +454,7 @@ const VoyageStatus = (props: {
 							<p style={{ margin: '0' }}>
 								<Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Voyage')}>Voyage
 								</Label> ran for {formatTimeSeconds(voyDuration(narrative))} and it's currently returning (
-								{formatTimeSeconds(voyage.recall_time_left)} at {Moment().add(voyage.recall_time_left, 's').format('h:mma')}).
+								{formatTimeSeconds(voyage.recall_time_left)} at {Moment(STTApi.lastSyncVoyage).add(voyage.recall_time_left, 's').format('h:mma')}).
 							</p>
 						)
 					});
@@ -497,13 +497,13 @@ const VoyageStatus = (props: {
 							&nbsp;has been
 							ongoing for {formatTimeSeconds(voyage.voyage_duration)} (new dilemma in{' '}
 							{formatTimeSeconds(secondsToNextDilemma)}
-							&nbsp;at {Moment().add(secondsToNextDilemma, 's').format('h:mma')})
+							&nbsp;at {Moment(STTApi.lastSyncVoyage).add(secondsToNextDilemma, 's').format('h:mma')})
 							{
 								(estSecondsLeft < secondsToNextDilemma) &&
 								<span style={{ fontWeight: 'bold' }}>
 									&nbsp;Voyage AM left ({voyage.hp}) might not be enough to reach the next dilemma.
 									&nbsp;By worst-case estimate, voyage loss in {formatTimeSeconds(estSecondsLeft)}
-									&nbsp;at {Moment().add(estSecondsLeft, 's').format('h:mma')}
+									&nbsp;at {Moment(STTApi.lastSyncVoyage).add(estSecondsLeft, 's').format('h:mma')}
 								</span>
 							}
 						</div>
@@ -565,9 +565,10 @@ const GauntletStatus = (props: {
 							{
 								!anyEnabled && `No crew available to compete. `
 							}
-							The <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Gauntlet')}>Gauntlet</Label> ends in {formatTimeSeconds(gauntlet.seconds_to_end)}, next crew refresh in{' '}
+							The <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Gauntlet')}>Gauntlet</Label> ends
+							in {formatTimeSeconds(gauntlet.seconds_to_end)}, next crew refresh in{' '}
 							{formatTimeSeconds(gauntlet.seconds_to_next_crew_refresh)}
-							{' '}at {Moment().add(gauntlet.seconds_to_next_crew_refresh, 's').format('h:mma')}.
+							{' '}at {Moment(STTApi.lastSyncGauntlet).add(gauntlet.seconds_to_next_crew_refresh, 's').format('h:mma')}.
 						</div>
 					)
 				});

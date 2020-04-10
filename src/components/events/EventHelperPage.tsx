@@ -17,7 +17,7 @@ import { SkillCell } from '../crew/SkillCell';
 export const EventHelperPage = (props: {
    onTabSwitch?: (newTab: string) => void;
 }) => {
-   const [eventImageUrl, setEventImageUrl] = React.useState();
+   const [eventImageUrl, setEventImageUrl] = React.useState<string | undefined>();
 
    let currEvent : EventDTO | undefined = undefined;
    if (

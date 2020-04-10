@@ -1,3 +1,4 @@
+import Moment from 'moment';
 import STTApi from '../../api/index';
 import CONFIG from '../../api/CONFIG';
 import { GauntletDTO, GauntletCrewDTO, CrewData, GauntletContestDTO, GauntletContestLootDTO } from '../../api/DTO';
@@ -15,6 +16,7 @@ export async function loadGauntlet(): Promise<GauntletDTO> {
 	STTApi.playerData.character.gauntlets = [];
 
 	await STTApi.applyUpdates(data);
+	STTApi.lastSyncGauntlet = Moment();
 
 	return STTApi.playerData.character.gauntlets[0];
 }
