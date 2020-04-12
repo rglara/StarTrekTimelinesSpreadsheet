@@ -323,8 +323,8 @@ export const GalaxyEvent = (props: {
    const vpCurr = currEvent.victory_points ?? 0;
    const vpTopThresh = currEvent.threshold_rewards[currEvent.threshold_rewards.length-1].points;
    let rareArchetypeId : number | undefined = undefined;
-   let rareArchetype = undefined;
-   let rareTurninCount = undefined;
+   //let rareArchetype = undefined;
+   let rareTurninCount: number | undefined = undefined;
    {
       const gos = adventures.filter(ad => ad.golden_octopus);
       if (gos.length > 0) {
@@ -339,41 +339,75 @@ export const GalaxyEvent = (props: {
    if (rareItem) {
       rareCount = rareItem.quantity;
    }
-   let vpPerTurnin = undefined;
+
+   // VP per turnin of 2 or 3 items
+   let vpPerMission = undefined;
    if (rewards.length > 0) {
-      vpPerTurnin = rewards[0].quantity;
+      vpPerMission = rewards[0].quantity;
    }
+
+   // The two phases have a different turnin schedule for rares; phase 2 starts with 3x3@735
+   const vpPerTurninTable : {items: number; count?: number; vp: number}[][] = [[
+         { items: 1, count: 1, vp: 125 },
+         { items: 2, count: 3, vp: 415 },
+         { items: 3, count: 3, vp: 735 },
+         { items: 5, count: 5, vp: 1365 },
+         { items: 7, count: 5, vp: 2135 },
+         { items: 9, count: 5, vp: 2950 },
+         { items: 12, count: 5, vp: 3945 },
+         { items: 15, vp: 4850 }
+      ],[
+         { items: 3, count: 3, vp: 735 },
+         { items: 5, count: 5, vp: 1365 },
+         { items: 7, count: 5, vp: 2135 },
+         { items: 9, count: 5, vp: 2950 },
+         { items: 12, count: 5, vp: 3945 },
+         { items: 15, vp: 4850 }
+      ]
+   ];
 
    let rawTurninsToGo = undefined;
-   if (vpPerTurnin) {
-      rawTurninsToGo = (vpTopThresh - vpCurr) / vpPerTurnin;
+   if (vpPerMission) {
+      rawTurninsToGo = (vpTopThresh - vpCurr) / vpPerMission;
    }
    let rareVP = undefined;
-   if (rareTurninCount && vpPerTurnin) {
-      let rareTurninCountLeft = rareTurninCount;
-      //if (currEvent.opened_phase === 2) {
+   if (rareCount <= 0) {
+      rareVP = 0;
+   }
+   else if (rareTurninCount !== undefined && vpPerMission && currEvent.opened_phase !== undefined) {
+      const t = vpPerTurninTable[currEvent.opened_phase];
+      if (t) {
          rareVP = 0;
-         //TODO: test this before turnins have occurred
-         // if (vpPerTurnin === 125 && rareTurninCountLeft > 0) {
-         //    rareVP += 125 * 1;
-         //    rareTurninCountLeft -= 1;
-         // }
-         // if (vpPerTurnin === 415 && rareTurninCountLeft > 0) {
-         //    let times = 3;
-         //    rareTurninCountLeft -= times;
-         //    if (rareTurninCountLeft < 0) {
-         //       times = times + rareTurninCountLeft;
-         //    }
-         //    rareVP += 415 * times;
-         //    rareTurninCountLeft -= times;
-         // }
-         rareVP = rareCount / rareTurninCount * 4850; // 4850 for 15x rare turnins
-      //}
+         let rareCountLeft = rareCount;
+         let rtcIndex = t.findIndex(tt => tt.items === rareTurninCount);
+         if (rtcIndex >= 0) {
+            // Don't iterate to the last slot of the table
+            for (let i=rtcIndex; i < t.length - 1; ++i) {
+               if (rareCountLeft <= 0) {
+                  break;
+               }
+               const ti = t[i];
+               if (ti.count !== undefined) {
+                  const less = ti.items * ti.count;
+                  if (less > rareCountLeft) {
+                     rareVP += (rareCountLeft / ti.items) * ti.vp;
+                     rareCountLeft = 0;
+                     break;
+                  } else {
+                     rareCountLeft -= less;
+                     rareVP += ti.count * ti.vp;
+                  }
+               }
+            }
+         }
+         const tf = t[t.length-1];
+         rareVP += (rareCountLeft / tf.items) * tf.vp;
+      }
    }
 
-   let turninsIncludingRares = 0;
-   if (rareVP && vpPerTurnin) {
-      turninsIncludingRares = (vpTopThresh - vpCurr - rareVP) / vpPerTurnin;
+   let missionsIncludingRares = 0;
+   if (rareVP && vpPerMission) {
+      missionsIncludingRares = (vpTopThresh - vpCurr - rareVP) / vpPerMission;
    }
 
    return (
@@ -383,11 +417,12 @@ export const GalaxyEvent = (props: {
             <GalaxyStat label="Current VP" value={vpCurr} />
             <GalaxyStat label="Current Rares" value={rareCount ?? 'unknown'} />
             <GalaxyStat label="VP from Rares" value={rareVP ?? 'unknown'} />
+            <GalaxyStat label="VP with Rares" value={vpCurr + (rareVP ?? 0)} />
          </div>
          {vpTopThresh > vpCurr && <div>
             <GalaxyStat label="Top Threshold VP" value={vpTopThresh} />
-            <GalaxyStat label="Turnins without Rares" value={rawTurninsToGo ?? 'unknown'} />
-            <GalaxyStat label="Turnins with Rares" value={turninsIncludingRares ?? 'unknown'} />
+            <GalaxyStat label="Missions without Rares" value={rawTurninsToGo ?? 'unknown'} />
+            <GalaxyStat label="Missions with Rares" value={missionsIncludingRares ?? 'unknown'} />
          </div>}
 
          <Accordion>
