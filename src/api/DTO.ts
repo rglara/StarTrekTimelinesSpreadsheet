@@ -1427,7 +1427,12 @@ export interface EventDTO {
       seconds_to_end: number;
       splash_image: ImageDataDTO;
    }[];
-   ranked_brackets: any[];
+   ranked_brackets: {
+      first: number;
+      last: number;
+      quantity: number;
+      rewards: RewardDTO[];
+   }[];
    rewards_teaser: string;
    rules: string;
    seconds_to_end: number;
@@ -1438,6 +1443,24 @@ export interface EventDTO {
    threshold_rewards: { points: number; rewards: any[]}[];
    unclaimed_threshold_rewards?: any[];
    victory_points?: number;
+}
+
+export interface EventLeaderboardEntryDTO {
+   dbid: number;
+   display_name: string;
+   pid: number;
+   avatar?: ImageDataDTO,
+   level: number;
+   uid: number;
+   rank: number;
+   score: number;
+}
+
+export interface EventLeaderboardDTO {
+   action: string;//"ephemeral",
+   leaderboard: EventLeaderboardEntryDTO[];
+   player_rank: number;
+   player_score: number;
 }
 
 export interface EventShuttleDTO {

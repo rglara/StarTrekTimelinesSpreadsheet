@@ -30,7 +30,7 @@ import { NeededEquipmentClass, EquipNeedFilter, UnparsedEquipment, EquipNeed } f
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
-import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO, DatacoreCrewDTO, PlayerInspectDTO } from './DTO';
+import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO, DatacoreCrewDTO, PlayerInspectDTO, EventLeaderboardDTO } from './DTO';
 // #!if ENV === 'electron'
 import fs from 'fs';
 import { getAppPath } from '../utils/pal';
@@ -564,6 +564,15 @@ export class STTApiClass {
 		} else {
 			throw new Error('Invalid data for player!');
 		}
+	}
+
+	async loadEventLeaderboard(eventInstanceId: number, topCount: number, top: boolean = true): Promise<EventLeaderboardDTO> {
+		let data = await this.executeGetRequest('event/leaderboard', {
+			instance_id: eventInstanceId,
+			max: topCount,
+			type: top ? 'top' : 'centered'
+		})
+		return data as EventLeaderboardDTO;
 	}
 
 	// getGithubReleases(): Promise<any> {

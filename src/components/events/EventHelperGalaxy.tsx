@@ -6,7 +6,7 @@ import { ItemDisplay } from '../../utils/ItemDisplay';
 
 import STTApi, { CONFIG, RarityStars, getItemDetailsLink } from '../../api';
 import { EventDTO, EventGatherPoolAdventureDTO, EVENT_TYPES, ItemArchetypeDTO, ItemData, CrewData, ItemArchetypeDemandDTO } from '../../api/DTO';
-import { EventCrewBonusTable } from './EventHelperPage';
+import { EventCrewBonusTable, EventStat } from './EventHelperPage';
 import ReactTable, { Column, SortingRule } from 'react-table';
 import { MissionCostDetails } from '../../api/EquipmentTools';
 
@@ -201,21 +201,6 @@ function getRosterWithBonuses(crew_bonuses: { [crew_symbol: string]: number }): 
    });
 
    return sortedRoster;
-}
-
-const GalaxyStat = (props: {
-   value: number | string,
-   label: string,
-   classAdd?: string
-}) => {
-   let value = props.value;
-   if (typeof value === 'number') {
-      value = Math.trunc(value * 100) / 100;
-   }
-   return <div className={`${props.classAdd ? props.classAdd : ''} ui tiny statistic`}>
-      <div className="label" style={{ color: 'unset' }}>{props.label}</div>
-      <div className="value" style={{ color: props.classAdd || 'unset' }}>{value}</div>
-   </div>;
 }
 
 export const GalaxyEvent = (props: {
@@ -414,15 +399,13 @@ export const GalaxyEvent = (props: {
       <div>
          <h3>Galaxy event: {currEvent.name}</h3>
          <div>
-            <GalaxyStat label="Current VP" value={vpCurr} />
-            <GalaxyStat label="Current Rares" value={rareCount ?? 'unknown'} />
-            <GalaxyStat label="VP from Rares" value={rareVP ?? 'unknown'} />
-            <GalaxyStat label="VP with Rares" value={vpCurr + (rareVP ?? 0)} />
+            <EventStat label="Current Rares" value={rareCount ?? 'unknown'} />
+            <EventStat label="VP from Rares" value={rareVP ?? 'unknown'} />
+            <EventStat label="VP with Rares" value={vpCurr + (rareVP ?? 0)} />
          </div>
          {vpTopThresh > vpCurr && <div>
-            <GalaxyStat label="Top Threshold VP" value={vpTopThresh} />
-            <GalaxyStat label="Missions without Rares" value={rawTurninsToGo ?? 'unknown'} />
-            <GalaxyStat label="Missions with Rares" value={missionsIncludingRares ?? 'unknown'} />
+            <EventStat label="Missions without Rares" value={rawTurninsToGo ?? 'unknown'} />
+            <EventStat label="Missions with Rares" value={missionsIncludingRares ?? 'unknown'} />
          </div>}
 
          <Accordion>

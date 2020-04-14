@@ -3,7 +3,7 @@ import React from 'react';
 import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
 import ReactTable, { Column, SortingRule } from 'react-table';
 import STTApi, { formatTimeSeconds, CONFIG, RarityStars, getCrewDetailsLink } from '../../api';
-import { EventDTO, CrewData } from "../../api/DTO";
+import { EventDTO, CrewData, EventLeaderboardEntryDTO } from "../../api/DTO";
 import { GalaxyEvent } from './EventHelperGalaxy';
 import { ShuttleEvent } from './EventHelperShuttle';
 import { SkirmishEvent } from './EventHelperSkirmish';
@@ -60,6 +60,9 @@ export const EventHelperPage = (props: {
       msg = ' starts in ' + formatTimeSeconds(currEvent.seconds_to_start);
    }
 
+   const vpCurr = currEvent.victory_points ?? 0;
+   const vpTopThresh = currEvent.threshold_rewards[currEvent.threshold_rewards.length - 1].points;
+
    return (
       <div className='tab-panel' data-is-scrollable='true'>
          <h2>Event {msg}</h2>
@@ -69,12 +72,128 @@ export const EventHelperPage = (props: {
          }
          <p>{currEvent.description}</p>
 
+         <div>
+            <EventStat label="Current VP" value={vpCurr} />
+            {vpTopThresh > vpCurr &&
+               <EventStat label="Top Threshold VP" value={vpTopThresh} />
+            }
+         </div>
+
+         <EventLeaderboard event={currEvent} />
+
          <GalaxyEvent event={currEvent} />
          <ShuttleEvent event={currEvent} onTabSwitch={props.onTabSwitch} />
          <SkirmishEvent event={currEvent} onTabSwitch={props.onTabSwitch} />
          <ExpeditionEvent event={currEvent} onTabSwitch={props.onTabSwitch} />
       </div>
    );
+}
+
+export const EventStat = (props: {
+   value: number | string,
+   label: string,
+   classAdd?: string
+}) => {
+   let value = props.value;
+   if (typeof value === 'number') {
+      value = Math.trunc(value * 100) / 100;
+   }
+   return <div className={`${props.classAdd ? props.classAdd : ''} ui tiny statistic`}>
+      <div className="label" style={{ color: 'unset' }}>{props.label}</div>
+      <div className="value" style={{ color: props.classAdd || 'unset' }}>{value}</div>
+   </div>;
+}
+
+interface RewardBracket {
+   hi: number;
+   lo: number;
+   vpHi: number;
+   vpLo?: number;
+}
+
+const EventLeaderboard = (props:{
+   event: EventDTO
+}) => {
+   const [brackets, setBrackets] = React.useState<RewardBracket[]>([])
+   const [playerRank, setPlayerRank] = React.useState<number | undefined>()
+   const [up10, setUp10] = React.useState<EventLeaderboardEntryDTO | undefined>()
+   const [up25, setUp25] = React.useState<EventLeaderboardEntryDTO | undefined>()
+   const [up50, setUp50] = React.useState<EventLeaderboardEntryDTO | undefined>()
+   const [dn10, setDn10] = React.useState<EventLeaderboardEntryDTO | undefined>()
+   const [dn25, setDn25] = React.useState<EventLeaderboardEntryDTO | undefined>()
+   const [dn50, setDn50] = React.useState<EventLeaderboardEntryDTO | undefined>()
+
+   //HACK: this can only get 100 "top" or 100 "centered" event participants; no known way
+   //      to request a particular window of ranks
+   const count = 100
+   React.useEffect(() => {
+      STTApi.loadEventLeaderboard(props.event.instance_id, count).then(lb => {
+         let newBrackets : RewardBracket[] = [];
+         props.event.ranked_brackets.filter(rb => rb.first <= count).forEach(rb => {
+            const hi = lb.leaderboard[rb.first-1]
+            const lo = rb.last-1 < lb.leaderboard.length ? lb.leaderboard[rb.last-1] : undefined
+            let rew : RewardBracket = {
+               hi: rb.first,
+               lo: rb.last,
+               vpHi: hi.score,
+               vpLo: lo?.score
+            };
+            newBrackets.push(rew);
+         });
+         setBrackets(newBrackets);
+         setPlayerRank(lb.player_rank);
+      });
+      STTApi.loadEventLeaderboard(props.event.instance_id, count, false).then(lb => {
+         const p = lb.leaderboard.length / 2;
+         setUp50(lb.leaderboard[0]);
+         setUp25(lb.leaderboard[lb.leaderboard.length/4]);
+         setDn25(lb.leaderboard[lb.leaderboard.length / 4 * 3]);
+         setDn50(lb.leaderboard[lb.leaderboard.length-1]);
+         setUp10(lb.leaderboard[p - 10]);
+         setDn10(lb.leaderboard[p + 10]);
+         //TODO: if we are close enough to a bracket edge to see it, then show that
+         //let newBrackets: RewardBracket[] = [];
+         // props.event.ranked_brackets.forEach(rb => {
+         //    const hi = lb.leaderboard[rb.first - 1]
+         //    const lo = rb.last - 1 < lb.leaderboard.length ? lb.leaderboard[rb.last - 1] : undefined
+         //    let rew: RewardBracket = {
+         //       hi: rb.first,
+         //       lo: rb.last,
+         //       vpHi: hi.score,
+         //       vpLo: lo?.score
+         //    };
+         //    newBrackets.push(rew);
+         // });
+         //setBrackets(newBrackets)
+      });
+   }, []);
+
+   return <div>
+      Ranked reward threshhold current VP:
+      <ul><li>Rank: VP For Rank</li>
+         {brackets.map(br => <li key={br.hi}>{br.hi}: {br.vpHi}{inBracket(br) && <span>Current VP: {props.event.victory_points}</span> }</li>)}
+      </ul>
+      <EventStat label="Up 50" value={up50 ? (up50.rank + ': ' + up50.score + ' (+' + (up50.score - (props.event.victory_points ?? 0)) + ')') : 'unknown'} />
+      <EventStat label="Up 25" value={up25 ? (up25.rank + ': ' + up25.score + ' (+' + (up25.score - (props.event.victory_points ?? 0)) + ')') : 'unknown'} />
+      <EventStat label="Up 10" value={up10 ? (up10.rank + ': ' + up10.score + ' (+' + (up10.score - (props.event.victory_points ?? 0)) + ')') : 'unknown'} />
+      <EventStat label="Current Rank" value={playerRank ?? 'unknown'} />
+      <EventStat label="Down 50" value={dn10 ? (dn10.rank + ': ' + dn10.score + ' (-' + ((props.event.victory_points ?? 0) - dn10.score) + ')') : 'unknown'} />
+      <EventStat label="Down 25" value={dn25 ? (dn25.rank + ': ' + dn25.score + ' (-' + ((props.event.victory_points ?? 0) - dn25.score) + ')') : 'unknown'} />
+      <EventStat label="Down 50" value={dn50 ? (dn50.rank + ': ' + dn50.score + ' (-' + ((props.event.victory_points ?? 0) - dn50.score) + ')') : 'unknown'} />
+   </div>;
+
+   function inBracket(br: RewardBracket) {
+      if (props.event.victory_points === undefined || props.event.victory_points <= 0) {
+         return false;
+      }
+      if (props.event.victory_points < br.vpHi) {
+         return false;
+      }
+      if (br.vpLo === undefined) {
+         return true;
+      }
+      return props.event.victory_points >= br.vpLo;
+   }
 }
 
 export const EventCrewBonusTable = (props: {
