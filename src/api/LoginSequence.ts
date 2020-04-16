@@ -31,6 +31,10 @@ export async function loginSequence(onProgress: (description: string) => void) {
             description: 'datacore'
         },
         {
+            loader: STTApi.loadEventBorrowableCrew.bind(STTApi),
+            description: 'borrowable crew'
+        },
+        {
             loader: STTApi.loadPlayerData.bind(STTApi),
             description: 'player data'
         }

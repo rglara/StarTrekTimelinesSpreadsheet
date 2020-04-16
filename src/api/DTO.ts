@@ -146,6 +146,8 @@ export interface CrewEquipmentSlotData {
 // Used internally by the app; not a DTO
 export interface CrewData {
    active_id?: number;
+   active_index: number;
+   active_status: number;
    action: CrewActionDTO;
    archetypes?: any[];
    /** @deprecated - migrate to using status.buyback */
@@ -213,9 +215,9 @@ export interface CrewData {
 
 export interface BorrowedCrewDTO {
    action?: CrewActionDTO;
-   active_id: any;
-   active_index: number;
-   active_status: number;
+   active_id?: number;
+   active_index?: number;
+   active_status?: number;
    archetype_id: number;
    equipment: number[][];
    equipment_rank: number;

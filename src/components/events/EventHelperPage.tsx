@@ -114,6 +114,9 @@ interface RewardBracket {
 const EventLeaderboard = (props:{
    event: EventDTO
 }) => {
+   if (props.event.seconds_to_start > 0) {
+      return <span/>;
+   }
    const [brackets, setBrackets] = React.useState<RewardBracket[]>([])
    const [playerRank, setPlayerRank] = React.useState<number | undefined>()
    const [up10, setUp10] = React.useState<EventLeaderboardEntryDTO | undefined>()

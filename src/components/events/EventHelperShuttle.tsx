@@ -14,13 +14,17 @@ export const ShuttleEvent = (props: {
    ) {
       return <span />;
    }
+   let eventVP = props.event.content.shuttles![0].shuttle_mission_rewards.find(r => r.type === 11);
+   let eventShuttleVP = eventVP ? eventVP.quantity : 0
 
    return <div><h2>Shuttle Event Details</h2>
       <div style={{ margin: '0' }}>
          <span>
             {props.onTabSwitch &&
-               <span>Click to see shuttle details: <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Shuttles')}>Shuttle Details</Label></span>
+               <span>Click to see shuttle details: <Label as='a'
+                  onClick={() => props.onTabSwitch && props.onTabSwitch('Shuttles')}>Shuttle Details</Label></span>
             }
+            <h4>Next shuttle VP: {eventShuttleVP ?? ''}</h4>
             <div>{props.event.bonus_text}</div>
             <EventCrewBonusTable bonuses={props.event.content.shuttles[0].crew_bonuses} />
          </span>

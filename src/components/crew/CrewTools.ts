@@ -117,6 +117,8 @@ function crewToRoster(dto: CrewDTO) : CrewData {
 		favorite: dto.favorite,
 		flavor: dto.flavor,
 		active_id: dto.active_id,
+		active_index: dto.active_index,
+		active_status: dto.active_status,
 		action: dto.action,
 		ship_battle: dto.ship_battle,
 

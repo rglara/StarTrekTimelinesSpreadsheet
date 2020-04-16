@@ -9,7 +9,10 @@ import { CONFIG, getChronitonCount, formatTimeSeconds, loadVoyage } from '../api
 import { loadGauntlet } from './gauntlet/GauntletTools';
 
 import { openDevTools } from '../utils/pal';
-import { EVENT_TYPES, SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_COMPLETE, PlayerShuttleDTO, SHUTTLE_STATE_INPROGRESS } from '../api/DTO';
+import { EVENT_TYPES, SHUTTLE_STATE_NAMES,
+	PlayerShuttleDTO,
+	SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_COMPLETE,
+	SHUTTLE_STATE_INPROGRESS, SHUTTLE_STATE_OPENED } from '../api/DTO';
 import { VOYAGE_AM_DECAY_PER_MINUTE, voyDuration } from './voyage/VoyageTools';
 
 const Priority = {
@@ -593,12 +596,17 @@ const ShuttleStatus = (props:{
 	let returned : PlayerShuttleDTO[] = [];
 	let active: PlayerShuttleDTO[] = [];
 	let other: PlayerShuttleDTO[] = [];
+	let opened: PlayerShuttleDTO[] = [];
 	let shuttles = STTApi.playerData.character.shuttle_adventures.map(sa => sa.shuttles[0]);
 
 	if (unusedCount > 0) {
 		statusIcon = Priority.QUESTION;
 	}
 	if (shuttles.length > 0) {
+		opened = shuttles.filter(sa => sa.state === SHUTTLE_STATE_OPENED);
+		if (opened.length > 0) {
+			statusIcon = Priority.HOURGLASS;
+		}
 		returned = shuttles.filter(sa => sa.state === SHUTTLE_STATE_COMPLETE);
 		if (returned.length > 0) {
 			statusIcon = Priority.EXCLAMATION;
@@ -608,6 +616,7 @@ const ShuttleStatus = (props:{
 	}
 
 	return <Recommendation title='Shuttles' icon={statusIcon}>
+		<Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Shuttles')}>Shuttles page</Label>
 		{unusedCount > 0 && <div>
 			<div style={{ margin: '0' }}>
 				Idle Shuttles ({unusedCount}): You have {unusedCount} shuttle(s) idling instead of out bringing goodies.

@@ -30,7 +30,7 @@ import { NeededEquipmentClass, EquipNeedFilter, UnparsedEquipment, EquipNeed } f
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
-import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO, DatacoreCrewDTO, PlayerInspectDTO, EventLeaderboardDTO } from './DTO';
+import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO, DatacoreCrewDTO, PlayerInspectDTO, EventLeaderboardDTO, BorrowedCrewDTO } from './DTO';
 // #!if ENV === 'electron'
 import fs from 'fs';
 import { getAppPath } from '../utils/pal';
@@ -97,6 +97,7 @@ export class STTApiClass {
 	public inWebMode: boolean;
 	public allcrew!: CrewData[];
 	public datacore!: DatacoreCrewDTO[];
+	public borrowableCrew!: BorrowedCrewDTO[];
 
 	public serverAddress: string = 'http://localhost/';
 	private datacoreAddress: string = 'https://datacore.app/structured/botcrew.json';
@@ -157,6 +158,7 @@ export class STTApiClass {
 		this.fleetData = undefined;
 		this._fleetMemberInfo = { members: [], squads: [] };
 		this.roster = [];
+		this.borrowableCrew = [];
 		this.items = [];
 		this.ships = [];
 		this.missions = [];
@@ -383,6 +385,7 @@ export class STTApiClass {
 		if (this._usemock) {
 			const rv = this.getMockData(resourceUrl);
 			if (rv) {
+				this.applyUpdates(rv);
 				return rv;
 			}
 		}
@@ -420,6 +423,7 @@ export class STTApiClass {
 		if (this._usemock) {
 			const rv = this.getMockData(resourceUrl);
 			if (rv) {
+				this.applyUpdates(rv);
 				return rv;
 			}
 		}
@@ -573,6 +577,16 @@ export class STTApiClass {
 			type: top ? 'top' : 'centered'
 		})
 		return data as EventLeaderboardDTO;
+	}
+
+	async loadEventBorrowableCrew(): Promise<void> {
+		this.borrowableCrew = [];
+		let data = await this.executeGetRequest('crew/borrowable_crew');
+		if (data.borrowable_crew) {
+			this.borrowableCrew = data.borrowable_crew as BorrowedCrewDTO[];
+		} else {
+			console.log(new Error('Failed loading data returned for borrowable crew'));
+		}
 	}
 
 	// getGithubReleases(): Promise<any> {
