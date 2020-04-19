@@ -1355,7 +1355,13 @@ export interface EventContentSkirmishDTO {
       epic: any;
    };
    content_type: 'skirmish';
-   currency: any;
+   currency: {
+      currency: string; // 'intel'
+      max: number;
+      overflow: number;
+      rate: number;
+      seconds_from_basis: number;
+   };
    current_difficulty: string;
    difficulty_lockout: any;
    event_ships: number[];

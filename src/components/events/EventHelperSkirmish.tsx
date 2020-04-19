@@ -5,6 +5,7 @@ import { Label, Popup, List } from 'semantic-ui-react';
 import ReactTable, { Column } from 'react-table';
 import { EventDTO, EVENT_TYPES, CrewData } from "../../api/DTO";
 import STTApi, { RarityStars, CONFIG, getCrewDetailsLink } from '../../api';
+import { EventStat } from './EventHelperPage';
 
 type CrewBonus = {
    iconUrl: string,
@@ -94,12 +95,47 @@ export const SkirmishEvent = (props: {
 
    const columns = getColumns();
 
-   return <div><h2>Skirmish Event Details</h2>
+   const vpCurr = props.event.victory_points ?? 0;
+   const vpTopThresh = props.event.threshold_rewards[props.event.threshold_rewards.length - 1].points;
+
+   const vpPerRun = 6000; // 6000 = fully bonused run
+   const intelPerChronSpent = 10;
+   const kitDiscount = 0.75;
+   let vpToGo = vpTopThresh - vpCurr;
+   let intelCount = Math.floor((props.event.content.currency.seconds_from_basis / props.event.content.currency.rate) ?? 0);
+   let runsAfforded = intelCount / props.event.content.start_cost;
+   let vpAfforded = runsAfforded * vpPerRun;
+   let intelToSpend = vpToGo * (props.event.content.start_cost / vpPerRun);
+   let intelToGain = intelToSpend - intelCount;
+   let runsToGo = intelToSpend / props.event.content.start_cost;
+   let chronsToSpend = intelToGain / intelPerChronSpent;
+   let chronsToSpendWithKit = chronsToSpend * kitDiscount;
+   let intelAccrued = undefined;
+   if (props.event.opened_phase !== undefined) {
+      let secondsToEnd = props.event.phases[props.event.opened_phase].seconds_to_end;
+      intelAccrued = secondsToEnd / props.event.content.currency.rate;
+   }
+
+   return <div><h3>Skirmish Event Details</h3>
+      <div>
+         <EventStat label="Intel" value={intelCount ?? 'unknown'} />
+         <EventStat label="Skirmishes Afforded" value={runsAfforded ?? 'unknown'} />
+         <EventStat label="VP Afforded" value={vpAfforded ?? 0} />
+         <EventStat label="Intel gained until end" value={intelAccrued ?? 'unknown'} />
+      </div>
+      {vpToGo > 0 && <div>
+         <EventStat label="Skirmishes to go" value={runsToGo ?? 'unknown'} />
+         <EventStat label="VP to go" value={vpToGo ?? 'unknown'} />
+         <EventStat label="Intel to top threshold" value={intelToSpend ?? 'unknown'} />
+         <EventStat label="Intel needed" value={intelToGain ?? 'unknown'} />
+         <EventStat label="Chrons to top threshold" value={chronsToSpend ?? 'unknown'} />
+         <EventStat label="Chrons with kit" value={chronsToSpendWithKit ?? 'unknown'} />
+      </div>}
       <div style={{ margin: '0' }}>
          <span>
             <div>{props.event.bonus_text}</div>
             <div>Bonus Event Crew (Major Bonus): {props.event.content.bonus_crew.join(', ')}</div>
-            Owned bonus crew: <List horizontal>{crew_bonuses.map(cb => <CrewBonusEntry cb={cb} />)}</List>
+            Owned bonus crew: <List horizontal>{crew_bonuses.map(cb => <CrewBonusEntry key={cb.crew.id} cb={cb} />)}</List>
             {/* TODO: use event helper page renderCrewBonus and remove from HomePage */}
             <div>Bonus Crew (Minor Bonus) traits: {props.event.content.bonus_traits.join(', ')}</div>
          </span>
