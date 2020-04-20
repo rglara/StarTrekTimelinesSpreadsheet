@@ -119,12 +119,7 @@ const EventLeaderboard = (props:{
    }
    const [brackets, setBrackets] = React.useState<RewardBracket[]>([])
    const [playerRank, setPlayerRank] = React.useState<number | undefined>()
-   const [up10, setUp10] = React.useState<EventLeaderboardEntryDTO | undefined>()
-   const [up25, setUp25] = React.useState<EventLeaderboardEntryDTO | undefined>()
-   const [up50, setUp50] = React.useState<EventLeaderboardEntryDTO | undefined>()
-   const [dn10, setDn10] = React.useState<EventLeaderboardEntryDTO | undefined>()
-   const [dn25, setDn25] = React.useState<EventLeaderboardEntryDTO | undefined>()
-   const [dn50, setDn50] = React.useState<EventLeaderboardEntryDTO | undefined>()
+   const [updn, setUpDn] = React.useState<(EventLeaderboardEntryDTO | undefined)[]>([]);
 
    //HACK: this can only get 100 "top" or 100 "centered" event participants; no known way
    //      to request a particular window of ranks
@@ -134,6 +129,7 @@ const EventLeaderboard = (props:{
          let newBrackets : RewardBracket[] = [];
          props.event.ranked_brackets.filter(rb => rb.first <= count).forEach(rb => {
             const hi = lb.leaderboard[rb.first-1]
+            const me = lb.leaderboard.find(lbe => lbe.pid === STTApi.playerData.id);
             const lo = rb.last-1 < lb.leaderboard.length ? lb.leaderboard[rb.last-1] : undefined
             let rew : RewardBracket = {
                hi: rb.first,
@@ -148,12 +144,15 @@ const EventLeaderboard = (props:{
       });
       STTApi.loadEventLeaderboard(props.event.instance_id, count, false).then(lb => {
          const p = lb.leaderboard.length / 2;
-         setUp50(lb.leaderboard[0]);
-         setUp25(lb.leaderboard[lb.leaderboard.length/4]);
-         setDn25(lb.leaderboard[lb.leaderboard.length / 4 * 3]);
-         setDn50(lb.leaderboard[lb.leaderboard.length-1]);
-         setUp10(lb.leaderboard[p - 10]);
-         setDn10(lb.leaderboard[p + 10]);
+         let updnNew: (EventLeaderboardEntryDTO | undefined)[] = [];
+         updnNew.push(lb.leaderboard[0]);
+         updnNew.push(lb.leaderboard[lb.leaderboard.length/4]);
+         updnNew.push(lb.leaderboard[p - 10]);
+         updnNew.push(lb.leaderboard.find(lbe => lbe.pid === STTApi.playerData.id));
+         updnNew.push(lb.leaderboard[p + 10]);
+         updnNew.push(lb.leaderboard[lb.leaderboard.length-1]);
+         updnNew.push(lb.leaderboard[lb.leaderboard.length / 4 * 3]);
+         setUpDn(updnNew);
          //TODO: if we are close enough to a bracket edge to see it, then show that
          //let newBrackets: RewardBracket[] = [];
          // props.event.ranked_brackets.forEach(rb => {
@@ -176,13 +175,15 @@ const EventLeaderboard = (props:{
       <ul><li>Rank: VP For Rank</li>
          {brackets.map(br => <li key={br.hi}>{br.hi}: {br.vpHi}{inBracket(br) && <span>Current VP: {props.event.victory_points}</span> }</li>)}
       </ul>
-      <EventStat label="Up 50" value={up50 ? (up50.rank + ': ' + up50.score + ' (+' + (up50.score - (props.event.victory_points ?? 0)) + ')') : 'unknown'} />
-      <EventStat label="Up 25" value={up25 ? (up25.rank + ': ' + up25.score + ' (+' + (up25.score - (props.event.victory_points ?? 0)) + ')') : 'unknown'} />
-      <EventStat label="Up 10" value={up10 ? (up10.rank + ': ' + up10.score + ' (+' + (up10.score - (props.event.victory_points ?? 0)) + ')') : 'unknown'} />
-      <EventStat label="Current Rank" value={playerRank ?? 'unknown'} />
-      <EventStat label="Down 50" value={dn10 ? (dn10.rank + ': ' + dn10.score + ' (-' + ((props.event.victory_points ?? 0) - dn10.score) + ')') : 'unknown'} />
-      <EventStat label="Down 25" value={dn25 ? (dn25.rank + ': ' + dn25.score + ' (-' + ((props.event.victory_points ?? 0) - dn25.score) + ')') : 'unknown'} />
-      <EventStat label="Down 50" value={dn50 ? (dn50.rank + ': ' + dn50.score + ' (-' + ((props.event.victory_points ?? 0) - dn50.score) + ')') : 'unknown'} />
+      <ul><li>Rank: VP For Rank</li>
+         <li>Up 50 - {updn[0] ? (updn[0].rank + ': ' + updn[0].score + ' (+' + (updn[0].score - (props.event.victory_points ?? 0)) + ')') : 'unknown'}</li>
+         <li>Up 25 - {updn[1] ? (updn[1].rank + ': ' + updn[1].score + ' (+' + (updn[1].score - (props.event.victory_points ?? 0)) + ')') : 'unknown'}</li>
+         <li>Up 10 - {updn[2] ? (updn[2].rank + ': ' + updn[2].score + ' (+' + (updn[2].score - (props.event.victory_points ?? 0)) + ')') : 'unknown'}</li>
+         <li>Current Rank - { updn[3]?(updn[3].rank + ': ' + updn[3].score) : 'unknown'}</li>
+         <li>Down 10 - {updn[4] ? (updn[4].rank + ': ' + updn[4].score + ' (-' + ((props.event.victory_points ?? 0) - updn[4].score) + ')') : 'unknown'}</li>
+         <li>Down 25 - {updn[5] ? (updn[5].rank + ': ' + updn[5].score + ' (-' + ((props.event.victory_points ?? 0) - updn[5].score) + ')') : 'unknown'}</li>
+         <li>Down 50 - {updn[6] ? (updn[6].rank + ': ' + updn[6].score + ' (-' + ((props.event.victory_points ?? 0) - updn[6].score) + ')') : 'unknown'}</li>
+      </ul>
    </div>;
 
    function inBracket(br: RewardBracket) {
