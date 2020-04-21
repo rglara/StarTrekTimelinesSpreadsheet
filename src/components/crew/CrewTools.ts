@@ -183,7 +183,10 @@ export function buildCrewDataAll(allcrew: CrewDTO[]): CrewData[] {
 
 		let avatar = STTApi.getCrewAvatarBySymbol(crew.symbol);
 		if (!avatar) {
-			console.error(`Could not find the crew avatar for (all crew entry) archetype_id ${crew.archetype_id}`);
+			// frozen and datacore entries evolve but the cached mock data does not, so skip this error
+			if (!STTApi.mockData) {
+				console.error(`Could not find the crew avatar for (all crew entry) ${crew.symbol} archetype_id ${crew.archetype_id}`);
+			}
 			return;
 		}
 		STTApi.applyBuffConfig(crew);

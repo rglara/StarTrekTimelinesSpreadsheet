@@ -1,11 +1,12 @@
 import React from 'react';
-import { Item, Dropdown, Label } from 'semantic-ui-react';
+import { Item, Label, Form } from 'semantic-ui-react';
 
 import STTApi, { CONFIG, formatTimeSeconds, CrewSkills } from '../api';
 import { CrewData, PlayerShuttleDTO, EventDTO,
 	EVENT_TYPES, BorrowedCrewDTO,
 	SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_OPENED,
 	PlayerShuttleAdventureDTO, SHUTTLE_STATE_INPROGRESS } from '../api/DTO';
+import { DropdownButton, Dropdown } from 'react-bootstrap';
 
 interface CrewChoice {
 	slotIndex: number;
@@ -54,7 +55,13 @@ function cid(c: CrewData | BorrowedCrewDTO) : number {
 export const Shuttles = (props: {
 	onTabSwitch?: (newTab: string) => void;
 }) => {
-	let [userChoices, setUserChoices] = React.useState<{ [shuttle_id: number]: CrewChoice[]}>({});
+	const [userChoices, setUserChoices] = React.useState<ShuttleSelection[]>([]);
+	const [selections, setSelections] = React.useState<ShuttleSelection[]>([]);
+	const [computingNativeEstimate, setComputingNativeEstimate] = React.useState<boolean>(false);
+
+	React.useEffect(() => {
+		selectCrew(true);
+	}, [userChoices]);
 
 	let event : EventDTO | undefined = undefined;
 	if (
@@ -66,38 +73,51 @@ export const Shuttles = (props: {
 	}
 
 	const activeShuttleAdventures = STTApi.playerData.character.shuttle_adventures;
-	const bonusedRoster = getBonusedRoster(event?.content.shuttles?.[0].crew_bonuses ?? {});
 
-	const shuttleCalcs: ShuttleCalc[] = buildSlotCalculator(bonusedRoster, event, activeShuttleAdventures);
-	const selections: ShuttleSelection[] = selectCrew();
+	const canUserSelect = selections.filter(sel => sel.calc.shuttle.state === SHUTTLE_STATE_OPENED).length > 0;
 
-	function _chooseSlot(calc: ShuttleCalc, calcSlot: ShuttleCalcSlot, value: number) {
-		let sel = calcSlot.bestCrew.find(c => cid(c.crew) === value);
+	return (
+		<div className='tab-panel' data-is-scrollable='true'>
+			<div style={{ padding: '10px' }}>
+				{event && <div>
+					<h2>Current event: {event.name}</h2>
+					{props.onTabSwitch &&
+						<span>Click to see bonus crew and other event details: <Label as='a' onClick={() =>
+							props.onTabSwitch && props.onTabSwitch('Events')}>Event Details</Label>
+					</span>}
+				</div>}
+				<h3>Active shuttles</h3>
+				{(!activeShuttleAdventures || activeShuttleAdventures.length == 0) && <div>
+					You have no active shuttles. Open some shuttle missions in the game client
+				</div>}
+				{canUserSelect && <div>
+					<Form.Button primary onClick={() => selectCrew(true)} disabled={false}>
+						Calculate best crew selection
+						{computingNativeEstimate && <i className='spinner loading icon' />}
+					</Form.Button>
+				</div>}
+				<Item.Group divided>{selections.sort((a, b) => a.calc.shuttle.expires_in - b.calc.shuttle.expires_in).map(sel =>
+					<ShuttleItem
+						key={sel.calc.shuttle.id}
+						selection={sel}
+						chooseSlot={chooseSlot}
+						challengeRating={sel.calc.challenge_rating}
+						resetSelections={resetSelections} />)}
+				</Item.Group>
+			</div>
+		</div>
+	);
 
-		let newChoices = {...userChoices};
-		let chs = newChoices[calc.shuttle.id] ?? [];
-		let chOld = chs.find(c => c.slotIndex === calcSlot.slotIndex);
-		if (chOld) {
-			chOld.item = sel;
-		}
-		else {
-			chs.push({
-				slotIndex: calcSlot.slotIndex,
-				item: sel,
-				userSelect: true
-			});
-		}
-		newChoices[calc.shuttle.id] = chs;
-		setUserChoices(newChoices);
+	async function selectCrew(fillEmpty: boolean) {
+		setComputingNativeEstimate(true);
+		const bonusedRoster = getBonusedRoster(event?.content.shuttles?.[0].crew_bonuses ?? {});
+		const shuttleCalcs: ShuttleCalc[] = buildSlotCalculator(bonusedRoster, event, activeShuttleAdventures);
+		let sels = await computeCrew(bonusedRoster, shuttleCalcs, userChoices, fillEmpty);
+		setSelections(sels);
+		setComputingNativeEstimate(false);
 	}
 
-	function resetSelections(calc: ShuttleCalc) {
-		let newUserChoices = { ...userChoices };
-		newUserChoices[calc.shuttle.id] = [];
-		setUserChoices(newUserChoices);
-	}
-
-	function selectCrew() : ShuttleSelection[] {
+	async function computeCrew(bonusedRoster: CrewItem[], shuttleCalcs: ShuttleCalc[], userChoices: ShuttleSelection[], fillEmpty: boolean): Promise<ShuttleSelection[]> {
 		let sels: ShuttleSelection[] = [];
 
 		let usedCrew: Set<number> = new Set<number>();
@@ -105,7 +125,7 @@ export const Shuttles = (props: {
 		// First, mark active (on shuttles or voyages) and user-selected crew as "used"
 		bonusedRoster.filter(c => c.crew.active_id).forEach(ac => usedCrew.add(cid(ac.crew)));
 		shuttleCalcs.forEach(calc => {
-			let userChosen = userChoices[calc.shuttle.id] ?? [];
+			let userChosen = userChoices.find(uc => uc.calc.shuttle.id === calc.shuttle.id)?.chosen ?? [];
 			userChosen.forEach(uc => {
 				const c = uc.item;
 				if (c) {
@@ -119,14 +139,11 @@ export const Shuttles = (props: {
 
 		// Now fill up empty slots
 		shuttleCalcs.forEach(calc => {
-			let chosen : CrewChoice[] = [];
-			let userChosen = userChoices[calc.shuttle.id] ?? [];
+			let chosen: CrewChoice[] = [];
+			let userChosen = userChoices.find(uc => uc.calc.shuttle.id === calc.shuttle.id)?.chosen ?? [];
 			calc.slots.forEach((scs, i) => {
 				let userChoice = userChosen.find(uc => uc.slotIndex === i);
-				if (userChoice?.item) {
-					chosen.push(userChoice);
-				}
-				else if (calc.shuttle.state !== SHUTTLE_STATE_OPENED) {
+				if (calc.shuttle.state !== SHUTTLE_STATE_OPENED) {
 					// Ignore used crew and find them in the roster
 					let item = bonusedRoster.filter(c => c.crew.active_id === calc.shuttle.id && c.crew.active_index === i).shift();
 					chosen.push({
@@ -134,13 +151,18 @@ export const Shuttles = (props: {
 						item
 					});
 				}
+				else if (userChoice?.item) {
+					chosen.push(userChoice);
+				}
 				else {
-					let item : CrewItem | undefined = undefined;
+					let item: CrewItem | undefined = undefined;
 
-					// Grab the first unused crew by score
-					item = scs.bestCrew.filter(c => !usedCrew.has(cid(c.crew))).shift();
-					if (item) {
-						usedCrew.add(cid(item.crew))
+					if (fillEmpty) {
+						// Grab the first unused crew by score
+						item = scs.bestCrew.filter(c => !usedCrew.has(cid(c.crew))).shift();
+						if (item) {
+							usedCrew.add(cid(item.crew))
+						}
 					}
 
 					chosen.push({
@@ -159,31 +181,42 @@ export const Shuttles = (props: {
 		return sels;
 	}
 
-	return (
-		<div className='tab-panel' data-is-scrollable='true'>
-			<div style={{ padding: '10px' }}>
-				{event && <div>
-					<h2>Current event: {event.name}</h2>
-					{props.onTabSwitch &&
-						<span>Click to see bonus crew and other event details: <Label as='a' onClick={() =>
-							props.onTabSwitch && props.onTabSwitch('Events')}>Event Details</Label>
-					</span>}
-				</div>}
-				<h3>Active shuttles</h3>
-				{(!activeShuttleAdventures || activeShuttleAdventures.length == 0) && <div>
-					You have no active shuttles. Open some shuttle missions in the game client
-				</div>}
-				<Item.Group divided>{selections.sort((a, b) => a.calc.shuttle.expires_in - b.calc.shuttle.expires_in).map(sel =>
-					<ShuttleItem
-						key={sel.calc.shuttle.id}
-						selection={sel}
-						chooseSlot={_chooseSlot}
-						challengeRating={sel.calc.challenge_rating}
-						resetSelections={resetSelections} />)}
-				</Item.Group>
-			</div>
-		</div>
-	);
+	function chooseSlot(calc: ShuttleCalc, calcSlot: ShuttleCalcSlot, value: number) {
+		let sel = calcSlot.bestCrew.find(c => cid(c.crew) === value);
+
+		let newChoices = [ ...userChoices ];
+		// Remove the selected crew from wherever it is
+		newChoices.forEach(ss => {
+			let uchs = ss.chosen;
+			ss.chosen = uchs.filter(uc => uc.item !== undefined && cid(uc.item.crew) !== value);
+		})
+		let ssThisShuttle = newChoices.find(uc => uc.calc.shuttle.id === calc.shuttle.id);
+		if (!ssThisShuttle) {
+			ssThisShuttle = {
+				calc,
+				chosen: []
+			};
+			newChoices.push(ssThisShuttle);
+		}
+		let chsThisShuttle = ssThisShuttle.chosen;
+		let chOldThisSlot = chsThisShuttle.find(c => c.slotIndex === calcSlot.slotIndex);
+		if (chOldThisSlot) {
+			chOldThisSlot.item = sel;
+		}
+		else {
+			chsThisShuttle.push({
+				slotIndex: calcSlot.slotIndex,
+				item: sel,
+				userSelect: true
+			});
+		}
+		setUserChoices(newChoices);
+	}
+
+	function resetSelections(calc: ShuttleCalc) {
+		let newUserChoices = userChoices.filter(c => c.calc.shuttle.id !== calc.shuttle.id);
+		setUserChoices(newUserChoices);
+	}
 }
 
 const ShuttleItem = (props: {
@@ -209,22 +242,13 @@ const ShuttleItem = (props: {
 					<p>Faction: {faction!.name}</p>
 					<p>{shuttle.state === SHUTTLE_STATE_INPROGRESS ? 'Completes' : 'Expires'} in {formatTimeSeconds(shuttle.expires_in)}</p>
 					{props.selection.calc.slots.map((calcSlot, idx) => {
-						let cc = props.selection.chosen[idx]?.item?.crew;
-						let currentSel = undefined;
-						if (cc) {
-							currentSel = cid(cc);
-						}
-						return <div key={idx}>
-							<b>{calcSlot.skillText}</b>
-							<Dropdown
-								fluid
-								selection
-								disabled={shuttle.state !== SHUTTLE_STATE_OPENED}
-								options={calcSlot.bestCrew}
-								onChange={(e, { value }) => props.chooseSlot(props.selection.calc, calcSlot, value as number)}
-								value={currentSel}
-							/>
-						</div>;
+						return <ShuttleSeatSelector
+							key={idx}
+							calcSlot={calcSlot}
+							chooseSlot={props.chooseSlot}
+							shuttle={shuttle}
+							selection={props.selection}
+						/>;
 					})}
 					Chance:{' '}{props.selection.calc.chance(chosenItems)}{' '}%
 					{shuttle.state === SHUTTLE_STATE_OPENED &&
@@ -239,6 +263,57 @@ const ShuttleItem = (props: {
 			</Item.Content>
 		</Item>
 	);
+}
+
+const ShuttleSeatSelector = (props:{
+	calcSlot: ShuttleCalcSlot;
+	chooseSlot: (calc: ShuttleCalc, calcSlot: ShuttleCalcSlot, value: number) => void;
+	shuttle: PlayerShuttleDTO;
+	selection: ShuttleSelection;
+}) => {
+
+	const isEditable = props.shuttle.state === SHUTTLE_STATE_OPENED;
+	let options = props.calcSlot.bestCrew;
+	// Filter active crew for shuttles with open slots
+	if (isEditable) {
+		options = options.filter(c => !c.crew.active_id);
+	}
+
+	let sel = props.selection.chosen.find(cc => cc.slotIndex === props.calcSlot.slotIndex);
+	let crew = sel?.item?.crew;
+	let selectedContent = undefined;
+	if (crew) {
+		// content is styled in options but not in chosen[]
+		selectedContent = options.find(opt => cid(opt.crew) === cid(crew!))?.content;
+	}
+	// style the option for current selection differently if it is a user selection
+	if (sel?.userSelect || !isEditable) {
+		selectedContent = <span style={{fontWeight:'bold'}}>{selectedContent}</span>
+	}
+
+	const styleDiv = { border: '1px black solid', padding: '1em', lineHeight: '1em', borderRadius: '.25em' };
+	const styleDropdown = { border: '1px black solid', padding: '1em', lineHeight: '1em', borderRadius: '.25em', display: 'inline-block' };
+
+	return <div>
+		<b>{props.calcSlot.skillText}</b>
+		{!isEditable && <div style={styleDiv}>{selectedContent ?? ''}</div>}
+		{isEditable &&
+			<Dropdown key='outline-light' onSelect={(key:string) => {
+				props.chooseSlot(props.selection.calc, props.calcSlot, Number(key))
+			}}>
+				<Dropdown.Toggle
+					as="span"
+					id="dropdown-basic"
+					style={styleDropdown}>
+					{selectedContent ?? ''}
+				</Dropdown.Toggle>
+
+				<Dropdown.Menu style={{ overflowY: 'scroll', height:'200px' }}>
+					{options.map(opt => <Dropdown.Item key={opt.value} eventKey={String(opt.value)}>{opt.content}</Dropdown.Item>)}
+				</Dropdown.Menu>
+			</Dropdown>
+		}
+	</div>
 }
 
 function getBonusedRoster(crew_bonuses: { [crew_symbol: string]: number; }): CrewItem[] {
@@ -332,8 +407,14 @@ function buildSlotCalculator(bonusedRoster: CrewItem[], event: EventDTO | undefi
 			// for best crew, doesn't really matter if they don't have the skill, so just include everyone
 			cs.bestCrew = bonusedRoster.map(r => { return { ...r, total: cs.crewValue(r) }; }).sort((a, b) => b.total - a.total);
 			cs.bestCrew.forEach((c) => {
+				const isShared = (c.crew as any).crew_id === undefined;
 				c.text = `${c.crew.name} (${c.total})`;
-				c.content = <span>{c.crew.name} <CrewSkills crew={c.crew as CrewData} useIcon={true} addScore={c.total} hideProf={true} /></span>;
+				if (isShared) {
+					c.content = <span style={{fontWeight:'bold'}}>{c.crew.name}{isShared ? ' - shared' : ''} <CrewSkills crew={c.crew as CrewData} useIcon={true} addScore={c.total} hideProf={true} /></span>;
+				}
+				else {
+					c.content = <span>{c.crew.name} <CrewSkills crew={c.crew as CrewData} useIcon={true} addScore={c.total} hideProf={true} /></span>;
+				}
 				c.value = cid(c.crew);
 				c.image = (c.crew as any).iconUrl;
 			});
