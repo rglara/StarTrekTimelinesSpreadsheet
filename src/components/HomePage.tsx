@@ -254,7 +254,8 @@ const DailyMissionStatus = (props:{}) => {
 				</div>;
 			})}
 			{fleetIncomplete.length > 0 && <div>
-				Some daily fleet rewards are incomplete: {fleetIncomplete.map(fd => fd.description).join(', ')}
+				Some daily fleet rewards are incomplete: {
+					fleetIncomplete.map(fd => fd.description + ' (' + fd.current_points + '/' + fd.total_points + ')').join(', ')}
 				{ (fleetStarbaseIncmoplete && canDonate) && <div style={{ marginLeft: '20px'}}>
 					You have {STTApi.starbaseDonationsRemaining} starbase donations left today. Help your fleet get their dailies!
 				</div>}

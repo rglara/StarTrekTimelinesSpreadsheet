@@ -268,7 +268,7 @@ interface FleetMember {
 	event_rank: number;
 	iconUrl?: string,
 	last_active: any;
-	level: string;
+	level: number;
 	location?: string;
 	pid: number;
 	rank: any;
@@ -293,7 +293,7 @@ export const FleetDetails = (props: {}) => {
 			var newMember : FleetMember = {
 				dbid: member.dbid,
 				pid: member.pid,
-				level: 'unknown',
+				level: member.level,
 				location: 'unknown',
 				currentShip: 'unknown',
 				display_name: member.display_name,
@@ -329,7 +329,6 @@ export const FleetDetails = (props: {}) => {
 			}).catch((error) => { }));
 		}
 
-		//FIXME: this appears to do nothing
 		// // Load player details
 		// iconPromises.push(STTApi.inspectPlayer(member.pid).then(memberData => {
 		// 	member.level = memberData.character.level;
