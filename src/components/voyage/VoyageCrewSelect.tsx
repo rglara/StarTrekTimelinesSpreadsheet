@@ -638,13 +638,17 @@ const BestCrew = (props : {
 						let isPri = skill.skill == STTApi.playerData.character.voyage_descriptions[0].skills.primary_skill;
 						let isSec = skill.skill == STTApi.playerData.character.voyage_descriptions[0].skills.secondary_skill;
 
+						const firstHazardFailureTime = (sv: number) => sv * 0.045 + 34;
+
+						const sv = skill.core + (skill.range_min + skill.range_max) / 2;
 						return (
 							<li key={skill.skill}>
 								<span className='quest-mastery'>
 									<img src={CONFIG.SPRITES['icon_' + skill.skill].url} height={18} /> &nbsp; {skill.core} ({skill.range_min}-
-									{skill.range_max})&nbsp;[{skill.core + (skill.range_min + skill.range_max) / 2}]&nbsp;
+									{skill.range_max})&nbsp;[{sv}]&nbsp;
 									{isPri ? ' (Pri) ' : ''}
 									{isSec ? ' (Sec) ' : ''}
+									<> - First hazard failure expected at: {formatTimeSeconds(firstHazardFailureTime(sv)*60)}</>
 								</span>
 							</li>
 						);

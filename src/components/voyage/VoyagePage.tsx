@@ -14,7 +14,7 @@ export const VoyagePage = (props: VoyagePageProps) => {
       updateState({});
       updateCommandItems(); // when a voyage starts, command items need to update to show toggle
    }, []);
-   const [showCalcAnyway, setShowCalcAnyway] = React.useState<boolean>(false);
+   const [showCalcAnyway, setShowCalcAnyway] = React.useState<boolean>(STTApi.mockData);
 
    React.useEffect(() => updateCommandItems(), [showCalcAnyway]);
 

@@ -76,7 +76,11 @@ export const VoyageLog = (props:{}) => {
             computingNativeEstimate={computingNativeEstimate}
             recall={recall} />
          <VoyageDilemma voyage={voyage} reload={reloadVoyageState} />
-         <VoyageCurrentCrew voyage={voyage} skillChecks={skillChecks} />
+         <VoyageCurrentCrewSkills
+            voyage={voyage}
+            skillChecks={skillChecks}
+            exportNarrative={voyageExport?.narrative}
+         />
 
          {voyageRewards && <span>
             <h3>{'Pending rewards (' + voyageRewards.length + ')'}</h3>
@@ -456,10 +460,22 @@ export const VoyageLog = (props:{}) => {
    }
 }
 
-const VoyageCurrentCrew = (props: {
+const VoyageCurrentCrewSkills = (props: {
    voyage: VoyageDTO;
-   skillChecks?: SkillChecks
+   skillChecks?: SkillChecks;
+   exportNarrative?: VoyageNarrativeDTO[];
 }) => {
+   let firstFailures : {[sk:string]: number} = {};
+   if (props.exportNarrative) {
+      const hazards = props.exportNarrative.filter(n => n.encounter_type === 'hazard' && n.skill_check?.skill);
+      Object.keys(props.voyage.skill_aggregates).map(sk => {
+         let ff = hazards.find(n => n.skill_check?.skill === sk && n.skill_check?.passed == false);
+         if (ff) {
+            firstFailures[sk] = ff.index;
+         }
+      });
+   }
+
    return <table style={{ borderSpacing: '0' }}>
       <tbody>
          <tr>
@@ -483,7 +499,7 @@ const VoyageCurrentCrew = (props: {
                                           &nbsp; {crew.name}
                                        </span>}
                                        content={<CrewSkills crew={crew} useIcon={false} asVoyScore={true} addVoyTotal={true} />}
-                                    />
+                                       />
                                  </span>
                               </li>
                            );
@@ -496,6 +512,7 @@ const VoyageCurrentCrew = (props: {
                   {Object.keys(props.voyage.skill_aggregates).map(k => props.voyage.skill_aggregates[k]).map(skill => {
                      let isPri = skill.skill == props.voyage.skills.primary_skill;
                      let isSec = skill.skill == props.voyage.skills.secondary_skill;
+                     const ff = firstFailures[skill.skill] ?? -1;
                      return (
                         <li key={skill.skill}>
                            <span className='quest-mastery'>
@@ -504,10 +521,13 @@ const VoyageCurrentCrew = (props: {
                                     {isPri ? ' (Pri) ' : ''}
                               {isSec ? ' (Sec) ' : ''}
                               &nbsp;
-                                    <Popup
+                              <Popup
                                  trigger={<span style={isPri ? { color: CONFIG.RARITIES[5].color } : isSec ? { color: CONFIG.RARITIES[1].color } : {}}><Icon name='thumbs up' /></span>}
                                  content="Skill checks passed"
                               /> {props.skillChecks && props.skillChecks![skill.skill].passed + '/' + props.skillChecks![skill.skill].att}
+                              {ff > 0 &&
+                                 <> - First Failure @ {formatTimeSeconds(ff * 20)}</>
+                              }
                            </span>
                         </li>
                      );
