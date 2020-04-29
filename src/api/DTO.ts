@@ -473,6 +473,7 @@ export interface VoyageDescriptionDTO {
 export interface VoyageExportData {
    id: number;
    skills: { primary_skill: string; secondary_skill: string; };
+   antimatter: number;
    slots: {
       name: string;
       skill: string;

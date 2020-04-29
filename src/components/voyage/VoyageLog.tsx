@@ -244,6 +244,7 @@ export const VoyageLog = (props:{}) => {
          let voyageExport: VoyageExportData = {
             id: voyage.id,
             skills: voyage.skills,
+            antimatter: voyage.max_hp,
             skillAggregates: [],
             slots: STTApi.playerData.character.voyage_descriptions[0].crew_slots,
             stats: {

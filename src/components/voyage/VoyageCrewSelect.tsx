@@ -5,7 +5,7 @@ import { Message, Dropdown, Header, Select, Checkbox, Form, Image, Card, Button,
 import STTApi, { CONFIG, bonusCrewForCurrentEvent, formatTimeSeconds, download, CrewSkills } from '../../api';
 import { CrewData, VoyageDTO } from '../../api/DTO';
 import { bestVoyageShip, startVoyage } from './VoyageTools';
-import { calculateVoyage, exportVoyageData, CalcChoice, cleanCrewName, CalcRemainingOptions, estimateVoyageRemaining } from './voyageCalc';
+import { calculateVoyage, exportVoyageData, CalcChoice, cleanCrewName, CalcRemainingOptions, estimateVoyageRemaining, CalcOptions } from './voyageCalc';
 
 interface VoyageCrewEntry {
 	key: number;
@@ -316,7 +316,7 @@ export const VoyageCrewSelect = (props: {
 		});
 	}
 
-	function _packVoyageOptions() {
+	function _packVoyageOptions() : CalcOptions {
 		let filteredRoster = getAvailableCrew();
 
 		return {
