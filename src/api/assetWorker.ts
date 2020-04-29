@@ -14,6 +14,11 @@ function parseFromBundle(data: any): any {
     }
     else {
         if (data.assetName && data.assetName.length > 0) {
+            if (!assetBundle || !assetBundle.sprites) {
+                console.error('Failed to parse a sprite out of bundle ' + data.label);
+                return [];
+            }
+
             let sprite = assetBundle.sprites.find((sprite: any) => sprite.spriteName === data.spriteName);
             if (!sprite) {
                 console.error('Sprite ' + data.label +' not found!');

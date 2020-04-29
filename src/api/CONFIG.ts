@@ -19,7 +19,7 @@ export default class CONFIG {
 	// default client_id of the Steam Windows version of STT - used for login only
 	static readonly CLIENT_ID: string = '4fc852d7-d602-476a-a292-d243022a475d';
 	static readonly CLIENT_API_VERSION: number = 15; //Need to revalidate DTOs in STTApi.ts when this changes
-	static readonly CLIENT_VERSION: string = '7.4.2';
+	static readonly CLIENT_VERSION: string = '7.5.0';
 	static readonly CLIENT_PLATFORM: string = 'webgl';
 
 	// releases URL

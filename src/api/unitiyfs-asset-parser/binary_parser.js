@@ -31,7 +31,8 @@ var SPECIAL_TYPES = {
     'Skip'     : null,
     'Choice'   : null,
     'Nest'     : null,
-    'Bit'      : null
+    'Bit'      : null,
+    'Align'    : null
 };
 
 var aliasRegistry = {};
@@ -117,6 +118,14 @@ Parser.prototype.skip = function(length, options) {
     }
 
     return this.setNextParser('skip', '', {length: length});
+};
+
+Parser.prototype.align = function(length, options) {
+    if (options && options.assert) {
+        throw new Error('assert option on align is not allowed.');
+    }
+
+    return this.setNextParser('align', '', {length: length});
 };
 
 Parser.prototype.string = function(varName, options) {
@@ -310,7 +319,7 @@ Parser.prototype.sizeOf = function() {
         size = this.options.length * elementSize;
 
     // if this a skip
-    } else if (this.type === 'Skip') {
+    } else if ((this.type === 'Skip') || (this.type === 'Align') ){
         size = this.options.length;
 
     // if this is a nested parser
@@ -467,6 +476,11 @@ Parser.prototype.generateBit = function(ctx) {
 Parser.prototype.generateSkip = function(ctx) {
     var length = ctx.generateOption(this.options.length);
     ctx.pushCode('offset += {0};', length);
+};
+
+Parser.prototype.generateAlign = function(ctx) {
+    var length = ctx.generateOption(this.options.length);
+    ctx.pushCode('offset += ((offset % {0}) == 0) ? 0 : ({0} - (offset % {0}));', length);
 };
 
 Parser.prototype.generateString = function(ctx) {

@@ -65,10 +65,6 @@ export class AssetImageProvider implements ImageProvider {
             return { id: id, url: cachedUrl };
         }
 
-        //HACK; don't bother until the asset bundle can be processed again;
-        if (true) {
-            throw new Error('Failed to load image');
-        }
         let data = await STTApi.networkHelper.getRaw(this.baseURLAsset + ((assetName.length > 0) ? assetName : spriteName) + '.sd', undefined)
         if (!data) {
             throw new Error('Failed to load image');
@@ -86,11 +82,6 @@ export class AssetImageProvider implements ImageProvider {
         let cachedUrl = await this._imageCache.getImage(iconFile)
         if (cachedUrl) {
             return { id, url: cachedUrl };
-        }
-
-        //HACK; don't bother until the asset bundle can be processed again; when fixed, update CONFIG.HOURS_TO_RECOVERY
-        if (true) {
-            return {id, url: undefined };
         }
 
         let data: any;

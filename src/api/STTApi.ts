@@ -441,6 +441,11 @@ export class STTApiClass {
 			platform_folder: CONFIG.CLIENT_PLATFORM
 		});
 
+		// Get asset bundle version from new location
+		let response = await window.fetch(`https://stt-cdn-services.s3.amazonaws.com/production/${CONFIG.CLIENT_PLATFORM}_${CONFIG.CLIENT_VERSION}.txt`);
+		let bundle_version = await response.text();
+		data.config.asset_bundle_version = bundle_version;
+
 		this.serverConfig = data;
 	}
 

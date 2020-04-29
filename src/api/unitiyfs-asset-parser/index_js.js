@@ -9,26 +9,26 @@ var Buffer = self.Buffer;
 
 var assetBundle = new Parser()
 	.endianess('big')
-	.string('signature', {  // "UnityFS"
+	.string('signature', {
 		zeroTerminated: true
 	})
-	.int32('format_version') // 6
-	.string('unity_version', { // "5.x.x"
+	.int32('format_version')
+	.string('unity_version', {
 		zeroTerminated: true
 	})
-	.string('generator_version', { // "2017.4.17f1"
+	.string('generator_version', {
 		zeroTerminated: true
 	})
-	.int32('file_size1') //0
-	.int32('file_size2') // 528862
-	.uint32('ciblock_size') //64
-	.uint32('uiblock_size') //91
-	.uint32('flags') // 67
-	.array('compressedBlk', { // byte[]
+	.int32('file_size1')
+	.int32('file_size2')
+	.uint32('ciblock_size')
+	.uint32('uiblock_size')
+	.uint32('flags')
+	.array('compressedBlk', {
 		type: "uint8",
 		length: 'ciblock_size'
 	})
-	.array('assets', { // byte[]
+	.array('assets', {
 		type: "uint8",
 		readUntil: 'eof'
 	});
@@ -36,23 +36,23 @@ var assetBundle = new Parser()
 var blockList = new Parser()
 	.endianess('big')
 	.skip(16)
-	.int32('num_blocks') // 1
+	.int32('num_blocks')
 	.array('blocks', {
 		type: Parser.start()
-			.int32('busize') // 528748
-			.int32('bcsize') // 528748
-			.int16('bflags'), // 64
+			.int32('busize')
+			.int32('bcsize')
+			.int16('bflags'),
 		length: 'num_blocks'
 	})
-	.int32('num_nodes') // 1
+	.int32('num_nodes')
 	.array('nodes', {
 		type: Parser.start()
-			.int32('ofs1') // 0
-			.int32('ofs2') // 0
-			.int32('size1') // 0
-			.int32('size2') // 528748
-			.int32('status') // 4
-			.string('name', { // "CAB-d441eef4839431472fb997a38d8cbd42"
+			.int32('ofs1')
+			.int32('ofs2')
+			.int32('size1')
+			.int32('size2')
+			.int32('status')
+			.string('name', {
 				zeroTerminated: true
 			}),
 		length: 'num_nodes'
@@ -69,13 +69,27 @@ var typeParser = new Parser()
 	.uint32('index')
 	.int32('flags');
 
-// FIXME: something is messed up here in the latest version. num_nodes is far too large
-//        compared to the size of the buffer available, so the skip or something else
-//        here must have changed; need to find the updated format or no more image parsing!
 var typeTreeParser = new Parser()
 	.endianess('little')
 	.int32('class_id')
-	.skip(function () { return (this.class_id < 0) ? 0x20 : 0x10; })
+	.choice(undefined, {
+		tag: (vars) => vars.format,
+		choices: {
+			17: Parser.start()
+				.endianess('little')
+				.int8('unk0')
+				.int16('script_id')
+		},
+		defaultChoice: Parser.start()
+	})
+	.skip(function (vars) {
+		if (vars.format === 17) {
+			if (this.class_id === 114) {
+				this.class_id = (this.script_id >= 0) ? (-2 - this.script_id) : -1;
+			}
+		}
+		return (this.class_id < 0) ? 0x20 : 0x10;
+	})
 	.uint32('num_nodes')
 	.uint32('buffer_bytes')
 	.array('node_data', {
@@ -100,20 +114,14 @@ var typeStructParser = new Parser()
 		length: 'num_types'
 	});
 
-var assetParser = new Parser()
-	.endianess('big')
-	.uint32('metadata_size')
-	.uint32('file_size')
-	.uint32('format')
-	.uint32('data_offset') // Hard-coded assume format > 9
-	.uint32('endianness', { assert: 0 })
+var objectParser15 = new Parser()
 	.endianess('little')
-	.nest('typeStruct', { type: typeStructParser })
 	.uint32('num_objects')
+	.align(4)
 	.array('objects', {
 		type: Parser.start()
+			.skip(3)
 			.endianess('little')
-			.skip(3) // TODO: Align at 4-byte instead of hardcode
 			.int32('path_id1')
 			.int32('path_id2')
 			.uint32('data_offset')
@@ -122,6 +130,7 @@ var assetParser = new Parser()
 			.int16('class_id')
 			.int16('unk1')
 			.int8('unk2')
+			.align(4)
 		,
 		length: 'num_objects'
 	})
@@ -129,6 +138,88 @@ var assetParser = new Parser()
 	.uint32('num_refs', { assert: 0 })
 	.string('unk_string', {
 		zeroTerminated: true
+	});
+
+var objectParser15Manifest = new Parser()
+	.endianess('little')
+	.uint32('num_objects')
+	.align(4)
+	.array('objects', {
+		type: Parser.start()
+			.endianess('little')
+			.int32('path_id1')
+			.int32('path_id2')
+			.uint32('data_offset')
+			.uint32('size')
+			.int32('type_id')
+			.int16('class_id')
+			.int16('unk1')
+			.int8('unk2')
+			.align(4)
+		,
+		length: 'num_objects'
+	})
+	.uint32('num_adds', { assert: 0 })
+	.uint32('num_refs', { assert: 0 })
+	.string('unk_string', {
+		zeroTerminated: true
+	});
+
+var objectParser17 = new Parser()
+	.endianess('little')
+	.uint32('num_objects')
+	.array('objects', {
+		type: Parser.start()
+			.endianess('big')
+			.align(4)
+			.int32('path_id1')
+			.int32('path_id2')
+			.uint32('data_offset')
+			.uint32('size')
+			.int32('type_id')
+		,
+		length: 'num_objects'
+	})
+	.uint32('num_adds', { assert: 0 })
+	.uint32('num_refs', { assert: 0 })
+	.string('unk_string', {
+		zeroTerminated: true
+	});
+
+// Use this parser for images, the big endian for the bundle manifest
+var objectParser17Little = new Parser()
+	.endianess('little')
+	.uint32('num_objects')
+	.array('objects', {
+		type: Parser.start()
+			.endianess('little')
+			.align(4)
+			.int32('path_id1')
+			.int32('path_id2')
+			.uint32('data_offset')
+			.uint32('size')
+			.int32('type_id')
+		,
+		length: 'num_objects'
+	})
+	.uint32('num_adds', { assert: 0 })
+	.uint32('num_refs', { assert: 0 })
+	.string('unk_string', {
+		zeroTerminated: true
+	});
+
+var assetParser = new Parser()
+	.endianess('big')
+	.uint32('metadata_size')
+	.uint32('file_size')
+	.uint32('format', { assert: (fmt) => (fmt === 15) || (fmt === 17) })
+	.uint32('data_offset') // Hard-coded assume format > 9
+	.uint32('endianness', { assert: 0 })
+	.endianess('little')
+	.nest('typeStruct', { type: typeStructParser })
+	.array('objectData', {
+		type: "uint8",
+		readUntil: 'eof'
 	});
 
 function alignOff(offset) {
@@ -262,15 +353,40 @@ function read_value(object, type, objectBuffer, offset) {
 	return { result, offset };
 }
 
-function parseAssetBundle(data) {
+function parseAssetBundleInternal(data, isManifest) {
 	var bundle = assetBundle.parse(Buffer.from(data));
 
 	var decompressed = Buffer.alloc(bundle.uiblock_size);
 	lz4js.decompressBlock(bundle.compressedBlk, decompressed, 0, bundle.ciblock_size, 0);
 	var bundleBlocks = blockList.parse(decompressed);
 
-	//var asset = assetParser.parse(Buffer.from(bundle.assets));
-	var asset = assetParserGenerated(Buffer.from(bundle.assets));
+	var asset = assetParser.parse(Buffer.from(bundle.assets));
+
+	let obj = undefined;
+	if (asset.format === 15) {
+		if (isManifest)
+		{
+			obj = objectParser15Manifest.parse(Buffer.from(asset.objectData));
+		} else {
+			obj = objectParser15.parse(Buffer.from(asset.objectData));
+		}
+	} else if (asset.format === 17) {
+		if (isManifest) {
+			obj = objectParser17.parse(Buffer.from(asset.objectData));
+		} else {
+			obj = objectParser17Little.parse(Buffer.from(asset.objectData));
+		}
+
+		obj.objects.forEach((object, index) => {
+			let class_id = object.type_id;
+			class_id = asset.typeStruct.types[index].class_id;
+			object.type_id = class_id;
+			object.class_id = class_id;
+		});
+	}
+
+	asset.num_objects = obj.num_objects;
+	asset.objects = obj.objects;
 
 	const strings = "AABB AnimationClip AnimationCurve AnimationState Array Base BitField bitset bool char ColorRGBA Component data deque double dynamic_array FastPropertyName first float Font GameObject Generic Mono GradientNEW GUID GUIStyle int list long long map Matrix4x4f MdFour MonoBehaviour MonoScript m_ByteSize m_Curve m_EditorClassIdentifier m_EditorHideFlags m_Enabled m_ExtensionPtr m_GameObject m_Index m_IsArray m_IsStatic m_MetaFlag m_Name m_ObjectHideFlags m_PrefabInternal m_PrefabParentObject m_Script m_StaticEditorFlags m_Type m_Version Object pair PPtr<Component> PPtr<GameObject> PPtr<Material> PPtr<MonoBehaviour> PPtr<MonoScript> PPtr<Object> PPtr<Prefab> PPtr<Sprite> PPtr<TextAsset> PPtr<Texture> PPtr<Texture2D> PPtr<Transform> Prefab Quaternionf Rectf RectInt RectOffset second set short size SInt16 SInt32 SInt64 SInt8 staticvector string TextAsset TextMesh Texture Texture2D Transform TypelessData UInt16 UInt32 UInt64 UInt8 unsigned int unsigned long long unsigned short vector Vector2f Vector3f Vector4f m_ScriptingClassIdentifier Gradient ";
 
@@ -321,8 +437,6 @@ function parseAssetBundle(data) {
 
 	let parsedObjects = [];
 	asset.objects.forEach((object, index) => {
-		var objectBuffer = Buffer.from(bundle.assets.slice(asset.data_offset + object.data_offset, asset.data_offset + object.data_offset + object.size));
-
 		var type_tree = asset.typeStruct.types.find((type) => type.class_id == object.type_id);
 		if (!type_tree) {
 			type_tree = asset.typeStruct.types.find((type) => type.class_id == object.class_id);
@@ -335,6 +449,7 @@ function parseAssetBundle(data) {
 			}
 		}
 
+		var objectBuffer = Buffer.from(bundle.assets.slice(asset.data_offset + object.data_offset/*, asset.data_offset + object.data_offset + object.size*/));
 		let parsedObject = read_value(object, type_tree.node_data[0], objectBuffer, 0).result;
 		parsedObject.type = type_tree.node_data[0].type;
 
@@ -345,6 +460,7 @@ function parseAssetBundle(data) {
 
 	let imageTexture = undefined;
 	let hasSprites = false;
+	let assetBundleManifest = undefined;
 	parsedObjects.forEach(object => {
 		if (object.type == 'Texture2D') {
 			if ((object.m_TextureFormat != 10) && (object.m_TextureFormat != 12)) {
@@ -365,15 +481,24 @@ function parseAssetBundle(data) {
 		if (object.type == 'Sprite') {
 			hasSprites = true;
 		}
+		if (object.type == 'AssetBundleManifest') {
+			assetBundleManifest = object.AssetBundleNames.map(o => o.second);
+		}
 	});
 
 	if (!imageTexture) {
-		console.log("No image in this asset bundle");
-		console.log(parsedObjects);
-		return undefined;
+		if (!assetBundleManifest) {
+			//console.log("No image in this asset bundle");
+			//console.log(parsedObjects);
+			return undefined;
+		} else {
+			//let images = assetBundleManifest.filter(nm => nm.startsWith('images'));
+			//console.log(assetBundleManifest);
+			if (isManifest) {
+				return {assetBundleManifest};
+			}
+		}
 	}
-
-	var sprites = [];
 
 	var result = {
 		imageName: imageTexture.m_Name,
@@ -382,7 +507,7 @@ function parseAssetBundle(data) {
 			width: imageTexture.m_Width,
 			height: imageTexture.m_Height
 		},
-		sprites
+		sprites: []
 	};
 
 	if (hasSprites) {
@@ -415,102 +540,4 @@ function parseAssetBundle(data) {
 	return result;
 }
 
-function assetParserGenerated(buffer, callback, constructorFn) {
-	var offset = 0;
-	var vars = {};
-	vars.metadata_size = buffer.readUInt32BE(offset);
-	offset += 4;
-	vars.file_size = buffer.readUInt32BE(offset);
-	offset += 4;
-	vars.format = buffer.readUInt32BE(offset);
-	offset += 4;
-	vars.data_offset = buffer.readUInt32BE(offset);
-	offset += 4;
-	vars.endianness = buffer.readUInt32BE(offset);
-	offset += 4;
-	vars.typeStruct = {};
-	var $tmp0 = offset;
-	while (buffer.readUInt8(offset++) !== 0);
-	vars.typeStruct.generator_version = buffer.toString('utf8', $tmp0, offset - 1);
-	vars.typeStruct.target_platform = buffer.readUInt32LE(offset);
-	offset += 4;
-	vars.typeStruct.has_type_trees = buffer.readUInt8(offset);
-	offset += 1;
-	vars.typeStruct.num_types = buffer.readInt32LE(offset);
-	offset += 4;
-	vars.typeStruct.types = [];
-	for (var $tmp1 = 0; $tmp1 < vars.typeStruct.num_types; $tmp1++) {
-		var $tmp2 = {};
-		$tmp2.class_id = buffer.readInt32LE(offset);
-		offset += 4;
-		offset += (function () {
-			return this.class_id < 0 ? 0x20 : 0x10;
-		}).call($tmp2, vars);
-		$tmp2.num_nodes = buffer.readUInt32LE(offset);
-		offset += 4;
-		$tmp2.buffer_bytes = buffer.readUInt32LE(offset);
-		offset += 4;
-		$tmp2.node_data = [];
-		for (var $tmp3 = 0; $tmp3 < $tmp2.num_nodes; $tmp3++) {
-			var $tmp4 = {};
-			$tmp4.version = buffer.readInt16LE(offset);
-			offset += 2;
-			$tmp4.depth = buffer.readUInt8(offset);
-			offset += 1;
-			$tmp4.is_array = buffer.readUInt8(offset);
-			offset += 1;
-			$tmp4.typeOffset = buffer.readInt32LE(offset);
-			offset += 4;
-			$tmp4.nameOffset = buffer.readInt32LE(offset);
-			offset += 4;
-			$tmp4.size = buffer.readInt32LE(offset);
-			offset += 4;
-			$tmp4.index = buffer.readUInt32LE(offset);
-			offset += 4;
-			$tmp4.flags = buffer.readInt32LE(offset);
-			offset += 4;
-			$tmp2.node_data.push($tmp4);
-		}
-		$tmp2.buffer_data = [];
-		for (var $tmp5 = 0; $tmp5 < $tmp2.buffer_bytes; $tmp5++) {
-			var $tmp6 = buffer.readUInt8(offset);
-			offset += 1;
-			$tmp2.buffer_data.push($tmp6);
-		}
-		vars.typeStruct.types.push($tmp2);
-	}
-	vars.num_objects = buffer.readUInt32LE(offset);
-	offset += 4;
-	vars.objects = [];
-	for (var $tmp7 = 0; $tmp7 < vars.num_objects; $tmp7++) {
-		var $tmp8 = {};
-		offset += 3;
-		$tmp8.path_id1 = buffer.readInt32LE(offset);
-		offset += 4;
-		$tmp8.path_id2 = buffer.readInt32LE(offset);
-		offset += 4;
-		$tmp8.data_offset = buffer.readUInt32LE(offset);
-		offset += 4;
-		$tmp8.size = buffer.readUInt32LE(offset);
-		offset += 4;
-		$tmp8.type_id = buffer.readInt32LE(offset);
-		offset += 4;
-		$tmp8.class_id = buffer.readInt16LE(offset);
-		offset += 2;
-		$tmp8.unk1 = buffer.readInt16LE(offset);
-		offset += 2;
-		$tmp8.unk2 = buffer.readInt8(offset);
-		offset += 1;
-		vars.objects.push($tmp8);
-	}
-	vars.num_adds = buffer.readUInt32LE(offset);
-	offset += 4;
-	vars.num_refs = buffer.readUInt32LE(offset);
-	offset += 4;
-	var $tmp9 = offset;
-	while (buffer.readUInt8(offset++) !== 0);
-	vars.unk_string = buffer.toString('utf8', $tmp9, offset - 1);
-	return vars;
-}
-
-module.exports = { parseAssetBundle };
+module.exports = { parseAssetBundleInternal };
