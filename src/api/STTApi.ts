@@ -378,6 +378,20 @@ export class STTApiClass {
 		);
 	}
 
+	async executeGetRequestRaw(resourceUrl: string, absoluteUrl: string, qs: any = {}, json: boolean): Promise<any> {
+		if (this._accessToken === undefined) {
+			throw new Error('Not logged in!');
+		}
+		if (this._usemock) {
+			const rv = this.getMockData(resourceUrl);
+			if (rv) {
+				return rv;
+			}
+		}
+
+		return this._net.get_proxy(absoluteUrl, qs, json);
+	}
+
 	async executeGetRequestWithUpdates(resourceUrl: string, qs: any = {}): Promise<any> {
 		if (this._accessToken === undefined) {
 			throw new Error('Not logged in!');
@@ -442,8 +456,8 @@ export class STTApiClass {
 		});
 
 		// Get asset bundle version from new location
-		let response = await window.fetch(`https://stt-cdn-services.s3.amazonaws.com/production/${CONFIG.CLIENT_PLATFORM}_${CONFIG.CLIENT_VERSION}.txt`);
-		let bundle_version = await response.text();
+		const url = `https://stt-cdn-services.s3.amazonaws.com/production/${CONFIG.CLIENT_PLATFORM}_${CONFIG.CLIENT_VERSION}.txt`;
+		let bundle_version = await this.executeGetRequestRaw('asset_bundle_version.txt', url, null, false);
 		data.config.asset_bundle_version = bundle_version;
 
 		this.serverConfig = data;

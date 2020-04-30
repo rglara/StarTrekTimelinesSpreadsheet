@@ -74,14 +74,17 @@ export class NetworkFetch {
 		}
 	}
 
-	async get_proxy(uri: string, qs: any) : Promise<any> {
+	async get_proxy(uri: string, qs: any, json: boolean = true) : Promise<any> {
 		if (!this._urlProxy) {
-			return this.get(uri, qs);
+			return this.get(uri, qs, json);
 		} else {
 			let response = await this.postjson(this._urlProxy + '/get', {origURI: uri, qs});
 
 			if (response.ok) {
-				return response.json();
+				if (json) {
+					return response.json();
+				}
+				return response.text();
 			} else {
 				let data = await response.text();
 				throw new Error(`Network error; status ${response.status}; reply ${data}.`);
