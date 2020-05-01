@@ -121,7 +121,7 @@ export const SkirmishEvent = (props: {
          <EventStat label="Intel" value={intelCount ?? 'unknown'} />
          <EventStat label="Skirmishes Afforded" value={runsAfforded ?? 'unknown'} />
          <EventStat label="VP Afforded" value={vpAfforded ?? 0} />
-         <EventStat label="Intel gained until end" value={intelAccrued ?? 'unknown'} />
+         <EventStat label="Intel gained to phase end" value={intelAccrued ?? 'unknown'} />
       </div>
       {vpToGo > 0 && <div>
          <EventStat label="Skirmishes to go" value={runsToGo ?? 'unknown'} />

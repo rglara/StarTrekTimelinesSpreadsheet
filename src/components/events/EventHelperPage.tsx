@@ -150,8 +150,8 @@ const EventLeaderboard = (props:{
          updnNew.push(lb.leaderboard[p - 10]);
          updnNew.push(lb.leaderboard.find(lbe => lbe.pid === STTApi.playerData.id));
          updnNew.push(lb.leaderboard[p + 10]);
-         updnNew.push(lb.leaderboard[lb.leaderboard.length-1]);
          updnNew.push(lb.leaderboard[lb.leaderboard.length / 4 * 3]);
+         updnNew.push(lb.leaderboard[lb.leaderboard.length-1]);
          setUpDn(updnNew);
          //TODO: if we are close enough to a bracket edge to see it, then show that
          //let newBrackets: RewardBracket[] = [];
@@ -176,13 +176,13 @@ const EventLeaderboard = (props:{
          {brackets.map(br => <li key={br.hi}>{br.hi}: {br.vpHi}{inBracket(br) && <span>Current VP: {props.event.victory_points}</span> }</li>)}
       </ul>
       <ul><li>Rank: VP For Rank</li>
-         <li>Up 50 - {updn[0] ? (updn[0].rank + ': ' + updn[0].score + ' (+' + (updn[0].score - (props.event.victory_points ?? 0)) + ')') : 'unknown'}</li>
-         <li>Up 25 - {updn[1] ? (updn[1].rank + ': ' + updn[1].score + ' (+' + (updn[1].score - (props.event.victory_points ?? 0)) + ')') : 'unknown'}</li>
-         <li>Up 10 - {updn[2] ? (updn[2].rank + ': ' + updn[2].score + ' (+' + (updn[2].score - (props.event.victory_points ?? 0)) + ')') : 'unknown'}</li>
-         <li>Current Rank - { updn[3]?(updn[3].rank + ': ' + updn[3].score) : 'unknown'}</li>
-         <li>Down 10 - {updn[4] ? (updn[4].rank + ': ' + updn[4].score + ' (-' + ((props.event.victory_points ?? 0) - updn[4].score) + ')') : 'unknown'}</li>
-         <li>Down 25 - {updn[5] ? (updn[5].rank + ': ' + updn[5].score + ' (-' + ((props.event.victory_points ?? 0) - updn[5].score) + ')') : 'unknown'}</li>
-         <li>Down 50 - {updn[6] ? (updn[6].rank + ': ' + updn[6].score + ' (-' + ((props.event.victory_points ?? 0) - updn[6].score) + ')') : 'unknown'}</li>
+         <li>Up 50 - {updn[0] ? (updn[0].rank + ': ' + updn[0].score + ' (+' + (updn[0].score - (updn[3]?.score ?? 0)) + ')') : 'unknown'}</li>
+         <li>Up 25 - {updn[1] ? (updn[1].rank + ': ' + updn[1].score + ' (+' + (updn[1].score - (updn[3]?.score ?? 0)) + ')') : 'unknown'}</li>
+         <li>Up 10 - {updn[2] ? (updn[2].rank + ': ' + updn[2].score + ' (+' + (updn[2].score - (updn[3]?.score ?? 0)) + ')') : 'unknown'}</li>
+         <li>Current Rank - { updn[3] ? (updn[3].rank + ': ' + updn[3].score) : 'unknown'}</li>
+         <li>Down 10 - {updn[4] ? (updn[4].rank + ': ' + updn[4].score + ' (-' + ((updn[3]?.score ?? 0) - updn[4].score) + ')') : 'unknown'}</li>
+         <li>Down 25 - {updn[5] ? (updn[5].rank + ': ' + updn[5].score + ' (-' + ((updn[3]?.score ?? 0) - updn[5].score) + ')') : 'unknown'}</li>
+         <li>Down 50 - {updn[6] ? (updn[6].rank + ': ' + updn[6].score + ' (-' + ((updn[3]?.score ?? 0) - updn[6].score) + ')') : 'unknown'}</li>
       </ul>
    </div>;
 
