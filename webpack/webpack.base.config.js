@@ -70,7 +70,8 @@ module.exports = function(targetEnv, devEnv) {
 				'process.env.NODE_ENV': JSON.stringify(devEnv ? 'development' : 'production'),
 				'process.env.APP_VERSION': JSON.stringify(PACKAGE.version)
 			}),
-			new CopyWebpackPlugin([{ from: 'src/assets/semantic', to: 'css' }])
+			new CopyWebpackPlugin([{ from: 'src/assets/semantic', to: 'css' }]),
+			new webpack.ProgressPlugin(),
 		]
 	};
 
