@@ -70,7 +70,7 @@ export function getMissionCostDetails(questId: number, mastery_level: number): M
 	return { };
 }
 
-export async function loadFullTree(onProgress: (description: string) => void, recursing: boolean): Promise<void> {
+export async function loadFullTree(onProgress: (description: string, subDesc?: string) => void, recursing: boolean): Promise<void> {
 	let mapEquipment: Set<number> = new Set();
 	let missingEquipment: number[] = [];
 
@@ -115,7 +115,7 @@ export async function loadFullTree(onProgress: (description: string) => void, re
 	// Load the description for all crew equipment
 	let allcrewData = Array.from(allCrewEquip.values());
 	while (allcrewData.length > 0) {
-		onProgress(`Loading all crew equipment... (${allcrewData.length} remaining)`);
+		onProgress('Loading all crew equipment...', `(${allcrewData.length} remaining)`);
 		let archetypesAll = await loadItemsDescription(allcrewData.splice(0, 20));
 		console.log(`Loaded ${archetypesAll.length}, remaining ${allcrewData.length}`);
 		if (archetypesAll.length > 0) {
@@ -147,10 +147,10 @@ export async function loadFullTree(onProgress: (description: string) => void, re
 		});
 	});
 
-	onProgress(`Loading equipment... (${missingEquipment.length} remaining)`);
+	onProgress('Loading equipment...', `(${missingEquipment.length} remaining)`);
 	if (missingEquipment.length === 0) {
 		// We're done loading, let's cache the current list, to save on future loading time
-		/*await*/ STTApi.equipmentCache.put({
+		await STTApi.equipmentCache.put({
 			digest: STTApi.serverConfig!.config.craft_config.recipe_tree.digest,
 			archetypeCache: STTApi.itemArchetypeCache.archetypes
 		});
@@ -168,7 +168,7 @@ export async function loadFullTree(onProgress: (description: string) => void, re
 	}
 
 	// We're done loading, let's cache the current list, to save on future loading time
-	/*await*/ STTApi.equipmentCache.put({
+	await STTApi.equipmentCache.put({
 		digest: STTApi.serverConfig!.config.craft_config.recipe_tree.digest,
 		archetypeCache: STTApi.itemArchetypeCache.archetypes
 	});
