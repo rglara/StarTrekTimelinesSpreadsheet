@@ -97,12 +97,12 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
         await promise.catch((error: any) => { /*console.warn(error);*/ });
     };
 
-    onProgress('Loading...');
+    onProgress('Loading Crew Images...');
     for (let rosterCrew of STTApi.roster) {
         if (rosterCrew.iconUrl === '') {
             rosterCrew.iconUrl = STTApi.imageProvider.getCrewCached(rosterCrew, false);
             if (rosterCrew.iconUrl === '') {
-                await updateProgress('Loading Crew Portraits...', rosterCrew.name,
+                await updateProgress('', rosterCrew.name,
                     STTApi.imageProvider.getCrewImageUrl(rosterCrew, false)
                         .then(found => { rosterCrew.iconUrl = found.url; }));
             }
@@ -111,7 +111,7 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
         if (rosterCrew.iconBodyUrl === '') {
             rosterCrew.iconBodyUrl = STTApi.imageProvider.getCrewCached(rosterCrew, true);
             if (rosterCrew.iconBodyUrl === '') {
-                await updateProgress('Loading Crew Bodies...', rosterCrew.name,
+                await updateProgress('', rosterCrew.name,
                     STTApi.imageProvider.getCrewImageUrl(rosterCrew, true)
                         .then(found => { rosterCrew.iconBodyUrl = found.url; }));
             }
@@ -119,11 +119,10 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
     }
 
     // Also load the avatars for crew not in the roster
-    onProgress('Loading...');
     for (let avatar of STTApi.crewAvatars) {
         avatar.iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
         if (avatar.iconUrl === '') {
-            await updateProgress('Loading non-Crew Portraits...', avatar.name,
+            await updateProgress('', avatar.name,
                 STTApi.imageProvider.getCrewImageUrl(avatar, false)
                     .then(found => { avatar.iconUrl = found.url; }));
         }
@@ -132,11 +131,10 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
     onProgress('Loading Ships...');
     STTApi.ships = await matchShips(STTApi.playerData.character.ships);
 
-    onProgress('Loading...');
     for (let ship of STTApi.ships) {
         ship.iconUrl = STTApi.imageProvider.getCached(ship);
         if (ship.iconUrl === '') {
-            await updateProgress('Loading Ship Images...', ship.name,
+            await updateProgress('', ship.name,
                 STTApi.imageProvider.getShipImageUrl(ship)
                     .then(found => { ship.iconUrl = found.url; }));
         }
@@ -161,10 +159,9 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
         scanRewards(f.name, f.shuttle_mission_rewards);
     });
 
-    onProgress('Loading...');
+    onProgress('Loading Inventory Images...');
     STTApi.items = [];
     for (const itemDTO of STTApi.playerData.character.items) {
-        onProgress('Loading Inventory Images...');
         try {
             let item : ItemData = {
                 ...itemDTO,
@@ -185,7 +182,6 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
                         .then(found => { item.iconUrl = found.url || ''; }));
             }
 
-            onProgress('Loading Inventory Images...');
             item.cadetable = '';
             const cadetSources = STTApi.getEquipmentManager().getCadetableItems().get(item.archetype_id);
             if (cadetSources) {
@@ -268,7 +264,7 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
         }
     }
 
-    onProgress('Loading...');
+    onProgress('Loading Faction and Faction Store Images...');
     for (let faction of STTApi.playerData.character.factions) {
         faction.iconUrl = STTApi.imageProvider.getCached(faction);
 
@@ -277,7 +273,7 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
                 STTApi.imageProvider.getFactionImageUrl(faction, faction.id)
                     .then(found => { faction.iconUrl = found.url; }));
         }
-        await updateProgress('Loading Faction Store Images...', '', loadFactionStore(faction));
+        await updateProgress('', '', loadFactionStore(faction));
     }
 
     onProgress('Compiling Crew Data...');
@@ -290,7 +286,7 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
     }
 
     // Also load the avatars for crew not in the roster
-    onProgress('Loading...');
+    onProgress('Loading Supplemental Crew...');
     for (let crew of STTApi.allcrew) {
         crew.iconUrl = STTApi.imageProvider.getCrewCached(crew, false);
         if (crew.iconUrl === '') {
@@ -313,21 +309,21 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
         crew.archetypes = [];
     });
 
-    onProgress('Loading...');
+    onProgress('Loading Equipment Images...');
     for (let equipment of STTApi.itemArchetypeCache.archetypes) {
         equipment.iconUrl = STTApi.imageProvider.getCached(equipment);
         if (equipment.iconUrl === '') {
-            await updateProgress('Loading Equipment Images...', equipment.name,
+            await updateProgress('', equipment.name,
                 STTApi.imageProvider.getItemImageUrl(equipment, equipment.id)
                     .then(found => { equipment.iconUrl = found.url; }));
         }
     }
 
-    onProgress('Loading...');
+    onProgress('Loading Sprites...');
     for (let sprite in CONFIG.SPRITES) {
         CONFIG.SPRITES[sprite].url = STTApi.imageProvider.getSpriteCached(CONFIG.SPRITES[sprite].asset, sprite);
         if (CONFIG.SPRITES[sprite].url === '') {
-            await updateProgress('Loading Sprites...', sprite,
+            await updateProgress('', sprite,
                 STTApi.imageProvider.getSprite(CONFIG.SPRITES[sprite].asset, sprite, sprite)
                     .then(found => { CONFIG.SPRITES[found.id].url = found.url; }));
         }

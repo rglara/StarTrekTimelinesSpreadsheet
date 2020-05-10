@@ -58,7 +58,7 @@ interface AppHomeState {
 	captainAvatarUrl: string,
 	captainAvatarBodyUrl: string,
 	spinnerLabel: string,
-	spinnerSublabel: string,
+	spinnerSublabel?: string,
 	hideErrorDialog: boolean,
 	hideBootMessage: boolean,
 	showBootMessage: boolean,
@@ -184,7 +184,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 	render() {
 		if (this.state.showSpinner) {
 			return <div className="centeredVerticalAndHorizontal">
-				<div className="ui massive text active centered inline loader">{this.state.spinnerLabel}<br/>{this.state.spinnerSublabel}</div>
+				<div className="ui massive text active centered inline loader">{this.state.spinnerLabel}<br/>{this.state.spinnerSublabel ?? ''}</div>
 			</div>;
 		}
 
@@ -520,9 +520,16 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 	_onAccessToken() {
 		this.setState({ showSpinner: true, showLoginDialog: false });
 
-		loginSequence((progressLabel, progressSublabel = '') => {
-			console.log(`Progress message: '${progressLabel}' | '${progressSublabel}'`);
-			this.setState({ spinnerLabel: progressLabel, spinnerSublabel: progressSublabel });
+		loginSequence((progressLabel, progressSublabel) => {
+			if (progressLabel && progressLabel.length > 0) {
+				if (progressSublabel) {
+					console.log(`Progress message: '${progressLabel}' | '${progressSublabel}'`);
+				}
+				else {
+					console.log(`Progress message: ${progressLabel}`);
+				}
+				this.setState({ spinnerLabel: progressLabel, spinnerSublabel: progressSublabel });
+			}
 		}).then(this._onDataFinished)
 			.catch((err) => {
 				this._onDataError(err);
@@ -540,7 +547,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 
 	_onRefresh() {
 		STTApi.refreshEverything(false);
-		this.setState({ dataLoaded: false, spinnerLabel: 'Refreshing...', spinnerSublabel: '' });
+		this.setState({ dataLoaded: false, spinnerLabel: 'Refreshing...', spinnerSublabel: undefined });
 		this._onAccessToken();
 	}
 
