@@ -456,7 +456,7 @@ export class STTApiClass {
 		});
 
 		// Get asset bundle version from new location
-		const url = `https://stt-cdn-services.s3.amazonaws.com/production/${CONFIG.CLIENT_PLATFORM}_${CONFIG.CLIENT_VERSION}.txt`;
+		const url = `${CONFIG.URL_CDN}${data.config.server_environment.environment}/${CONFIG.CLIENT_PLATFORM}_${CONFIG.CLIENT_VERSION}.txt`;
 		let bundle_version = await this.executeGetRequestRaw('asset_bundle_version.txt', url, null, false);
 		data.config.asset_bundle_version = bundle_version;
 
