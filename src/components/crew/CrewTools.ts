@@ -81,7 +81,7 @@ function crewToRoster(dto: CrewDTO) : CrewData {
 	// Replace "nonhuman" with "alien" to make the search easier
 	let nh = rawTraits.indexOf('nonhuman');
 	if (nh > -1) {
-		rawTraits.splice(nh, 1, 'alient');
+		rawTraits.splice(nh, 1, 'alien');
 	}
 
 	// Add datacore "big book" details
