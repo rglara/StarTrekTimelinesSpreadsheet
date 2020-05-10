@@ -377,9 +377,8 @@ function parseAssetBundleInternal(data, isManifest) {
 			obj = objectParser17Little.parse(Buffer.from(asset.objectData));
 		}
 
-		obj.objects.forEach((object, index) => {
-			let class_id = object.type_id;
-			class_id = asset.typeStruct.types[index].class_id;
+		obj.objects.forEach((object, _index) => {
+			let class_id = asset.typeStruct.types[object.type_id].class_id;
 			object.type_id = class_id;
 			object.class_id = class_id;
 		});
@@ -449,7 +448,7 @@ function parseAssetBundleInternal(data, isManifest) {
 			}
 		}
 
-		var objectBuffer = Buffer.from(bundle.assets.slice(asset.data_offset + object.data_offset/*, asset.data_offset + object.data_offset + object.size*/));
+		var objectBuffer = Buffer.from(bundle.assets.slice(asset.data_offset + object.data_offset, asset.data_offset + object.data_offset + object.size));
 		let parsedObject = read_value(object, type_tree.node_data[0], objectBuffer, 0).result;
 		parsedObject.type = type_tree.node_data[0].type;
 
