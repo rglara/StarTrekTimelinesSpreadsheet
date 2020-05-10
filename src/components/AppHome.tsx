@@ -58,6 +58,7 @@ interface AppHomeState {
 	captainAvatarUrl: string,
 	captainAvatarBodyUrl: string,
 	spinnerLabel: string,
+	spinnerSublabel: string,
 	hideErrorDialog: boolean,
 	hideBootMessage: boolean,
 	showBootMessage: boolean,
@@ -108,6 +109,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 			captainAvatarUrl: '',
 			captainAvatarBodyUrl: '',
 			spinnerLabel: 'Loading...',
+			spinnerSublabel: '',
 			hideErrorDialog: true,
 			hideBootMessage: true,
 			showBootMessage: false,
@@ -182,7 +184,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 	render() {
 		if (this.state.showSpinner) {
 			return <div className="centeredVerticalAndHorizontal">
-				<div className="ui massive text active centered inline loader">{this.state.spinnerLabel}</div>
+				<div className="ui massive text active centered inline loader">{this.state.spinnerLabel}<br/>{this.state.spinnerSublabel}</div>
 			</div>;
 		}
 
@@ -518,9 +520,9 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 	_onAccessToken() {
 		this.setState({ showSpinner: true, showLoginDialog: false });
 
-		loginSequence((progressLabel) => {
-			console.log(`Progress message: '${progressLabel}'`);
-			this.setState({ spinnerLabel: progressLabel });
+		loginSequence((progressLabel, progressSublabel = '') => {
+			console.log(`Progress message: '${progressLabel}' | '${progressSublabel}'`);
+			this.setState({ spinnerLabel: progressLabel, spinnerSublabel: progressSublabel });
 		}).then(this._onDataFinished)
 			.catch((err) => {
 				this._onDataError(err);
@@ -531,14 +533,14 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 		this.setState({ darkTheme: false }, () => { this._onSwitchTheme(true); });
 
 		STTApi.refreshEverything(true);
-		this.setState({ showLoginDialog: true, hideErrorDialog: true, dataLoaded: false, captainName: '', spinnerLabel: 'Loading...' });
+		this.setState({ showLoginDialog: true, hideErrorDialog: true, dataLoaded: false, captainName: '', spinnerLabel: 'Loading...', spinnerSublabel: '' });
 
 		this.props.onLogout();
 	}
 
 	_onRefresh() {
 		STTApi.refreshEverything(false);
-		this.setState({ dataLoaded: false, spinnerLabel: 'Refreshing...' });
+		this.setState({ dataLoaded: false, spinnerLabel: 'Refreshing...', spinnerSublabel: '' });
 		this._onAccessToken();
 	}
 

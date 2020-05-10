@@ -8,7 +8,7 @@ import { refreshAllFactions, loadFactionStore } from './FactionTools';
 import { calculateMissionCrewSuccess, calculateMinimalComplementAsync } from './MissionCrewSuccess';
 import { CrewData, CrewDTO, ItemData, PotentialRewardDTO, RewardDTO } from "./DTO";
 
-export async function loginSequence(onProgress: (description: string) => void) {
+export async function loginSequence(onProgress: (description: string, subDesc?: string) => void) {
     let mainResources = [
         {
             loader: STTApi.loadCrewArchetypes.bind(STTApi),
@@ -55,146 +55,95 @@ export async function loginSequence(onProgress: (description: string) => void) {
         }
     ];
 
-    // These things are now loading in parallel, the status will always be the last one in the list (which is probably fine)
-    let promises: Array<Promise<void>> = [];
-    for (let res of mainResources) {
-        onProgress('Loading ' + res.description + '...');
-        promises.push(res.loader());
-    }
 
-    await Promise.all(promises);
+    onProgress('Loading Main Resources...');
+    let mainPromises: Array<Promise<void>> = mainResources.map(res => {
+        console.log(` - Processing ${res.description}`);
+        return res.loader();
+    });
+    await Promise.all(mainPromises);
 
-    let iconPromises: Array<Promise<void>> = [];
     if (STTApi.playerData.fleet && STTApi.playerData.fleet.id != 0) {
-        for (let res of fleetResources) {
-            onProgress('Loading ' + res.description + '...');
-            iconPromises.push(res.loader(STTApi.playerData.fleet.id));
-        }
+        onProgress('Loading Fleet Resources...');
+        let fleetPromises: Array<Promise<void>> = fleetResources.map(res => {
+            console.log(` - Processing ${res.description}`);
+            return res.loader(STTApi.playerData.fleet.id);
+        });
+        await Promise.all(fleetPromises);
     }
 
-    onProgress('Loading missions and quests...');
+    onProgress('Loading Missions and Quests...');
     // Filter out missions in a bad state
-    STTApi.playerData.character.accepted_missions = STTApi.playerData.character.accepted_missions.filter((mission) => mission.main_story);
+    STTApi.playerData.character.accepted_missions = STTApi.playerData.character.accepted_missions
+        .filter(mission => mission.main_story);
     let ms = [...STTApi.playerData.character.cadet_schedule.missions,
               ...STTApi.playerData.character.accepted_missions];
     let missions = await loadMissionData(ms, STTApi.playerData.character.dispute_histories);
     STTApi.missions = missions;
 
-    onProgress('Analyzing crew...');
-    let roster: CrewData[] = await buildCrewData(STTApi.playerData.character);
-    STTApi.roster = roster;
+    onProgress('Analyzing Crew...');
+    STTApi.roster = await buildCrewData(STTApi.playerData.character);
 
-    // Not really an "icon", but adding it here because this is what we wait on at the end
-    // of this function (so code could run in parallel, especially network loads)
-    //iconPromises.push(() => {
-        onProgress('Calculating mission success stats for crew...');
-        STTApi.missionSuccess = calculateMissionCrewSuccess();
-        calculateMinimalComplementAsync();
-    //});
+    onProgress('Calculating Mission Success', 'Stats for Crew...');
+    STTApi.missionSuccess = calculateMissionCrewSuccess();
+    calculateMinimalComplementAsync();
 
-    let total = roster.length * 2 + STTApi.crewAvatars.length;
-    let current = 0;
-    onProgress('Caching crew images... (' + current + '/' + total + ')');
+    const updateProgress = async (label: string, key: string, promise: Promise<void>) => {
+        if (!key) {
+            onProgress(label);
+        } else {
+            onProgress(label, `(${key})`);
+        }
+        await promise.catch((error: any) => { /*console.warn(error);*/ });
+    };
 
-    for (let rosterCrew of roster) {
+    onProgress('Loading...');
+    for (let rosterCrew of STTApi.roster) {
         if (rosterCrew.iconUrl === '') {
             rosterCrew.iconUrl = STTApi.imageProvider.getCrewCached(rosterCrew, false);
             if (rosterCrew.iconUrl === '') {
-                iconPromises.push(STTApi.imageProvider.getCrewImageUrl(rosterCrew, false).then((found) => {
-                    current++;
-                    // if (current % 10 == 0)
-                    //     onProgress('Caching crew images... (' + current + '/' + total + ')');
-                    rosterCrew.iconUrl = found.url;
-                }).catch((error: any) => { /*console.warn(error);*/ }));
-            } else {
-                // Image is already cached
-
-                current++;
-                // If we leave this in, stupid React will re-render everything, even though we're in a tight synchronous loop and no one gets to see the updated value anyway
-                //onProgress('Caching crew images... (' + current++ + '/' + total + ')');
+                await updateProgress('Loading Crew Portraits...', rosterCrew.name,
+                    STTApi.imageProvider.getCrewImageUrl(rosterCrew, false)
+                        .then(found => { rosterCrew.iconUrl = found.url; }));
             }
         }
 
         if (rosterCrew.iconBodyUrl === '') {
             rosterCrew.iconBodyUrl = STTApi.imageProvider.getCrewCached(rosterCrew, true);
             if (rosterCrew.iconBodyUrl === '') {
-                iconPromises.push(STTApi.imageProvider.getCrewImageUrl(rosterCrew, true).then((found) => {
-                    current++;
-                    // if (current % 10 == 0)
-                    //     onProgress('Caching crew images... (' + current + '/' + total + ')');
-                    rosterCrew.iconBodyUrl = found.url;
-                }).catch((error: any) => { /*console.warn(error);*/ }));
-            } else {
-                // Image is already cached
-
-                current++;
-                // If we leave this in, stupid React will re-render everything, even though we're in a tight synchronous loop and no one gets to see the updated value anyway
-                //onProgress('Caching crew images... (' + current++ + '/' + total + ')');
+                await updateProgress('Loading Crew Bodies...', rosterCrew.name,
+                    STTApi.imageProvider.getCrewImageUrl(rosterCrew, true)
+                        .then(found => { rosterCrew.iconBodyUrl = found.url; }));
             }
         }
     }
 
-    onProgress('Caching crew images... (' + current + '/' + total + ')');
-
     // Also load the avatars for crew not in the roster
+    onProgress('Loading...');
     for (let avatar of STTApi.crewAvatars) {
         avatar.iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
         if (avatar.iconUrl === '') {
-            iconPromises.push(STTApi.imageProvider.getCrewImageUrl(avatar, false).then((found) => {
-                current++;
-                // if (current % 10 == 0)
-                //     onProgress('Caching crew images... (' + current + '/' + total + ')');
-                avatar.iconUrl = found.url;
-            }).catch((error: any) => { /*console.warn(error);*/ }));
-        } else {
-            // Image is already cached
-
-            current++;
-            // If we leave this in, stupid React will re-render everything, even though we're in a tight synchronous loop and no one gets to see the updated value anyway
-            //onProgress('Caching crew images... (' + current++ + '/' + total + ')');
+            await updateProgress('Loading non-Crew Portraits...', avatar.name,
+                STTApi.imageProvider.getCrewImageUrl(avatar, false)
+                    .then(found => { avatar.iconUrl = found.url; }));
         }
     }
 
-    onProgress('Caching crew images... (' + current + '/' + total + ')');
+    onProgress('Loading Ships...');
+    STTApi.ships = await matchShips(STTApi.playerData.character.ships);
 
-    //await Promise.all(iconPromises);
-
-    onProgress('Loading ships...');
-
-    let ships = await matchShips(STTApi.playerData.character.ships);
-    STTApi.ships = ships;
-
-    total += ships.length;
-    //current = 0;
-    onProgress('Caching ship images... (' + current + '/' + total + ')');
-    //iconPromises = [];
-    for (let ship of ships) {
+    onProgress('Loading...');
+    for (let ship of STTApi.ships) {
         ship.iconUrl = STTApi.imageProvider.getCached(ship);
         if (ship.iconUrl === '') {
-            iconPromises.push(STTApi.imageProvider.getShipImageUrl(ship).then((found) => {
-                //onProgress('Caching ship images... (' + current++ + '/' + total + ')');
-                let ship = STTApi.ships.find((ship) => ship.name === found.id);
-                if (ship) {
-                    ship.iconUrl = found.url;
-                }
-            }).catch((error: any) => { /*console.warn(error);*/ }));
-        } else {
-            // Image is already cached
-
-            current++;
-            // If we leave this in, stupid React will re-render everything, even though we're in a tight synchronous loop and no one gets to see the updated value anyway
-            //onProgress('Caching ship images... (' + current++ + '/' + total + ')');
+            await updateProgress('Loading Ship Images...', ship.name,
+                STTApi.imageProvider.getShipImageUrl(ship)
+                    .then(found => { ship.iconUrl = found.url; }));
         }
     }
 
-    onProgress('Caching ship images... (' + current + '/' + total + ')');
-
-    //await Promise.all(iconPromises);
-
-    onProgress('Caching item details...');
-
+    onProgress('Loading Faction Rewards...');
     await refreshAllFactions();
-
     let rewardItemIds = new Map<string, Set<number>>();
     const scanRewards = (name: string, potential_rewards?: (PotentialRewardDTO | RewardDTO)[]) => {
         if (!potential_rewards)
@@ -207,19 +156,15 @@ export async function loginSequence(onProgress: (description: string) => void) {
             }
         });
     };
-    const apiref = STTApi;
-
     STTApi.playerData.character.factions.forEach(f => {
         rewardItemIds.set(f.name, new Set());
         scanRewards(f.name, f.shuttle_mission_rewards);
     });
 
-    total += STTApi.playerData.character.items.length;
-    //current = 0;
-    onProgress('Caching item images... (' + current + '/' + total + ')');
-    //iconPromises = [];
+    onProgress('Loading...');
     STTApi.items = [];
-    for (let itemDTO of STTApi.playerData.character.items) {
+    for (const itemDTO of STTApi.playerData.character.items) {
+        onProgress('Loading Inventory Images...');
         try {
             let item : ItemData = {
                 ...itemDTO,
@@ -235,26 +180,14 @@ export async function loginSequence(onProgress: (description: string) => void) {
             //itemDTO.symbol = itemDTO.icon.file.replace("/items", "").split("/")[2];
 
             if (item.iconUrl === '') {
-                iconPromises.push(STTApi.imageProvider.getItemImageUrl(item, item.id).then((found) => {
-                    current++;
-                    // if (current % 10 == 0)
-                    //     onProgress('Caching item images... (' + current + '/' + total + ')');
-                    //let foundDTO = STTApi.playerData.character.items.find((item) => item.id === found.id);
-                    let foundItem = STTApi.items.find((item) => item.id === found.id);
-                    if (foundItem) {
-                        foundItem.iconUrl = found.url || '';
-                    }
-                }).catch((error) => { /*console.warn(error);*/ }));
-            } else {
-                // Image is already cached
-
-                current++;
-                // If we leave this in, stupid React will re-render everything, even though we're in a tight synchronous loop and no one gets to see the updated value anyway
-                //onProgress('Caching item images... (' + current++ + '/' + total + ')');
+                await updateProgress('Loading Item Images...', item.name,
+                    STTApi.imageProvider.getItemImageUrl(item, item.id)
+                        .then(found => { item.iconUrl = found.url || ''; }));
             }
 
+            onProgress('Loading Inventory Images...');
             item.cadetable = '';
-            let cadetSources = STTApi.getEquipmentManager().getCadetableItems().get(item.archetype_id);
+            const cadetSources = STTApi.getEquipmentManager().getCadetableItems().get(item.archetype_id);
             if (cadetSources) {
                 cadetSources.forEach(v => {
                     let name = v.mission.episode_title;
@@ -271,14 +204,13 @@ export async function loginSequence(onProgress: (description: string) => void) {
                         item.cadetable += ' | ';
                     item.cadetable += name + ' : ' + questIndex + ' : ' + questName + ' : ' + CONFIG.MASTERY_LEVELS[mastery].name;
 
-                    const costDetails = getMissionCostDetails(v.quest.id, mastery);
-
+                    // const costDetails = getMissionCostDetails(v.quest.id, mastery);
                     item.sources.push({
                         chance: 0,
                         quotient: 0,
-                        title: name + ' #' + questIndex + ' ' + CONFIG.MASTERY_LEVELS[mastery].name + ' (' + questName + ')' ,//+
-                           // '[' + entry.chance_grade + '/5 @ ' +
-                            //costDetails.cost + ' Chrons (q=' + (Math.round(entry.energy_quotient * 100) / 100) + ')]',
+                        title: name + ' #' + questIndex + ' ' + CONFIG.MASTERY_LEVELS[mastery].name + ' (' + questName + ')',
+                            // + '[' + entry.chance_grade + '/5 @ ' +
+                            // costDetails.cost + ' Chrons (q=' + (Math.round(entry.energy_quotient * 100) / 100) + ')]',
                         type: 'cadet',
                         mission: v.mission,
                         quest: v.quest,
@@ -295,9 +227,9 @@ export async function loginSequence(onProgress: (description: string) => void) {
                 n = iter.next();
             }
 
-            let archetype = STTApi.itemArchetypeCache.archetypes.find(a => a.id === item.archetype_id);
+            const archetype = STTApi.itemArchetypeCache.archetypes.find(a => a.id === item.archetype_id);
             if (archetype) {
-                let missions = archetype.item_sources.filter(e => e.type === 0 || e.type === 1 || e.type === 2);
+                const missions = archetype.item_sources.filter(e => e.type === 0 || e.type === 1 || e.type === 2);
                 const sources = missions.map((entry, idx) => {
                     const chance = entry.chance_grade / 5;
                     const quotient = entry.energy_quotient;
@@ -326,13 +258,8 @@ export async function loginSequence(onProgress: (description: string) => void) {
                     };
                 });
                 const filtered = sources.filter(s => s.title !== '');
-                filtered.forEach(src => item.sources.push(src))
-                //console.log("  Item sources: " + filtered);
+                filtered.forEach(src => item.sources.push(src));
             }
-            else {
-                //console.log("  Item archetype not found");
-            }
-
             //console.log('Item: ' + item.name + ' rarity:' + item.rarity + ' sym:' + item.symbol + ' aid:' + item.archetype_id + ' iid:' + item.id
             // + (' srcs:' + item.sources.map((src, idx, all) => src.title +'-' + src.type + (idx === all.length - 1 ? '' : ', '))));
         }
@@ -341,44 +268,19 @@ export async function loginSequence(onProgress: (description: string) => void) {
         }
     }
 
-    onProgress('Caching item images... (' + current + '/' + total + ')');
-
-    //await Promise.all(iconPromises);
-
-    onProgress('Caching faction images...');
-
-    total += STTApi.playerData.character.factions.length;
-    //current = 0;
-    onProgress('Caching faction images... (' + current + '/' + total + ')');
-    //iconPromises = [];
+    onProgress('Loading...');
     for (let faction of STTApi.playerData.character.factions) {
         faction.iconUrl = STTApi.imageProvider.getCached(faction);
 
         if (!faction.iconUrl || faction.iconUrl === '') {
-            iconPromises.push(STTApi.imageProvider.getFactionImageUrl(faction, faction.id).then((found) => {
-                // onProgress('Caching faction images... (' + current++ + '/' + total + ')');
-                let faction = STTApi.playerData.character.factions.find((faction) => faction.id === found.id);
-                if (faction) {
-                    faction.iconUrl = found.url;
-                }
-            }).catch((error: any) => { /*console.warn(error);*/ }));
-        } else {
-            // Image is already cached
-
-            current++;
-            // If we leave this in, stupid React will re-render everything, even though we're in a tight synchronous loop and no one gets to see the updated value anyway
-            //onProgress('Caching faction images... (' + current++ + '/' + total + ')');
+            await updateProgress('Loading Faction Image...', faction.name,
+                STTApi.imageProvider.getFactionImageUrl(faction, faction.id)
+                    .then(found => { faction.iconUrl = found.url; }));
         }
-
-        iconPromises.push(loadFactionStore(faction));
+        await updateProgress('Loading Faction Store Images...', '', loadFactionStore(faction));
     }
 
-    onProgress('Caching faction images... (' + current + '/' + total + ')');
-
-    //await Promise.all(iconPromises);
-
-    onProgress('Loading crew cache...');
-
+    onProgress('Compiling Crew Data...');
     try {
         STTApi.allcrew = buildCrewDataAllFromDatacore(STTApi.datacore ?? []);
     }
@@ -388,26 +290,17 @@ export async function loginSequence(onProgress: (description: string) => void) {
     }
 
     // Also load the avatars for crew not in the roster
+    onProgress('Loading...');
     for (let crew of STTApi.allcrew) {
         crew.iconUrl = STTApi.imageProvider.getCrewCached(crew, false);
         if (crew.iconUrl === '') {
-            iconPromises.push(STTApi.imageProvider.getCrewImageUrl(crew, false).then((found) => {
-                current++;
-                // if (current % 10 === 0) {
-                //     onProgress('Caching crew images... (' + current + '/' + total + ')');
-                // }
-                crew.iconUrl = found.url;
-            }).catch((error: any) => { /*console.warn(error);*/ }));
-        } else {
-            // Image is already cached
-
-            current++;
-            // If we leave this in, stupid React will re-render everything, even though we're in a tight synchronous loop and no one gets to see the updated value anyway
-            //onProgress('Caching crew images... (' + current++ + '/' + total + ')');
+            await updateProgress('Loading Supplemental Crew...', crew.name,
+                STTApi.imageProvider.getCrewImageUrl(crew, false)
+                    .then(found => { crew.iconUrl = found.url; }));
         }
     }
 
-    onProgress('Loading equipment...');
+    onProgress('Loading Equipment...');
     if (STTApi.inWebMode) {
         // In web mode we already augmented the itemarchetypes with whatever we had cached, just try to fix stuff up here
         fixupAllCrewIds();
@@ -420,63 +313,23 @@ export async function loginSequence(onProgress: (description: string) => void) {
         crew.archetypes = [];
     });
 
-    onProgress('Caching images...');
-
-    // Trick the UI into updating (yield)
-    await new Promise(resolve => setTimeout(resolve, 50));
-
-    total += STTApi.itemArchetypeCache.archetypes.length;
-    //current = 0;
-    onProgress('Caching equipment images... (' + current + '/' + total + ')');
-
-    //iconPromises = [];
+    onProgress('Loading...');
     for (let equipment of STTApi.itemArchetypeCache.archetypes) {
         equipment.iconUrl = STTApi.imageProvider.getCached(equipment);
         if (equipment.iconUrl === '') {
-            iconPromises.push(STTApi.imageProvider.getItemImageUrl(equipment, equipment.id).then((found) => {
-                current++;
-                // if (current % 10 == 0) {
-                //     onProgress('Caching equipment images... (' + current + '/' + total + ')');
-                // }
-                let item = STTApi.itemArchetypeCache.archetypes.find((item) => item.id === found.id);
-                if (item) {
-                    item.iconUrl = found.url;
-                }
-            }).catch((error) => { }));
-        } else {
-            // Image is already cached
-
-            current++;
-            // If we leave this in, stupid React will re-render everything, even though we're in a tight synchronous loop and no one gets to see the updated value anyway
-            //onProgress('Caching equipment images... (' + current++ + '/' + total + ')');
+            await updateProgress('Loading Equipment Images...', equipment.name,
+                STTApi.imageProvider.getItemImageUrl(equipment, equipment.id)
+                    .then(found => { equipment.iconUrl = found.url; }));
         }
     }
 
-    onProgress('Caching equipment images... (' + current + '/' + total + ')');
-
-    //await Promise.all(iconPromises);
-
-    total += Object.keys(CONFIG.SPRITES).length;
-    //current = 0;
-    onProgress('Caching misc images... (' + current + '/' + total + ')');
-    //iconPromises = [];
+    onProgress('Loading...');
     for (let sprite in CONFIG.SPRITES) {
         CONFIG.SPRITES[sprite].url = STTApi.imageProvider.getSpriteCached(CONFIG.SPRITES[sprite].asset, sprite);
         if (CONFIG.SPRITES[sprite].url === '') {
-            iconPromises.push(STTApi.imageProvider.getSprite(CONFIG.SPRITES[sprite].asset, sprite, sprite).then((found) => {
-                // onProgress('Caching misc images... (' + current++ + '/' + total + ')');
-                CONFIG.SPRITES[found.id].url = found.url;
-            }).catch((error: any) => { /*console.warn(error);*/ }));
-        } else {
-            // Image is already cached
-
-            current++;
-            // If we leave this in, stupid React will re-render everything, even though we're in a tight synchronous loop and no one gets to see the updated value anyway
-            //onProgress('Caching misc images... (' + current++ + '/' + total + ')');
+            await updateProgress('Loading Sprites...', sprite,
+                STTApi.imageProvider.getSprite(CONFIG.SPRITES[sprite].asset, sprite, sprite)
+                    .then(found => { CONFIG.SPRITES[found.id].url = found.url; }));
         }
     }
-
-    onProgress('Finishing up...');
-
-    await Promise.all(iconPromises);
 }
