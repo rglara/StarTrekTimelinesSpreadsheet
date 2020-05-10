@@ -1,3 +1,5 @@
+import Worker from 'worker-loader!./assetWorker';
+
 export class WorkerTask {
     data: ArrayBuffer;
     assetName: string | undefined;
@@ -17,7 +19,7 @@ export class WorkerThread {
     run(workerTask: WorkerTask): void {
         this.workerTask = workerTask;
         // create a new web worker
-        const worker: Worker = new this.parentPool.AssetWorker();
+        const worker = new Worker();
         worker.addEventListener('message', (message: any) => {
             this.workerTask.resolve(message.data);
             this.workerDone();
@@ -39,10 +41,8 @@ export class WorkerThread {
 export class WorkerPool {
     private workerQueue: WorkerThread[];
     private taskQueue: WorkerTask[];
-    AssetWorker: any;
 
     constructor(size: number) {
-        this.AssetWorker = require("worker-loader?name=assetWorker.js!./assetWorker");
         this.workerQueue = new Array<WorkerThread>();
         this.taskQueue = new Array<WorkerTask>();
 

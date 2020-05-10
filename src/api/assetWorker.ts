@@ -1,3 +1,5 @@
+const ctx: Worker = self as any;
+
 import { parseAssetBundle } from './unitiyfs-asset-parser';
 
 function parseFromBundle(data: any): any {
@@ -32,14 +34,14 @@ function parseFromBundle(data: any): any {
     }
 }
 
-self.addEventListener('message', (message: any) => {
+ctx.addEventListener('message', (message: any) => {
     let result = parseFromBundle(message.data);
 
     if (result && result.data && result.data.length > 0) {
-        (self as any).postMessage(result, [result.data.buffer]);
+        ctx.postMessage(result, [result.data.buffer]);
     }
     else {
-        (self as any).postMessage(result);
+        ctx.postMessage(result);
     }
 
     // close this worker

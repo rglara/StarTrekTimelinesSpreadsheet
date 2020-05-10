@@ -85,15 +85,17 @@ export class AssetImageProvider implements ImageProvider {
         }
 
         let data: any;
+        const urlPrefix = this.getAssetUrl(iconFile);
         try {
-            data = await STTApi.networkHelper.getRaw(this.getAssetUrl(iconFile) + '.sd', undefined);
+            data = await STTApi.networkHelper.getRaw(`${urlPrefix}.sd`, undefined);
         }
-        catch (err) {
+        catch (_err) {
             try {
-               // Most assets have the .sd extensions, a few have the .ld extension; this is available in asset_bundles but I can't extract that in JavaScript
-               data = await STTApi.networkHelper.getRaw(this.getAssetUrl(iconFile) + '.ld', undefined);
+               // Most assets have the .sd extensions, a few have the .ld extension;
+               // This is available in asset_bundles but I can't extract that in JavaScript
+               data = await STTApi.networkHelper.getRaw(`${urlPrefix}.ld`, undefined);
             }
-            catch (err2) {
+            catch (_err2) {
                return { id, url: undefined };
             }
         }
