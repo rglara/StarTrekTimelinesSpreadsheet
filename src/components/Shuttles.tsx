@@ -410,7 +410,7 @@ function buildSlotCalculator(bonusedRoster: CrewItem[], event: EventDTO | undefi
 				const isShared = (c.crew as any).crew_id === undefined;
 				c.text = `${c.crew.name} (${c.total})`;
 				if (isShared) {
-					c.content = <span style={{fontWeight:'bold'}}>{c.crew.name}{isShared ? ' - shared' : ''} <CrewSkills crew={c.crew as CrewData} useIcon={true} addScore={c.total} hideProf={true} /></span>;
+					c.content = <span>{c.crew.name}{isShared ? ' - shared' : ''} <CrewSkills crew={c.crew as CrewData} useIcon={true} addScore={c.total} hideProf={true} /></span>;
 				}
 				else {
 					c.content = <span>{c.crew.name} <CrewSkills crew={c.crew as CrewData} useIcon={true} addScore={c.total} hideProf={true} /></span>;

@@ -59,8 +59,12 @@ export const CrewSkills = (props: {
 			props.starBreakSpace ? <br/> : <>&nbsp;</>
 		}
 		{ Object.keys(CONFIG.SKILLS).map(s => {
+			// Don't show zero skill values
+			if (!crew.skills[s] || (crew.skills[s].core <= 0 && crew.skills[s].min <= 0)) {
+				return <span key={s} />;
+			}
 			// BorrowedCrewDTO and CrewDTO will have missing skills or unknown voy skills
-			if (!crew.skills[s] || crew.skills[s].voy === undefined || crew.skills[s].voy <= 0) {
+			if (props.asVoyScore && (crew.skills[s].voy === undefined || crew.skills[s].voy <= 0)) {
 				return <span key={s} />;
 			}
 			let wasFirstDash = firstDash;
