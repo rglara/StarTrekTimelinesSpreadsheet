@@ -3,64 +3,22 @@ import { Item, Label, Form } from 'semantic-ui-react';
 
 import STTApi, { CONFIG, formatTimeSeconds, CrewSkills } from '../api';
 import { CrewData, PlayerShuttleDTO, EventDTO,
-	EVENT_TYPES, BorrowedCrewDTO,
-	SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_OPENED,
+	EVENT_TYPES, SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_OPENED,
 	PlayerShuttleAdventureDTO, SHUTTLE_STATE_INPROGRESS } from '../api/DTO';
 import { DropdownButton, Dropdown } from 'react-bootstrap';
-
-interface CrewChoice {
-	slotIndex: number;
-	item?: CrewItem;
-	userSelect?: boolean;
-}
-
-interface ShuttleSelection {
-	calc: ShuttleCalc;
-	chosen: CrewChoice[];
-}
-
-interface ShuttleCalc {
-	challenge_rating: number;
-	shuttle: PlayerShuttleDTO;
-	chance: (crew: (CrewItem | undefined)[]) => number;
-	slots: ShuttleCalcSlot[];
-}
-
-interface ShuttleCalcSlot {
-	skillText: string;
-	slotIndex: number;
-	crewValue: (crew: CrewItem) => number;
-	bestCrew: CrewItem[];
-}
-
-interface CrewItem {
-	crew: CrewData | BorrowedCrewDTO;
-	skills: { [sk: string] : number };
-	total: number;
-
-	// These three are needed for the item to appear in a combo
-	text?: string;
-	content?: any;
-	value?: number;
-	image?: string;
-}
-
-function cid(c: CrewData | BorrowedCrewDTO) : number {
-	if ((c as CrewData).crew_id) {
-		return (c as CrewData).crew_id;
-	}
-	return c.id;
-}
+import { ShuttleSelection, ShuttleCalc, CrewItem, CrewChoice,
+	getBonusedRoster, computeCrew, cid, ShuttleCalcSlot
+} from '../api/ShuttleTools';
 
 export const Shuttles = (props: {
 	onTabSwitch?: (newTab: string) => void;
 }) => {
 	const [userChoices, setUserChoices] = React.useState<ShuttleSelection[]>([]);
 	const [selections, setSelections] = React.useState<ShuttleSelection[]>([]);
-	const [computingNativeEstimate, setComputingNativeEstimate] = React.useState<boolean>(false);
+	const [computingEstimate, setComputingEstimate] = React.useState<boolean>(false);
 
 	React.useEffect(() => {
-		selectCrew(true);
+		selectCrew('first');
 	}, [userChoices]);
 
 	let event : EventDTO | undefined = undefined;
@@ -91,9 +49,9 @@ export const Shuttles = (props: {
 					You have no active shuttles. Open some shuttle missions in the game client
 				</div>}
 				{canUserSelect && <div>
-					<Form.Button primary onClick={() => selectCrew(true)} disabled={false}>
+					<Form.Button primary onClick={() => selectCrew('best')} disabled={false}>
 						Calculate best crew selection
-						{computingNativeEstimate && <i className='spinner loading icon' />}
+						{computingEstimate && <i className='spinner loading icon' style={{marginLeft:'5px'}}/>}
 					</Form.Button>
 				</div>}
 				<Item.Group divided>{selections.sort((a, b) => a.calc.shuttle.expires_in - b.calc.shuttle.expires_in).map(sel =>
@@ -108,16 +66,27 @@ export const Shuttles = (props: {
 		</div>
 	);
 
-	async function selectCrew(fillEmpty: boolean) {
-		setComputingNativeEstimate(true);
+	async function selectCrew(fillStrategy: string) {
+		setComputingEstimate(true);
 		const bonusedRoster = getBonusedRoster(event?.content.shuttles?.[0].crew_bonuses ?? {});
 		const shuttleCalcs: ShuttleCalc[] = buildSlotCalculator(bonusedRoster, event, activeShuttleAdventures);
-		let sels = await computeCrew(bonusedRoster, shuttleCalcs, userChoices, fillEmpty);
-		setSelections(sels);
-		setComputingNativeEstimate(false);
+		if (fillStrategy === 'best') {
+			//FIXME: need a better way to fork this to background
+			setTimeout(async () => {
+				let sels = await computeCrew(bonusedRoster, shuttleCalcs, userChoices)
+				//let sels = await computeCrewFirst(bonusedRoster, shuttleCalcs, userChoices, fillStrategy);
+				setSelections(sels);
+				setComputingEstimate(false);
+			}, 10)
+		} else {
+			let sels = await computeCrewFirst(bonusedRoster, shuttleCalcs, userChoices, fillStrategy);
+			setSelections(sels);
+			setComputingEstimate(false);
+		}
 	}
 
-	async function computeCrew(bonusedRoster: CrewItem[], shuttleCalcs: ShuttleCalc[], userChoices: ShuttleSelection[], fillEmpty: boolean): Promise<ShuttleSelection[]> {
+	// Naive computation of best crew - take the first unused option for each shuttle slot ordered by skill value
+	async function computeCrewFirst(bonusedRoster: CrewItem[], shuttleCalcs: ShuttleCalc[], userChoices: ShuttleSelection[], fillStrategy: string): Promise<ShuttleSelection[]> {
 		let sels: ShuttleSelection[] = [];
 
 		let usedCrew: Set<number> = new Set<number>();
@@ -157,7 +126,7 @@ export const Shuttles = (props: {
 				else {
 					let item: CrewItem | undefined = undefined;
 
-					if (fillEmpty) {
+					if (fillStrategy === 'first') {
 						// Grab the first unused crew by score
 						item = scs.bestCrew.filter(c => !usedCrew.has(cid(c.crew))).shift();
 						if (item) {
@@ -314,58 +283,6 @@ const ShuttleSeatSelector = (props:{
 			</Dropdown>
 		}
 	</div>
-}
-
-function getBonusedRoster(crew_bonuses: { [crew_symbol: string]: number; }): CrewItem[] {
-	let rv: CrewItem[] = [];
-	STTApi.roster.forEach(crew => {
-		if (crew.buyback || crew.frozen > 0) {
-			return;
-		}
-
-		const foundBonus = crew_bonuses[crew.symbol] ?? 1;
-
-		let skills: { [sk: string]: number } = {};
-		for (let sk in CONFIG.SKILLS) {
-			skills[sk] = crew.skills[sk].core * foundBonus;
-		}
-
-		rv.push({
-			crew: crew,
-			skills,
-			total: 0
-		});
-	});
-
-	// These don't show up until you have already used them
-	let brws = STTApi.playerData.character.crew_borrows ?? [];
-	if (brws.length === 0) {
-		// These are synchronized, but don't have "active*" fields
-		brws = STTApi.borrowableCrew ?? [];
-	}
-	if (brws) {
-		brws.forEach(crew => {
-			const foundBonus = crew_bonuses[crew.symbol] ?? 1;
-
-			let skills: { [sk: string]: number } = {};
-			for (let sk in CONFIG.SKILLS) {
-				// borrowed crew does not have all skills filled like CrewData does
-				if (!crew.skills[sk]) {
-					skills[sk] = 0;
-				}
-				else {
-					skills[sk] = crew.skills[sk].core * foundBonus;
-				}
-			}
-
-			rv.push({
-				crew: crew,
-				skills,
-				total: 0
-			});
-		});
-	}
-	return rv;
 }
 
 function buildSlotCalculator(bonusedRoster: CrewItem[], event: EventDTO | undefined, activeShuttleAdventures: PlayerShuttleAdventureDTO[]): ShuttleCalc[] {
