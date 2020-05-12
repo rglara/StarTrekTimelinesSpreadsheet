@@ -336,7 +336,7 @@ export const FleetDetails = (props: {}) => {
 		// 	member.currentShip = memberData.character.current_ship.name;
 		// }));
 	});
-	Promise.all(iconPromises).then(() => forceUpdate(0));
+	Promise.all(iconPromises).then(() => forceUpdate({}));
 
 // #!if ENV === 'electron'
 	loginPubNub().then(data => {

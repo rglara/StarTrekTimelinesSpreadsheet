@@ -2,12 +2,16 @@ function isObject(item: any): boolean {
     return (item && typeof item === 'object' && !Array.isArray(item));
 }
 
-export function mergeDeep(target: any, ...sources: any[]): any {
-    if (!sources.length) return target;
-    const source = sources.shift();
+export function mergeDeep(target: any, source: any | undefined, skipMerge?: string[]): any {
+    if (!source) {
+        return target;
+    }
 
     if (isObject(target) && isObject(source)) {
         for (const key in source) {
+            if (skipMerge && skipMerge.includes(key)) {
+                continue;
+            }
             if (isObject(source[key])) {
                 if (!target[key]) Object.assign(target, { [key]: {} });
                 mergeDeep(target[key], source[key]);
@@ -35,5 +39,5 @@ export function mergeDeep(target: any, ...sources: any[]): any {
         }
     }
 
-    return mergeDeep(target, ...sources);
+    return target;
 }

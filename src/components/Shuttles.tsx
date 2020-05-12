@@ -4,17 +4,19 @@ import { Item, Label, Form } from 'semantic-ui-react';
 import STTApi, { CONFIG, formatTimeSeconds, CrewSkills } from '../api';
 import { CrewData, PlayerShuttleDTO, EventDTO,
 	EVENT_TYPES, SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_OPENED,
-	PlayerShuttleAdventureDTO, SHUTTLE_STATE_INPROGRESS } from '../api/DTO';
+	PlayerShuttleAdventureDTO, SHUTTLE_STATE_INPROGRESS, BorrowedCrewDTO } from '../api/DTO';
 import { DropdownButton, Dropdown } from 'react-bootstrap';
 import { ShuttleSelection, ShuttleCalc, CrewItem, CrewChoice,
-	getBonusedRoster, computeCrew, cid, ShuttleCalcSlot
+	getBonusedRoster, computeCrew, cid, ShuttleCalcSlot, shuttleStart
 } from '../api/ShuttleTools';
 
 export const Shuttles = (props: {
 	onTabSwitch?: (newTab: string) => void;
 }) => {
+	const [, forceUpdate] = React.useState();
 	const [userChoices, setUserChoices] = React.useState<ShuttleSelection[]>([]);
 	const [selections, setSelections] = React.useState<ShuttleSelection[]>([]);
+	const [selType, setSelType] = React.useState<string | undefined>();
 	const [computingEstimate, setComputingEstimate] = React.useState<boolean>(false);
 
 	React.useEffect(() => {
@@ -53,6 +55,7 @@ export const Shuttles = (props: {
 						Calculate best crew selection
 						{computingEstimate && <i className='spinner loading icon' style={{marginLeft:'5px'}}/>}
 					</Form.Button>
+					{selType && <>Current selection: {selType}</>}
 				</div>}
 				<Item.Group divided>{selections.sort((a, b) => a.calc.shuttle.expires_in - b.calc.shuttle.expires_in).map(sel =>
 					<ShuttleItem
@@ -60,6 +63,7 @@ export const Shuttles = (props: {
 						selection={sel}
 						chooseSlot={chooseSlot}
 						challengeRating={sel.calc.challenge_rating}
+						refresh={() => forceUpdate({})}
 						resetSelections={resetSelections} />)}
 				</Item.Group>
 			</div>
@@ -71,6 +75,7 @@ export const Shuttles = (props: {
 		const bonusedRoster = getBonusedRoster(event?.content.shuttles?.[0].crew_bonuses ?? {});
 		const shuttleCalcs: ShuttleCalc[] = buildSlotCalculator(bonusedRoster, event, activeShuttleAdventures);
 		if (fillStrategy === 'best') {
+			setSelType("Best")
 			//FIXME: need a better way to fork this to background
 			setTimeout(async () => {
 				let sels = await computeCrew(bonusedRoster, shuttleCalcs, userChoices)
@@ -79,6 +84,7 @@ export const Shuttles = (props: {
 				setComputingEstimate(false);
 			}, 10)
 		} else {
+			setSelType("First Available")
 			let sels = await computeCrewFirst(bonusedRoster, shuttleCalcs, userChoices, fillStrategy);
 			setSelections(sels);
 			setComputingEstimate(false);
@@ -193,10 +199,20 @@ const ShuttleItem = (props: {
 	challengeRating: number;
 	chooseSlot: (calc: ShuttleCalc, calcSlot: ShuttleCalcSlot, value: number) => void;
 	resetSelections: (calc: ShuttleCalc) => void;
+	refresh: () => void;
 }) => {
 	const shuttle = props.selection.calc.shuttle;
 	let faction = STTApi.playerData.character.factions.find(faction => faction.id === shuttle.faction_id);
 	const chosenItems = props.selection.chosen.map(ch => ch.item);
+	const chance = props.selection.calc.chance(chosenItems);
+	const chosenCrew = chosenItems.filter(ch => ch !== undefined).map(ch => ch!.crew);
+	let canStart = true;
+	if (shuttle.state !== SHUTTLE_STATE_OPENED) {
+		canStart = false;
+	}
+	if (chosenCrew.length < props.selection.calc.slots.length) {
+		canStart = false;
+	}
 
 	return (
 		<Item key={shuttle.id}>
@@ -219,7 +235,7 @@ const ShuttleItem = (props: {
 							selection={props.selection}
 						/>;
 					})}
-					Chance:{' '}{props.selection.calc.chance(chosenItems)}{' '}%
+					Chance:{' '}{chance}{' '}%
 					{shuttle.state === SHUTTLE_STATE_OPENED &&
 						props.selection.chosen.map(cs => cs.userSelect ?? false).reduce((p, c) => p || c, false)
 						&&
@@ -228,10 +244,22 @@ const ShuttleItem = (props: {
 				</Item.Description>
 				<Item.Extra>
 					State: {SHUTTLE_STATE_NAMES[shuttle.state] || SHUTTLE_STATE_NAME_UNKNOWN}
+					{canStart && <Form.Button floated='right' onClick={start} content='Send Shuttle' />}
 				</Item.Extra>
 			</Item.Content>
 		</Item>
 	);
+
+	function start() {
+		shuttleStart(shuttle, chosenCrew, undefined, chance)
+			.then(() => {
+				props.refresh();
+			})
+			.catch(err => {
+				console.log(err);
+				//setError(err.message);
+			});
+	}
 }
 
 const ShuttleSeatSelector = (props:{

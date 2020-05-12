@@ -135,6 +135,14 @@ export default class CONFIG {
 		13: 'Useful loot' // ?
 	};
 
+	static readonly ITEM_ARCHETYPE_SOURCE_TYPE: { [index:number]:string } = {
+		0: 'disputes',
+		1: 'faction transmission',
+		2: 'ship battle',
+		3: 'dispute crit reward',
+		// others?
+	}
+
 	static readonly CURRENCIES: { [type: string]: { name: string, icon: string } } = {
 		premium_earnable: {
 			name: 'merits',

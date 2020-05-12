@@ -653,6 +653,7 @@ export class STTApiClass {
 				if (data.character) {
 					this._playerData!.player!.character = mergeDeep(this._playerData!.player!.character, data.character);
 					this.itemRecount();
+					await this.refreshRoster();
 				}
 
 				if (data.event) {
@@ -661,13 +662,13 @@ export class STTApiClass {
 					}
 				}
 
-                if (data.shuttle) {
-                    this._playerData!.player!.character.shuttle_adventures.forEach((adv: PlayerShuttleAdventureDTO) => {
-                        if (adv.shuttles[0].id === data.shuttle.id) {
-                            adv.shuttles[0] = mergeDeep(adv.shuttles[0], data.shuttle);
-                        }
-                    });
-                }
+				if (data.shuttle) {
+					 this._playerData!.player!.character.shuttle_adventures.forEach((adv: PlayerShuttleAdventureDTO) => {
+						  if (adv.shuttles[0].id === data.shuttle.id) {
+								adv.shuttles[0] = mergeDeep(adv.shuttles[0], data.shuttle, ['slots','rewards']);
+						  }
+					 });
+				}
 			} else if (data.action === 'delete') {
 				// TODO
 				// For example, data.character.items, array with objects with just the id property in them

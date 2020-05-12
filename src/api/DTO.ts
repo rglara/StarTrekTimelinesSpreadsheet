@@ -1114,7 +1114,8 @@ export interface ItemArchetypeSourceDTO {
    mission: number;
    name: string;
    place: string;
-   type: number; // 0: disputes, 1: faction transmission, 2: ship battle, 3: dispute crit reward; others?
+   /** See CONFIG.ITEM_ARCHETYPE_SOURCE_TYPE */
+   type: number;
 }
 
 export interface ItemDTO {
@@ -1127,6 +1128,7 @@ export interface ItemDTO {
    quantity: number;
    rarity: number;
    symbol: string;
+   /** See CONFIG.REWARDS_ITEM_TYPE */
    type: number;
 }
 
