@@ -10,11 +10,11 @@ Validating the features of the tool with a wide variety of user profiles (with o
 
 ## Submitting changes
 
-Please send a [GitHub Pull Request](https://github.com/IAmPicard/StarTrekTimelinesSpreadsheet/pull/new/master) with a clear list of what you've done (read more about [pull requests](https://help.github.com/articles/about-pull-requests/)).
+Please send a GitHub Pull Request with a clear list of what you've done (read more about [pull requests](https://help.github.com/articles/about-pull-requests/)).
 
 Particularly looking for folks with frontend (HTML / CSS) experience.
 
-*Note:* I will not approve pull requests that automate any part of the game play. Not only would that be a violation of [Disruptor Beam's TOS](https://www.disruptorbeam.com/tos/), it would also enable cheating which I don't condone. Firstly, I'm a player of Star Trek Timelines and wand to enjoy the game as its authors intended for it to be enjoyed. Also, any feature that does not serve the primary purpose of helping with crew management will undergo heightened scrutiny.
+*Note:* I will not approve pull requests that automate any part of the game play. Not only would that be a violation of the game's terms of service, it would also enable cheating which I don't condone. Firstly, I'm a player of Star Trek Timelines and want to enjoy the game as its authors intended for it to be enjoyed.
 
 ## Statistics and algorithms
 

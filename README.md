@@ -1,11 +1,16 @@
 # Star Trek Timelines Spreadsheet Tool
-A tool to help with management of various parts of the Star Trek Timelines mobile game
+A companion tool to the Star Trek Timelines mobile game to help with management, add conveniences, and provide analysis of your crew, inventory, and activities.
 
-See also [https://www.disruptorbeam.com/games/star-trek-timelines], [https://stt.wiki/wiki/], [https://www.reddit.com/r/StarTrekTimelines/]
+See also
+* [https://www.tiltingpoint.com/games/star-trek-timelines/]
+* [https://stt.wiki/wiki/]
+* [https://www.reddit.com/r/StarTrekTimelines/]
 
 This started as a spreadsheet helper tool and grew into a standalone native application with a web deployment option.
 
 ## Project Status
+This project is a fork of the original, which is no longer available.
+
 In January 2019, the original developer and maintainer of this project known as **IAmPicard** ceased involvement in the tool and removed their resources from public access online. Unfortunate activity directed towards him led to this, including this statement on the site ([https://iampicard.com/]) before it was taken down:
 
 > <h1>Goodbye</h1>
@@ -47,7 +52,7 @@ In January 2019, the original developer and maintainer of this project known as 
 > <p>Thank you for your support!</p>
 > <p>-- IAmPicard 🖖</p>
 
-This git repository contains the last state of that tool as well as some further modifications. The modifications started as minor
+This git repository contains the last state of that tool as well as many further modifications. The modifications started as minor
 improvements as well as changes to allow it to continue to function, and have grown to be more substantial and include new features such as aids with weekly events. I have no intention of publishing a web version since I don't have the resources
 or desire to get into the same situation as the original author.
 
@@ -56,12 +61,12 @@ I encourage you to only use a version of the tool from a trusted source (such as
 
 ## Notes
 
-> :exclamation: **HELP WANTED** :exclamation: Are you a developer? Do you love Star Trek Timelines and wish this tool could be improved? I need your help, I can't keep up with maintaining and adding new features to the tool by myself! Please get in touch with me, or fork the repo and start playing with the code. Look in the issue list for inspiration on a needed fix / feature. :thumbsup:
+> :exclamation: **HELP WANTED** :exclamation: If you enjoy Star Trek Timelines and wish this tool could be improved, I could use your help. Send pull requests, open tickets, or offer other support as you are able.
 
-**NOTE** This tool does not automate any part of the game play with the purpose of cheating or creating an unfair advantage; its main purpose is to function as a management tool to help players organize their crew and to add utility where the game is lacking (such as inventory management).
+**NOTE** This tool does not automate any part of the game play with the purpose of cheating or creating an unfair advantage; its purpose is to function as a tool for management, convenience, and analysis to help players organize their crew and to add utility where the game is lacking (such as inventory management).
 
 **DISCLAIMER** This tool is provided "as is", without warranty of any kind. Use at your own risk!
-It should be understood that *Star Trek Timelines* content and materials are trademarks and copyrights of [Disruptor Beam, Inc.](https://www.disruptorbeam.com/tos/) or its licensors. All rights reserved. This tool is neither endorsed by nor affiliated with Disruptor Beam, Inc. ( [more](/docs/DBSupport.png) )
+It should be understood that *Star Trek Timelines* content and materials are trademarks and copyrights of [Tilting Point, Inc.](https://www.tiltingpoint.com/) or its licensors. All rights reserved. This tool is neither endorsed by nor affiliated with Tilting Point, Inc. (or the previous developer, Disruptor Beam, Inc. [more](/docs/DBSupport.png) )
 
 ## Install and run the tool
 
@@ -73,61 +78,68 @@ However, if you're only interested in installing and running the tool, head on t
 
 ### Summary Page
 
-![Screenshot tool](/docs/homepage.png "Homepage screenshot")
-
-The first tab shows summary information, including your player name, DBID, and messages of the day from DB or your fleet.
+The first tab shows summary information, including your player name, DBID, and messages of the day from the devs or your fleet.
 
 Notable features:
 * Voyage status - run time, next dilemma time, worst-case estimate of failure
 * Gauntlet status - next crew refresh time, gauntlet end time
 * Shuttle status - shuttle return time, unused shuttle count
-* Cadet ticket usage
-* Inventory max check
-* Replicator daily use check
+* Daily mission completion status (individual and fleet)
+* Inventory max check and Replicator daily use check
 * Event status - event pending or started
+
+![Screenshot tool](/docs/homepage.png "Homepage screenshot")
 
 ### Crew management
 
-![Screenshot tool](/docs/mac-crew.png "Tool screenshot")
-
-On the crew management main page you can sort by various fields, (un)group by rarity as well as export the data in Excel, CSV, JSON or HTML formats.
+On the crew management main page you can sort by various fields, group by rarity as well as export the data as Excel or CSV.
 
 Notable features:
 * Show detail columns for "Base", "Gauntlet" (proficiency), or "Voyage" (base + proficiency average)
-* Show "big book" tier
+* Show "big book" tier and whether the crew is available in the portal
 * Show "value" - occurrences of this crew in the top ten of various categories among your other crew
 * Show gauntlet score (proficiency sum), gauntlet global rank, voyage score, voyage global rank
 * Link to click to open in [datacore.app]
 * Hover to see equipment and other details; click equipment icon in hover to replicate
 
+![Screenshot tool](/docs/page_crew_base.png "Crew Base Stats")
+![Screenshot tool](/docs/page_crew_gaunt.png "Crew Gauntlet Stats")
+![Screenshot tool](/docs/page_crew_voy.png "Crew Voyage Stats")
+
 ### Voyage
-
-![Screenshot Voyage](/docs/mac-voyage-calculation.png "Voyage screenshot")
-
-![Screenshot Voyage](/docs/mac-voyage-log.png "Voyage log screenshot")
 
 You can calculate best crew for a voyage, as well as monitor the current voyage.
 
 Notable features:
-* Calculate best crew for the next voyage, automatically excluding event bonus crew or manually selecting crew
-* Monitor current voyage log and estimate time remaining for current voyage
+* Calculate best crew for the next voyage
+  * Automatically exclude event bonus crew
+  * Manually exclude or select crew
+  * Uses a native C++ implementation with WASM for improved performance
+* Monitor current voyage log and see estimated time remaining for current voyage
 * Perform voyage dilemmas or recall the voyage
 * Calculate and export best crew for all voyage pairs
 * Export voyage log and statistics
 
+![Screenshot Voyage](/docs/page_voy_select.png "Voyage screenshot")
+
+![Screenshot Voyage](/docs/page_voy_log.png "Voyage log screenshot")
+
 ### Gauntlet
+
+Run gauntlet battles with a helpful UI
+
+Notable features:
+* Avoids excessive UI frills for quicker battles
+* Display all available gauntlet matchups with chance to beat listed opponent
+  * Display fleetmates distinctly from other opponents
+* Display all gauntlet crew selections and current status (battles fought, disabled) and allow revive/restore
+* Display last gauntlet match details (win/loss, crits, chance to win, last win reward)
+* Recommendation mode to help select crew to use in your next gauntlet (if you didn't already start it).
+  * This algorithm could use some additional input from contributors.
 
 ![Screenshot Gauntlet Round](/docs/mac-gauntlet.png "Gauntlet Round screenshot")
 
-In this tab you can get run the gauntlet battles without excessive UI frills and with computed odds to beat listed opponents. There are also recommendations for which crew to use in your next gauntlet (if you didn't already start it). Note that the algorithm could use some additional input from contributors.
-
 ![Screenshot Gauntlet](/docs/Screenshot-Gauntlet.png "Gauntlet screenshot")
-
-Notable features:
-* Compute recommended gauntlet crew
-* Display all gauntlet crew selections and current status (battles fought, disabled) and allow revive/restore
-* Display last gauntlet match details (win/loss, crits, chance to win, last win reward)
-* Display all available gauntlet matchups with chance to win
 
 ### Event details
 
@@ -140,44 +152,58 @@ Notable features:
 * Skirmish events show crew ship skills for event bonus crew
 * Expedition events show bonus crew
 
-### Item management
+![Screenshot Shuttle Event](/docs/page_event_sh.png "Shuttle Event screenshot")
 
-![Screenshot Items](/docs/mac-items.png "Items screenshot")
+### Item management
 
 This tab lists out all the items you currently have, along with their quantity and type.
 
 Notable features
-* Source column displays count of missions that provide the item and hover shows all mission details
+* *Source* column displays count of missions that provide the item and hover shows all mission details
 * Cadet and faction details show whether the item is available via cadet mission or faction shuttle
+* Click an item icon to replicate
+
+![Screenshot Items](/docs/page_item_sources.png "Items screenshot")
 
 ### Item Replication
 
 Select an item from the item management view (or other places) to replicate an item without having to dig around in a crew's unequipped item construction tree. Easily select unneeded ship schematics, experience trainers, replicator rations, or sort through items by name and quantity.
 
-### Ship management
+![Screenshot Items](/docs/page_item_repl.png "Items screenshot")
 
-![Screenshot Ships](/docs/mac-ships.png "Ships screenshot")
+### Ship management
 
 This tab lists out all the ships you currently have, along with their stats.
 
 Notable features
 * Sorting by "Level" also sorts by available schematics to allow more easily locating unneeded schematics
 
+![Screenshot Ships](/docs/mac-ships.png "Ships screenshot")
+
 ### Cryo Collections
 
 See what active, frozen, and unowned crew exist for each collection, and see your progress with collection milestones.
+
+![Screenshot Collections](/docs/page_collections.png "Cryo Collections screenshot")
 
 ### Top Crew
 
 See your top 10 crew in various categories, for only active crew or including frozen crew. Categories include your base values for the six skills, your proficiency values for the 16 gauntlet pairs, and your crew's global gauntlet ranks for the 16 gauntlet pairs
 
+![Screenshot Top Base](/docs/page_best_base.png "Top Base screenshot")
+![Screenshot Top Base](/docs/page_best_brank.png "Top Base screenshot")
+
 ### Crew Ship Abilities
 
 See a table of your crew's ship abilities, including activation type (Attack, Accuracy, or Evasion) and amount, activation action and amount, times for initialization, duration, and cooldown, charge details, and passive bonuses.
 
+![Screenshot Crew Ship Abilities](/docs/page_crewship.png "Crew Ship Ability screenshot")
+
 ### Factions
 
 See all faction stores, including potential shuttle rewards per faction and the ability to purchase store items. See also how many of each item for sale is in your inventory.
+
+![Screenshot Faction Stores](/docs/page_facstore.png "Faction Store screenshot")
 
 ### Missions
 
@@ -197,14 +223,14 @@ Basic information about your fleet such as a member list with their last online 
 Clone the repo and build with `node.js` v 10.
 
 Minimal set of steps required
-* `git clone https://github.com/IAmPicard/StarTrekTimelinesSpreadsheet.git`
+* `git clone https://github.com/paulbilnoski/StarTrekTimelinesSpreadsheet.git`
 * `cd StarTrekTimelinesSpreadsheet`
 * `npm install`
   * You may also need to `npm install electron` if you see the message `Error: Electron failed to install correctly, please delete node_modules/electron and try installing again`
 * `npm run dev`
 
 ##### Development
-* Run `npm run dev` to start webpack-dev-server. Electron will launch automatically after compilation.
+* Run `npm run dev` to start *webpack-dev-server*. Electron will launch automatically after compilation.
 
 If changes are made to the C++ native codebase under `/native`:
 * On UNIX systems, you can compile to see warnings/errors with the following (though it does not build for proper integration with the app)
@@ -219,23 +245,22 @@ If you delete `node_modules/stt*` to get back to a cleaner state, `npm install` 
 _You have two options, an automatic build or two manual steps_
 
 ###### One Shot
-* Set ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES=true and run "electron-builder" to build the native package
-* Run `npm run package` to have webpack compile your application into `dist/bundle.js` and `dist/index.html`, and then an electron-packager run will be triggered for the current platform/arch, outputting to `builds/`
+* Set `ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES=true` and run `electron-builder` to build the native package
+* Run `npm run package` to have webpack compile your application into `dist/bundle.js` and `dist/index.html`, and then an `electron-packager` run will be triggered for the current platform/arch, outputting to `builds/`
 
 ###### Manual
-_Recommendation: Update the "postpackage" script call in package.json to specify parameters as you choose and use the `npm run package` command instead of running these steps manually_
+_Recommendation: Update the "postpackage" script call in `package.json` to specify parameters as you choose and use the `npm run package` command instead of running these steps manually_
 * Run `npm run build` to have webpack compile and output your bundle to `dist/bundle.js`
-* Then you can call electron-packager directly with any commands you choose
+* Then you can call `electron-packager` directly with any commands you choose
 
-If you want to test the production build (In case you think Babili might be breaking something) after running `npm run build` you can then call `npm run prod`. This will cause electron to load off of the `dist/` build instead of looking for the webpack-dev-server instance. Electron will launch automatically after compilation.
+If you want to test the production build (In case you think Babili might be breaking something) after running `npm run build` you can then call `npm run prod`. This will cause electron to load off of the `dist/` build instead of looking for the *webpack-dev-server* instance. Electron will launch automatically after compilation.
 
 ## Privacy and security
 There is no server associated with this tool, all state stays on your device. Here's a comprehensive list of URLs that the tool accesses (all these URLs are accessed over a secure (HTTPS) connection):
-- https://thorium.disruptorbeam.com/ : this is the login URL for DisruptorBeam; your username / password or Facebook access token is sent to this URL in order to get an access_token. This URL is only accessed during login.
-- https://stt.disruptorbeam.com/ : this is the main Star Trek Timelines API endpoint URL, owned by DisruptorBeam.
-- https://api.github.com/repos/IAmPicard/StarTrekTimelinesSpreadsheet/releases : this URL contains the list of tool releases. It's accessed during application boot (and from the About tab) to check for new versions. No data is sent along with the request (it's just a GET).
+- https://thorium.disruptorbeam.com/ : this is the login URL for the game; your username / password or Facebook access token is sent to this URL in order to get an access_token. This URL is only accessed during login.
+- https://stt.disruptorbeam.com/ : this is the main Star Trek Timelines API endpoint URL, owned by ~~DisruptorBeam~~ TiltingPoint.
 - https://ptpb.pw : this URL is accessed when (and only if) you use the Share dialog to share your crew stats online.
 - https://www.facebook.com/v2.8/dialog/oauth : this URL is only accessed if you use the Facebook login option. It's used to obtain a facebook access token which is later sent to DB's server to get an access_token.
-- https://datacore.app/ : This URL is used to access the "big book" content such as subjective crew rankings
+- https://datacore.app/ : This URL is used to access the "big book" content such as subjective crew rankings and portal availability of crew
 
-The tool never stores your username or password and it only sends it to DisruptorBeam's official servers for login purposes. If you check the "Stay logged in" checkbox in the login dialog, the tool will store an access_token on your local device in the IndexedDB database.
+The tool never stores your username or password and it only sends it to the game's official servers for login purposes. If you check the "Stay logged in" checkbox in the login dialog, the tool will store an access_token on your local device in the IndexedDB database.
