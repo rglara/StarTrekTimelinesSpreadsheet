@@ -73,14 +73,11 @@ export async function reviveVoyage(voyageId: number): Promise<void> {
 }
 
 export async function resolveDilemma(voyageId: number, dilemmaId: number, index: number): Promise<void> {
-	let data = await STTApi.executePostRequest('voyage/resolve_dilemma', {
+	await STTApi.executePostRequestWithUpdates('voyage/resolve_dilemma', {
 		voyage_status_id: voyageId,
 		dilemma_id: dilemmaId,
 		resolution_index: index
 	});
-	if (!data) {
-		throw new Error('Invalid data for voyage resolve_dilemma!');
-	}
 }
 
 export async function startVoyage(
@@ -121,19 +118,7 @@ export async function startVoyage(
 		params.ship_name = shipName;
 	}
 
-	let data = await STTApi.executePostRequest('voyage/start', params);
-
-	if (data) {
-		//console.info("Started voyage");
-
-		data.forEach((action: any) => {
-			if (action.character && action.character.voyage) {
-				STTApi.playerData.character.voyage = action.character.voyage;
-			}
-		});
-	} else {
-		throw new Error('Invalid data for voyage start!');
-	}
+	await STTApi.executePostRequestWithUpdates('voyage/start', params);
 }
 
 export function bestVoyageShip(): {ship: ShipDTO, score: number }[] {
