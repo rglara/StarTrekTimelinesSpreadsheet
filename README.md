@@ -78,7 +78,7 @@ However, if you're only interested in installing and running the tool, head on t
 
 ### Summary Page
 
-The first tab shows summary information, including your player name, DBID, and messages of the day from the devs or your fleet.
+Shows summary information, including your player name, DBID, and messages of the day from the devs or your fleet.
 
 Notable features:
 * Voyage status - run time, next dilemma time, worst-case estimate of failure
@@ -90,17 +90,20 @@ Notable features:
 
 ![Screenshot tool](/docs/homepage.png "Homepage screenshot")
 
-### Crew management
+### Crew
 
-On the crew management main page you can sort by various fields, group by rarity as well as export the data as Excel or CSV.
+Sort by various fields, group by rarity as well as export the data as Excel or CSV.
 
 Notable features:
-* Show detail columns for "Base", "Gauntlet" (proficiency), or "Voyage" (base + proficiency average)
+* Show detail column sets for "Base", "Gauntlet" (proficiency), or "Voyage" (base + proficiency average)
 * Show "big book" tier and whether the crew is available in the portal
 * Show "value" - occurrences of this crew in the top ten of various categories among your other crew
 * Show gauntlet score (proficiency sum), gauntlet global rank, voyage score, voyage global rank
+* Powerful filtering
+  * Semicolon for "or", space for "and", allows queries like "dax pilot;mayw;kirk" to find all Dax that are also Pilots and all Mayweathers and Kirks
 * Link to click to open in [datacore.app]
 * Hover to see equipment and other details; click equipment icon in hover to replicate
+* Show count of frozen crew if multiple
 
 ![Screenshot tool](/docs/page_crew_base.png "Crew Base Stats")
 ![Screenshot tool](/docs/page_crew_gaunt.png "Crew Gauntlet Stats")
@@ -108,15 +111,21 @@ Notable features:
 
 ### Voyage
 
-You can calculate best crew for a voyage, as well as monitor the current voyage.
+Calculate "best" crew for a voyage, as well as monitor the current voyage.
 
 Notable features:
-* Calculate best crew for the next voyage
+* Calculate "best" crew for the next voyage
+  * Send crew on a voyage from the tool (game client must be restarted to see changes)
   * Automatically exclude event bonus crew
   * Manually exclude or select crew
   * Uses a native C++ implementation with WASM for improved performance
-* Monitor current voyage log and see estimated time remaining for current voyage
-* Perform voyage dilemmas or recall the voyage
+* Monitor current voyage log
+  * Estimated time remaining for current voyage
+  * Recalled voyage run time not including recall time
+  * Time of next dilemma and duration until next dilemma
+  * Estimated time of return if recalled now or recalled when antimatter runs low
+  * Listing of voyage rewards, including whether crew is not owned, frozen, or adds a fusion level
+* Perform voyage dilemmas or recall the voyage 
 * Calculate and export best crew for all voyage pairs
 * Export voyage log and statistics
 
@@ -141,39 +150,84 @@ Notable features:
 
 ![Screenshot Gauntlet](/docs/Screenshot-Gauntlet.png "Gauntlet screenshot")
 
-### Event details
+### Events
 
-This tab lists details according to the current event, or shows a message if no event is active or pending.
+Details of the current event, or shows a message if no event is active or pending.
 
 Notable features:
-* Displays event details per event type
-* Shuttle events show crew base skills including bonus values
-* Galaxy events show bonus crew, active missions, items used in all missions, current inventory amounts for the items, where to farm the items
+* Displays event details for all event types
+  * Victory points required for tiers in the top 100 players
+  * Your current VP and rank, and top threshold reward VP if not yet reached
+  * VP, rank, and VP difference for players above and below 10, 25, and 50 rank spots indicates effort required to move up or be moved down
+* Faction (Shuttle) events
+  * All crew base skills including bonus values, with frozen status and traits
+  * VP gained by next shuttle success
+* Supply (Galaxy) events
+  * Show bonus crew with bonus values
+  * Show all items to be crafted and which are a part of the 3 active missions
+    * Top three best crew to craft the item with a crit, chance to crit, and whether they are frozen
+  * Items used in all crafting missions and best drop rates in missions where they are farmed
+  * Current inventory amounts for the used items
+  * Missions where items can be farmed
 * Skirmish events show crew ship skills for event bonus crew
 * Expedition events show bonus crew
 
 ![Screenshot Shuttle Event](/docs/page_event_sh.png "Shuttle Event screenshot")
 
-### Item management
+### Items
 
-This tab lists out all the items you currently have, along with their quantity and type.
+Lists all items in your inventory, along with their quantity and type.
 
 Notable features
-* *Source* column displays count of missions that provide the item and hover shows all mission details
-* Cadet and faction details show whether the item is available via cadet mission or faction shuttle
+* Displays item icon, name, rarity, quantity, category, and other details
+* Powerful filtering
+  * Semicolon for "or", space for "and", allows queries like "clo pat;alc;augment transmission" to find all Clothing Patterns, Alcohol, and items returned from the Augment faction
+* *Source* column displays count of missions that provide the item - hover to show all mission details
+* Cadet and faction details show whether the item is available via cadet mission or faction shuttle mission
 * Click an item icon to replicate
+* Filter to items provided by ship battles (in "Settings") to help with skirmish farming
 
 ![Screenshot Items](/docs/page_item_sources.png "Items screenshot")
 
 ### Item Replication
 
-Select an item from the item management view (or other places) to replicate an item without having to dig around in a crew's unequipped item construction tree. Easily select unneeded ship schematics, experience trainers, replicator rations, or sort through items by name and quantity.
+Select an item to replicate to see the replicator dialog.
+
+Notable features
+* Easy to find an item to replicate
+  * Replicate an item in your inventory
+    * Restrictions exist for certain items that cannot be replicated
+  * Opened from
+    * Item List (click the icon)
+    * Crew page (click the item icon in a crew hover)
+  * In the game, it is difficult to replicate because you must dig around in a crew's unequipped item construction tree.
+* Easily select items from computed categories
+  * Ship schematics for ships at max level
+  * Experience trainers
+  * Replicator rations
+* Easily sort and page through items by name and quantity instead of relying on the icon
+  * In the game, it is difficult to see the item label in some cases
+  * Usually junk items are few in quantity, such as Dabo rewards
 
 ![Screenshot Items](/docs/page_item_repl.png "Items screenshot")
 
-### Ship management
+### Shuttles
 
-This tab lists out all the ships you currently have, along with their stats.
+Calculate "best" crew for a open shuttles, as well as monitor the current shuttle status.
+
+Notable features
+* See all active shuttles and current status (opened, in progress, completed)
+* Select crew for all shuttles and see chance of success
+* Compute a "best" assignment of available crew to shuttles
+  * Easy helper for Faction events to evenly distribute crew among open shuttle missions
+  * Pre-select certain crew and let it compute the remaining slots
+* Send shuttles from the tool (game client must be restarted to see changes)
+
+![Screenshot Shuttles](/docs/page_shuttles.png "Shuttles screenshot")
+
+### Ships
+
+Lists the ships you currently have, along with their stats.
 
 Notable features
 * Sorting by "Level" also sorts by available schematics to allow more easily locating unneeded schematics
@@ -188,7 +242,14 @@ See what active, frozen, and unowned crew exist for each collection, and see you
 
 ### Top Crew
 
-See your top 10 crew in various categories, for only active crew or including frozen crew. Categories include your base values for the six skills, your proficiency values for the 16 gauntlet pairs, and your crew's global gauntlet ranks for the 16 gauntlet pairs
+See your top 10 crew in various categories
+
+Notable features
+* Base values category for six skills
+* Proficiency values category for the 16 gauntlet pairs
+* Gauntlet global rank for the 16 gauntlet pairs
+* Shows *EQ* if missing equipment and *L* if not max level
+* Toggle inclusion of frozen crew (in "Settings")
 
 ![Screenshot Top Base](/docs/page_best_base.png "Top Base screenshot")
 ![Screenshot Top Base](/docs/page_best_brank.png "Top Base screenshot")
@@ -201,21 +262,30 @@ See a table of your crew's ship abilities, including activation type (Attack, Ac
 
 ### Factions
 
-See all faction stores, including potential shuttle rewards per faction and the ability to purchase store items. See also how many of each item for sale is in your inventory.
+See all faction stores
+
+Notable features
+* Purchase faction store items from the tool
+* See how many of each item for sale is in your inventory
+* See how many shuttle transmissions you have per faction
+* See potential shuttle rewards per faction
 
 ![Screenshot Faction Stores](/docs/page_facstore.png "Faction Store screenshot")
 
 ### Missions
 
-![Screenshot Missions](/docs/mac-missions.png "Missions screenshot")
+This tab gives an overview of all accepted missions and cadet challenges, along with individual requirements and player stats for each quest and challenge, as well as crew success rates for each challenge (node).
 
-This tab give an overview of all accepted missions and cadet challenged, along with individual requirements and player stats for each quest and challenge, as well as crew success rates for each challenge (node).
+![Screenshot Missions](/docs/mac-missions.png "Missions screenshot")
 
 ### Fleet
 
-![Screenshot Fleet](/docs/Screenshot-Fleet.png "Fleet screenshot")
+Notable features
+* Fleet message of the day
+* Fleet member list with name, level, squad, last online status, event rank
+* Fleet chat logs
 
-Basic information about your fleet such as a member list with their last online and event ranks and starbase rooms' status.
+![Screenshot Fleet](/docs/Screenshot-Fleet.png "Fleet screenshot")
 
 ## Development environment
 
