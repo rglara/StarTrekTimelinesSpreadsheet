@@ -17,8 +17,8 @@ export default class CONFIG {
 	static readonly URL_SERVER: string = 'https://stt.disruptorbeam.com/';
 	static readonly URL_CDN: string = 'https://stt-cdn-services.s3.amazonaws.com/';
 
-	// default client_id of the Steam Windows version of STT - used for login only
-	static readonly CLIENT_ID: string = '4fc852d7-d602-476a-a292-d243022a475d';
+	// default client_id of the Facebook client - used for login only
+	static readonly CLIENT_ID: string = '322613001274224';
 	static readonly CLIENT_API_VERSION: number = 15; //Need to revalidate DTOs in STTApi.ts when this changes
 	static readonly CLIENT_VERSION: string = '7.5.2';
 	static readonly CLIENT_PLATFORM: string = 'webgl';
