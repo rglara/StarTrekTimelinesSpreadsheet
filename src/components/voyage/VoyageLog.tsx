@@ -42,6 +42,7 @@ export const VoyageLog = (props:{}) => {
    React.useEffect(() => {
       reloadVoyageState();
    }, []);
+   const spriteClass = GetSpriteCssClass();
 
    if (showSpinner) {
       return (
@@ -61,7 +62,7 @@ export const VoyageLog = (props:{}) => {
       </Button>
    );
 
-   const rewardTableColumns = getColumns();
+   const rewardTableColumns = getColumns(spriteClass);
 
    let voyRunTime = 0;
    if (voyageExport && voyageExport.narrative) {
@@ -110,7 +111,7 @@ export const VoyageLog = (props:{}) => {
             <CollapsibleSection title={"Complete Captain's Log (" + Object.keys(indexedNarrative).length + ')'}>
             {Object.keys(indexedNarrative).map(key => {
                let v = indexedNarrative[+key];
-               return <VoyageLogEntry key={key} log={v} />;
+               return <VoyageLogEntry key={key} log={v} spriteClass={spriteClass} />;
             })}
             </CollapsibleSection>
          }
@@ -126,17 +127,16 @@ export const VoyageLog = (props:{}) => {
          <br />
       </div>;
 
-   function getColumns() {
-      const spriteClass = GetSpriteCssClass();
+   function getColumns(spriteClass: string) {
       return [
          {
             id: 'icon',
             Header: '',
-            minWidth: 30,
-            maxWidth: 30,
+            minWidth: 72,
+            maxWidth: 72,
             resizable: false,
             accessor: (row: any) => row.full_name,
-            Cell: (p: any) => <img className={spriteClass} src={p.original.iconUrl} height={25} />
+            Cell: (p: any) => <img className={`image-fit ${spriteClass}`} src={p.original.iconUrl} />
          },
          {
             id: 'quantity',
@@ -574,7 +574,6 @@ const VoyageState = (props: {
       return <div className='voyage-stats'></div>;
    }
    if (props.voyage.state === 'recalled') {
-      // TODO: FORMAT ME!!!
       return <div className='voyage-stats'>
          <VoyageStat label="Voyage Length" value={formatTimeSeconds(props.voyRunTime)} />
          <VoyageStat label="Time With Recall" value={formatTimeSeconds(props.voyage.voyage_duration)} />

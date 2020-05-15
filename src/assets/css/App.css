@@ -24,6 +24,10 @@
     object-fit: contain;
 }
 
+.collapsible-section {
+    margin-bottom: 20px;
+}
+
 .ui.label.big.group-header {
     display: inherit;
     text-align: center;
@@ -67,6 +71,11 @@
 .voyage-crew {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.voyage-crew .vc-complement,
+.voyage-crew .vc-skills {
     margin-bottom: 20px;
 }
 
@@ -101,6 +110,31 @@
 .voyage-rewards {
     max-width: 750px;
     margin-bottom: 20px;
+}
+
+.voyage-log {
+    border-left: solid 1px;
+    padding-left: 10px;
+    margin-bottom: 20px;
+    margin-left: 10px;
+}
+
+.voyage-log-entry {
+    display: grid;
+    grid-template-rows: auto;
+    grid-template-columns: auto 1fr;
+    column-gap: 10px;
+    min-height: 35px;
+}
+
+.vle-images {
+    justify-self: end;
+    align-self: center;
+}
+
+.vle-text {
+    justify-self: start;
+    align-self: center;
 }
 
 .recipe-item-span {

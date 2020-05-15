@@ -13,12 +13,19 @@ export const CollapsibleSection = (props:CollapsibleSectionProps) => {
 
 	let background = props.background ? props.background : 'none';
 
-	return (<div>
-		<h2><button type='button'
-			style={{ cursor: 'default', background: background, border: 'none' }}
-			onClick={() => setCollapsed(!isCollapsed)}>
-			<Icon iconName={isCollapsed ? 'ChevronDown' : 'ChevronUp'} className={ColorClassNames.neutralDark} />
-		</button> {props.title}
+	return (<div className='collapsible-section'>
+		<h2>
+			<button
+				type='button'
+				style={{ background: background, border: 'none', marginRight: '6px' }}
+				onClick={() => setCollapsed(!isCollapsed)}
+			>
+				<Icon
+					iconName={isCollapsed ? 'ChevronDown' : 'ChevronUp'}
+					className={ColorClassNames.neutralDark}
+				/>
+			</button>
+			{props.title}
 		</h2>
 		{!isCollapsed && props.children}
 	</div>);
