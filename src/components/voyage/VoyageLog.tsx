@@ -9,6 +9,7 @@ import { estimateVoyageRemaining, CalcRemainingOptions } from './voyageCalc';
 import { VoyageLogEntry } from './VoyageLogEntry';
 import { VoyageNarrativeDTO, VoyageDTO, CrewData, RewardDTO, VoyageExportData } from '../../api/DTO';
 import { CrewImageData } from '../images/ImageProvider';
+import { GetSpriteCssClass } from '../DarkThemeContext';
 
 type IndexedNarrative = {
    [index: number]: VoyageNarrativeDTO[]
@@ -68,7 +69,8 @@ export const VoyageLog = (props:{}) => {
    }
 
    return <div style={{ userSelect: 'initial' }}>
-         <h3>Voyage on the {shipName}</h3>
+         <h1>Voyage on the {shipName}</h1>
+         <hr/>
          <VoyageState
             voyage={voyage}
             estimatedMinutesLeft={estimatedMinutesLeft}
@@ -82,25 +84,27 @@ export const VoyageLog = (props:{}) => {
             exportNarrative={voyageExport?.narrative}
          />
 
-         {voyageRewards && <span>
-            <h3>{'Pending rewards (' + voyageRewards.length + ')'}</h3>
-            <div style={{ maxWidth: '750px'}}>
-               <ReactTable
-                  data={voyageRewards}
-                  columns={rewardTableColumns}
-                  sorted={sorted}
-                  onSortedChange={sorted => setSorted(sorted)}
-                  className='-striped -highlight'
-                  defaultPageSize={10}
-                  pageSize={10}
-                  showPagination={voyageRewards.length > 10}
-                  showPageSizeOptions={false}
-                  NextComponent={defaultButton}
-                  PreviousComponent={defaultButton}
-               />
+         {voyageRewards &&
+            <div className='voyage-rewards'>
+               <div className='ui label big group-header'>
+                  {'Pending rewards (' + voyageRewards.length + ')'}
+               </div>
+               <div>
+                  <ReactTable
+                     data={voyageRewards}
+                     columns={rewardTableColumns}
+                     sorted={sorted}
+                     onSortedChange={sorted => setSorted(sorted)}
+                     className='-striped -highlight'
+                     defaultPageSize={10}
+                     pageSize={10}
+                     showPagination={voyageRewards.length > 10}
+                     showPageSizeOptions={false}
+                     NextComponent={defaultButton}
+                     PreviousComponent={defaultButton}
+                  />
+               </div>
             </div>
-            <br />
-            </span>
          }
          {indexedNarrative &&
             <CollapsibleSection title={"Complete Captain's Log (" + Object.keys(indexedNarrative).length + ')'}>
@@ -123,6 +127,7 @@ export const VoyageLog = (props:{}) => {
       </div>;
 
    function getColumns() {
+      const spriteClass = GetSpriteCssClass();
       return [
          {
             id: 'icon',
@@ -131,13 +136,14 @@ export const VoyageLog = (props:{}) => {
             maxWidth: 30,
             resizable: false,
             accessor: (row: any) => row.full_name,
-            Cell: (p: any) => <img src={p.original.iconUrl} height={25} />
+            Cell: (p: any) => <img className={spriteClass} src={p.original.iconUrl} height={25} />
          },
          {
             id: 'quantity',
             Header: 'Quantity',
             minWidth: 50,
             maxWidth: 70,
+            style: { textAlign: 'center' },
             resizable: false,
             accessor: (row: any) => row.quantity
          },
@@ -477,67 +483,84 @@ const VoyageCurrentCrewSkills = (props: {
       });
    }
 
-   return <table style={{ borderSpacing: '0' }}>
-      <tbody>
-         <tr>
-            <td>
-               <section>
-                  <h4>Full crew complement and skill aggregates</h4>
-                  <ul>
-                     {
-                        // map by voyage description slots because they are sorted
-                        STTApi.playerData.character.voyage_descriptions[0].crew_slots.map((dslot) => {
-                           const slot = props.voyage.crew_slots.find(s => s.symbol === dslot.symbol)!;
-                           const crew = STTApi.roster.find(c => c.crew_id === slot.crew.id)!;
-                           return (
-                              <li key={slot.symbol}>
-                                 <span className='quest-mastery'>
-                                    <img src={CONFIG.SPRITES['icon_' + slot.skill].url} height={18} /> &nbsp;
-                                       {slot.name} &nbsp;{' '}
-                                    <Popup flowing
-                                       trigger={<span className='quest-mastery'>
-                                          <img src={crew.iconUrl} height={20} />{' '}
-                                          &nbsp; {crew.name}
-                                       </span>}
-                                       content={<CrewSkills crew={crew} useIcon={false} asVoyScore={true} addVoyTotal={true} />}
-                                       />
+   const spriteClass = GetSpriteCssClass();
+   return <div>
+      <div className='voyage-crew'>
+         <div className='vc-complement'>
+            <div className='ui label big group-header'>Crew Complement</div>
+            {
+               // map by voyage description slots because they are sorted
+               STTApi.playerData.character.voyage_descriptions[0].crew_slots.map((dslot) => {
+                  const slot = props.voyage.crew_slots.find(s => s.symbol === dslot.symbol)!;
+                  const crew = STTApi.roster.find(c => c.crew_id === slot.crew.id)!;
+                  return (
+                     <div className='vc-position' key={slot.symbol}>
+                        <div className='vcp-skill'>
+                           <img
+                              className={`image-fit ${spriteClass}`}
+                              src={CONFIG.SPRITES['icon_' + slot.skill].url}
+                           />
+                        </div>
+                        <div className='vcp-name'>{slot.name}</div>
+                        <div className='vcp-pic'>
+                           <Popup flowing
+                              trigger={<img className='image-fit' src={crew.iconUrl} />}
+                              content={<CrewSkills crew={crew} useIcon={false} asVoyScore={true} addVoyTotal={true} />}
+                           />
+                        </div>
+                        <div className='vcp-crewname'>{crew.name}</div>
+                     </div>
+                  );
+               })
+            }
+         </div>
+         <div className='vc-skills'>
+            <div className='ui label big group-header'>Skill Aggregates</div>
+            {
+               Object.keys(props.voyage.skill_aggregates).map(k => props.voyage.skill_aggregates[k]).map(skill => {
+                  let isPri = skill.skill == props.voyage.skills.primary_skill;
+                  let isSec = skill.skill == props.voyage.skills.secondary_skill;
+                  const ff = firstFailures[skill.skill] ?? -1;
+                  return (
+                     <div className='vc-skill' key={skill.skill}>
+                        <div className='vcs-icon'>
+                           <img
+                              className={`image-fit ${spriteClass}`}
+                              src={CONFIG.SPRITES['icon_' + skill.skill].url}
+                           />
+                        </div>
+                        <div className='vcs-range'>
+                           Core: {skill.core}
+                           <br/>
+                           Range: {skill.range_min}-{skill.range_max}
+                           <br/>
+                           Average: {skill.core + (skill.range_min + skill.range_max) / 2}
+                        </div>
+                        <div className='vcs-success'>
+                           <Popup
+                              trigger={
+                                 <span style={isPri ? { color: CONFIG.RARITIES[5].color } : isSec ? { color: CONFIG.RARITIES[1].color } : {}}>
+                                    <Icon name='thumbs up' />
+                                    {isPri ? '(Pri)' : isSec ? '(Sec)' : ''}
                                  </span>
-                              </li>
-                           );
-                        })}
-                  </ul>
-               </section>
-            </td>
-            <td>
-               <ul>
-                  {Object.keys(props.voyage.skill_aggregates).map(k => props.voyage.skill_aggregates[k]).map(skill => {
-                     let isPri = skill.skill == props.voyage.skills.primary_skill;
-                     let isSec = skill.skill == props.voyage.skills.secondary_skill;
-                     const ff = firstFailures[skill.skill] ?? -1;
-                     return (
-                        <li key={skill.skill}>
-                           <span className='quest-mastery'>
-                              <img src={CONFIG.SPRITES['icon_' + skill.skill].url} height={18} /> &nbsp; {skill.core} ({skill.range_min}-
-                                    {skill.range_max})&nbsp;[{skill.core + (skill.range_min + skill.range_max) / 2}]&nbsp;
-                                    {isPri ? ' (Pri) ' : ''}
-                              {isSec ? ' (Sec) ' : ''}
-                              &nbsp;
-                              <Popup
-                                 trigger={<span style={isPri ? { color: CONFIG.RARITIES[5].color } : isSec ? { color: CONFIG.RARITIES[1].color } : {}}><Icon name='thumbs up' /></span>}
-                                 content="Skill checks passed"
-                              /> {props.skillChecks && props.skillChecks![skill.skill].passed + '/' + props.skillChecks![skill.skill].att}
-                              {ff > 0 &&
-                                 <> - First Failure @ {formatTimeSeconds(ff * 20)}</>
                               }
-                           </span>
-                        </li>
-                     );
-                  })}
-               </ul>
-            </td>
-         </tr>
-      </tbody>
-   </table>;
+                              content={`${isPri ? 'Primary s' : isSec ? 'Secondary s' : 'S'}kill checks passed`}
+                           />
+                           <br/>
+                           {props.skillChecks && props.skillChecks![skill.skill].passed + ' of ' + props.skillChecks![skill.skill].att}
+                        </div>
+                        <div className='vcs-failure'>
+                           {ff > 0 &&
+                              <> First Failure<br/>@ {formatTimeSeconds(ff * 20)}</>
+                           }
+                        </div>
+                     </div>
+                  );
+               })
+            }
+         </div>
+      </div>
+   </div>;
 }
 
 const VoyageState = (props: {
@@ -548,10 +571,11 @@ const VoyageState = (props: {
    recall: () => void;
 }) => {
    if (!props.voyage) {
-      return <div />;
+      return <div className='voyage-stats'></div>;
    }
    if (props.voyage.state === 'recalled') {
-      return <div>
+      // TODO: FORMAT ME!!!
+      return <div className='voyage-stats'>
          <VoyageStat label="Voyage Length" value={formatTimeSeconds(props.voyRunTime)} />
          <VoyageStat label="Time With Recall" value={formatTimeSeconds(props.voyage.voyage_duration)} />
          <VoyageStat label="Recall Time Left" value={formatTimeSeconds(props.voyage.recall_time_left ?? 0)} />
@@ -561,7 +585,7 @@ const VoyageState = (props: {
       </div>;
    } else if (props.voyage.state === 'failed') {
       return (
-         <p>
+         <p className="voyage-failed">
             Voyage has run out of antimatter after {formatTimeSeconds(props.voyage.voyage_duration)} and it's waiting to be abandoned or
             replenished.
          </p>
@@ -570,7 +594,7 @@ const VoyageState = (props: {
       if (props.voyage.seconds_between_dilemmas === undefined ||
          props.voyage.seconds_since_last_dilemma === undefined ||
          props.estimatedMinutesLeft === undefined) {
-         return <div />;
+         return <div className='voyage-stats'></div>;
       }
       const getDilemmaChance = (estimatedMinutesLeft: number) => {
          let minEstimate = (estimatedMinutesLeft * 0.75 - 1) * 60;
@@ -592,12 +616,12 @@ const VoyageState = (props: {
       //const srcDil = STTApi.imageProvider.getCached({ icon: { file: 'images/icons/dilemma_icon' } });
 
       return (
-         <div>
-            <div>
+         <div className='voyage-stats'>
+            <div className='overview'>
                <VoyageStat label="Voyage Length" value={formatTimeSeconds(props.voyage.voyage_duration)} />
                <VoyageStat label="Antimatter" value={props.voyage.hp + ' / ' + props.voyage.max_hp} />
             </div>
-            <div>
+            <div className='dilemma'>
                {/* TODO: get this div to look better <div>
                   <img src={srcDil} height="30" />
                </div> */}
@@ -605,7 +629,7 @@ const VoyageState = (props: {
                <VoyageStat label="Dilemma At" value={Moment().add(props.voyage.seconds_between_dilemmas - props.voyage.seconds_since_last_dilemma, 's').format('h:mma')} />
                <VoyageStat label="Dilemma Reach Chance" value={getDilemmaChance(props.estimatedMinutesLeft) + '%'} />
             </div>
-            <div>
+            <div className='times'>
                <VoyageStat label="Est Length" value={formatTimeSeconds(props.voyage.voyage_duration + props.estimatedMinutesLeft * 60)} />
                <VoyageStat label="Est End In" value={formatTimeSeconds(props.estimatedMinutesLeft * 60)} />
                <VoyageStat label="Est End At" value={Moment().add(props.estimatedMinutesLeft, 'm').format('h:mma')} />
@@ -613,12 +637,11 @@ const VoyageState = (props: {
                <VoyageStat label="Est Recall End" value={Moment().add(props.estimatedMinutesLeft, 'm').add(estRecallDurationSec, 's').format('h:mma')} />
                {props.computingNativeEstimate && <i className='spinner loading icon' />}
             </div>
-
-            <div>
+            <div className='recall'>
                <VoyageStat label="Recall Time Now" value={formatTimeSeconds(recallNowDurationSec)} />
                <VoyageStat label="Recall End" value={Moment().add(recallNowDurationSec, 's').format('h:mma')} />
                <div className="ui statistic">
-                  <button className='ui mini button' onClick={() => props.recall()}>
+                  <button className='ui button' onClick={() => props.recall()}>
                      <i className='icon undo' />
                      Recall now
                   </button>
@@ -664,12 +687,11 @@ const VoyageDilemma = (props: {
 
    if (voy.dilemma && voy.dilemma.id && voy.dilemma.resolutions) {
       return (
-         <div>
-            <h3 key={0} className='ui top attached header'>
+         <div className='voyage-dilemma'>
+            <h2 key={0} className='ui top attached header'>
                Dilemma - <span dangerouslySetInnerHTML={{ __html: voy.dilemma.title }} />
-            </h3>
-            ,
-               <div key={1} className='ui center aligned inverted attached segment'>
+            </h2>
+            <div key={1} className='ui center aligned inverted attached segment'>
                <div>
                   <span dangerouslySetInnerHTML={{ __html: voy.dilemma.intro }} />
                </div>
