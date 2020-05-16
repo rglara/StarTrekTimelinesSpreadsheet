@@ -125,7 +125,7 @@ Notable features:
   * Time of next dilemma and duration until next dilemma
   * Estimated time of return if recalled now or recalled when antimatter runs low
   * Listing of voyage rewards, including whether crew is not owned, frozen, or adds a fusion level
-* Perform voyage dilemmas or recall the voyage 
+* Perform voyage dilemmas or recall the voyage
 * Calculate and export best crew for all voyage pairs
 * Export voyage log and statistics
 
@@ -163,16 +163,31 @@ Notable features:
   * All crew base skills including bonus values, with frozen status and traits
   * VP gained by next shuttle success
 * Supply (Galaxy) events
-  * Show bonus crew with bonus values
+  * Estimated number of craft turnings to complete to gain top reward threshold
+  * VP to be gained by turning in super rare event items gained by craft crits
+  * Show all bonus crew, including unowned crew
+  * Show crew with bonus values, whether they are on a shuttle or voyage, and other details
   * Show all items to be crafted and which are a part of the 3 active missions
     * Top three best crew to craft the item with a crit, chance to crit, and whether they are frozen
-  * Items used in all crafting missions and best drop rates in missions where they are farmed
-  * Current inventory amounts for the used items
-  * Missions where items can be farmed
+  * Items used in all crafting missions and lowest cost (average items dropped per chron spent) in missions where they are farmed
+  * Current inventory amounts of items used to craft event items
+  * Missions where crafting material items can be farmed
 * Skirmish events show crew ship skills for event bonus crew
 * Expedition events show bonus crew
 
+Shuttle Events:
 ![Screenshot Shuttle Event](/docs/page_event_sh.png "Shuttle Event screenshot")
+
+Galaxy events:
+![Screenshot Galaxy Event](/docs/page_event_gal.png "Galaxy Event screenshot")
+Galaxy event full bonus crew listing:
+![Screenshot Galaxy Event Bonus Crew](/docs/page_event_gal_bonus.png "Galaxy Event Bonus Crew screenshot")
+Galaxy event owned crew list:
+![Screenshot Galaxy Event Owned Crew](/docs/page_event_gal_crew.png "Galaxy Event Owned Crew screenshot")
+Galaxy event crafting details:
+![Screenshot Galaxy Event Crafting Details](/docs/page_event_gal_detail.png "Galaxy Event Crafting screenshot")
+Galaxy event farming list:
+![Screenshot Galaxy Event Farm List](/docs/page_event_gal_farm.png "Galaxy Event Farm List screenshot")
 
 ### Items
 
