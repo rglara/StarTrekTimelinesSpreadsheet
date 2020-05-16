@@ -9,6 +9,7 @@ import { estimateVoyageRemaining, CalcRemainingOptions } from './voyageCalc';
 import { VoyageLogEntry } from './VoyageLogEntry';
 import { VoyageNarrativeDTO, VoyageDTO, CrewData, RewardDTO, VoyageExportData } from '../../api/DTO';
 import { CrewImageData } from '../images/ImageProvider';
+import { VoyageSkillsReadout, Skill } from './VoyageSkillsReadout';
 import { GetSpriteCssClass } from '../DarkThemeContext';
 
 type IndexedNarrative = {
@@ -484,6 +485,34 @@ const VoyageCurrentCrewSkills = (props: {
    }
 
    const spriteClass = GetSpriteCssClass();
+   const successOutput = (sk: Skill) => {
+      let isPri = sk.skill === props.voyage.skills.primary_skill;
+      let isSec = sk.skill === props.voyage.skills.secondary_skill;
+      return (
+         <span>
+            <Popup
+               trigger={
+                  <span style={isPri ? { color: CONFIG.RARITIES[5].color } : isSec ? { color: CONFIG.RARITIES[1].color } : {}}>
+                     <Icon name='thumbs up' />
+                     {isPri ? '(Pri)' : isSec ? '(Sec)' : ''}
+                  </span>
+               }
+               content={`${isPri ? 'Primary s' : isSec ? 'Secondary s' : 'S'}kill checks passed`}
+            />
+            <br/>
+            {props.skillChecks && props.skillChecks![sk.skill].passed + ' of ' + props.skillChecks![sk.skill].att}
+         </span>
+      )
+   };
+   const failOutput = (sk: Skill) => {
+      const ff = firstFailures[sk.skill] ?? -1;
+      if (ff > 0) {
+         return (
+            <span>First Failure<br/>@ {formatTimeSeconds(ff * 20)}</span>
+         )
+      }
+      return <span></span>
+   };
    return <div>
       <div className='voyage-crew'>
          <div className='vc-complement'>
@@ -514,51 +543,11 @@ const VoyageCurrentCrewSkills = (props: {
                })
             }
          </div>
-         <div className='vc-skills'>
-            <div className='ui label big group-header'>Skill Aggregates</div>
-            {
-               Object.keys(props.voyage.skill_aggregates).map(k => props.voyage.skill_aggregates[k]).map(skill => {
-                  let isPri = skill.skill == props.voyage.skills.primary_skill;
-                  let isSec = skill.skill == props.voyage.skills.secondary_skill;
-                  const ff = firstFailures[skill.skill] ?? -1;
-                  return (
-                     <div className='vc-skill' key={skill.skill}>
-                        <div className='vcs-icon'>
-                           <img
-                              className={`image-fit ${spriteClass}`}
-                              src={CONFIG.SPRITES['icon_' + skill.skill].url}
-                           />
-                        </div>
-                        <div className='vcs-range'>
-                           Core: {skill.core}
-                           <br/>
-                           Range: {skill.range_min}-{skill.range_max}
-                           <br/>
-                           Average: {skill.core + (skill.range_min + skill.range_max) / 2}
-                        </div>
-                        <div className='vcs-success'>
-                           <Popup
-                              trigger={
-                                 <span style={isPri ? { color: CONFIG.RARITIES[5].color } : isSec ? { color: CONFIG.RARITIES[1].color } : {}}>
-                                    <Icon name='thumbs up' />
-                                    {isPri ? '(Pri)' : isSec ? '(Sec)' : ''}
-                                 </span>
-                              }
-                              content={`${isPri ? 'Primary s' : isSec ? 'Secondary s' : 'S'}kill checks passed`}
-                           />
-                           <br/>
-                           {props.skillChecks && props.skillChecks![skill.skill].passed + ' of ' + props.skillChecks![skill.skill].att}
-                        </div>
-                        <div className='vcs-failure'>
-                           {ff > 0 &&
-                              <> First Failure<br/>@ {formatTimeSeconds(ff * 20)}</>
-                           }
-                        </div>
-                     </div>
-                  );
-               })
-            }
-         </div>
+         <VoyageSkillsReadout
+            skill_aggregates={props.voyage.skill_aggregates}
+            success_readout={successOutput}
+            failure_readout={failOutput}
+         />
       </div>
    </div>;
 }
