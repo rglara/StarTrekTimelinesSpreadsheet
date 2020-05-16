@@ -11,7 +11,7 @@
 }
 
 .ship-dropdown {
-    min-width: 25em !important;
+    min-width: 26em !important;
 }
 
 .sprite-dark {
@@ -38,6 +38,35 @@
 .voyage-failed {
     font-size: large;
     color: red;
+}
+
+.voyage-skillsets {
+    display: grid;
+    grid-template-rows: 36px;
+    grid-template-columns: auto 36px auto 36px 1fr;
+    align-items: center;
+    column-gap: 10px;
+    margin-top: 4px;
+    margin-bottom: 16px;
+    font-size: 1.5em;
+}
+
+.voyage-skillsets img {
+    width: 36px;
+    height: 36px;
+}
+
+.voyage-skillsets div:nth-child(3) {
+    margin-left: 20px;
+}
+
+.voyage-crew-select {
+    margin-top: 20px;
+}
+
+.voyage-crew-select .vc-skills {
+    margin-top: 20px;
+    width: fit-content;
 }
 
 .voyage-stats {
@@ -93,13 +122,13 @@
 
 .voyage-crew .vc-complement .vc-position .vcp-crewname,
 .voyage-crew .vc-complement .vc-position .vcp-name,
-.voyage-crew .vc-skills .vc-skill .vcs-range,
-.voyage-crew .vc-skills .vc-skill .vcs-success,
-.voyage-crew .vc-skills .vc-skill .vcs-failure  {
+.vc-skills .vc-skill .vcs-range,
+.vc-skills .vc-skill .vcs-success,
+.vc-skills .vc-skill .vcs-failure  {
     align-self: center;
 }
 
-.voyage-crew .vc-skills .vc-skill {
+.vc-skills .vc-skill {
     display: grid;
     grid-template-rows: 68px;
     grid-template-columns: 68px 1fr 60px 1fr;

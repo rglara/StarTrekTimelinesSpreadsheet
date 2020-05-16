@@ -5,7 +5,9 @@ import { Message, Dropdown, Header, Select, Checkbox, Form, Image, Card, Button,
 import STTApi, { CONFIG, bonusCrewForCurrentEvent, formatTimeSeconds, download, CrewSkills } from '../../api';
 import { CrewData, VoyageDTO } from '../../api/DTO';
 import { bestVoyageShip, startVoyage } from './VoyageTools';
+import { VoyageSkillsReadout, Skill } from './VoyageSkillsReadout';
 import { calculateVoyage, exportVoyageData, CalcChoice, cleanCrewName, CalcRemainingOptions, estimateVoyageRemaining, CalcOptions } from './voyageCalc';
+import { GetSpriteCssClass } from '../DarkThemeContext';
 
 interface VoyageCrewEntry {
 	key: number;
@@ -24,6 +26,7 @@ export const VoyageCrewSelect = (props: {
 	const [includeFrozen, setIncludeFrozen] = React.useState(false);
 	const [includeActive, setIncludeActive] = React.useState(false);
 	const [shipName, setShipName] = React.useState(undefined as string | undefined);
+	const spriteClass = GetSpriteCssClass();
 
 	const initialCalcState = {
 		estimatedDuration: undefined,
@@ -98,27 +101,32 @@ export const VoyageCrewSelect = (props: {
 		});
 	}
 
-	let curVoy = '';
+	let currentPrimarySkillUrl;
+	let currentSecondarySkillUrl;
 	if (STTApi.playerData.character.voyage_descriptions && STTApi.playerData.character.voyage_descriptions.length > 0) {
-		curVoy = `${CONFIG.SKILLS[STTApi.playerData.character.voyage_descriptions[0].skills.primary_skill]} primary / ${
-			CONFIG.SKILLS[STTApi.playerData.character.voyage_descriptions[0].skills.secondary_skill]
-		} secondary`;
+		currentPrimarySkillUrl = CONFIG.SPRITES[`icon_${STTApi.playerData.character.voyage_descriptions[0].skills.primary_skill}`].url;
+		currentSecondarySkillUrl = CONFIG.SPRITES[`icon_${STTApi.playerData.character.voyage_descriptions[0].skills.secondary_skill}`].url;
 	}
 	let voyage: VoyageDTO | undefined = undefined;
 	if (STTApi.playerData.character.voyage && STTApi.playerData.character.voyage.length > 0) {
 		voyage = STTApi.playerData.character.voyage[0];
-		curVoy = `${CONFIG.SKILLS[voyage.skills.primary_skill]} primary / ${
-			CONFIG.SKILLS[voyage.skills.secondary_skill]
-		} secondary`;
+		currentPrimarySkillUrl = CONFIG.SPRITES[`icon_${voyage.skills.primary_skill}`].url;
+		currentSecondarySkillUrl = CONFIG.SPRITES[`icon_${voyage.skills.secondary_skill}`].url;
 	}
 
 	const estDurationSec = (calcState.estimatedDuration ?? 0) * 60 * 60;
 	const estRecallDurationSec = 0.4 * (estDurationSec);
-
 	return (
-		<div style={{ margin: '5px' }}>
+		<div>
+			<h1>Start Voyage</h1>
 			<Message attached>
-				Configure the settings below, then click on the "Calculate" button to see the recommendations. Current voyage is <b>{curVoy}</b>.
+				<div className='voyage-skillsets'>
+					<div>Primary:</div>
+					<div><img className={`image-fit ${spriteClass}`} src={currentPrimarySkillUrl} /></div>
+					<div>Secondary:</div>
+					<div><img className={`image-fit ${spriteClass}`} src={currentSecondarySkillUrl} /></div>
+				</div>
+				<div>Configure the settings below, then click on the "Calculate" button to see the recommendations.</div>
 			</Message>
 			<Form className='attached fluid segment' loading={generatingVoyCrewRank || calcState.state === 'inprogress'}>
 				<Form.Group inline>
@@ -620,43 +628,41 @@ const BestCrew = (props : {
 			}
 		}
 
-		return <div>
-				<br />
+		const primarySecondaryOutput = (sk: Skill) => {
+			let isPri = sk.skill === STTApi.playerData.character.voyage_descriptions[0].skills.primary_skill;
+			let isSec = sk.skill === STTApi.playerData.character.voyage_descriptions[0].skills.secondary_skill;
+			return (
+				<span>{isPri ? 'Primary' : isSec ? 'Secondary' : ''}</span>
+			)
+		};
+		const failOutput = (sk: Skill) => {
+			const sv = sk.core + (sk.range_min + sk.range_max) / 2;
+			const failSeconds = (sv * 0.045 + 34) * 60;
+			return (
+				<div>First hazard failure<br/>expected @ {formatTimeSeconds(failSeconds)}</div>
+			)
+		};
+		return <div className='voyage-crew-select'>
 				{props.state === 'inprogress' && <div className='ui medium centered text active inline loader'>Still calculating...</div>}
 				{selectSlotId !== undefined &&
 					<Dropdown
-					fluid
-					selection
-					options={buildOptions(selectSlotId)}
-					onChange={(e, { value }) => setChoice(selectSlotId, value as number)}
-					// value={}
+						fluid
+						selection
+						options={buildOptions(selectSlotId)}
+						onChange={(e, { value }) => setChoice(selectSlotId, value as number)}
+						// value={}
 					/>
 				}
 				<Card.Group>{crewSpans}</Card.Group>
-				<ul>
-					{ Object.keys(skill_aggregates).map(k => skill_aggregates[k]).map(skill => {
-						let isPri = skill.skill == STTApi.playerData.character.voyage_descriptions[0].skills.primary_skill;
-						let isSec = skill.skill == STTApi.playerData.character.voyage_descriptions[0].skills.secondary_skill;
-
-						const firstHazardFailureTime = (sv: number) => sv * 0.045 + 34;
-
-						const sv = skill.core + (skill.range_min + skill.range_max) / 2;
-						return (
-							<li key={skill.skill}>
-								<span className='quest-mastery'>
-									<img src={CONFIG.SPRITES['icon_' + skill.skill].url} height={18} /> &nbsp; {skill.core} ({skill.range_min}-
-									{skill.range_max})&nbsp;[{sv}]&nbsp;
-									{isPri ? ' (Pri) ' : ''}
-									{isSec ? ' (Sec) ' : ''}
-									<> - First hazard failure expected at: {formatTimeSeconds(firstHazardFailureTime(sv)*60)}</>
-								</span>
-							</li>
-						);
-					})}
-				</ul>
-
+				{
+					props.crewSelection && props.crewSelection.length &&
+					<VoyageSkillsReadout
+						skill_aggregates={skill_aggregates}
+						success_readout={primarySecondaryOutput}
+						failure_readout={failOutput}
+					/>
+				}
 			</div>;
-
 	} else {
 		return <span />;
 	}
