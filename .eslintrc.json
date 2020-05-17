@@ -15,6 +15,9 @@
         "@typescript-eslint"
     ],
     "rules": {
-        "no-console": "off"
+        "no-console": "off",
+        "eol-last": "error",
+        "no-trailing-spaces": "error",
+        "indent": ["error", 4]
     }
 }

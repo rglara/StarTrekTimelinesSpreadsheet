@@ -49,7 +49,8 @@
 		"rebuild": "electron-rebuild",
 		"package": "electron-packager ./ --out=./builds --prune --icon=src/assets/icons/ATFleet.ico",
 		"installer": "node createinstaller.js",
-		"postinstall": "run-s -l rebuild"
+		"postinstall": "run-s -l rebuild",
+		"lint": "eslint --ext .ts,.tsx ."
 	},
 	"devDependencies": {
 		"@babel/cli": "^7.8.4",
