@@ -35,6 +35,7 @@ import { EventHelperPage } from './events/EventHelperPage';
 import { Experiments } from './Experiments';
 import { ModalNotification } from './ModalNotification';
 import { loadUITheme } from './Styles';
+import DarkThemeContext, { DarkThemeProvider } from './DarkThemeContext';
 
 import STTApi from '../api';
 import { loginSequence } from '../api';
@@ -189,6 +190,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 		}
 
 		return (
+			<DarkThemeProvider value={this.state.darkTheme}>
 			<Fabric style={{ color: this.state.theme.semanticColors.bodyText, backgroundColor: this.state.theme.semanticColors.bodyBackground }} className='App'>
 				<div style={{ display: 'flex', flexFlow: 'column', height: '100%', padding: '3px' }}>
 					<div style={{ flex: '1 1 auto' }}>
@@ -250,6 +252,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 
 				<ModalNotification ref='modalNotification' />
 			</Fabric>
+			</DarkThemeProvider>
 		);
 	}
 

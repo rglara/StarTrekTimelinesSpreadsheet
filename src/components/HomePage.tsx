@@ -98,27 +98,27 @@ export const HomePage = (props: {
 			<div className='ui right aligned inverted segment'>
 				<div className='ui black large image label'>
 					<img src={CONFIG.SPRITES['energy_icon'].url} className='ui' />
-					{getChronitonCount()}
+					{getChronitonCount()?.toLocaleString()}
 				</div>
 
 				<div className='ui black large image label'>
 					<img src={CONFIG.SPRITES['images_currency_pp_currency_0'].url} className='ui' />
-					{STTApi.playerData.premium_purchasable}
+					{STTApi.playerData.premium_purchasable?.toLocaleString()}
 				</div>
 
 				<div className='ui black large image label'>
 					<img src={CONFIG.SPRITES['images_currency_pe_currency_0'].url} className='ui' />
-					{STTApi.playerData.premium_earnable}
+					{STTApi.playerData.premium_earnable?.toLocaleString()}
 				</div>
 
 				<div className='ui black large image label'>
 					<img src={CONFIG.SPRITES['images_currency_honor_currency_0'].url} className='ui' />
-					{STTApi.playerData.honor}
+					{STTApi.playerData.honor?.toLocaleString()}
 				</div>
 
 				<div className='ui black large image label'>
 					<img src={CONFIG.SPRITES['images_currency_sc_currency_0'].url} className='ui' />
-					{STTApi.playerData.money}
+					{STTApi.playerData.money?.toLocaleString()}
 				</div>
 
 				{ STTApi.playerData.character.stimpack &&

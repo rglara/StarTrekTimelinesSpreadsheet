@@ -11,7 +11,163 @@
 }
 
 .ship-dropdown {
-    min-width: 25em !important;
+    min-width: 26em !important;
+}
+
+.sprite-dark {
+    background-color: #1B1C1D;
+}
+
+.image-fit {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.collapsible-section {
+    margin-bottom: 20px;
+}
+
+.ui.label.big.group-header {
+    display: inherit;
+    text-align: center;
+    margin-bottom: 4px;
+    border-radius: 40px 40px 0 0;
+}
+
+.voyage-failed {
+    font-size: large;
+    color: red;
+}
+
+.voyage-skillsets {
+    display: grid;
+    grid-template-rows: 36px;
+    grid-template-columns: auto 36px auto 36px 1fr;
+    align-items: center;
+    column-gap: 10px;
+    margin-top: 4px;
+    margin-bottom: 16px;
+    font-size: 1.5em;
+}
+
+.voyage-skillsets img {
+    width: 36px;
+    height: 36px;
+}
+
+.voyage-skillsets div:nth-child(3) {
+    margin-left: 20px;
+}
+
+.voyage-crew-select {
+    margin-top: 20px;
+}
+
+.voyage-crew-select .vc-skills {
+    margin-top: 20px;
+    width: fit-content;
+}
+
+.voyage-stats {
+    margin-bottom: 20px;
+}
+
+.voyage-stats div {
+    margin-bottom: 4px;
+}
+
+.voyage-stats .overview div {
+    margin-right: 20px;
+}
+
+.voyage-stats .dilemma div {
+    margin-right: 20px;
+}
+
+.voyage-stats .times div {
+    margin-right: 20px;
+}
+
+.voyage-stats .recall div {
+    margin-right: 20px;
+}
+
+.voyage-dilemma {
+    margin-bottom: 20px;
+}
+
+.voyage-crew {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.voyage-crew .vc-complement,
+.voyage-crew .vc-skills {
+    margin-bottom: 20px;
+}
+
+.voyage-crew .vc-complement {
+    margin-right: 40px;
+}
+
+.voyage-crew .vc-complement .vc-position {
+    display: grid;
+    grid-template-rows: 36px;
+    grid-template-columns: 36px 1fr 36px 1fr;
+    column-gap: 10px;
+    margin-bottom: 4px;
+}
+
+.voyage-crew .vc-complement .vc-position .vcp-crewname,
+.voyage-crew .vc-complement .vc-position .vcp-name,
+.vc-skills .vc-skill .vcs-range,
+.vc-skills .vc-skill .vcs-success,
+.vc-skills .vc-skill .vcs-failure  {
+    align-self: center;
+}
+
+.vc-skills .vc-skill {
+    display: grid;
+    grid-template-rows: 68px;
+    grid-template-columns: 68px 1fr 60px 1fr;
+    column-gap: 28px;
+    margin-bottom: 10px;
+}
+
+.voyage-rewards {
+    max-width: 750px;
+    margin-bottom: 20px;
+}
+
+.voyage-log {
+    border-left: solid 1px;
+    padding-left: 10px;
+    margin-bottom: 20px;
+    margin-left: 10px;
+}
+
+.voyage-log-entry {
+    display: grid;
+    grid-template-rows: auto;
+    grid-template-columns: auto 1fr;
+    column-gap: 10px;
+    min-height: 35px;
+}
+
+.vle-images {
+    justify-self: end;
+    align-self: center;
+}
+
+.vle-text {
+    justify-self: start;
+    align-self: center;
+}
+
+.ui.header.vle-text {
+    margin-top: 0;
 }
 
 .recipe-item-span {
@@ -122,7 +278,7 @@
     max-height: calc(100vh - 50px);
     overflow-x: hidden;
     overflow-y: auto;
-    padding: 5px 0;
+    padding: 10px;
     position: relative;
 }
 
