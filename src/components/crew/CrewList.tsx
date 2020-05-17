@@ -194,13 +194,15 @@ export const CrewList = (props: {
 				onSortedChange={setSorted}
 				showPagination={(filtered.length > 50)}
 				showPageSizeOptions={false}
-				className="-striped -highlight"
+				className='-striped -highlight'
 				style={(!props.embedded && (filtered.length > 50)) ? { height: 'calc(100vh - 92px - 34px)' } : {}}
 				pivotBy={pivotBy}
 				getTrProps={(s:any, r:any) => {
+					const originalRowData: CrewData = r && r.original;
 					return {
 						style: {
-							opacity: (r && r.original && r.original.isExternal) ? "0.5" : "inherit"
+							opacity: (originalRowData && originalRowData.status.external) ? '0.5' : 'inherit',
+							backgroundColor: (originalRowData && originalRowData.status.expires_in) ? 'pink' : 'inherit',
 						}
 					};
 				}}
