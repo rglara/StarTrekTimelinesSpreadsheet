@@ -11,13 +11,15 @@
         "ecmaVersion": 2020,
         "sourceType": "module"
     },
-    "plugins": [
-        "@typescript-eslint"
-    ],
+    "plugins": [ "@typescript-eslint" ],
     "rules": {
+        // needed to allow console.log to work
         "no-console": "off",
+        // prefer last line in file to be a newline
         "eol-last": "error",
+        // prefer no trailing spaces at the end of a line
         "no-trailing-spaces": "error",
+        // prefer 4 spaces for indentation
         "indent": ["error", 4]
     }
 }
