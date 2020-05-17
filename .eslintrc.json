@@ -16,10 +16,11 @@
         // needed to allow console.log to work
         "no-console": "off",
         // prefer last line in file to be a newline
-        "eol-last": "error",
+        "eol-last": "warn",
         // prefer no trailing spaces at the end of a line
-        "no-trailing-spaces": "error",
-        // prefer 4 spaces for indentation
-        "indent": ["error", 4]
+        "no-trailing-spaces": "warn",
+        // prefer 3 spaces for indentation, but not a fascist linter
+        //"indent": ["warn", 3]
+        "indent": "off"
     }
 }
