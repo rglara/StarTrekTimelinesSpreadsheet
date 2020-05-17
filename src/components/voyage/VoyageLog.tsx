@@ -133,11 +133,11 @@ export const VoyageLog = (props:{}) => {
          {
             id: 'icon',
             Header: '',
-            minWidth: 72,
-            maxWidth: 72,
+            minWidth: 42,
+            maxWidth: 42,
             resizable: false,
             accessor: (row: any) => row.full_name,
-            Cell: (p: any) => <img className={`image-fit ${spriteClass}`} src={p.original.iconUrl} />
+            Cell: (p: any) => <img className={`image-fit ${spriteClass}`} src={p.original.iconUrl} height='32px' />
          },
          {
             id: 'quantity',

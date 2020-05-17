@@ -166,6 +166,10 @@
     align-self: center;
 }
 
+.ui.header.vle-text {
+    margin-top: 0;
+}
+
 .recipe-item-span {
     float: left;
     margin-right: 5px;

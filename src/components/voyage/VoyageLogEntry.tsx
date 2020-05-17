@@ -8,11 +8,9 @@ export class VoyageLogEntry extends React.Component<any,any> {
 
       this.props.log.forEach((entry: any) => {
          if (entry.crew) {
-            entry.crewIconUrls = [];
-            for(let i = 0; i < entry.crew.length; i += 1) {
-               let rc = STTApi.roster.find(rosterCrew => rosterCrew.symbol == entry.crew[i]);
-               entry.crewIconUrls.push(rc ? rc.iconUrl ?? '' : '');
-            }
+            entry.crewIconUrls = entry.crew.map((ec: any) =>
+               STTApi.roster.find(rosterCrew => rosterCrew.symbol == ec))
+                  .map((rc: any) => rc ? rc.iconUrl ?? '' : '');
          }
       });
    }
@@ -30,7 +28,7 @@ export class VoyageLogEntry extends React.Component<any,any> {
          }
          let textClass = 'vle-text';
          if (entry.skill_check && (index + 1) === this.props.log.length) {
-            textClass = `${textClass} ui label ${entry.skill_check.passed ? 'green' : 'red'}`
+            textClass = `${textClass} ui header ${entry.skill_check.passed ? 'green' : 'red'}`
             images.push(
                <span key={`skill-${index}`}>
                   <img className={this.props.spriteClass} src={CONFIG.SPRITES['icon_' + entry.skill_check.skill].url} height={32} />
