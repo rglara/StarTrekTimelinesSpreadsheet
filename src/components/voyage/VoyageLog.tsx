@@ -1,7 +1,7 @@
 import React from 'react';
 import Moment from 'moment';
 import { Button, Icon, Popup } from 'semantic-ui-react';
-import ReactTable, { SortingRule } from 'react-table';
+import ReactTable, { SortingRule, Column } from 'react-table';
 
 import STTApi, { CONFIG, RarityStars, formatTimeSeconds, CollapsibleSection, download, CrewSkills, getItemDetailsLink } from '../../api';
 import { loadVoyage, recallVoyage, resolveDilemma, VOYAGE_AM_DECAY_PER_MINUTE, voyDuration } from './VoyageTools';
@@ -128,7 +128,7 @@ export const VoyageLog = (props:{}) => {
          <br />
       </div>;
 
-   function getColumns(spriteClass: string) {
+   function getColumns(spriteClass: string) : Column<RewardDTO>[] {
       return [
          {
             id: 'icon',
@@ -136,8 +136,8 @@ export const VoyageLog = (props:{}) => {
             minWidth: 42,
             maxWidth: 42,
             resizable: false,
-            accessor: (row: any) => row.full_name,
-            Cell: (p: any) => <img className={`image-fit ${spriteClass}`} src={p.original.iconUrl} height='32px' />
+            accessor: (row) => row.full_name,
+            Cell: (p) => <img className={`image-fit ${spriteClass}`} src={p.original.iconUrl} height='32px' />
          },
          {
             id: 'quantity',
@@ -146,7 +146,7 @@ export const VoyageLog = (props:{}) => {
             maxWidth: 70,
             style: { textAlign: 'center' },
             resizable: false,
-            accessor: (row: any) => row.quantity
+            accessor: (row) => row.quantity
          },
          {
             id: 'name',
@@ -154,8 +154,8 @@ export const VoyageLog = (props:{}) => {
             minWidth: 150,
             maxWidth: 250,
             resizable: true,
-            accessor: (row: any) => row.full_name,
-            Cell: (p: any) => {
+            accessor: (row) => row.full_name,
+            Cell: (p) => {
                let item = p.original;
                return (
                   <a href={getItemDetailsLink(item)} target='_blank'>
@@ -167,7 +167,7 @@ export const VoyageLog = (props:{}) => {
          {
             id: 'rarity',
             Header: 'Rarity',
-            accessor: (c: any) => {
+            accessor: (c) => {
                if (c.type > 2) {
                   return -1;
                }
@@ -176,7 +176,7 @@ export const VoyageLog = (props:{}) => {
             minWidth: 75,
             maxWidth: 75,
             resizable: false,
-            Cell: (p: any) => {
+            Cell: (p) => {
                let item = p.original;
                // 3 is for honor, credits, crons
                if (item.type > 2) {
@@ -195,13 +195,13 @@ export const VoyageLog = (props:{}) => {
             Header: 'Type',
             minWidth: 100,
             resizable: true,
-            accessor: (row: any) => {
+            accessor: (row) => {
                if (row.item_type) {
                   return row.type + '.' + row.item_type;
                }
                return row.type;
             },
-            Cell: (p: any) => {
+            Cell: (p) => {
                let item = p.original;
 
                if (item.type === 1) {
@@ -460,7 +460,7 @@ export const VoyageLog = (props:{}) => {
 
          //TODO: to estimte including a single refill
          // options.remainingAntiMatter += voyage.max_hp;
-         // estimateVoyageRemaining(options, (estimate: any) => {
+         // estimateVoyageRemaining(options, (estimate) => {
          //    setEstimatedMinutesLeftRefill(estimate);
          //    setNativeEstimate(true);
          // });
@@ -656,7 +656,7 @@ const VoyageDilemma = (props: {
    voyage?: VoyageDTO;
    reload: () => void;
 }) => {
-   async function chooseDilemma(voyageId: any, dilemmaId: any, index: any) {
+   async function chooseDilemma(voyageId: number, dilemmaId: number, index: number) {
       if (index < 0) {
          return;
       }
@@ -684,7 +684,7 @@ const VoyageDilemma = (props: {
                   <span dangerouslySetInnerHTML={{ __html: voy.dilemma.intro }} />
                </div>
                <div className='ui middle aligned selection list inverted'>
-                  {voy.dilemma.resolutions.map((resolution: any, index: number) => {
+                  {voy.dilemma.resolutions.map((resolution, index) => {
                      if (resolution.locked) {
                         return (
                            <div className='item' key={index}>

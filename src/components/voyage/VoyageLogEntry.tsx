@@ -1,52 +1,46 @@
 import React from "react";
 import STTApi, { CONFIG } from "../../api";
 import { Image, Icon } from 'semantic-ui-react';
+import { VoyageNarrativeDTO } from "../../api/DTO";
 
-export class VoyageLogEntry extends React.Component<any,any> {
-   constructor(props:any) {
-      super(props);
+export const VoyageLogEntry = (props: {
+   spriteClass: string;
+   log: VoyageNarrativeDTO[];
+}) => {
+   let crewIconUrls : {[sym:string]:string} = {};
 
-      this.props.log.forEach((entry: any) => {
-         if (entry.crew) {
-            entry.crewIconUrls = entry.crew.map((ec: any) =>
-               STTApi.roster.find(rosterCrew => rosterCrew.symbol == ec))
-                  .map((rc: any) => rc ? rc.iconUrl ?? '' : '');
-         }
-      });
-   }
-
-   render() {
-      const listItems : any[] = [];
-      this.props.log.forEach((entry: any, index: number) => {
-         const images = [];
-         if (entry.crewIconUrls) {
-            for(let j = 0; j < entry.crewIconUrls.length; j += 1) {
-               images.push(
-                  <Image avatar className='mini' src={entry.crewIconUrls[j]} key={`${index}-${j}`} />
-               );
+   return <div className='voyage-log'>
+      {
+         props.log.map((entry, index) => {
+            const isLastEntryOfHazard = (entry.skill_check && (index + 1) === props.log.length);
+            let textClass = 'vle-text';
+            if (isLastEntryOfHazard) {
+               textClass = `${textClass} ui header ${entry.skill_check!.passed ? 'green' : 'red'}`
             }
-         }
-         let textClass = 'vle-text';
-         if (entry.skill_check && (index + 1) === this.props.log.length) {
-            textClass = `${textClass} ui header ${entry.skill_check.passed ? 'green' : 'red'}`
-            images.push(
-               <span key={`skill-${index}`}>
-                  <img className={this.props.spriteClass} src={CONFIG.SPRITES['icon_' + entry.skill_check.skill].url} height={32} />
-                  &nbsp;
-                  {entry.skill_check.passed == true ? <Icon name='thumbs up' /> : <Icon name='thumbs down' />}
-               </span>
-            );
-         }
-         listItems.push(
-            <div className='voyage-log-entry' key={index}>
-               <div className='vle-images'>{images}</div>
+
+            return <div className='voyage-log-entry' key={index}>
+               <div className='vle-images'>
+                  { entry.crew && entry.crew.map(ec => {
+                        if (!crewIconUrls[ec]) {
+                           const rc = STTApi.roster.find(rosterCrew => rosterCrew.symbol == ec);
+                           crewIconUrls[ec] = rc?.iconUrl ?? '';
+                        }
+                        return crewIconUrls[ec];
+                     })
+                     .map((src, j) => <Image avatar className='mini' src={src} key={`${index}-${j}`} />)
+                  }
+                  { isLastEntryOfHazard && <span key={`skill-${index}`}>
+                        <img className={props.spriteClass} src={CONFIG.SPRITES['icon_' + entry.skill_check!.skill].url} height={32} />
+                        &nbsp;
+                        {entry.skill_check!.passed == true ? <Icon name='thumbs up' /> : <Icon name='thumbs down' />}
+                     </span>
+                  }
+               </div>
                <div className={textClass}>
                   <span dangerouslySetInnerHTML={{ __html: entry.text }} />
                </div>
-            </div>
-         );
-      });
-
-      return <div className='voyage-log'>{listItems}</div>;
-   }
+            </div>;
+         })
+      }
+   </div>;
 }
