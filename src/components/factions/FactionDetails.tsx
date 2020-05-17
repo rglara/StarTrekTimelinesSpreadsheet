@@ -3,11 +3,11 @@ import React from 'react';
 import { Accordion, Button, Segment, Header } from 'semantic-ui-react';
 import { getTheme } from '@uifabric/styling';
 
-import { ItemDisplay } from '../utils/ItemDisplay';
+import { ItemDisplay } from '../../utils/ItemDisplay';
 
-import STTApi, { CONFIG, refreshAllFactions, loadFactionStore } from '../api';
-import { FactionDTO, PotentialRewardDTO, RewardDTO, ItemArchetypeDTO, FactionStoreItemDTO } from '../api/DTO';
-import { CrewImageData } from './images/ImageProvider';
+import STTApi, { CONFIG, refreshAllFactions, loadFactionStore } from '../../api';
+import { FactionDTO, PotentialRewardDTO, RewardDTO, ItemArchetypeDTO, FactionStoreItemDTO } from '../../api/DTO';
+import { CrewImageData } from '../images/ImageProvider';
 
 interface StoreItemProps {
 	storeItem: FactionStoreItemDTO;

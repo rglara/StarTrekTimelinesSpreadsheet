@@ -29,7 +29,7 @@ import { NeededEquipment } from './NeededEquipment';
 import { CrewDuplicates } from './crew/CrewDuplicates';
 import { IncompleteMissions } from './IncompleteMissions';
 import { CryoCollections } from './CryoCollections';
-import { FactionDetails } from './FactionDetails';
+import { FactionDetails } from './factions/FactionDetails';
 import { Shuttles } from './Shuttles';
 import { EventHelperPage } from './events/EventHelperPage';
 import { Experiments } from './Experiments';
