@@ -416,6 +416,22 @@
     border-left-color: #0078d7;
 }
 
+.faction-gallery {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.faction-gallery div {
+    margin-right: 12px;
+    margin-bottom: 12px;
+}
+
+.faction-gallery img {
+    height: 70px;
+    cursor: pointer;
+}
+
 .modalNotification-container {
     min-height: 20vh;
     display: flex;

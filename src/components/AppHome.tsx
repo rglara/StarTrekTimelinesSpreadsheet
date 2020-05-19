@@ -35,7 +35,7 @@ import { EventHelperPage } from './events/EventHelperPage';
 import { Experiments } from './Experiments';
 import { ModalNotification } from './ModalNotification';
 import { loadUITheme } from './Styles';
-import DarkThemeContext, { DarkThemeProvider } from './DarkThemeContext';
+import { DarkThemeProvider } from './DarkThemeContext';
 
 import STTApi from '../api';
 import { loginSequence } from '../api';
