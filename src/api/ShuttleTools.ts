@@ -68,7 +68,7 @@ export async function shuttleStart(shuttle: PlayerShuttleDTO,
     await STTApi.executePostRequestWithUpdates("shuttle/start", dto);
 }
 
-export function getBonusedRoster(crew_bonuses: { [crew_symbol: string]: number; }): CrewItem[] {
+export function getBonusedRoster(crew_bonuses: { [crew_symbol: string]: number; }, alloWBorrow: boolean): CrewItem[] {
     let rv: CrewItem[] = [];
     STTApi.roster.forEach(crew => {
         if (crew.buyback || crew.frozen > 0) {
@@ -95,7 +95,7 @@ export function getBonusedRoster(crew_bonuses: { [crew_symbol: string]: number; 
         // These are synchronized, but don't have "active*" fields
         brws = STTApi.borrowableCrew ?? [];
     }
-    if (brws) {
+    if (brws && alloWBorrow) {
         brws.forEach(crew => {
             const foundBonus = crew_bonuses[crew.symbol] ?? 1;
 

@@ -72,7 +72,7 @@ export const Shuttles = (props: {
 
 	async function selectCrew(fillStrategy: string) {
 		setComputingEstimate(true);
-		const bonusedRoster = getBonusedRoster(event?.content.shuttles?.[0].crew_bonuses ?? {});
+		const bonusedRoster = getBonusedRoster(event?.content.shuttles?.[0].crew_bonuses ?? {}, event?.content.shuttles?.[0].allow_borrow ?? false);
 		const shuttleCalcs: ShuttleCalc[] = buildSlotCalculator(bonusedRoster, event, activeShuttleAdventures);
 		if (fillStrategy === 'best') {
 			setSelType("Best")
