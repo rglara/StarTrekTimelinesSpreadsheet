@@ -81,8 +81,7 @@ export const FactionDisplay = (props:FactionDisplayProps) => {
 		}
 
 		return (
-			<div
-				style={{ display: 'grid', padding: '10px', gridTemplateColumns: 'repeat(6, 1fr)', gridTemplateRows: 'auto auto', gridGap: '8px' }}>
+			<div className='faction-store'>
 				{props.faction.storeItems && props.faction.storeItems.map((storeItem, idx) => (
 					<StoreItem key={idx} storeItem={storeItem} onBuy={() => buyItem(storeItem)} />
 				))}
@@ -105,7 +104,7 @@ export const FactionDisplay = (props:FactionDisplayProps) => {
 	let tokens = token ? token.quantity : 0;
 
 	return (
-		<div style={{ paddingBottom: '10px' }}>
+		<div className='faction-section'>
 			<div style={{ display: 'grid', gridTemplateColumns: 'min-content auto', gridTemplateAreas: `'icon description'`, gridGap: '10px' }}>
 				<div style={{ gridArea: 'icon' }}>
 					<img src={reputationIconUrl} height={90} />
@@ -144,6 +143,7 @@ export const FactionDisplay = (props:FactionDisplayProps) => {
 			/>
 			<h5>Store</h5>
 			{renderStoreItems()}
+			<hr/>
 		</div>
 	);
 }

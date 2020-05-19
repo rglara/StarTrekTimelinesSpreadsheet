@@ -39,7 +39,7 @@ export const StoreItem = (props: StoreItemProps) => {
 	}
 
 	return (
-		<div style={{ textAlign: 'center' }}>
+		<div className='faction-store-item'>
 			<Header as='h5' attached='top' style={{ color: getTheme().palette.neutralDark, backgroundColor: getTheme().palette.themeLighter }}>
 				{props.storeItem.offer.game_item.name}
 			</Header>

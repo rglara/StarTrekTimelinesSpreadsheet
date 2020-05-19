@@ -432,6 +432,24 @@
     cursor: pointer;
 }
 
+.faction-section {
+    padding-bottom: 10px;
+}
+
+.faction-store {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: auto auto;
+    grid-gap: 12px;
+    padding-bottom: 10px;
+}
+
+.faction-store-item {
+    text-align: center;
+    display: grid;
+    grid-template-rows: auto 108px 36px;
+}
+
 .modalNotification-container {
     min-height: 20vh;
     display: flex;
