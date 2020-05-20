@@ -48,14 +48,21 @@ export const StoreItem = (props: StoreItemProps) => {
 			});
 	}
 
+	const currentPalette = getTheme().palette;
 	return (
 		<div className='faction-store-item'>
-			<Header as='h5' attached='top' style={{ color: getTheme().palette.neutralDark, backgroundColor: getTheme().palette.themeLighter }}>
+			<Header
+				as='h5'
+				attached='top'
+				style={{
+					color: locked ? currentPalette.neutralTertiary : currentPalette.neutralDark,
+					backgroundColor: locked ? currentPalette.neutralLighter : currentPalette.themeLighter,
+				}}>
 				{props.storeItem.offer.game_item.name}
 			</Header>
-			<Segment attached style={{ backgroundColor: getTheme().palette.themeLighter }}>
+			<Segment attached style={{ backgroundColor: locked ? currentPalette.neutralLighter : currentPalette.themeLighter }}>
 				<ItemDisplay
-					style={{ marginLeft: 'auto', marginRight: 'auto' }}
+					style={{ marginLeft: 'auto', marginRight: 'auto', opacity: locked ? '50%' : '100%' }}
 					src={iconUrl}
 					size={80}
 					maxRarity={props.storeItem.offer.game_item.rarity}
