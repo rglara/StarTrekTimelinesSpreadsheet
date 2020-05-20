@@ -31,11 +31,21 @@ export const StoreItem = (props: StoreItemProps) => {
 	let curr = CONFIG.CURRENCIES[props.storeItem.offer.cost.currency];
 	let locked = props.storeItem.locked || props.storeItem.offer.purchase_avail === 0;
 
-	let iconUrl;
+	let tempUrl;
 	if (props.storeItem.offer.game_item.type === 1) {
-		iconUrl = STTApi.imageProvider.getCrewCached(props.storeItem.offer.game_item as CrewImageData, false);
+		tempUrl = STTApi.imageProvider.getCrewCached(props.storeItem.offer.game_item as CrewImageData, false);
 	} else {
-		iconUrl = STTApi.imageProvider.getCached(props.storeItem.offer.game_item);
+		tempUrl = STTApi.imageProvider.getCached(props.storeItem.offer.game_item);
+	}
+	const [iconUrl, setIconUrl] = React.useState(tempUrl);
+	if (!tempUrl) {
+		// some items don't get cached if you don't already own them, so load them now
+		STTApi.imageProvider.getItemImageUrl(props.storeItem.offer.game_item, props.storeItem.offer.game_item.id)
+			.then(found => {
+				if (found.url) {
+					setIconUrl(found.url);
+				}
+			});
 	}
 
 	return (
