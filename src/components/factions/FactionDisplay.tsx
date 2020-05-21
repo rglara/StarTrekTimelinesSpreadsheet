@@ -100,9 +100,10 @@ export const FactionDisplay = (props:FactionDisplayProps) => {
 		return 'Unknown';
 	}
 
-	let token = STTApi.items.find(item => item.archetype_id === props.faction.shuttle_token_id);
-	let tokens = token ? token.quantity : 0;
-
+	const token = STTApi.items.find(item => item.archetype_id === props.faction.shuttle_token_id);
+	const tokens = token ? token.quantity : 0;
+	const numRewardColumns = 4;
+	const pluralize = (count: number, noun: string) => `${count} ${noun}${count !== 1 ? 's' : ''}`;
 	return (
 		<div className='faction-section'>
 			<div style={{ display: 'grid', gridTemplateColumns: 'min-content auto', gridTemplateAreas: `'icon description'`, gridGap: '10px' }}>
@@ -110,23 +111,27 @@ export const FactionDisplay = (props:FactionDisplayProps) => {
 					<img src={reputationIconUrl} height={90} />
 				</div>
 				<div style={{ gridArea: 'description' }}>
-					<h4>{props.faction.name}</h4>
-					<p>
-						Reputation: {_getReputationName(props.faction.reputation)} ({props.faction.completed_shuttle_adventures}{' '}
-						completed shuttle adventures)
-					</p>
-					<h4>Transmissions: {tokens}</h4>
+					<h2>{props.faction.name}</h2>
+					<h3>({`${_getReputationName(props.faction.reputation)} - ${pluralize(tokens, 'transmission')}`})</h3>
+					<p>{pluralize(props.faction.completed_shuttle_adventures, 'completed shuttle adventure')}</p>
 				</div>
 			</div>
 			<Accordion
 				defaultActiveIndex={-1}
+				className='faction-reward-list'
 				panels={[
 					{
 						key: '1',
 						title: 'Potential shuttle rewards',
 						content: {
-							content: equipment.map((item, idx) => (
-								<span style={{ display: 'contents' }} key={idx}>
+							style: {
+								gridTemplateColumns: `repeat(${numRewardColumns}, 1fr)`,
+								gridTemplateRows: `repeat(${Math.ceil(equipment.length / numRewardColumns)}, 1fr)`,
+							},
+							content: equipment
+								.sort((a, b) => a.name.localeCompare(b.name))
+								.map((item, idx) => (
+								<div key={idx}>
 									<ItemDisplay
 										style={{ display: 'inline-block' }}
 										src={item.iconUrl ? item.iconUrl : ''}
@@ -134,8 +139,8 @@ export const FactionDisplay = (props:FactionDisplayProps) => {
 										maxRarity={item.rarity}
 										rarity={item.rarity}
 									/>{' '}
-									{item.name}
-								</span>
+									{item.name} {item.rarity > 0 ? `(${item.rarity})` : ''}
+								</div>
 							))
 						}
 					}

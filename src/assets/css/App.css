@@ -436,6 +436,12 @@
     padding-bottom: 10px;
 }
 
+.faction-reward-list.ui.accordion .active.content {
+    display: grid;
+    grid-auto-flow: column;
+    margin-bottom: 20px;
+}
+
 .faction-store {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
