@@ -56,35 +56,37 @@ export function computeExtraSchematics() : ItemData[] {
 }
 
 export function computeExtraItems() : ItemData[] {
-    let equipmentAlreadyOnCrew = new Set();
-    STTApi.roster.forEach(crew => {
-        if (crew.buyback) {
-            return;
-        }
+    // let equipmentAlreadyOnCrew = new Set();
+    // STTApi.roster.forEach(crew => {
+    //     if (crew.buyback) {
+    //         return;
+    //     }
 
-        // Comment this line if we want to be more aggressive (with potentially more false positives for in-progress crew)
-        if (crew.level < 100) {
-            return;
-        }
+    //     // Comment this line if we want to be more aggressive (with potentially more false positives for in-progress crew)
+    //     if (crew.level < 100) {
+    //         return;
+    //     }
 
-        let lastEquipmentLevel = crew.level;
-        for (let equipment of crew.equipment_slots) {
-            if (!equipment.have) {
-                lastEquipmentLevel = equipment.level;
-            }
-        }
+    //     let lastEquipmentLevel = crew.level;
+    //     for (let equipment of crew.equipment_slots) {
+    //         if (!equipment.have) {
+    //             lastEquipmentLevel = equipment.level;
+    //         }
+    //     }
 
-        let feCrew = STTApi.allcrew.find(c => c.symbol === crew.symbol);
-        if (feCrew) {
-            feCrew.equipment_slots.forEach(equipment => {
-                if (equipment.level < lastEquipmentLevel) {
-                    equipmentAlreadyOnCrew.add(equipment.archetype);
-                }
-            });
-        }
-    });
+    //     let feCrew = STTApi.allcrew.find(c => c.symbol === crew.symbol);
+    //     if (feCrew) {
+    //         feCrew.equipment_slots.forEach(equipment => {
+    //             if (equipment.level < lastEquipmentLevel) {
+    //                 equipmentAlreadyOnCrew.add(equipment.archetype);
+    //             }
+    //         });
+    //     }
+    // });
 
-    return STTApi.items.filter(
-        item => equipmentAlreadyOnCrew.has(item.archetype_id) && item.quantity === 1 && item.rarity > 1
-    );
+    // return STTApi.items.filter(
+    //     item => equipmentAlreadyOnCrew.has(item.archetype_id) && item.quantity === 1 && item.rarity > 1
+    // );
+
+    return STTApi.items.filter(item => item.type === 2 && item.name.includes("'s "));
 }
