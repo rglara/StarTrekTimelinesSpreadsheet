@@ -1,23 +1,20 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
-import { CrewData, SkillData } from "./DTO";
+import { CrewData, MissionDTO, MissionQuestChallengeDTO, MissionQuestDTO, SkillData } from "./DTO";
 
-export interface IChallengeSuccessTrait
-{
+export interface IChallengeSuccessTrait {
     trait: string;
     bonus: number;
 }
 
-export interface IChallengeSuccessCrew
-{
+export interface IChallengeSuccessCrew {
     crew: any;
     success: number;
     rollRequired: number;
     rollCrew: number;
 }
 
-export interface IChallengeSuccess
-{
+export interface IChallengeSuccess {
     mission: any;
     quest: any;
     challenge: any;
@@ -26,9 +23,9 @@ export interface IChallengeSuccess
     skill: string;
     cadet: boolean;
     crew_requirement: any;
-    traits: Array<IChallengeSuccessTrait>;
+    traits: IChallengeSuccessTrait[];
     lockedTraits: Array<string>;
-    crew: Array<IChallengeSuccessCrew>;
+    crew: IChallengeSuccessCrew[];
 }
 
 export function calculateMissionCrewSuccess(): Array<IChallengeSuccess> {
@@ -168,24 +165,28 @@ export function calculateMinimalComplementAsync(): void {
     worker.postMessage({ success: STTApi.missionSuccess });*/
 }
 
-export interface ICrewPath
-{
+export interface ICrewPath {
     path: any;
     crew: IChallengeSuccessCrew[];
     success: number;
 }
 
-export interface IQuestRecommendations
-{
-    mission: any;
+export interface IQuestMission extends MissionQuestDTO {
+    difficulty_by_mastery?: number[];
+    critical_threshold?: number;
+    trait_bonuses?: number[];
+}
+
+export interface IQuestRecommendations {
+    mission?: IQuestMission;
     bestCrewPaths?: ICrewPath[];
     allFinished: boolean;
 }
 
 export function calculateQuestRecommendations(questId: number, loadEvenFinishedNodes: boolean): IQuestRecommendations {
-    let mission: any = undefined;
-    STTApi.missions.forEach((episode: any) => {
-        episode.quests.forEach((quest: any) => {
+    let mission: IQuestMission | undefined;
+    STTApi.missions.forEach((episode: MissionDTO) => {
+        episode.quests.forEach((quest: MissionQuestDTO) => {
             if (quest.id === questId) {
                 mission = quest;
             }
@@ -201,17 +202,17 @@ export function calculateQuestRecommendations(questId: number, loadEvenFinishedN
     }
 
     // Get the numbers from the first challenge that has them (since they match across the quest)
-    mission.challenges.forEach((challenge: any) => {
+    mission.challenges.forEach((challenge: MissionQuestChallengeDTO) => {
         if (challenge.difficulty_by_mastery) {
-            mission.difficulty_by_mastery = challenge.difficulty_by_mastery;
+            mission!.difficulty_by_mastery = challenge.difficulty_by_mastery;
         }
 
         if (challenge.critical && challenge.critical.threshold) {
-            mission.critical_threshold = challenge.critical.threshold;
+            mission!.critical_threshold = challenge.critical.threshold;
         }
 
         if (challenge.trait_bonuses && (challenge.trait_bonuses.length > 0)) {
-            mission.trait_bonuses = challenge.trait_bonuses[0].bonuses;
+            mission!.trait_bonuses = challenge.trait_bonuses[0].bonuses;
         }
     });
 
@@ -263,7 +264,7 @@ export function calculateQuestRecommendations(questId: number, loadEvenFinishedN
                 return;
             }
 
-            let recommendations = STTApi.missionSuccess.find(missionSuccess => (missionSuccess.quest.id === mission.id) && (missionSuccess.challenge.id === path[level]));
+            let recommendations = STTApi.missionSuccess.find(missionSuccess => (missionSuccess.quest.id === mission!.id) && (missionSuccess.challenge.id === path[level]));
             if (recommendations && recommendations.crew.length > 0) {
                 recommendations.crew.forEach(recommendation => {
                     // If we already picked 3 crew, all subsequent choices must be from those 3

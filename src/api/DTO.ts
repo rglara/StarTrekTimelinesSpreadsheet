@@ -1289,28 +1289,30 @@ export interface MissionQuestMasteryLevelDTO {
 	rewards: (PotentialRewardDTO | RewardDTO)[]; // first item is PotentialRewardDTO with type=0, second is RewardDTO
 }
 
+export interface MissionQuestChallengeDTO {
+	children: number[];
+	critical: {
+		claimed: boolean;
+		reward: RewardDTO[];
+		standard_loot: PotentialRewardDTO[];
+		threshold: number;
+	};
+	difficulty: number;
+	difficulty_by_mastery: number[];
+	grid_x: number;
+	grid_y: number;
+	id: number;
+	image: ImageDataDTO;
+	locks: any[];
+	name: string;
+	skill: string;
+	trait_bonuses: { trait: string; bonuses: number[] }[];
+}
+
 export interface MissionQuestDTO {
 	action: string;
 	cadet?: boolean;
-	challenges: {
-		children: number[];
-		critical: {
-			claimed: boolean;
-			reward: RewardDTO[];
-			standard_loot: PotentialRewardDTO[];
-			threshold: number;
-		};
-		difficulty: number;
-		difficulty_by_mastery: number[];
-		grid_x: number;
-		grid_y: number;
-		id: number;
-		image: ImageDataDTO;
-		locks: any[];
-		name: string;
-		skill: string;
-		trait_bonuses: { trait: string; bonuses: number[] }[];
-	}[];
+	challenges: MissionQuestChallengeDTO[];
 	crew_requirement?: {
 		description: string;
 		max_stars: number;
