@@ -389,6 +389,7 @@ export interface RewardDTO {
    skills?: { [skill: string]: SkillDTO; };
    symbol: string; // 'energy' (chrons), 'honor' (honor), 'nonpremium' (merits), 'season_points' (accolades), 'premium' (dilithium)
    traits?: string[];
+   /** See CONFIG.REWARDS_ITEM_TYPE */
    type: number;
 
    // added by the app

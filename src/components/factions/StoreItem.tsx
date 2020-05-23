@@ -8,12 +8,10 @@ import { FactionStoreItemDTO } from '../../api/DTO';
 import { ItemDisplay } from '../../utils/ItemDisplay';
 import { CrewImageData } from '../images/ImageProvider';
 
-interface StoreItemProps {
+export const StoreItem = (props: {
 	storeItem: FactionStoreItemDTO;
 	onBuy: () => void;
-}
-
-export const StoreItem = (props: StoreItemProps) => {
+}) => {
 	let archetypes = STTApi.itemArchetypeCache.archetypes;
 	let equipment = archetypes.find(e => e.id === props.storeItem.offer.game_item.id);
 	let sources = undefined;

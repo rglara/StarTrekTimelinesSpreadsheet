@@ -8,11 +8,9 @@ import { FactionDTO, PotentialRewardDTO, RewardDTO, ItemArchetypeDTO, FactionSto
 
 import { StoreItem } from './StoreItem';
 
-interface FactionDisplayProps {
+export const FactionDisplay = (props: {
 	faction: FactionDTO;
-}
-
-export const FactionDisplay = (props:FactionDisplayProps) => {
+}) => {
 	const [reputationIconUrl, setReputationIconUrl] = React.useState('');
 	const [showSpinner, setShowSpinner] = React.useState(true);
 
