@@ -3,7 +3,7 @@ import React from 'react';
 import { Accordion } from 'semantic-ui-react';
 
 import { ItemDisplay } from '../../utils/ItemDisplay';
-import STTApi, { loadFactionStore } from '../../api';
+import STTApi, { loadFactionStore, RarityStars } from '../../api';
 import { FactionDTO, PotentialRewardDTO, RewardDTO, ItemArchetypeDTO, FactionStoreItemDTO } from '../../api/DTO';
 
 import { StoreItem } from './StoreItem';
@@ -139,7 +139,8 @@ export const FactionDisplay = (props:FactionDisplayProps) => {
 										maxRarity={item.rarity}
 										rarity={item.rarity}
 									/>{' '}
-									{item.name} {item.rarity > 0 ? `(${item.rarity})` : ''}
+									{item.name}
+									<RarityStars asSpan={true} max={item.rarity} value={item.rarity} />
 								</div>
 							))
 						}

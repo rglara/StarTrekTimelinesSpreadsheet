@@ -416,6 +416,17 @@
     border-left-color: #0078d7;
 }
 
+.faction-page {
+    padding: 10px;
+}
+
+.faction-content {
+    -webkit-overflow-scrolling: touch;
+    max-height: calc(100vh - 230px);
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
 .faction-gallery {
     display: flex;
     flex-direction: row;

@@ -66,13 +66,17 @@ export const FactionDetails = () => {
 	});
 
 	return (
-		<div className='tab-panel' data-is-scrollable='true'>
-			<h1>Factions</h1>
-			<div className='faction-gallery'>
-				{galleryItems}
+		<div className='faction-page'>
+			<div className='faction-header'>
+				<h1>Factions</h1>
+				<div className='faction-gallery'>
+					{galleryItems}
+				</div>
+				<hr/>
 			</div>
-			<hr/>
-			{detailItems}
+			<div className='faction-content'>
+				{detailItems}
+\			</div>
 		</div>
 	);
 }
