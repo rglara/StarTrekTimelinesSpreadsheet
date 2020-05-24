@@ -19,14 +19,11 @@ interface MissionExplorerState {
 	options: MissionOptions[];
 }
 
-interface MissionOptions {
-	key: string;
-	text: string;
+interface MissionOptions extends IDropdownOption {
 	data?: {
 		mission: string;
 		questId: number;
 	};
-	itemType?: number;
 }
 
 export class MissionExplorer extends React.Component<MissionExplorerProps, MissionExplorerState> {
@@ -81,11 +78,15 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 			if (mission.quests.length == 0) return;
 			if (onlyIncomplete && (mission.stars_earned == mission.total_stars)) return;
 
-			var missionLabel = (mission.quests[0].cadet ? 'CADET - ' : '') + mission.episode_title;
-			missionLabel += ' (' + mission.stars_earned + ' / ' + mission.total_stars + ')';
+			const missionLabel =
+				`${mission.quests[0].cadet ? 'CADET - ' : ''}${mission.episode_title} (${mission.stars_earned} / ${mission.total_stars})`;
 
-			options.push({ key: mission.episode_title + mission.id, text: missionLabel, itemType: DropdownMenuItemType.Header });
-			var any = false;
+			options.push({
+				key: mission.episode_title + mission.id,
+				text: missionLabel,
+				itemType: DropdownMenuItemType.Header
+			});
+			let found = false;
 			mission.quests.forEach((quest) => {
 				if (quest.quest_type == 'ConflictQuest') {
 					if (onlyIncomplete) {
@@ -94,12 +95,19 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 						if (goals == goal_progress) return;
 					}
 
-					options.push({ key: quest.name + quest.id, text: quest.name, data: { mission: mission.episode_title, questId: quest.id } });
-					any = true;
+					options.push({
+						key: quest.name + quest.id,
+						text: quest.name,
+						data: {
+							mission: mission.episode_title,
+							questId: quest.id
+						}
+					});
+					found = true;
 				}
 			});
 
-			if (!any) {
+			if (!found) {
 				options.pop();
 			}
 		});
@@ -107,11 +115,11 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 		return options;
 	}
 
-	_onRenderTitle(options?: IDropdownOption[]): JSX.Element {
-		if (options && options.length > 1) {
-			let option = options[0];
+	_onRenderTitle(options?: MissionOptions[]): JSX.Element {
+		if (options && options.length > 0) {
+			const option = options[0];
 			return (<div>
-				<span><b>{option.data.mission} : </b></span>
+				<span><b>{option.data ? option.data.mission : 'UNKNOWN'} : </b></span>
 				<span>{option.text}</span>
 			</div>);
 		}
@@ -119,14 +127,14 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 	}
 
 	render() {
-		if (this.state.dataAvailable)
+		if (this.state.dataAvailable) {
 			return (
 				<div className='tab-panel' data-is-scrollable='true'>
 					<p><b>Note: </b>These calculations only search crew necessary for completing the missions with the epic mastery.</p>
 					<Dropdown
-						selectedKey={this.state.selectedItem && this.state.selectedItem.key}
-						onChange={(evt, item) => {
-							this.setState({ selectedItem: item as MissionOptions });
+						selectedKey={this.state.selectedItem?.key}
+						onChange={(_evt, item) => {
+							this.setState({ selectedItem: item });
 							if (this.missionDetailsRef.current && item && item.data) {
 								this.missionDetailsRef.current.loadMissionDetails(item.data.questId);
 							}
@@ -138,6 +146,7 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 					<MissionDetails questId={this.state.selectedItem} ref={this.missionDetailsRef} />
 				</div>
 			);
+		}
 		else {
 			return <div className="centeredVerticalAndHorizontal">
 				<div className="ui huge centered text active inline loader">Loading mission and quest data...</div>
