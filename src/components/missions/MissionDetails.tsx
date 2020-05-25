@@ -214,11 +214,36 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 			});
 		}
 
-		return (<div>
+		return (
 			<div className='mission-info'>
 				<div className='mission-details'>
 					<h3>{this.state.mission.name}</h3>
 					<p>{this.state.mission.description}</p>
+					<div className='mission-matrix'>
+						<div></div>
+						<div className='mm-data'><Image src={CONFIG.MASTERY_LEVELS[0].url()} height={24} /></div>
+						<div className='mm-data'><Image src={CONFIG.MASTERY_LEVELS[1].url()} height={24} /></div>
+						<div className='mm-data'><Image src={CONFIG.MASTERY_LEVELS[2].url()} height={24} /></div>
+						<div className='mm-label'>Mastery Required:</div>
+						<div className='mm-data'>{(this.state.mission.difficulty_by_mastery) && this.state.mission.difficulty_by_mastery[0]}</div>
+						<div className='mm-data'>{(this.state.mission.difficulty_by_mastery) && this.state.mission.difficulty_by_mastery[1]}</div>
+						<div className='mm-data'>{(this.state.mission.difficulty_by_mastery) && this.state.mission.difficulty_by_mastery[2]}</div>
+						<div className='mm-label'>Trait Bonuses:</div>
+						<div className='mm-data'>{(this.state.mission.trait_bonuses) && this.state.mission.trait_bonuses[0]}</div>
+						<div className='mm-data'>{(this.state.mission.trait_bonuses) && this.state.mission.trait_bonuses[1]}</div>
+						<div className='mm-data'>{(this.state.mission.trait_bonuses) && this.state.mission.trait_bonuses[2]}</div>
+						<div className='mm-label'>Completed:</div>
+						<div className='mm-data'>{this.state.mission.mastery_levels[0].progress.goal_progress} / {this.state.mission.mastery_levels[0].progress.goals}</div>
+						<div className='mm-data'>{this.state.mission.mastery_levels[1].progress.goal_progress} / {this.state.mission.mastery_levels[1].progress.goals}</div>
+						<div className='mm-data'>{this.state.mission.mastery_levels[2].progress.goal_progress} / {this.state.mission.mastery_levels[2].progress.goals}</div>
+						<div className='mm-divider'><hr/></div>
+						<div className='mm-label'>Critical Threshold:</div>
+						<div className='mm-note'>{this.state.mission.critical_threshold ? this.state.mission.critical_threshold : 'none'}</div>
+						{this.state.mission.cadet && (<div className='mm-label'>Cadet Requirements:</div>)}
+						{this.state.mission.cadet && (<div className='mm-note'>
+							<span dangerouslySetInnerHTML={this.htmlDecode(this.state.mission!.crew_requirement!.description)} />
+						</div>)}
+					</div>
 				</div>
 				<div className='mission-graph'>
 					<canvas
@@ -228,66 +253,11 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 						style={{ width: '100%', height: 'auto' }}
 					/>
 				</div>
-				<div className='mission-calc'>Calcs</div>
+				<div className='mission-calc'>
+					{crewSelectionLog}
+					{(this.state.selectedChallenge != undefined) && this.renderChallengeDetails()}
+				</div>
 			</div>
-
-			<table style={{ width: '100%' }}>
-				<tbody>
-					<tr style={{ minWidth: '300px' }}><td style={{ width: '50%' }}>
-						<h3>{this.state.mission.name}</h3>
-						<p>{this.state.mission.description}</p>
-
-						<div>
-							Mastery required: <span className='quest-mastery'>
-								<Image src={CONFIG.MASTERY_LEVELS[0].url()} height={20} />({
-									(this.state.mission.difficulty_by_mastery) && this.state.mission.difficulty_by_mastery[0]
-								})
-							<Image src={CONFIG.MASTERY_LEVELS[1].url()} height={20} />({
-								(this.state.mission.difficulty_by_mastery) && this.state.mission.difficulty_by_mastery[1]
-							})
-							<Image src={CONFIG.MASTERY_LEVELS[2].url()} height={20} />({
-								(this.state.mission.difficulty_by_mastery) && this.state.mission.difficulty_by_mastery[2]
-							})
-						</span>
-						</div>
-						<div>
-							Completed: <span className='quest-mastery'>
-								<Image src={CONFIG.MASTERY_LEVELS[0].url()} height={20} />({this.state.mission.mastery_levels[0].progress.goal_progress} / {this.state.mission.mastery_levels[0].progress.goals})
-							<Image src={CONFIG.MASTERY_LEVELS[1].url()} height={20} />({this.state.mission.mastery_levels[1].progress.goal_progress} / {this.state.mission.mastery_levels[1].progress.goals})
-							<Image src={CONFIG.MASTERY_LEVELS[2].url()} height={20} />({this.state.mission.mastery_levels[2].progress.goal_progress} / {this.state.mission.mastery_levels[2].progress.goals})
-						</span>
-						</div>
-						<div>
-							Trait bonuses: <span className='quest-mastery'>
-								<Image src={CONFIG.MASTERY_LEVELS[0].url()} height={20} />({
-									(this.state.mission.trait_bonuses) && this.state.mission.trait_bonuses[0]
-								})
-								<Image src={CONFIG.MASTERY_LEVELS[1].url()} height={20} />({
-									(this.state.mission.trait_bonuses) && this.state.mission.trait_bonuses[1]
-								})
-								<Image src={CONFIG.MASTERY_LEVELS[2].url()} height={20} />({
-									(this.state.mission.trait_bonuses) && this.state.mission.trait_bonuses[2]
-								})
-							</span>
-						</div>
-						<div>
-							Critical threshold: {this.state.mission.critical_threshold ? this.state.mission.critical_threshold : 'none'}
-						</div>
-						{this.state.mission.cadet && (
-							<div>
-								Cadet requirements: <span dangerouslySetInnerHTML={this.htmlDecode(this.state.mission!.crew_requirement!.description)} />
-							</div>
-						)}
-					</td><td style={{ width: '50%', minHeight: '280px' }}>
-							<canvas ref='canvasMission2' width={1000} height={450} style={{ width: '100%', height: 'auto' }} />
-						</td></tr>
-					<tr><td colSpan={2}>
-						{crewSelectionLog}
-						{(this.state.selectedChallenge != undefined) && this.renderChallengeDetails()}
-					</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>);
+		);
 	}
 }

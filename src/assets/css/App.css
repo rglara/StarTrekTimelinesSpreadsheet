@@ -428,18 +428,37 @@
 .mission-info {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    gap: 15px;
 }
 
-.mission-details {
-    margin-right: 20px;
+.mission-matrix {
+    display: grid;
+    grid-template-columns: 160px 1fr 1fr 1fr;
+    font-size: medium;
+    align-items: start;
 }
 
-.mission-graph {
+.mm-label {
+    justify-self: right;
+}
+
+.mm-data {
+    justify-self: center;
+}
+
+.mm-divider {
+    grid-column-start: 1;
+    grid-column-end: 5;
+}
+
+.mm-note {
+    justify-self: left;
+    margin-left: 20px;
+    grid-column-start: 2;
+    grid-column-end: 5;
 }
 
 .mission-calc {
-    background-color: pink;
-    height: 300px;
     grid-column-start: 1;
     grid-column-end: 3;
 }
