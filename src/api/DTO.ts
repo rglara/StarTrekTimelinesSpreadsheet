@@ -1121,7 +1121,7 @@ export interface ItemArchetypeSourceDTO {
 
 export interface ItemDTO {
    archetype_id: number;
-   expires_in: any;
+   expires_in: any; // null
    flavor: string;
    icon: ImageDataDTO;
    id: number;
@@ -1131,6 +1131,15 @@ export interface ItemDTO {
    symbol: string;
    /** See CONFIG.REWARDS_ITEM_TYPE */
    type: number;
+
+   // These fields are found on shuttle/craft bonus items
+
+   /** skill_id is from serverConfig.config.stats_config.stat_desc_by_id */
+   bonuses?: {[skill_id:string] : number};
+   cr_modifier?: number; // 0
+   crafting_bonuses?: { [key: number]: number };
+   reward_modifier?: number; // 0
+   time_modifier?: number;
 }
 
 // Used internaly by the app; not a DTO
@@ -1238,17 +1247,23 @@ export interface ServerConfigDTO {
    server_environment: any;
    ship: any;
    shuttle_adventures: {
-      secondary_skill_percentage: number;
-      //unlisted: shuttle_speedup_formula_v2_dil_cost_1 through _5
-      //unlisted: shuttle_speedup_formula_v2_time_1 through _5
-      sigmoid_midpoint: number;
-      sigmoid_steepness: number;
-      speedup_formula_coefficient_1: number;
-      speedup_formula_coefficient_2: number;
-      speedup_formula_coefficient_3: number;
-      speedup_seconds_per_currency_unit: number;
+      secondary_skill_percentage: number; // .25
+      //unlisted: shuttle_speedup_formula_v2_dil_cost_1 .. cost_5 // 1, 100, 200, 400, 500
+      //unlisted: shuttle_speedup_formula_v2_time_1 .. time_5 // 60, 3600, 10800, 32400, 43200
+      sigmoid_midpoint: number; // .5
+      sigmoid_steepness: number; // 3.5
+      speedup_formula_coefficient_1: number; // -1.604e-8
+      speedup_formula_coefficient_2: number; // 0.001873
+      speedup_formula_coefficient_3: number; // 18
+      speedup_seconds_per_currency_unit: number; // 27
    };
-   stats_config: any;
+   stats_config: {
+      stat_desc_by_id: { [skill_id: string] : {
+         symbol: string; // e.g. "engineering_skill_core",
+         skill: string; // e.g. "engineering_skill",
+         stat: 'core' | 'range_min' | 'range_max';
+      }}
+   };
    tokens: { id: number; symbol: string; faction_id: number; }[];
    voyage_dying_indicator: number;
    voyages_matched_crew_trait_bonus: number;

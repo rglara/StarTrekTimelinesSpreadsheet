@@ -1,5 +1,5 @@
 import STTApi, { CONFIG } from "./index";
-import { CrewData, BorrowedCrewDTO, PlayerShuttleDTO, SHUTTLE_STATE_OPENED, ItemDTO } from "./DTO";
+import { CrewData, BorrowedCrewDTO, PlayerShuttleDTO, SHUTTLE_STATE_OPENED, ItemDTO, ItemData } from "./DTO";
 
 export interface CrewItem {
     crew: CrewData | BorrowedCrewDTO;
@@ -22,19 +22,23 @@ export interface CrewChoice {
 export interface ShuttleSelection {
     calc: ShuttleCalc;
     chosen: CrewChoice[];
+    bonus?: {
+        item: ItemData;
+        userSelect: boolean;
+    };
 }
 
 export interface ShuttleCalc {
     challenge_rating: number;
     shuttle: PlayerShuttleDTO;
-    chance: (crew: (CrewItem | undefined)[]) => number;
+    chance: (crew: (CrewItem | undefined)[], bonus: ItemData | undefined) => number;
     slots: ShuttleCalcSlot[];
 }
 
 export interface ShuttleCalcSlot {
     skillText: string;
     slotIndex: number;
-    crewValue: (crew: CrewItem) => number;
+	crewValue: (crew: CrewItem, bonus: ItemDTO | undefined) => number;
     bestCrew: CrewItem[];
 }
 
@@ -47,17 +51,19 @@ export async function shuttleNewMission(token: ItemDTO): Promise<void> {
     await STTApi.executePostRequestWithUpdates("shuttle/redeem_token", { id: token.id });
 }
 
+// comsumable is of item type=4; 3* adds 6%, 4* adds 12%, 5* adds 19%
 export async function shuttleStart(shuttle: PlayerShuttleDTO,
     crew: (CrewData | BorrowedCrewDTO)[],
     consumable_id: number | undefined,
-    displayed_percent_success: number
+    displayed_percent_success: number,
+    useToken: boolean
 ): Promise<void> {
     let dto : any = {
         id: shuttle.id,
         crew: crew.map(c => cid(c)).join(','),
         consumable: consumable_id ? consumable_id : 0,
         displayed_percent_success: `${displayed_percent_success}%`,
-        is_rental: 0,
+        is_rental: useToken ? 1 : 0,
     };
 
     const borrow = crew.findIndex(c => ((c as CrewData).crew_id) == undefined);
@@ -66,6 +72,11 @@ export async function shuttleStart(shuttle: PlayerShuttleDTO,
     }
 
     await STTApi.executePostRequestWithUpdates("shuttle/start", dto);
+}
+
+//TODO: need to determine how many active tokens are in use to use this API
+export async function shuttleValidateToken(tokensInUse: number): Promise<boolean> {
+    return await STTApi.executePostRequest("shuttle/validate_allowed_shuttle", { current_rentals: tokensInUse });
 }
 
 export function getBonusedRoster(crew_bonuses: { [crew_symbol: string]: number; }, alloWBorrow: boolean): CrewItem[] {
@@ -127,6 +138,33 @@ export function cid(c: CrewData | BorrowedCrewDTO): number {
     return c.id;
 }
 
+export function computeChance(challenge_rating: number, numberofSlots: number, skillSum: number): number {
+    return Math.floor(
+        100 /
+        (1 +
+            Math.exp(
+                STTApi.serverConfig!.config.shuttle_adventures.sigmoid_steepness *
+                (STTApi.serverConfig!.config.shuttle_adventures.sigmoid_midpoint - skillSum / (challenge_rating * numberofSlots))
+            ))
+    );
+}
+
+export function skillBonus(item: ItemDTO | undefined, sk: string) : number {
+	if (item?.bonuses) {
+		//FIXME: are there ever more than one here?
+		let k = Object.keys(item.bonuses).shift();
+		if (k) {
+			const v = item.bonuses[k];
+			let sc = STTApi.serverConfig?.config.stats_config.stat_desc_by_id[k];
+			if (sc && sc.skill === sk) {
+				return v;
+			}
+		}
+	}
+	return 0;
+}
+
+
 const LOG_CALCULATE = false;
 
 // Compute "best" crew for the available shuttles
@@ -134,8 +172,21 @@ const LOG_CALCULATE = false;
 //   select first unused for each slot (decent good selection)
 //   permutate slightly
 //   keep better result; keep worse result if it passes a threshhold (to jump to another local maximum)
-export const computeCrew = async (bonusedRoster: CrewItem[], shuttleCalcs: ShuttleCalc[], userChoices: ShuttleSelection[]): Promise<ShuttleSelection[]> => {
+export const computeCrew = async (
+	bonusedRoster: CrewItem[], shuttleCalcs: ShuttleCalc[], userChoices: ShuttleSelection[],
+	options?: {
+		useBonuses?: boolean;
+		useBonuses45?: boolean;
+	}
+): Promise<ShuttleSelection[]> => {
     // Initial configuration
+	let availableBonuses : ItemData[] = [];
+	if (options?.useBonuses) {
+		availableBonuses = STTApi.items.filter(item => item.type === 4);
+		if (!options.useBonuses45) {
+			availableBonuses = availableBonuses.filter(item => item.rarity < 4);
+		}
+	}
     let current = selectRandom(undefined);
     let next: ShuttleSelection[] = [];
     let iteration = 0;
@@ -199,7 +250,7 @@ export const computeCrew = async (bonusedRoster: CrewItem[], shuttleCalcs: Shutt
     function nrgToMax(sels: ShuttleSelection[]): number {
         let chances = sels.map(sel => {
             const chosenItems = sel.chosen.map(ch => ch.item);
-            return sel.calc.chance(chosenItems);
+            return sel.calc.chance(chosenItems, sel.bonus?.item);
         });
 
         const n = chances.length;
@@ -213,9 +264,6 @@ export const computeCrew = async (bonusedRoster: CrewItem[], shuttleCalcs: Shutt
 
     function selectRandom(selsCurrent?: ShuttleSelection[]): ShuttleSelection[] {
         let sels: ShuttleSelection[] = [];
-        const every = 5;
-        let counter = 0;
-
         let usedCrew: Set<number> = new Set<number>();
 
         // First, mark active (on shuttles or voyages) and user-selected crew as "used"
@@ -244,7 +292,9 @@ export const computeCrew = async (bonusedRoster: CrewItem[], shuttleCalcs: Shutt
 
         calcs.forEach((calc, ci) => {
             let chosen: CrewChoice[] = [];
-            let userChosen = userChoices.find(uc => uc.calc.shuttle.id === calc.shuttle.id)?.chosen ?? [];
+            const userSel = userChoices.find(uc => uc.calc.shuttle.id === calc.shuttle.id);
+            let userChosen = userSel?.chosen ?? [];
+            let bonus = userSel?.bonus?.userSelect ? userSel.bonus : undefined;
             calc.slots.forEach((scs, si) => {
                 let userChoice = userChosen.find(uc => uc.slotIndex === si);
                 if (calc.shuttle.state !== SHUTTLE_STATE_OPENED) {
@@ -296,9 +346,21 @@ export const computeCrew = async (bonusedRoster: CrewItem[], shuttleCalcs: Shutt
                 }
             });
 
+			if (!bonus && calc.shuttle.state === SHUTTLE_STATE_OPENED) {
+				const item = availableBonuses[Math.floor(Math.random() * availableBonuses.length)];
+				// ignore time boosts
+                if (item && item.bonuses) {
+                    bonus = {
+                        item,
+                        userSelect: false,
+                    }
+                }
+            }
+
             sels.push({
                 calc,
-                chosen
+                chosen,
+                bonus,
             });
         })
 

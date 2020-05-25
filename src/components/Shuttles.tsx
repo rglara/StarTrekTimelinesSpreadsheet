@@ -1,14 +1,15 @@
 import React from 'react';
-import { Item, Label, Form } from 'semantic-ui-react';
+import { Item, Label, Form, Checkbox } from 'semantic-ui-react';
 
 import STTApi, { CONFIG, formatTimeSeconds, CrewSkills } from '../api';
 import { CrewData, PlayerShuttleDTO, EventDTO,
 	EVENT_TYPES, SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_OPENED,
-	PlayerShuttleAdventureDTO, SHUTTLE_STATE_INPROGRESS, BorrowedCrewDTO } from '../api/DTO';
-import { DropdownButton, Dropdown } from 'react-bootstrap';
+	PlayerShuttleAdventureDTO, SHUTTLE_STATE_INPROGRESS, ItemDTO } from '../api/DTO';
+import { Dropdown } from 'react-bootstrap';
 import { ShuttleSelection, ShuttleCalc, CrewItem, CrewChoice,
-	getBonusedRoster, computeCrew, cid, ShuttleCalcSlot, shuttleStart
+	getBonusedRoster, computeCrew, cid, ShuttleCalcSlot, shuttleStart, computeChance, skillBonus
 } from '../api/ShuttleTools';
+import { ItemDisplay } from '../utils/ItemDisplay';
 
 export const Shuttles = (props: {
 	onTabSwitch?: (newTab: string) => void;
@@ -18,10 +19,12 @@ export const Shuttles = (props: {
 	const [selections, setSelections] = React.useState<ShuttleSelection[]>([]);
 	const [selType, setSelType] = React.useState<string | undefined>();
 	const [computingEstimate, setComputingEstimate] = React.useState<boolean>(false);
+	const [useBonuses, setUseBonuses] = React.useState<boolean>(false);
+	const [useBonuses45, setUseBonuses45] = React.useState<boolean>(false);
 
 	React.useEffect(() => {
 		selectCrew('first');
-	}, [userChoices]);
+	}, [userChoices, useBonuses, useBonuses45]);
 
 	let event : EventDTO | undefined = undefined;
 	if (
@@ -55,6 +58,19 @@ export const Shuttles = (props: {
 						Calculate best crew selection
 						{computingEstimate && <i className='spinner loading icon' style={{marginLeft:'5px'}}/>}
 					</Form.Button>
+					<Form.Field
+						control={Checkbox}
+						label='Use shuttle skill bonuses'
+						checked={useBonuses}
+						onChange={(e: any, { checked }: any) => setUseBonuses(checked)}
+					/>
+					<Form.Field
+						control={Checkbox}
+						disabled={!useBonuses}
+						label='Use 4* and 5* shuttle skill bonuses'
+						checked={useBonuses45}
+						onChange={(e: any, { checked }: any) => setUseBonuses45(checked)}
+					/>
 					{selType && <>Current selection: {selType}</>}
 				</div>}
 				<Item.Group divided>{selections.sort((a, b) => a.calc.shuttle.expires_in - b.calc.shuttle.expires_in).map(sel =>
@@ -78,7 +94,7 @@ export const Shuttles = (props: {
 			setSelType("Best")
 			//FIXME: need a better way to fork this to background
 			setTimeout(async () => {
-				let sels = await computeCrew(bonusedRoster, shuttleCalcs, userChoices)
+				let sels = await computeCrew(bonusedRoster, shuttleCalcs, userChoices, { useBonuses, useBonuses45 })
 				//let sels = await computeCrewFirst(bonusedRoster, shuttleCalcs, userChoices, fillStrategy);
 				setSelections(sels);
 				setComputingEstimate(false);
@@ -204,7 +220,7 @@ const ShuttleItem = (props: {
 	const shuttle = props.selection.calc.shuttle;
 	let faction = STTApi.playerData.character.factions.find(faction => faction.id === shuttle.faction_id);
 	const chosenItems = props.selection.chosen.map(ch => ch.item);
-	const chance = props.selection.calc.chance(chosenItems);
+	const chance = props.selection.calc.chance(chosenItems, props.selection.bonus?.item);
 	const chosenCrew = chosenItems.filter(ch => ch !== undefined).map(ch => ch!.crew);
 	let canStart = true;
 	if (shuttle.state !== SHUTTLE_STATE_OPENED) {
@@ -235,7 +251,20 @@ const ShuttleItem = (props: {
 							selection={props.selection}
 						/>;
 					})}
-					Chance:{' '}{chance}{' '}%
+					<div>
+						Bonus: {
+							props.selection.bonus ?
+								<ItemDisplay
+									size={50}
+									rarity={props.selection.bonus.item.rarity}
+									maxRarity={props.selection.bonus.item.rarity}
+									src={props.selection.bonus.item.iconUrl} />
+								: <>(None)</>
+						}
+					</div>
+					<div>
+						Chance:{' '}{chance}{' '}%
+					</div>
 					{shuttle.state === SHUTTLE_STATE_OPENED &&
 						props.selection.chosen.map(cs => cs.userSelect ?? false).reduce((p, c) => p || c, false)
 						&&
@@ -251,7 +280,7 @@ const ShuttleItem = (props: {
 	);
 
 	function start() {
-		shuttleStart(shuttle, chosenCrew, undefined, chance)
+		shuttleStart(shuttle, chosenCrew, undefined, chance, false)
 			.then(() => {
 				props.refresh();
 			})
@@ -316,17 +345,6 @@ const ShuttleSeatSelector = (props:{
 function buildSlotCalculator(bonusedRoster: CrewItem[], event: EventDTO | undefined, activeShuttleAdventures: PlayerShuttleAdventureDTO[]): ShuttleCalc[] {
 	let calcs: ShuttleCalc[] = [];
 
-	function shuttleChance(challenge_rating: number, numberofSlots: number, skillSum: number): number {
-		return Math.floor(
-			100 /
-			(1 +
-				Math.exp(
-					STTApi.serverConfig!.config.shuttle_adventures.sigmoid_steepness *
-					(STTApi.serverConfig!.config.shuttle_adventures.sigmoid_midpoint - skillSum / (challenge_rating * numberofSlots))
-				))
-		);
-	}
-
 	activeShuttleAdventures.forEach(adventure => {
 		let shuttle = adventure.shuttles[0];
 
@@ -334,15 +352,15 @@ function buildSlotCalculator(bonusedRoster: CrewItem[], event: EventDTO | undefi
 		let calc: ShuttleCalc = {
 			challenge_rating: adventure.challenge_rating,
 			shuttle: adventure.shuttles[0],
-			chance: (crew: (CrewItem | undefined)[]) => {
+			chance: (crew: (CrewItem | undefined)[], bonus: ItemDTO | undefined) => {
 				let skillSum = 0;
 				for (let i = 0; i < slots.length; ++i) {
 					const ci = crew[i];
 					if (ci) {
-						skillSum += slots[i].crewValue(ci);
+						skillSum += slots[i].crewValue(ci, bonus);
 					}
 				}
-				return shuttleChance(adventure.challenge_rating, adventure.shuttles[0].slots.length, skillSum);
+				return computeChance(adventure.challenge_rating, adventure.shuttles[0].slots.length, skillSum);
 			},
 			slots
 		}
@@ -350,7 +368,7 @@ function buildSlotCalculator(bonusedRoster: CrewItem[], event: EventDTO | undefi
 
 		function updateBest(c: ShuttleCalc, cs: ShuttleCalcSlot) {
 			// for best crew, doesn't really matter if they don't have the skill, so just include everyone
-			cs.bestCrew = bonusedRoster.map(r => { return { ...r, total: cs.crewValue(r) }; }).sort((a, b) => b.total - a.total);
+			cs.bestCrew = bonusedRoster.map(r => { return { ...r, total: cs.crewValue(r, undefined) }; }).sort((a, b) => b.total - a.total);
 			cs.bestCrew.forEach((c) => {
 				const isShared = (c.crew as any).crew_id === undefined;
 				c.text = `${c.crew.name} (${c.total})`;
@@ -371,23 +389,24 @@ function buildSlotCalculator(bonusedRoster: CrewItem[], event: EventDTO | undefi
 				// AND or single
 				const sks = slot.skills[0].split(',');
 				if (sks.length === 1) {
-					const cs = {
+					const cs: ShuttleCalcSlot = {
 						slotIndex: idx,
 						skillText: CONFIG.SKILLS[sks[0]],
-						crewValue: (crew: CrewItem) => {
-							return crew.skills[sks[0]];
+						crewValue: (crew: CrewItem, bonus: ItemDTO | undefined) => {
+							const val = crew.skills[sks[0]] + skillBonus(bonus, sks[0]);
+							return val;
 						},
 						bestCrew: []
 					};
 					calc.slots.push(cs);
 					updateBest(calc, cs);
 				} else {
-					const cs = {
+					const cs: ShuttleCalcSlot = {
 						slotIndex: idx,
 						skillText: CONFIG.SKILLS[sks[0]] + " AND " + CONFIG.SKILLS[sks[1]],
-						crewValue: (crew: CrewItem) => {
-							let a1 = crew.skills[sks[0]];
-							let a2 = crew.skills[sks[1]];
+						crewValue: (crew: CrewItem, bonus: ItemDTO | undefined) => {
+							let a1 = crew.skills[sks[0]] + skillBonus(bonus, sks[0]);
+							let a2 = crew.skills[sks[1]] + skillBonus(bonus, sks[1]);
 							return Math.floor(
 								Math.max(a1, a2) +
 								(Math.min(a1, a2) * STTApi.serverConfig!.config.shuttle_adventures.secondary_skill_percentage)
@@ -402,9 +421,9 @@ function buildSlotCalculator(bonusedRoster: CrewItem[], event: EventDTO | undefi
 				const cs = {
 					slotIndex: idx,
 					skillText: CONFIG.SKILLS[slot.skills[0]] + " OR " + CONFIG.SKILLS[slot.skills[1]],
-					crewValue: (crew: CrewItem) => {
-						let a1 = crew.skills[slot.skills[0]];
-						let a2 = crew.skills[slot.skills[1]];
+					crewValue: (crew: CrewItem, bonus: ItemDTO | undefined) => {
+						let a1 = crew.skills[slot.skills[0]] + skillBonus(bonus, slot.skills[0]);
+						let a2 = crew.skills[slot.skills[1]] + skillBonus(bonus, slot.skills[1]);
 						return Math.max(a1, a2);
 					},
 					bestCrew: []
