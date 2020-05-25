@@ -8,7 +8,7 @@ export interface IChallengeSuccessTrait {
 }
 
 export interface IChallengeSuccessCrew {
-    crew: any;
+    crew: CrewData;
     success: number;
     rollRequired: number;
     rollCrew: number;
@@ -286,14 +286,14 @@ export function calculateQuestRecommendations(questId: number, loadEvenFinishedN
                 if (crewSelection[i].crew.id == crewSelection[i - 1].crew.id) {
                     // If crew is used on consecutive nodes, it gets -20% to skill rating
                     let skill = nodeElem[path[i]].skill;
-                    let tiredSuccess = ((crewSelection[i].rollCrew + crewSelection[i].crew[skill].max) * STTApi.serverConfig!.config.conflict.tired_crew_coefficient - crewSelection[i].rollRequired) * 100 /
-                        (crewSelection[i].crew[skill].max - crewSelection[i].crew[skill].min);
-                    if (tiredSuccess > 100) tiredSuccess = 100;
-
+                    let tiredSuccess = ((crewSelection[i].rollCrew + crewSelection[i].crew.skills[skill].max) * STTApi.serverConfig!.config.conflict.tired_crew_coefficient - crewSelection[i].rollRequired) * 100 /
+                        (crewSelection[i].crew.skills[skill].max - crewSelection[i].crew.skills[skill].min);
+                    if (tiredSuccess > 100) {
+                        tiredSuccess = 100;
+                    }
                     if (tiredSuccess < min) {
                         min = tiredSuccess;
                     }
-
                     total += tiredSuccess;
                 }
                 else {

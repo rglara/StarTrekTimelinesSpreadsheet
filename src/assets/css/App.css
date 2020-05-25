@@ -416,15 +416,48 @@
     border-left-color: #0078d7;
 }
 
-.faction-page {
+.mission-selection {
+    width: 50%;
+    margin-bottom: 20px;
+}
+
+.mission-content {
+    max-height: calc(100vh - 190px);
+}
+
+.mission-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.mission-details {
+    margin-right: 20px;
+}
+
+.mission-graph {
+}
+
+.mission-calc {
+    background-color: pink;
+    height: 300px;
+    grid-column-start: 1;
+    grid-column-end: 3;
+}
+
+.faction-page,
+.mission-page {
     padding: 10px;
 }
 
-.faction-content {
+.faction-content,
+.mission-content {
     -webkit-overflow-scrolling: touch;
-    max-height: calc(100vh - 230px);
     overflow-x: hidden;
     overflow-y: auto;
+}
+
+.faction-content {
+    max-height: calc(100vh - 230px);
 }
 
 .faction-gallery {

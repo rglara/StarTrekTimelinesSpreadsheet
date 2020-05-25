@@ -129,21 +129,27 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 	render() {
 		if (this.state.dataAvailable) {
 			return (
-				<div className='tab-panel' data-is-scrollable='true'>
-					<p><b>Note: </b>These calculations only search crew necessary for completing the missions with the epic mastery.</p>
-					<Dropdown
-						selectedKey={this.state.selectedItem?.key}
-						onChange={(_evt, item) => {
-							this.setState({ selectedItem: item });
-							if (this.missionDetailsRef.current && item && item.data) {
-								this.missionDetailsRef.current.loadMissionDetails(item.data.questId);
-							}
-						}}
-						onRenderTitle={this._onRenderTitle}
-						placeholder='Select a mission'
-						options={this.state.options}
-					/>
-					<MissionDetails questId={this.state.selectedItem} ref={this.missionDetailsRef} />
+				<div className='mission-page'>
+					<div className='mission-header'>
+						<h1>Missions</h1>
+						<Dropdown
+							className='mission-selection'
+							selectedKey={this.state.selectedItem?.key}
+							onChange={(_evt, item) => {
+								this.setState({ selectedItem: item });
+								if (this.missionDetailsRef.current && item && item.data) {
+									this.missionDetailsRef.current.loadMissionDetails(item.data.questId);
+								}
+							}}
+							onRenderTitle={this._onRenderTitle}
+							placeholder='Select a mission'
+							options={this.state.options}
+						/>
+						<hr/>
+					</div>
+					<div className='mission-content'>
+						<MissionDetails questId={this.state.selectedItem} ref={this.missionDetailsRef} />
+					</div>
 				</div>
 			);
 		}

@@ -215,6 +215,22 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 		}
 
 		return (<div>
+			<div className='mission-info'>
+				<div className='mission-details'>
+					<h3>{this.state.mission.name}</h3>
+					<p>{this.state.mission.description}</p>
+				</div>
+				<div className='mission-graph'>
+					<canvas
+						ref='canvasMission'
+						width={1000}
+						height={450}
+						style={{ width: '100%', height: 'auto' }}
+					/>
+				</div>
+				<div className='mission-calc'>Calcs</div>
+			</div>
+
 			<table style={{ width: '100%' }}>
 				<tbody>
 					<tr style={{ minWidth: '300px' }}><td style={{ width: '50%' }}>
@@ -263,7 +279,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 							</div>
 						)}
 					</td><td style={{ width: '50%', minHeight: '280px' }}>
-							<canvas ref='canvasMission' width={1000} height={450} style={{ width: '100%', height: 'auto' }} />
+							<canvas ref='canvasMission2' width={1000} height={450} style={{ width: '100%', height: 'auto' }} />
 						</td></tr>
 					<tr><td colSpan={2}>
 						{crewSelectionLog}
