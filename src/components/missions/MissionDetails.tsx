@@ -184,12 +184,12 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 			return <span />;
 		}
 
-		var crewSelectionLog;
+		let crewSelectionLog;
 		if (this.state.bestCrewPaths?.length == 0) {
 			if (this.state.allFinished) {
-				crewSelectionLog = <span>You already completed all nodes on this mission. Congrats!</span>;
+				crewSelectionLog = <span className='ui header green'>You already completed all nodes on this mission.<br/>Congrats!</span>;
 			} else {
-				crewSelectionLog = <span style={{ color: 'red' }}>There is no crew selection capable of completing this mission. Get more crew!</span>;
+				crewSelectionLog = <span className='ui header red'>There is no crew selection capable of completing this mission.<br/>Get more crew!</span>;
 			}
 		}
 		else {

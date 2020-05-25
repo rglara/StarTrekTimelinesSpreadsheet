@@ -7,6 +7,7 @@ import STTApi from '../../api';
 
 import { MissionDetails } from './MissionDetails';
 import { ItemGroup } from 'semantic-ui-react';
+import { MissionDTO } from '../../api/DTO';
 
 interface MissionExplorerProps {
 	onCommandItemsUpdate?: (items: ICommandBarItemProps[]) => void;
@@ -72,14 +73,45 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 		}
 	}
 
+	_sortMissions(a: MissionDTO, b: MissionDTO): number {
+		// sort CADET missions (by id),
+		// then DISTRESS CALLS (alphabetically),
+		// then EPISODES (numerically)
+		const isCadetA = a.quests[0].cadet;
+		const isCadetB = b.quests[0].cadet;
+		if (isCadetA && !isCadetB) { return -1; }
+		if (!isCadetA && isCadetB) { return 1; }
+		if (isCadetA && isCadetB) { return a.id - b.id; }
+
+		const episodeNumA = a.episode_title.startsWith('Episode')
+			? Number(a.episode_title.substr(8, 2))
+			: -1;
+		const isEpisodeA = episodeNumA > 0;
+		const episodeNumB = b.episode_title.startsWith('Episode')
+			? Number(b.episode_title.substr(8, 2))
+			: -1;
+		const isEpisodeB = episodeNumB > 0;
+		const isDistressA = !isCadetA && !isEpisodeA;
+		const isDistressB = !isCadetB && !isEpisodeB;
+		if (isDistressA && !isDistressB) { return -1; }
+		if (!isDistressA && isDistressB) { return 1; }
+		if (isDistressA && isDistressB) { return a.episode_title.localeCompare(b.episode_title); }
+
+		return episodeNumA - episodeNumB;
+	}
+
 	loadOptions(onlyIncomplete: boolean) : MissionOptions[] {
 		let options: MissionOptions[] = [];
-		STTApi.missions.forEach((mission) => {
+		STTApi.missions.sort(this._sortMissions).forEach((mission) => {
 			if (mission.quests.length == 0) return;
 			if (onlyIncomplete && (mission.stars_earned == mission.total_stars)) return;
 
-			const missionLabel =
-				`${mission.quests[0].cadet ? 'CADET - ' : ''}${mission.episode_title} (${mission.stars_earned} / ${mission.total_stars})`;
+			const labelPrefix = mission.quests[0].cadet
+				? 'CADET: '
+				: mission.episode_title.startsWith('Episode')
+					? ''
+					: 'Distress Calls: ';
+			const missionLabel = `${labelPrefix}${mission.episode_title} (${mission.stars_earned} / ${mission.total_stars})`;
 
 			options.push({
 				key: mission.episode_title + mission.id,
@@ -88,7 +120,7 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 			});
 			let found = false;
 			mission.quests.forEach((quest) => {
-				if (quest.quest_type == 'ConflictQuest') {
+				if (quest.quest_type === 'ConflictQuest') {
 					if (onlyIncomplete) {
 						let goals = quest.mastery_levels[0].progress.goals + quest.mastery_levels[1].progress.goals + quest.mastery_levels[2].progress.goals;
 						let goal_progress = quest.mastery_levels[0].progress.goal_progress + quest.mastery_levels[1].progress.goal_progress + quest.mastery_levels[2].progress.goal_progress;
@@ -108,6 +140,7 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 			});
 
 			if (!found) {
+				// mission only contains space battle quests, so remove "header" option
 				options.pop();
 			}
 		});
