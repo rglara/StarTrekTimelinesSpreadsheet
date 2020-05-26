@@ -13,7 +13,7 @@ export interface RarityStarsProps {
 
 export let RarityStars = (props: RarityStarsProps) => {
 	let stars = "☆";
-	if (props.value) {
+	if (props.value !== undefined) {
 		stars = "★".repeat(props.value);
 		stars = stars + "☆".repeat(props.max - props.value);
 	}
