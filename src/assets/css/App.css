@@ -422,7 +422,7 @@
 }
 
 .mission-content {
-    max-height: calc(100vh - 190px);
+    height: calc(100vh - 190px);
 }
 
 .mission-info {
@@ -463,9 +463,36 @@
     grid-column-end: 3;
 }
 
+.mission-challenge {
+    margin-top: 10px;
+}
+
+.mc-matrix {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 4px 20px;
+    font-size: medium;
+    align-items: center;
+}
+
+.mcm-label {
+    justify-self: end;
+}
+
+.mcm-value {
+    justify-self: start;
+}
+
+.mcm-value .ms-Image {
+    display: inline-block;
+}
+
 .faction-page,
 .mission-page {
     padding: 10px;
+    max-height: calc(100vh - 50px);
+    overflow-x: hidden;
+    overflow-y: hidden;
 }
 
 .faction-content,
@@ -476,7 +503,7 @@
 }
 
 .faction-content {
-    max-height: calc(100vh - 230px);
+    height: calc(100vh - 230px);
 }
 
 .faction-gallery {

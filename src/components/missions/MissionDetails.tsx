@@ -42,6 +42,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 
 	componentDidUpdate(_prevProps: MissionDetailsProps, prevState: MissionDetailsState) {
 		if (this.state.mission !== prevState.mission) {
+			this.setState({ selectedChallenge: undefined });
 			this.updateGraph();
 		}
 	}
@@ -74,7 +75,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 			} else {
 				this.missionDisplay = new MissionDisplay(
 					this.refs.canvasMission, maxX, maxY,
-					(id: number) => this.setState({ selectedChallenge: id })
+					(id?: number) => this.setState({ selectedChallenge: id })
 				);
 			}
 
@@ -133,10 +134,10 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 			}
 		});
 
-		let critical = <span />;
+		let critical;
 		if (challenge.critical) {
 			if (!challenge.critical.claimed) {
-				critical = <p>Critical reward: {challenge.critical.reward[0].full_name}</p>;
+				critical = challenge.critical.reward[0].full_name;
 			}
 		}
 
@@ -155,20 +156,39 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 			});
 		}
 
-		return (<div>
+		return (<div className='mission-challenge'>
 			<h4>{challenge.name}</h4>
-			<span className='quest-mastery'>
-				Skill: <Image src={CONFIG.SPRITES['icon_' + challenge.skill].url} height={18} /> {CONFIG.SKILLS[challenge.skill]}
-			</span>
-			<p>Trait bonuses: {(traitBonuses.length > 0) ? traitBonuses.reduce(
-				(prev, curr) => prev === undefined ? curr : <>{prev}, {curr}</>) : 'none'}</p>
-			<p>Locks: {(lockTraits.length > 0) ? lockTraits.reduce(
-				(prev, curr) => prev === undefined ? curr : <>{prev}, {curr}</>) : 'none'}</p>
-			{critical}
+			<div className='mc-matrix'>
+				<div className='mcm-label'>Skill:</div>
+				<div className='mcm-value'>
+					<Image src={CONFIG.SPRITES['icon_' + challenge.skill].url} height={18} />
+					&nbsp;{CONFIG.SKILLS[challenge.skill]}
+				</div>
+				<div className='mcm-label'>Trait Bonuses:</div>
+				<div className='mcm-value'>
+					{(traitBonuses.length > 0)
+						? traitBonuses.reduce((prev, curr) => prev === undefined ? curr : <>{prev}, {curr}</>)
+						: 'None'}
+				</div>
+				<div className='mcm-label'>Locks:</div>
+				<div className='mcm-value'>
+					{(lockTraits.length > 0)
+						? lockTraits.reduce((prev, curr) => prev === undefined ? curr : <>{prev}, {curr}</>)
+						: 'None'}
+				</div>
+				{critical && (<div className='mcm-label'>Critical Reward:</div>)}
+				{critical && (<div className='mcm-value'>{critical}</div>)}
+			</div>
+			<div>
+				PERSONNEL
+			</div>
+
 			<div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap' }}>
 				{crewSuccess}
 			</div>
-			{(recommendations === undefined || recommendations.crew.length === 0) && <span style={{ color: 'red' }}>You have no crew capable of completing this node!</span>}
+			{(recommendations === undefined || recommendations.crew.length === 0) &&
+				<span className='ui header red'>You have no crew capable of completing this node!</span>
+			}
 		</div>);
 	}
 

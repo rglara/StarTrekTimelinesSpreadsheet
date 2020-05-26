@@ -136,10 +136,15 @@ export class MissionDisplay {
     }
 
     _onSelectionChanged() {
+        let found = false;
         for(let node of this.canvas.shapes) {
             if (node.selected) {
                 this.onSelectionChanged(node.id);
+                found = true;
             }
+        }
+        if (!found) {
+            this.onSelectionChanged(undefined);
         }
     }
 

@@ -6,7 +6,6 @@ import { Dropdown, DropdownMenuItemType, IDropdownOption } from 'office-ui-fabri
 import STTApi from '../../api';
 
 import { MissionDetails } from './MissionDetails';
-import { ItemGroup } from 'semantic-ui-react';
 import { MissionDTO } from '../../api/DTO';
 
 interface MissionExplorerProps {
@@ -181,7 +180,9 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 						<hr/>
 					</div>
 					<div className='mission-content'>
-						<MissionDetails questId={this.state.selectedItem} ref={this.missionDetailsRef} />
+						<MissionDetails
+							questId={this.state.selectedItem}
+							ref={this.missionDetailsRef} />
 					</div>
 				</div>
 			);
