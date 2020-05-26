@@ -310,7 +310,7 @@ const ShuttleItem = (props: {
 	);
 
 	function start() {
-		shuttleStart(shuttle, chosenCrew, undefined, chance, false)
+		shuttleStart(shuttle, chosenCrew, props.selection.bonus?.item.id, chance, false)
 			.then(() => {
 				props.refresh();
 			})
