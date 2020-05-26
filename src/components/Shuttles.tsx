@@ -1,10 +1,10 @@
 import React from 'react';
 import { Item, Label, Form, Checkbox } from 'semantic-ui-react';
 
-import STTApi, { CONFIG, formatTimeSeconds, CrewSkills } from '../api';
+import STTApi, { CONFIG, formatTimeSeconds, CrewSkills, RarityStars } from '../api';
 import { CrewData, PlayerShuttleDTO, EventDTO,
 	EVENT_TYPES, SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_OPENED,
-	PlayerShuttleAdventureDTO, SHUTTLE_STATE_INPROGRESS, ItemDTO } from '../api/DTO';
+	PlayerShuttleAdventureDTO, SHUTTLE_STATE_INPROGRESS, ItemDTO, ItemData } from '../api/DTO';
 import { Dropdown } from 'react-bootstrap';
 import { ShuttleSelection, ShuttleCalc, CrewItem, CrewChoice,
 	getBonusedRoster, computeCrew, cid, ShuttleCalcSlot, shuttleStart, computeChance, skillBonus
@@ -78,9 +78,12 @@ export const Shuttles = (props: {
 						key={sel.calc.shuttle.id}
 						selection={sel}
 						chooseSlot={chooseSlot}
+						chooseBonus={chooseBonus}
 						challengeRating={sel.calc.challenge_rating}
 						refresh={() => forceUpdate({})}
-						resetSelections={resetSelections} />)}
+						resetSelections={resetSelections}
+						options={{useBonuses: useBonuses, useBonuses45: useBonuses45}}
+					/>)}
 				</Item.Group>
 			</div>
 		</div>
@@ -131,7 +134,9 @@ export const Shuttles = (props: {
 		// Now fill up empty slots
 		shuttleCalcs.forEach(calc => {
 			let chosen: CrewChoice[] = [];
-			let userChosen = userChoices.find(uc => uc.calc.shuttle.id === calc.shuttle.id)?.chosen ?? [];
+			const userSel = userChoices.find(uc => uc.calc.shuttle.id === calc.shuttle.id);
+			let userChosen = userSel?.chosen ?? [];
+			let bonus = userSel?.bonus?.userSelect ? userSel.bonus : undefined;
 			calc.slots.forEach((scs, i) => {
 				let userChoice = userChosen.find(uc => uc.slotIndex === i);
 				if (calc.shuttle.state !== SHUTTLE_STATE_OPENED) {
@@ -165,7 +170,8 @@ export const Shuttles = (props: {
 
 			sels.push({
 				calc,
-				chosen
+				chosen,
+				bonus,
 			});
 		})
 
@@ -204,6 +210,31 @@ export const Shuttles = (props: {
 		setUserChoices(newChoices);
 	}
 
+	function chooseBonus(calc: ShuttleCalc, value: ItemData | undefined) {
+		let newChoices = [...userChoices];
+		let ssThisShuttle = newChoices.find(uc => uc.calc.shuttle.id === calc.shuttle.id);
+		if (!value) {
+			if (!ssThisShuttle) {
+				return;
+			}
+			ssThisShuttle.bonus = undefined;
+		}
+		else {
+			if (!ssThisShuttle) {
+				ssThisShuttle = {
+					calc,
+					chosen: [],
+				};
+				newChoices.push(ssThisShuttle);
+			}
+			ssThisShuttle.bonus = {
+				item: value,
+				userSelect: true,
+			};
+		}
+		setUserChoices(newChoices);
+	}
+
 	function resetSelections(calc: ShuttleCalc) {
 		let newUserChoices = userChoices.filter(c => c.calc.shuttle.id !== calc.shuttle.id);
 		setUserChoices(newUserChoices);
@@ -214,8 +245,13 @@ const ShuttleItem = (props: {
 	selection: ShuttleSelection;
 	challengeRating: number;
 	chooseSlot: (calc: ShuttleCalc, calcSlot: ShuttleCalcSlot, value: number) => void;
+	chooseBonus: (calc: ShuttleCalc, value: ItemData | undefined) => void;
 	resetSelections: (calc: ShuttleCalc) => void;
 	refresh: () => void;
+	options?: {
+		useBonuses?: boolean;
+		useBonuses45?: boolean;
+	};
 }) => {
 	const shuttle = props.selection.calc.shuttle;
 	let faction = STTApi.playerData.character.factions.find(faction => faction.id === shuttle.faction_id);
@@ -251,19 +287,13 @@ const ShuttleItem = (props: {
 							selection={props.selection}
 						/>;
 					})}
+					<ShuttleBonusSelector
+						selection={props.selection}
+						chooseBonus={props.chooseBonus}
+						options={props.options}
+					/>
 					<div>
-						Bonus: {
-							props.selection.bonus ?
-								<ItemDisplay
-									size={50}
-									rarity={props.selection.bonus.item.rarity}
-									maxRarity={props.selection.bonus.item.rarity}
-									src={props.selection.bonus.item.iconUrl} />
-								: <>(None)</>
-						}
-					</div>
-					<div>
-						Chance:{' '}{chance}{' '}%
+						Chance:{' '}{chance}{shuttle.state !== SHUTTLE_STATE_OPENED && '+'}{' '}%
 					</div>
 					{shuttle.state === SHUTTLE_STATE_OPENED &&
 						props.selection.chosen.map(cs => cs.userSelect ?? false).reduce((p, c) => p || c, false)
@@ -297,7 +327,6 @@ const ShuttleSeatSelector = (props:{
 	shuttle: PlayerShuttleDTO;
 	selection: ShuttleSelection;
 }) => {
-
 	const isEditable = props.shuttle.state === SHUTTLE_STATE_OPENED;
 	let options = props.calcSlot.bestCrew;
 	// Filter active crew for shuttles with open slots
@@ -340,6 +369,83 @@ const ShuttleSeatSelector = (props:{
 			</Dropdown>
 		}
 	</div>
+}
+
+const ShuttleBonusSelector = (props:{
+	selection: ShuttleSelection;
+	chooseBonus: (calc: ShuttleCalc, value: ItemData | undefined) => void;
+	options?: {
+		useBonuses?: boolean;
+		useBonuses45?: boolean;
+	};
+}) => {
+	let availableBonuses: ItemData[] = [];
+	if (props.options?.useBonuses) {
+		availableBonuses = STTApi.items.filter(item => item.type === 4);
+		if (!props.options.useBonuses45) {
+			availableBonuses = availableBonuses.filter(item => item.rarity < 4);
+		}
+	}
+
+	const isEditable = availableBonuses.length > 0 && props.selection.calc.shuttle.state === SHUTTLE_STATE_OPENED;
+	let missingBonus = <>None</>;
+	// Bonuses are not included in the DTO coming from the server for shuttles
+	if (props.selection.calc.shuttle.state !== SHUTTLE_STATE_OPENED) {
+		missingBonus = <> Unknown</>;
+	}
+
+	let selectedContent = missingBonus;
+	if (props.selection.bonus?.item) {
+		selectedContent = <><ItemDisplay
+			item={props.selection.bonus.item}
+			size={50}
+			rarity={props.selection.bonus.item.rarity}
+			maxRarity={props.selection.bonus.item.rarity}
+			src={props.selection.bonus.item.iconUrl} />
+			{props.selection.bonus.item.name}{' '}
+			<RarityStars max={props.selection.bonus.item.rarity} value={props.selection.bonus.item.rarity} asSpan={true} />
+		</>;
+	}
+	// style the option for current selection differently if it is a user selection
+	if (props.selection.bonus?.userSelect || !isEditable) {
+		selectedContent = <span style={{ fontWeight: 'bold' }}>{selectedContent}</span>
+	}
+
+	const styleDiv = { border: '1px black solid', padding: '1em', lineHeight: '1em', borderRadius: '.25em' };
+	const styleDropdown = { border: '1px black solid', padding: '1em', lineHeight: '1em', borderRadius: '.25em', display: 'inline-block' };
+
+	return <div>
+		Bonus:
+		{!isEditable && selectedContent}
+		{isEditable &&
+			<Dropdown key='outline-light' onSelect={(key: string) => {
+				const b = availableBonuses.find(item => item.id === Number(key))
+				props.chooseBonus(props.selection.calc, b);
+			}}>
+				<Dropdown.Toggle
+					as="span"
+					id="dropdown-basic"
+					style={styleDropdown}>
+					{selectedContent}
+				</Dropdown.Toggle>
+
+				<Dropdown.Menu style={{ overflowY: 'scroll', height: '200px' }}>
+					<Dropdown.Item key={0} eventKey={"0"}>
+						{missingBonus}
+					</Dropdown.Item>
+					{availableBonuses.map(item =>
+						<Dropdown.Item key={item.id} eventKey={String(item.id)}>
+							<ItemDisplay
+							size={50}
+							item={item}
+							rarity={item.rarity}
+							maxRarity={item.rarity}
+							src={item.iconUrl} />{item.name}{' '}<RarityStars max={item.rarity} value={item.rarity} asSpan={true}/>
+						</Dropdown.Item>)}
+				</Dropdown.Menu>
+			</Dropdown>
+		}
+	</div>;
 }
 
 function buildSlotCalculator(bonusedRoster: CrewItem[], event: EventDTO | undefined, activeShuttleAdventures: PlayerShuttleAdventureDTO[]): ShuttleCalc[] {

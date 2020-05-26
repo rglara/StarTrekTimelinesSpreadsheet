@@ -79,7 +79,7 @@ export async function shuttleValidateToken(tokensInUse: number): Promise<boolean
 	return await STTApi.executePostRequest("shuttle/validate_allowed_shuttle", { current_rentals: tokensInUse });
 }
 
-export function getBonusedRoster(crew_bonuses: { [crew_symbol: string]: number; }, alloWBorrow: boolean): CrewItem[] {
+export function getBonusedRoster(crew_bonuses: { [crew_symbol: string]: number; }, allowBorrow: boolean): CrewItem[] {
 	let rv: CrewItem[] = [];
 	STTApi.roster.forEach(crew => {
 		if (crew.buyback || crew.frozen > 0) {
@@ -106,7 +106,7 @@ export function getBonusedRoster(crew_bonuses: { [crew_symbol: string]: number; 
 		// These are synchronized, but don't have "active*" fields
 		brws = STTApi.borrowableCrew ?? [];
 	}
-	if (brws && alloWBorrow) {
+	if (brws && allowBorrow) {
 		brws.forEach(crew => {
 			const foundBonus = crew_bonuses[crew.symbol] ?? 1;
 
