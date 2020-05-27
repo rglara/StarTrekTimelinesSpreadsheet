@@ -147,16 +147,17 @@ export async function loadFullTree(onProgress: (description: string, subDesc?: s
 		});
 	});
 
-	onProgress('Loading equipment...', `(${missingEquipment.length} remaining)`);
 	if (missingEquipment.length === 0) {
 		// We're done loading, let's cache the current list, to save on future loading time
 		await STTApi.equipmentCache.put({
 			digest: STTApi.serverConfig!.config.craft_config.recipe_tree.digest,
 			archetypeCache: STTApi.itemArchetypeCache.archetypes
 		});
-
+		
 		return;
 	}
+	
+	onProgress('Loading equipment...', `(${missingEquipment.length} remaining)`);
 
 	// Load the description for the missing equipment
 	let archetypes = await loadItemsDescription(missingEquipment.slice(0, 20));

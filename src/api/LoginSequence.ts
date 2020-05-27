@@ -102,7 +102,7 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
         if (rosterCrew.iconUrl === '') {
             rosterCrew.iconUrl = STTApi.imageProvider.getCrewCached(rosterCrew, false);
             if (rosterCrew.iconUrl === '') {
-                await updateProgress('', rosterCrew.name,
+                await updateProgress('Loading Crew Images...', rosterCrew.name,
                     STTApi.imageProvider.getCrewImageUrl(rosterCrew, false)
                         .then(found => { rosterCrew.iconUrl = found.url; }));
             }
@@ -111,7 +111,7 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
         if (rosterCrew.iconBodyUrl === '') {
             rosterCrew.iconBodyUrl = STTApi.imageProvider.getCrewCached(rosterCrew, true);
             if (rosterCrew.iconBodyUrl === '') {
-                await updateProgress('', rosterCrew.name,
+                await updateProgress('Loading Crew Images...', rosterCrew.name,
                     STTApi.imageProvider.getCrewImageUrl(rosterCrew, true)
                         .then(found => { rosterCrew.iconBodyUrl = found.url; }));
             }
@@ -122,7 +122,7 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
     for (let avatar of STTApi.crewAvatars) {
         avatar.iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
         if (avatar.iconUrl === '') {
-            await updateProgress('', avatar.name,
+            await updateProgress('Loading Crew Images...', avatar.name,
                 STTApi.imageProvider.getCrewImageUrl(avatar, false)
                     .then(found => { avatar.iconUrl = found.url; }));
         }
@@ -313,7 +313,7 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
     for (let equipment of STTApi.itemArchetypeCache.archetypes) {
         equipment.iconUrl = STTApi.imageProvider.getCached(equipment);
         if (equipment.iconUrl === '') {
-            await updateProgress('', equipment.name,
+            await updateProgress('Loading Equipment Images...', equipment.name,
                 STTApi.imageProvider.getItemImageUrl(equipment, equipment.id)
                     .then(found => { equipment.iconUrl = found.url; }));
         }

@@ -312,6 +312,7 @@ Minimal set of steps required
 * `cd StarTrekTimelinesSpreadsheet`
 * `npm install`
   * You may also need to `npm install electron` if you see the message `Error: Electron failed to install correctly, please delete node_modules/electron and try installing again`
+  * You may need to `npm install -g --production windows-build-tools` to get `node-gyp` to install properly (with Python and Visual Studio tools for Electron)
 * `npm run dev`
 
 ##### Development
