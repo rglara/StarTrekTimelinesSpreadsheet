@@ -473,6 +473,7 @@
     gap: 4px 20px;
     font-size: medium;
     align-items: center;
+    margin-bottom: 20px;
 }
 
 .mcm-label {
@@ -485,6 +486,11 @@
 
 .mcm-value .ms-Image {
     display: inline-block;
+}
+
+.mc-personnel {
+    display: grid;
+    grid-auto-flow: row;
 }
 
 .faction-page,

@@ -156,6 +156,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 			});
 		}
 
+		const numPersonnelColumns = 5;
 		return (<div className='mission-challenge'>
 			<h4>{challenge.name}</h4>
 			<div className='mc-matrix'>
@@ -179,11 +180,13 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 				{critical && (<div className='mcm-label'>Critical Reward:</div>)}
 				{critical && (<div className='mcm-value'>{critical}</div>)}
 			</div>
-			<div>
-				PERSONNEL
-			</div>
-
-			<div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap' }}>
+			<div
+				className='mc-personnel'
+				style={{
+					gridTemplateColumns: `repeat(${numPersonnelColumns}, 1fr)`,
+					gridTemplateRows: `repeat(${Math.ceil(crewSuccess.length / numPersonnelColumns)}, 1fr)`,
+				}}
+			>
 				{crewSuccess}
 			</div>
 			{(recommendations === undefined || recommendations.crew.length === 0) &&
