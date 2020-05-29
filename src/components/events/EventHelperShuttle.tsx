@@ -4,55 +4,54 @@ import { Label } from 'semantic-ui-react';
 import { EventCrewBonusTable, EventStat } from './EventHelperPage';
 
 export const ShuttleEvent = (props: {
-   event: EventDTO;
-   onTabSwitch?: (newTab: string) => void;
+	event: EventDTO;
+	onTabSwitch?: (newTab: string) => void;
 }) => {
-   if (!props.event ||
-      !props.event.content ||
-      props.event.content.content_type !== EVENT_TYPES.SHUTTLES ||
-      !props.event.content.shuttles
-   ) {
-      return <span />;
-   }
-   let eventVP = props.event.content.shuttles![0].shuttle_mission_rewards.find(r => r.type === 11);
-   let eventShuttleVP = eventVP ? eventVP.quantity : 0
+	if (!props.event ||
+		!props.event.content ||
+		props.event.content.content_type !== EVENT_TYPES.SHUTTLES ||
+		!props.event.content.shuttles
+	) {
+		return <span />;
+	}
+	let eventVP = props.event.content.shuttles![0].shuttle_mission_rewards.find(r => r.type === 11);
+	let eventShuttleVP = eventVP ? eventVP.quantity : 0
 
-   const vpCurr = props.event.victory_points ?? 0;
-   const vpTopThresh = props.event.threshold_rewards[props.event.threshold_rewards.length - 1].points;
+	const vpCurr = props.event.victory_points ?? 0;
+	const vpTopThresh = props.event.threshold_rewards[props.event.threshold_rewards.length - 1].points;
 
-   let shuttlesToGo = undefined;
-   if (eventShuttleVP) {
-      shuttlesToGo = (vpTopThresh - vpCurr) / eventShuttleVP;
-   }
+	let shuttlesToGo = undefined;
+	if (eventShuttleVP) {
+		shuttlesToGo = (vpTopThresh - vpCurr) / eventShuttleVP;
+	}
 
-   let shPerBatch = undefined;
-   if (props.event.opened_phase !== undefined && eventShuttleVP > 0 && shuttlesToGo) {
-      let secondsToEnd = props.event.phases[props.event.opened_phase].seconds_to_end;
-      let hoursToEnd = secondsToEnd / (60 * 60);
-      let threeHourSlotsToEnd = hoursToEnd / 3;
+	let shPerBatch = undefined;
+	if (props.event.opened_phase !== undefined && eventShuttleVP > 0 && shuttlesToGo) {
+		let secondsToEnd = props.event.phases[props.event.opened_phase].seconds_to_end;
+		let hoursToEnd = secondsToEnd / (60 * 60);
+		let threeHourSlotsToEnd = hoursToEnd / 3;
 
-      shPerBatch = shuttlesToGo / threeHourSlotsToEnd;
-   }
+		shPerBatch = shuttlesToGo / threeHourSlotsToEnd;
+	}
 
-   return <div>
-      <h3>Faction event: {props.event.name}</h3>
-      <div>
-         <EventStat label="Current Shuttle VP" value={eventShuttleVP ?? 'unknown'} />
-      </div>
-      {vpTopThresh > vpCurr && <div>
-         <h4>To achieve top threshold reward in this phase:</h4>
-         <EventStat label="Shuttle Successes" value={shuttlesToGo ?? 'unknown'} />
-         <EventStat label="Shuttle Successes every 3 hours" value={shPerBatch ?? 'unknown'} />
-      </div>}
-      <div style={{ margin: '0' }}>
-         <span>
-            {props.onTabSwitch &&
-               <span>Click to see shuttle details: <Label as='a'
-                  onClick={() => props.onTabSwitch && props.onTabSwitch('Shuttles')}>Shuttle Details</Label></span>
-            }
-            <div>{props.event.bonus_text}</div>
-            <EventCrewBonusTable bonuses={props.event.content.shuttles[0].crew_bonuses} />
-         </span>
-      </div>
-   </div>;
+	return <div>
+		<h3>Faction event: {props.event.name}</h3>
+		<div>
+			<EventStat label="Current Shuttle VP" value={eventShuttleVP ?? 'unknown'} />
+		</div>
+		{vpTopThresh > vpCurr && <div>
+			<h4>To achieve top threshold reward in this phase:</h4>
+			<EventStat label="Shuttle Successes" value={shuttlesToGo ?? 'unknown'} />
+			<EventStat label="Shuttle Successes every 3 hours" value={shPerBatch ?? 'unknown'} />
+		</div>}
+		<div style={{ margin: '0' }}>
+			<span>
+				{props.onTabSwitch &&
+					<span>Click to see shuttle details: <Label as='a'
+						onClick={() => props.onTabSwitch && props.onTabSwitch('Shuttles')}>Shuttle Details</Label></span>
+				}
+				<EventCrewBonusTable bonuses={props.event.content.shuttles[0].crew_bonuses} />
+			</span>
+		</div>
+	</div>;
 }

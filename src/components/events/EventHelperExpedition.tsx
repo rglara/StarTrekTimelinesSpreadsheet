@@ -5,65 +5,64 @@ import STTApi from '../../api';
 import { EventCrewBonusTable } from './EventHelperPage';
 
 export const ExpeditionEvent = (props: {
-   event: EventDTO;
-   onTabSwitch?: (newTab: string) => void;
+	event: EventDTO;
+	onTabSwitch?: (newTab: string) => void;
 }) => {
-   if (!props.event ||
-      !props.event.content ||
-      props.event.content.content_type !== EVENT_TYPES.EXPEDITION
-   ) {
-      return <span />;
-   }
+	if (!props.event ||
+		!props.event.content ||
+		props.event.content.content_type !== EVENT_TYPES.EXPEDITION
+	) {
+		return <span />;
+	}
 
-   let crew_bonuses : { avatar: CrewAvatarDTO, iconUrl: string }[] = [];
-   let crew_bonuses_owned : {[symbol:string]: number } = {};
-   props.event.content.special_crew.forEach(scSymbol => {
-      let avatar = STTApi.getCrewAvatarBySymbol(scSymbol);
-      if (!avatar) {
-         return;
-      }
+	let crew_bonuses : { avatar: CrewAvatarDTO, iconUrl: string }[] = [];
+	let crew_bonuses_owned : {[symbol:string]: number } = {};
+	props.event.content.special_crew.forEach(scSymbol => {
+		let avatar = STTApi.getCrewAvatarBySymbol(scSymbol);
+		if (!avatar) {
+			return;
+		}
 
-      crew_bonuses.push({
-         avatar,
-         iconUrl: STTApi.imageProvider.getCrewCached(avatar, false)
-      });
+		crew_bonuses.push({
+			avatar,
+			iconUrl: STTApi.imageProvider.getCrewCached(avatar, false)
+		});
 
-      let crew = STTApi.roster.find(c => c.symbol === avatar!.symbol);
-      if (!crew) {
-         return;
-      }
+		let crew = STTApi.roster.find(c => c.symbol === avatar!.symbol);
+		if (!crew) {
+			return;
+		}
 
-      let iconUrl = avatar.iconUrl;
-      if (!iconUrl || iconUrl == '') {
-         iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
-      }
+		let iconUrl = avatar.iconUrl;
+		if (!iconUrl || iconUrl == '') {
+			iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
+		}
 
-      crew_bonuses_owned[crew.symbol] = 1;
-   });
+		crew_bonuses_owned[crew.symbol] = 1;
+	});
 
-   return <div><h2>Expedition Event Details</h2>
-      <div style={{ margin: '0' }}>
-         <span>
-            <div><h3>{props.event.bonus_text}</h3></div>
-            <div>
-               <List horizontal>
-                  {crew_bonuses.map(cb => (
-                     <List.Item key={cb.avatar.symbol}>
-                        <Image avatar src={cb.iconUrl} />
-                        <List.Content>
-                           <List.Header>{cb.avatar.name}</List.Header>
-                        </List.Content>
-                     </List.Item>
-                  ))}
-               </List>
-            </div>
-            <h3>Owned bonus crew</h3>
-            <EventCrewBonusTable
-               bonuses={crew_bonuses_owned}
-               onlyBonusCrew={true}
-               hideBonus={true}
-               />
-         </span>
-      </div>
-   </div>;
+	return <div><h2>Expedition Event Details</h2>
+		<div style={{ margin: '0' }}>
+			<span>
+				<div>
+					<List horizontal>
+						{crew_bonuses.map(cb => (
+							<List.Item key={cb.avatar.symbol}>
+								<Image avatar src={cb.iconUrl} />
+								<List.Content>
+									<List.Header>{cb.avatar.name}</List.Header>
+								</List.Content>
+							</List.Item>
+						))}
+					</List>
+				</div>
+				<h3>Owned bonus crew</h3>
+				<EventCrewBonusTable
+					bonuses={crew_bonuses_owned}
+					onlyBonusCrew={true}
+					hideBonus={true}
+					/>
+			</span>
+		</div>
+	</div>;
 }
