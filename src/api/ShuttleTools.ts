@@ -79,10 +79,14 @@ export async function shuttleValidateToken(tokensInUse: number): Promise<boolean
 	return await STTApi.executePostRequest("shuttle/validate_allowed_shuttle", { current_rentals: tokensInUse });
 }
 
-export function getBonusedRoster(crew_bonuses: { [crew_symbol: string]: number; }, allowBorrow: boolean): CrewItem[] {
+export function getBonusedRoster(crew_bonuses: { [crew_symbol: string]: number; }, allowBorrow: boolean, exclude: number[]): CrewItem[] {
 	let rv: CrewItem[] = [];
 	STTApi.roster.forEach(crew => {
 		if (crew.buyback || crew.frozen > 0) {
+			return;
+		}
+
+		if (exclude.includes(crew.crew_id)) {
 			return;
 		}
 

@@ -1,7 +1,7 @@
 import React from 'react';
-import { Item, Label, Form, Checkbox } from 'semantic-ui-react';
+import { Dropdown as SuiDropdown, Item, Label, Form, Checkbox } from 'semantic-ui-react';
 
-import STTApi, { CONFIG, formatTimeSeconds, CrewSkills, RarityStars } from '../api';
+import STTApi, { CONFIG, formatTimeSeconds, CrewSkills, RarityStars, bonusCrewForCurrentEvent } from '../api';
 import { CrewData, PlayerShuttleDTO, EventDTO,
 	EVENT_TYPES, SHUTTLE_STATE_NAMES, SHUTTLE_STATE_NAME_UNKNOWN, SHUTTLE_STATE_OPENED,
 	PlayerShuttleAdventureDTO, SHUTTLE_STATE_INPROGRESS, ItemDTO, ItemData } from '../api/DTO';
@@ -22,10 +22,6 @@ export const Shuttles = (props: {
 	const [useBonuses, setUseBonuses] = React.useState<boolean>(false);
 	const [useBonuses45, setUseBonuses45] = React.useState<boolean>(false);
 
-	React.useEffect(() => {
-		selectCrew('first');
-	}, [userChoices, useBonuses, useBonuses45]);
-
 	let event : EventDTO | undefined = undefined;
 	if (
 		STTApi.playerData.character.events &&
@@ -34,6 +30,33 @@ export const Shuttles = (props: {
 	) {
 		event = STTApi.playerData.character.events[0];
 	}
+
+	let eventCrew = bonusCrewForCurrentEvent(false);
+	const [currentSelectedItems, setCurrentSelectedItems] = React.useState(eventCrew ? eventCrew.crewIds : []);
+
+	React.useEffect(() => {
+		selectCrew('first');
+	}, [userChoices, currentSelectedItems, useBonuses, useBonuses45]);
+
+	interface CrewEntry {
+		key: number;
+		value: number;
+		image: { avatar: boolean; src: string | undefined; };
+		text: string;
+	}
+
+	let crewList: CrewEntry[] = [];
+	STTApi.roster.forEach(crew => {
+		if (crew.status.frozen <= 0) {
+			crewList.push({
+				key: crew.crew_id || crew.id,
+				value: crew.crew_id || crew.id,
+				image: { avatar: true, src: crew.iconUrl },
+				text: crew.name
+			});
+		}
+	});
+	crewList.sort((a, b) => (a.text < b.text) ? -1 : ((a.text > b.text) ? 1 : 0));
 
 	const activeShuttleAdventures = STTApi.playerData.character.shuttle_adventures;
 
@@ -71,7 +94,23 @@ export const Shuttles = (props: {
 						checked={useBonuses45}
 						onChange={(e: any, { checked }: any) => setUseBonuses45(checked)}
 					/>
-					{selType && <>Current selection: {selType}</>}
+					{selType && <>Current selection: <b>{selType}</b></>}
+					<Form.Field
+						control={SuiDropdown}
+						clearable
+						fluid
+						multiple
+						search
+						selection
+						options={crewList}
+						placeholder='Select or search for crew'
+						label={
+							"Crew you don't want to consider for shuttles" +
+							(event?.name ? ` (preselected crew which gives bonus in the event ${event.name})` : '')
+						}
+						value={currentSelectedItems}
+						onChange={(e: any, { value }: any) => setCurrentSelectedItems(value)}
+					/>
 				</div>}
 				<Item.Group divided>{selections.sort((a, b) => a.calc.shuttle.expires_in - b.calc.shuttle.expires_in).map(sel =>
 					<ShuttleItem
@@ -91,7 +130,9 @@ export const Shuttles = (props: {
 
 	async function selectCrew(fillStrategy: string) {
 		setComputingEstimate(true);
-		const bonusedRoster = getBonusedRoster(event?.content.shuttles?.[0].crew_bonuses ?? {}, event?.content.shuttles?.[0].allow_borrow ?? false);
+		const bonusedRoster = getBonusedRoster(event?.content.shuttles?.[0].crew_bonuses ?? {},
+			event?.content.shuttles?.[0].allow_borrow ?? false,
+			currentSelectedItems);
 		const shuttleCalcs: ShuttleCalc[] = buildSlotCalculator(bonusedRoster, event, activeShuttleAdventures);
 		if (fillStrategy === 'best') {
 			setSelType("Best")
@@ -331,7 +372,9 @@ const ShuttleSeatSelector = (props:{
 	let options = props.calcSlot.bestCrew;
 	// Filter active crew for shuttles with open slots
 	if (isEditable) {
-		options = options.filter(c => !c.crew.active_id);
+		// Look in the base roster to find active status; if a shuttle gets sent, the calculator does not
+		// reload crew from the catalog and the current entries are stale according to active_id
+		options = options.filter(c => !c.crew.active_id && !STTApi.roster.find(rc => rc.crew_id === cid(c.crew))?.active_id);
 	}
 
 	let sel = props.selection.chosen.find(cc => cc.slotIndex === props.calcSlot.slotIndex);
