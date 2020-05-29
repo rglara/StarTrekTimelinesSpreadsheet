@@ -5,7 +5,7 @@ import { Image } from 'office-ui-fabric-react/lib/Image';
 import { Persona, PersonaSize, PersonaPresence } from 'office-ui-fabric-react/lib/Persona';
 import { getTheme } from '@uifabric/styling';
 
-import STTApi, { CONFIG, calculateQuestRecommendations, IQuestRecommendations } from '../../api';
+import STTApi, { CONFIG, calculateQuestRecommendations, IQuestRecommendations, RarityStars } from '../../api';
 import { MissionDisplay } from '../../utils/canvasutils';
 import { MissionQuestChallengeDTO } from '../../api/DTO';
 
@@ -15,6 +15,7 @@ interface MissionDetailsProps {
 
 interface MissionDetailsState extends IQuestRecommendations {
 	selectedChallenge?: number;
+	masteryIndex: number;
 }
 
 export class MissionDetails extends React.Component<MissionDetailsProps, MissionDetailsState> {
@@ -26,6 +27,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 		this.loadMissionDetails = this.loadMissionDetails.bind(this);
 		this.loadMissionDetailsInternal = this.loadMissionDetailsInternal.bind(this);
 		this.updateGraph = this.updateGraph.bind(this);
+		this.handleMasteryChange = this.handleMasteryChange.bind(this);
 
 		if (!this.props.questId) {
 			this.state = {
@@ -33,10 +35,14 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 				bestCrewPaths: undefined,
 				allFinished: false,
 				selectedChallenge: undefined,
+				masteryIndex: 0,
 			};
 		}
 		else {
-			this.state = this.loadMissionDetailsInternal(this.props.questId.data.questId);
+			this.state = {
+				masteryIndex: 0,
+				...this.loadMissionDetailsInternal(this.props.questId.data.questId),
+			};
 		}
 	}
 
@@ -202,6 +208,10 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 		return { __html: output };
 	}
 
+	handleMasteryChange(evt: React.ChangeEvent<HTMLInputElement>): void {
+		this.setState({ masteryIndex: Number(evt.target.value) });
+	}
+
 	render() {
 		if (!this.state.mission) {
 			return <span />;
@@ -237,6 +247,50 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 			});
 		}
 
+		// determine remaining criticals
+		let criticalList: JSX.Element[] = [];
+		this.state.mission.mastery_levels[this.state.masteryIndex].jackpots.forEach(jp => {
+			if (!jp.claimed) {
+				const item = jp.reward[0];
+				// TODO: need to load item image
+				// most will probably not be in the cache, as they are not owned yet
+				// need to take specials (honor, dilithium, schematics, crew) into account
+				// let itemUrl;
+				// let eq = STTApi.itemArchetypeCache.archetypes
+				// 	.find(equipment => equipment.id === item.id);
+				// if (eq) {
+				// 	itemUrl = eq.iconUrl;
+				// }
+				let multipleCount;
+				if (item.quantity > 1) {
+					multipleCount = (<span>(x {item.quantity})</span>);
+				}
+
+				criticalList.push(
+					(<div key={item.id}>
+						<span>(#{jp.id}) - </span>
+						{/* <ItemDisplay
+							style={{ display: 'inline-block' }}
+							src={itemUrl ? itemUrl : ''}
+							size={32}
+							maxRarity={item.rarity}
+							rarity={item.rarity}
+						/>{' '} */}
+						{item.name}
+						<RarityStars asSpan={true} max={item.rarity} value={item.rarity} />
+						{multipleCount}
+					</div>)
+				);
+			}
+		});
+		if (criticalList.length === 0) {
+			criticalList.push((<div key='none'>None</div>));
+		}
+
+		const selectedThemeColor = getTheme().palette.tealLight;
+		const normalWidth = this.state.masteryIndex === 0 ? '2px' : '0';
+		const eliteWidth = this.state.masteryIndex === 1 ? '2px' : '0';
+		const epicWidth = this.state.masteryIndex === 2 ? '2px' : '0';
 		return (
 			<div className='mission-info'>
 				<div className='mission-details'>
@@ -244,21 +298,123 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 					<p>{this.state.mission.description}</p>
 					<div className='mission-matrix'>
 						<div></div>
-						<div className='mm-data'><Image src={CONFIG.MASTERY_LEVELS[0].url()} height={24} /></div>
-						<div className='mm-data'><Image src={CONFIG.MASTERY_LEVELS[1].url()} height={24} /></div>
-						<div className='mm-data'><Image src={CONFIG.MASTERY_LEVELS[2].url()} height={24} /></div>
+						<div className='mm-header'>
+							<label htmlFor='ms-normal'>
+								<Image src={CONFIG.MASTERY_LEVELS[0].url()} height={24} />
+							</label>
+						</div>
+						<div className='mm-header'>
+							<label htmlFor='ms-elite'>
+								<Image src={CONFIG.MASTERY_LEVELS[1].url()} height={24} />
+							</label>
+						</div>
+						<div className='mm-header'>
+							<label htmlFor='ms-epic'>
+								<Image src={CONFIG.MASTERY_LEVELS[2].url()} height={24} />
+							</label>
+						</div>
+						<div></div>
+						<div className='mm-header'>
+							<input
+								type='radio'
+								id='ms-normal'
+								name='mastery-selection'
+								value={0}
+								checked={this.state.masteryIndex === 0}
+								onChange={this.handleMasteryChange}
+							/>
+						</div>
+						<div className='mm-header'>
+							<input
+								type='radio'
+								id='ms-elite'
+								name='mastery-selection'
+								value={1}
+								checked={this.state.masteryIndex === 1}
+								onChange={this.handleMasteryChange}
+							/>
+						</div>
+						<div className='mm-header'>
+							<input
+								type='radio'
+								id='ms-epic'
+								name='mastery-selection'
+								value={2}
+								checked={this.state.masteryIndex === 2}
+								onChange={this.handleMasteryChange}
+							/></div>
 						<div className='mm-label'>Mastery Required:</div>
-						<div className='mm-data'>{(this.state.mission.difficulty_by_mastery) && this.state.mission.difficulty_by_mastery[0]}</div>
-						<div className='mm-data'>{(this.state.mission.difficulty_by_mastery) && this.state.mission.difficulty_by_mastery[1]}</div>
-						<div className='mm-data'>{(this.state.mission.difficulty_by_mastery) && this.state.mission.difficulty_by_mastery[2]}</div>
+						<div className='mm-data' style={{
+							border: `0 solid ${selectedThemeColor}`,
+							borderTopWidth: normalWidth,
+							borderLeftWidth: normalWidth,
+							borderRightWidth: normalWidth}}>
+								{(this.state.mission.difficulty_by_mastery)
+								&& this.state.mission.difficulty_by_mastery[0]}
+						</div>
+						<div className='mm-data' style={{
+							border: `0 solid ${selectedThemeColor}`,
+							borderTopWidth: eliteWidth,
+							borderLeftWidth: eliteWidth,
+							borderRightWidth: eliteWidth}}>
+								{(this.state.mission.difficulty_by_mastery)
+								&& this.state.mission.difficulty_by_mastery[1]}
+						</div>
+						<div className='mm-data' style={{
+							border: `0 solid ${selectedThemeColor}`,
+							borderTopWidth: epicWidth,
+							borderLeftWidth: epicWidth,
+							borderRightWidth: epicWidth}}>
+								{(this.state.mission.difficulty_by_mastery)
+								&& this.state.mission.difficulty_by_mastery[2]}
+						</div>
 						<div className='mm-label'>Trait Bonuses:</div>
-						<div className='mm-data'>{(this.state.mission.trait_bonuses) && this.state.mission.trait_bonuses[0]}</div>
-						<div className='mm-data'>{(this.state.mission.trait_bonuses) && this.state.mission.trait_bonuses[1]}</div>
-						<div className='mm-data'>{(this.state.mission.trait_bonuses) && this.state.mission.trait_bonuses[2]}</div>
+						<div className='mm-data' style={{
+							border: `0 solid ${selectedThemeColor}`,
+							borderLeftWidth: normalWidth,
+							borderRightWidth: normalWidth}}>
+								{(this.state.mission.trait_bonuses)
+								&& this.state.mission.trait_bonuses[0]}
+						</div>
+						<div className='mm-data' style={{
+							border: `0 solid ${selectedThemeColor}`,
+							borderLeftWidth: eliteWidth,
+							borderRightWidth: eliteWidth}}>
+								{(this.state.mission.trait_bonuses)
+								&& this.state.mission.trait_bonuses[1]}
+						</div>
+						<div className='mm-data' style={{
+							border: `0 solid ${selectedThemeColor}`,
+							borderLeftWidth: epicWidth,
+							borderRightWidth: epicWidth}}>
+								{(this.state.mission.trait_bonuses)
+								&& this.state.mission.trait_bonuses[2]}
+						</div>
 						<div className='mm-label'>Completed:</div>
-						<div className='mm-data'>{this.state.mission.mastery_levels[0].progress.goal_progress} / {this.state.mission.mastery_levels[0].progress.goals}</div>
-						<div className='mm-data'>{this.state.mission.mastery_levels[1].progress.goal_progress} / {this.state.mission.mastery_levels[1].progress.goals}</div>
-						<div className='mm-data'>{this.state.mission.mastery_levels[2].progress.goal_progress} / {this.state.mission.mastery_levels[2].progress.goals}</div>
+						<div className='mm-data' style={{
+							border: `0 solid ${selectedThemeColor}`,
+							borderBottomWidth: normalWidth,
+							borderLeftWidth: normalWidth,
+							borderRightWidth: normalWidth}}>
+								{this.state.mission.mastery_levels[0].progress.goal_progress}
+								/ {this.state.mission.mastery_levels[0].progress.goals}
+						</div>
+						<div className='mm-data' style={{
+							border: `0 solid ${selectedThemeColor}`,
+							borderBottomWidth: eliteWidth,
+							borderLeftWidth: eliteWidth,
+							borderRightWidth: eliteWidth}}>
+								{this.state.mission.mastery_levels[1].progress.goal_progress}
+								/ {this.state.mission.mastery_levels[1].progress.goals}
+						</div>
+						<div className='mm-data' style={{
+							border: `0 solid ${selectedThemeColor}`,
+							borderBottomWidth: epicWidth,
+							borderLeftWidth: epicWidth,
+							borderRightWidth: epicWidth}}>
+								{this.state.mission.mastery_levels[2].progress.goal_progress}
+								/ {this.state.mission.mastery_levels[2].progress.goals}
+						</div>
 						<div className='mm-divider'><hr/></div>
 						<div className='mm-label'>Critical Threshold:</div>
 						<div className='mm-note'>{this.state.mission.critical_threshold ? this.state.mission.critical_threshold : 'none'}</div>
@@ -275,6 +431,8 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 						height={450}
 						style={{ width: '100%', height: 'auto' }}
 					/>
+					<h5>Remaining Criticals:</h5>
+					{criticalList}
 				</div>
 				<div className='mission-calc'>
 					{crewSelectionLog}

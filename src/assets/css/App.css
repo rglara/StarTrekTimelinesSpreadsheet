@@ -442,8 +442,14 @@
     justify-self: right;
 }
 
-.mm-data {
+.mm-header {
     justify-self: center;
+    margin: 0px 10px;
+}
+
+.mm-data {
+    margin: 0px 10px;
+    text-align: center;
 }
 
 .mm-divider {

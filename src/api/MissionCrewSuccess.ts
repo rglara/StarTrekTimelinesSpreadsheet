@@ -166,7 +166,7 @@ export function calculateMinimalComplementAsync(): void {
 }
 
 export interface ICrewPath {
-    path: any;
+    path: number[];
     crew: IChallengeSuccessCrew[];
     success: number;
 }
@@ -217,7 +217,7 @@ export function calculateQuestRecommendations(questId: number, loadEvenFinishedN
     });
 
     // This algorithm assumes the graph is acyclic
-    let nodeElem: {[index:number]: any} = {};
+    let nodeElem: { [index: number]: any } = {};
     let unfinishedNodes: number[] = [];
     mission.challenges.forEach((challenge: any) => {
         nodeElem[challenge.id] = challenge;

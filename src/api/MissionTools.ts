@@ -1,4 +1,5 @@
 import STTApi from "./index";
+import { AcceptedMissionsDTO, MissionDTO } from "./DTO";
 
 async function loadQuestData(completed: boolean, quest: any) {
 	// The mission is incomplete, but maybe the quest itself is complete and already cached
@@ -58,17 +59,10 @@ async function loadConflictInfo(quest: any) {
 	});
 }
 
-export interface IMissionData {
-	id: number;
-	episode_title: string;
-	description: string;
-	stars_earned: number;
-	total_stars: number;
-	quests: any[];
-}
-
-export async function loadMissionData(accepted_missions: {symbol?:string, id:number}[],
-	dispute_histories: {symbol: string, mission_ids: number[] }[]): Promise<IMissionData[]> {
+export async function loadMissionData(
+	accepted_missions: { symbol?: string, id: number }[],
+	dispute_histories: { symbol: string, mission_ids: number[] }[]
+	): Promise<MissionDTO[]> {
 	let mission_ids: any[] = [];
 
 	accepted_missions.forEach((mission) => {
@@ -90,16 +84,16 @@ export async function loadMissionData(accepted_missions: {symbol?:string, id:num
 	}
 
 	let data = await STTApi.executeGetRequest("mission/info", { ids: mission_ids });
-	let missions: IMissionData[] = [];
+	let missions: MissionDTO[] = [];
 	let questPromises: Promise<void>[] = [];
 
-	data.character.accepted_missions.forEach((mission: any) => {
-		if (mission.symbol === 'mission_npev2')  {
+	data.character.accepted_missions.forEach((mission: AcceptedMissionsDTO) => {
+		if (mission.symbol === 'mission_npev2') {
 			return; // Ignore the tutorial episode
 		}
 
 		if (mission.episode_title != null) {
-			let missionData: IMissionData = {
+			let missionData: MissionDTO = {
 				id: mission.id,
 				episode_title: mission.episode_title,
 				description: mission.description,
@@ -108,9 +102,9 @@ export async function loadMissionData(accepted_missions: {symbol?:string, id:num
 				quests: []
 			};
 
-            if (mission.episode && mission.episode > 0) {
-                missionData.episode_title =`Episode ${mission.episode} : ${mission.episode_title}`;
-            }
+			if (mission.episode && mission.episode > 0) {
+				missionData.episode_title =`Episode ${mission.episode} : ${mission.episode_title}`;
+			}
 
 			mission.quests.forEach((quest: any) => {
 				if ((!quest.locked) && quest.name) {
@@ -166,7 +160,7 @@ export async function loadMissionData(accepted_missions: {symbol?:string, id:num
 				return; // Ignore the tutorial dispute
 			}
 
-			let missionData: IMissionData = {
+			let missionData: MissionDTO = {
 				id: dispute.mission_ids[0],
 				episode_title: 'Episode ' + dispute.episode + ' : ' + dispute.name,
 				description: 'Episode ' + dispute.episode,
