@@ -318,8 +318,6 @@ export function calculateQuestRecommendations(questId: number, masteryIndex: num
         }
     });
 
-    let allFinished = unfinishedNodes.length === 0;
-    allFinished = allFinished && (mission.mastery_levels.reduce((accumulator: number, currentValue: any) => (accumulator + currentValue.progress.goals - currentValue.progress.goal_progress), 0) === 0);
-
+    const allFinished = unfinishedNodes.length === 0;
     return { mission, bestCrewPaths, allFinished };
 }

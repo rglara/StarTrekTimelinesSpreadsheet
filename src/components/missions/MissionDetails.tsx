@@ -243,7 +243,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 		}
 
 		let crewSelectionLog;
-		if (this.state.bestCrewPaths?.length == 0) {
+		if (this.state.bestCrewPaths?.length === 0) {
 			if (this.state.allFinished) {
 				crewSelectionLog = <span className='ui header green'>You already completed all nodes on this mission.<br/>Congrats!</span>;
 			} else {
@@ -444,6 +444,9 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 						{this.state.mission.cadet && (<div className='mm-note'>
 							<span dangerouslySetInnerHTML={this.htmlDecode(this.state.mission!.crew_requirement!.description)} />
 						</div>)}
+						<div className='mm-divider'><hr/></div>
+						<div className='mm-label'>Remaining Criticals:</div>
+						<div className='mm-note'>{criticalList}</div>
 					</div>
 				</div>
 				<div className='mission-graph'>
@@ -453,8 +456,6 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 						height={450}
 						style={{ width: '100%', height: 'auto' }}
 					/>
-					<h5>Remaining Criticals:</h5>
-					{criticalList}
 				</div>
 				<div className='mission-calc'>
 					{crewSelectionLog}
