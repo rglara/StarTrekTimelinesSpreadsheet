@@ -71,8 +71,7 @@ export function calculateMissionCrewSuccess(): Array<IChallengeSuccess> {
 
                     let fixUp = function(trait: string): string {
                         // Replace "nonhuman" with "alien" to match the search fixup
-                        if (trait =='nonhuman')
-                            return 'alien';
+                        if (trait === 'nonhuman') { return 'alien'; }
                         return trait;
                     }
 
@@ -117,11 +116,12 @@ export function calculateMissionCrewSuccess(): Array<IChallengeSuccess> {
                         let rollCrew = csk.core;
 
                         // If crew doesn't have a skill, its default value is lowest_skill / 5
-                        if (rollCrew == 0) {
+                        if (rollCrew === 0) {
                             let lowestSkill = 99999;
                             for (let skill in CONFIG.SKILLS) {
-                                if ((csk.core > 0) && (lowestSkill > csk.core)) {
-                                    lowestSkill = csk.core
+                                const coreSkill = crew.skills[skill].core;
+                                if ((coreSkill > 0) && (lowestSkill > coreSkill)) {
+                                    lowestSkill = coreSkill;
                                 }
                             }
 
@@ -231,7 +231,7 @@ export function calculateQuestRecommendations(questId: number, masteryIndex: num
 
     // DFS to build all possible paths through the graph
     let paths: number[][] = [];
-    let buildTree = (index: number, path: number[]) => {
+    const buildTree = (index: number, path: number[]) => {
         let newPath = path.slice(0);
         newPath.push(index);
         if (nodeElem[index].children && nodeElem[index].children.length > 0) {
@@ -260,7 +260,7 @@ export function calculateQuestRecommendations(questId: number, masteryIndex: num
     // WARNING - computationally intensive (consider showing a progress and using a WebWorker to unblock the UI thread)
     paths.forEach(path => {
         let crewSelections: IChallengeSuccessCrew[][] = [];
-        let pathStep = (level: number, crewSelection: IChallengeSuccessCrew[]) => {
+        const pathStep = (level: number, crewSelection: IChallengeSuccessCrew[]) => {
             if (path.length === level) {
                 crewSelections.push(crewSelection);
                 return;
@@ -281,7 +281,7 @@ export function calculateQuestRecommendations(questId: number, masteryIndex: num
         pathStep(0, []);
 
         // Apply tired crew coefficient and sort crew selections by total success
-        let totalSuccess = (crewSelection: IChallengeSuccessCrew[]) => {
+        const totalSuccess = (crewSelection: IChallengeSuccessCrew[]) => {
             let min = crewSelection[0].success;
             let total = crewSelection[0].success;
             for (let i = 1; i < crewSelection.length; i++) {

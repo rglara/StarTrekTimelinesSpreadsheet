@@ -168,7 +168,10 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 			</span>);
 		}
 
-		let recommendations = STTApi.missionSuccess.find(missionSuccess => (missionSuccess.quest.id == mission!.id) && (missionSuccess.challenge.id == challenge!.id));
+		let recommendations = STTApi.missionSuccess
+			.find(missionSuccess =>
+				(missionSuccess.quest.id == mission!.id)
+				&& (missionSuccess.challenge.id == challenge!.id));
 		let crewSuccess: JSX.Element[] = [];
 		if (recommendations) {
 			recommendations.crew.forEach(item => {
@@ -212,8 +215,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 				style={{
 					gridTemplateColumns: `repeat(${numPersonnelColumns}, 1fr)`,
 					gridTemplateRows: `repeat(${Math.ceil(crewSuccess.length / numPersonnelColumns)}, 1fr)`,
-				}}
-			>
+				}}>
 				{crewSuccess}
 			</div>
 			{(recommendations === undefined || recommendations.crew.length === 0) &&
@@ -247,7 +249,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 			if (this.state.allFinished) {
 				crewSelectionLog = <span className='ui header green'>You already completed all nodes on this mission.<br/>Congrats!</span>;
 			} else {
-				crewSelectionLog = <span className='ui header red'>There is no crew selection capable of completing this mission.<br/>Get more crew!</span>;
+				crewSelectionLog = <span className='ui header red'>There is no crew selection capable of completing the remaining critical mission paths.<br/>Get more crew!</span>;
 			}
 		}
 		else {
@@ -264,9 +266,9 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 				});
 
 				crewSelectionLog.push(
-					<div key={indexcrewpath} style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap' }}>
-						<span>{(crewpath.success).toFixed(2)}% guaranteed success:</span>
-						{crewSuccess}
+					<div key={indexcrewpath}>
+						<div>{(crewpath.success).toFixed(2)}% guaranteed success:</div>
+						<div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap' }}>{crewSuccess}</div>
 					</div>
 				);
 			});
@@ -456,9 +458,9 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 						height={450}
 						style={{ width: '100%', height: 'auto' }}
 					/>
+					{crewSelectionLog}
 				</div>
 				<div className='mission-calc'>
-					{crewSelectionLog}
 					{this.renderChallengeDetails()}
 				</div>
 			</div>
