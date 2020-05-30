@@ -47,8 +47,10 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 	}
 
 	componentDidUpdate(_prevProps: MissionDetailsProps, prevState: MissionDetailsState) {
-		if (this.state.mission !== prevState.mission) {
+		if ((this.state.mission !== prevState.mission)
+			|| (this.state.masteryIndex !== prevState.masteryIndex)){
 			this.setState({ selectedChallenge: undefined });
+			this.renderChallengeDetails();
 			this.updateGraph();
 		}
 	}
@@ -58,7 +60,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 	}
 
 	loadMissionDetailsInternal(questId: number): IQuestRecommendations {
-		return calculateQuestRecommendations(questId, false);
+		return calculateQuestRecommendations(questId, this.state.masteryIndex, false);
 	}
 
 	updateGraph() {
@@ -102,8 +104,17 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 					});
 				}
 
+				const unclaimedCritical = mission?.mastery_levels[this.state.masteryIndex].jackpots
+					.find(jp => (jp.id === challenge.id) && !jp.claimed);
 				if (this.missionDisplay) {
-					this.missionDisplay.addNode(challenge.grid_x, challenge.grid_y, challenge.skill, challenge.critical && !challenge.critical.claimed, challenge.children, challenge.id, challenge.name);
+					this.missionDisplay.addNode(
+						challenge.grid_x,
+						challenge.grid_y,
+						challenge.skill,
+						unclaimedCritical,
+						challenge.children,
+						challenge.id,
+						challenge.name);
 				}
 			});
 		}
@@ -114,7 +125,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 		let mission = this.state.mission;
 		if (mission) {
 			mission.challenges.forEach(item => {
-				if (item.id == this.state.selectedChallenge) {
+				if (item.id === this.state.selectedChallenge) {
 					challenge = item;
 				}
 			});
@@ -141,10 +152,20 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 		});
 
 		let critical;
-		if (challenge.critical) {
-			if (!challenge.critical.claimed) {
-				critical = challenge.critical.reward[0].full_name;
+		const unclaimedCritical = mission?.mastery_levels[this.state.masteryIndex].jackpots
+			.find(jp => (jp.id === challenge!.id) && !jp.claimed);
+
+		if (unclaimedCritical) {
+			const item = unclaimedCritical.reward[0];
+			let multipleCount;
+			if (item.quantity > 1) {
+				multipleCount = (<span>(x {item.quantity})</span>);
 			}
+			critical = (<span>
+				{item.full_name}
+				<RarityStars asSpan={true} max={item.rarity} value={item.rarity} />
+				{multipleCount}
+			</span>);
 		}
 
 		let recommendations = STTApi.missionSuccess.find(missionSuccess => (missionSuccess.quest.id == mission!.id) && (missionSuccess.challenge.id == challenge!.id));
@@ -209,7 +230,11 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 	}
 
 	handleMasteryChange(evt: React.ChangeEvent<HTMLInputElement>): void {
-		this.setState({ masteryIndex: Number(evt.target.value) });
+		const index = Number(evt.target.value);
+		this.setState({
+			masteryIndex: index,
+			...calculateQuestRecommendations(this.props.questId?.data.questId, index, false),
+		});
 	}
 
 	render() {
@@ -276,7 +301,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 							maxRarity={item.rarity}
 							rarity={item.rarity}
 						/>{' '} */}
-						{item.name}
+						{item.full_name}
 						<RarityStars asSpan={true} max={item.rarity} value={item.rarity} />
 						{multipleCount}
 					</div>)
@@ -396,24 +421,21 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 							borderBottomWidth: normalWidth,
 							borderLeftWidth: normalWidth,
 							borderRightWidth: normalWidth}}>
-								{this.state.mission.mastery_levels[0].progress.goal_progress}
-								/ {this.state.mission.mastery_levels[0].progress.goals}
+								{this.state.mission.mastery_levels[0].progress.goal_progress} of {this.state.mission.mastery_levels[0].progress.goals}
 						</div>
 						<div className='mm-data' style={{
 							border: `0 solid ${selectedThemeColor}`,
 							borderBottomWidth: eliteWidth,
 							borderLeftWidth: eliteWidth,
 							borderRightWidth: eliteWidth}}>
-								{this.state.mission.mastery_levels[1].progress.goal_progress}
-								/ {this.state.mission.mastery_levels[1].progress.goals}
+								{this.state.mission.mastery_levels[1].progress.goal_progress} of {this.state.mission.mastery_levels[1].progress.goals}
 						</div>
 						<div className='mm-data' style={{
 							border: `0 solid ${selectedThemeColor}`,
 							borderBottomWidth: epicWidth,
 							borderLeftWidth: epicWidth,
 							borderRightWidth: epicWidth}}>
-								{this.state.mission.mastery_levels[2].progress.goal_progress}
-								/ {this.state.mission.mastery_levels[2].progress.goals}
+								{this.state.mission.mastery_levels[2].progress.goal_progress} of {this.state.mission.mastery_levels[2].progress.goals}
 						</div>
 						<div className='mm-divider'><hr/></div>
 						<div className='mm-label'>Critical Threshold:</div>
@@ -436,7 +458,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 				</div>
 				<div className='mission-calc'>
 					{crewSelectionLog}
-					{(this.state.selectedChallenge != undefined) && this.renderChallengeDetails()}
+					{this.renderChallengeDetails()}
 				</div>
 			</div>
 		);

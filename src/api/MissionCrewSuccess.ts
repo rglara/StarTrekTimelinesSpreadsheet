@@ -183,7 +183,7 @@ export interface IQuestRecommendations {
     allFinished: boolean;
 }
 
-export function calculateQuestRecommendations(questId: number, loadEvenFinishedNodes: boolean): IQuestRecommendations {
+export function calculateQuestRecommendations(questId: number, masteryIndex: number, loadEvenFinishedNodes: boolean): IQuestRecommendations {
     let mission: IQuestMission | undefined;
     STTApi.missions.forEach((episode: MissionDTO) => {
         episode.quests.forEach((quest: MissionQuestDTO) => {
@@ -222,7 +222,9 @@ export function calculateQuestRecommendations(questId: number, loadEvenFinishedN
     mission.challenges.forEach((challenge: any) => {
         nodeElem[challenge.id] = challenge;
 
-        if (challenge.critical && !challenge.critical.claimed) {
+        const unclaimedCritical = mission?.mastery_levels[masteryIndex].jackpots
+            .find(jp => (jp.id === challenge.id) && !jp.claimed);
+        if (unclaimedCritical) {
             unfinishedNodes.push(challenge.id)
         }
     });
