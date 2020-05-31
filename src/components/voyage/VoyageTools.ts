@@ -1,8 +1,8 @@
 import Moment from 'moment';
 import STTApi, { CONFIG } from '../../api/index';
 import { mergeDeep } from '../../api/ObjectMerge';
-import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO, VoyageExportData } from '../../api/DTO';
-import { CalcOptions, CalcChoice } from './voyageCalc';
+import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO, VoyageExportData, VoyageDescriptionDTO } from '../../api/DTO';
+import { CalcChoice, CalcExportData } from './voyageCalc';
 
 /**
  * Worst-case voyage AM decay rate (if all hazards fail)
@@ -173,6 +173,21 @@ export function voyDuration(narrative: VoyageNarrativeDTO[]) : number {
 	return dilemmaCount * TICKS_PER_DILEMMA * SECONDS_PER_TICK;
 }
 
+export function toSkillValues(sels: CalcChoice[], vdesc: VoyageDescriptionDTO) : {[sk:string]:number} {
+	let svs : {[sk:string]:number} = {};
+	sels.forEach((ch, sid) => {
+		Object.keys(ch.choice.skills).forEach(sk => {
+			if (!svs[sk]) { svs[sk] = 0; }
+			svs[sk] += ch.choice.skills[sk].voy;
+		});
+		const t = vdesc.crew_slots[sid].trait;
+		// if (ch.choice.rawTraits.includes(t)) {
+		// 	am += ANTIMATTER_FOR_SKILL_MATCH;
+		// }
+	});
+	return svs;
+}
+
 // Estimates voyage duration based on skill value and first failure time
 export function estimateVoyageDuration(pri: string, sec: string, svs: {[sk:string]:number}, currVoyTimeMinutes: number, amStart: number, log: boolean) : number {
 	const iph = 4; // indexes per hazard
@@ -282,12 +297,16 @@ const ANTIMATTER_FOR_SKILL_MATCH = 25;
 //   select first unused for each slot (decent good selection)
 //   permutate slightly
 //   keep better result; keep worse result if it passes a threshhold (to jump to another local maximum)
-export function calculateVoyage(options: CalcOptions,
+export function calculateVoyage(options: {
+	vd: VoyageDescriptionDTO;
+	roster: CrewData[];
+	shipAM: number;
+},
 	progressCallback: (choices: CalcChoice[], hoursLeft: number) => void,
 	doneCallback: (choices: CalcChoice[], hoursLeft: number) => void) : void
 {
 	const bestCrew : CrewData[][] = [];
-	options.voyage_description.crew_slots.forEach((slot, sid) => {
+	options.vd.crew_slots.forEach((slot, sid) => {
 		let best = bestCrew[sid];
 		if (!best) {
 			best = [];
@@ -368,24 +387,16 @@ export function calculateVoyage(options: CalcOptions,
 	// Energy function for annealing.
 	// Voyage estimated running time (in hours)
 	function nrgToMax(sels: CalcChoice[]): number {
+		const vd = options.vd;
 		let am = options.shipAM;
-		let svs : {[sk:string]:number} = {};
+		const svs = toSkillValues(sels, vd);
 		sels.forEach((ch, sid) => {
-			Object.keys(ch.choice.skills).forEach(sk => {
-				if (!svs[sk]) { svs[sk] = 0; }
-				svs[sk] += ch.choice.skills[sk].voy;
-			});
-			const t = options.voyage_description.crew_slots[sid].trait;
+			const t = vd.crew_slots[sid].trait;
 			if (ch.choice.rawTraits.includes(t)) {
 				am += ANTIMATTER_FOR_SKILL_MATCH;
 			}
 		});
-		const dur = estimateVoyageDuration(options.voyage_description.skills.primary_skill,
-			options.voyage_description.skills.secondary_skill,
-			svs,
-			0,
-			am,
-			false);
+		const dur = estimateVoyageDuration(vd.skills.primary_skill, vd.skills.secondary_skill, svs, 0, am, false);
 		return dur;
 	}
 
@@ -416,7 +427,7 @@ export function calculateVoyage(options: CalcOptions,
 		// let calcs = shuttleCalcs.slice();
 		// shuffle(calcs);
 
-		options.voyage_description.crew_slots.forEach((cs, sid) => {
+		options.vd.crew_slots.forEach((cs, sid) => {
 			let choice : CrewData | undefined = undefined;
 			//TODO: allow user override of crew-slot choice
 			// const userSel = userChoices.find(uc => uc.calc.shuttle.id === calc.shuttle.id);
@@ -427,20 +438,16 @@ export function calculateVoyage(options: CalcOptions,
 			// }
 			// else
 			{
-				if (!selsCurrent) {
-					// Grab the first unused crew by score
-					choice = bestCrew[sid].filter(c => !usedCrew.has(c.crew_id)).shift();
-				}
-				else {
-					const options = bestCrew[sid].filter(c => !usedCrew.has(c.crew_id));
+				if (selsCurrent) {
+					const bestOpts = bestCrew[sid].filter(c => !usedCrew.has(c.crew_id));
 					// Weight the random selection toward the front of the list
-					for (let i = 0; i < options.length; ++i) {
+					for (let i = 0; i < bestOpts.length; ++i) {
 						const r = Math.random();
 						// Select if the random value is below the curve in the higher probability range
 						const gap = .5; // 50% chance of select starting with first index - others may be better due to total voy still or trait match
 						const pass = r < gap;
 						if (pass) {
-							choice = options[i];
+							choice = bestOpts[i];
 							break;
 						}
 						//console.log("skipped option " + i + " " + r + " " + ci + "," + si)
@@ -448,14 +455,29 @@ export function calculateVoyage(options: CalcOptions,
 					//console.log("selecting random option " + ci + "," + si)
 					// Grab random selection of crew
 				}
-				if (choice) {
-					usedCrew.add(choice.crew_id);
+			}
+
+			// could not find a best select or need to initialize, pull first best option
+			if (!choice) {
+				choice = bestCrew[sid].filter(c => !usedCrew.has(c.crew_id)).shift();
+
+				if (!choice) {
+					// look anywhere for a choice
+					choice = options.roster.filter(c => !usedCrew.has(c.crew_id)).shift();
+				}
+
+				if (!choice) {
+					//TODO: ensure at least 12 crew are provided to calculation
+					// failed to find anyone
+					throw new Error('Failed finding enough crew in supplied roster');
 				}
 			}
 
+			usedCrew.add(choice.crew_id);
+
 			let chosen: CalcChoice = {
 				slotId: sid,
-				choice: choice!
+				choice: choice
 			};
 
 			sels.push(chosen);
@@ -463,4 +485,53 @@ export function calculateVoyage(options: CalcOptions,
 
 		return sels;
 	}
+}
+
+export function calculateVoyageCrewRank(
+	options: {
+		vd: VoyageDescriptionDTO;
+		roster: CrewData[];
+		shipAM: number;
+	},
+	result: (rankResult: string, estimateResult: string) => void) : void {
+	// rankResult format is: "Score,Alt 1,Alt 2,Alt 3,Alt 4,Alt 5,Status,Crew,Voyages (Pri),Voyages(alt)"
+	// estimateResult format is "Primary,Secondary,Estimate,Crew\nDIP, CMD, 8.2, crew1 | crew2 | crew3 | crew4 | crew5 | ... crew12\nCMD, DIP, 8.2, crew1 | ... "
+
+	Object.keys(CONFIG.SKILLS).forEach(pri => {
+		Object.keys(CONFIG.SKILLS).forEach(sec => {
+			if (pri === sec) {
+				return;
+			}
+
+			let opts = {
+				...options,
+				vd: {
+					...options.vd,
+					skills: { primary_skill: pri, secondary_skill: sec },
+					crew_slots: options.vd.crew_slots.map(cs => {return {...cs, trait: '_no_trait_'};})
+				}
+			};
+
+			calculateVoyage(
+				opts,
+				(entries: CalcChoice[], score: number) => {
+					// setCalcState({
+					// 	crewSelection: entries,
+					// 	estimatedDuration: score,
+					// 	state: 'inprogress'
+					// });
+				},
+				(entries: CalcChoice[], score: number) => {
+					// setCalcState({
+					// 	crewSelection: entries,
+					// 	estimatedDuration: score,
+					// 	state: 'done'
+					// });
+					//TODO: collect results and provide to the handler
+					console.log(CONFIG.SKILLS_SHORT[pri] + '-' + CONFIG.SKILLS_SHORT[sec] + ' ' + score);
+					result('', '');
+				}
+			);
+		})
+	});
 }
