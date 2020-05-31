@@ -76,7 +76,7 @@ export const FactionDetails = () => {
 			</div>
 			<div className='faction-content'>
 				{detailItems}
-\			</div>
+			</div>
 		</div>
 	);
 }

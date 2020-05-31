@@ -552,23 +552,26 @@ export interface PlayerDTO {
 	vip_points: number;
 }
 
+export interface AcceptedMissionsDTO {
+	accepted: boolean;
+	description: string;
+	episode: number;
+	episode_portrait: ImageDataDTO;
+	episode_title: string;
+	exclude_from_timeline: boolean | null;
+	id: number;
+	main_story: boolean;
+	marker: number[];
+	marker_icon: ImageDataDTO;
+	quests: MissionQuestDTO[];
+	stars_earned: number;
+	state: number;
+	symbol: string;
+	total_stars: number;
+}
+
 export interface PlayerCharacterDTO {
-	accepted_missions: {
-		accepted: boolean;
-		description: string;
-		episode: number;
-		episode_portrait: ImageDataDTO;
-		episode_title: string;
-		exclude_from_timeline: boolean | null;
-		id: number;
-		main_story: boolean;
-		marker: number[];
-		marker_icon: ImageDataDTO;
-		stars_earned: number;
-		state: number;
-		symbol: string;
-		total_stars: number;
-	}[];
+	accepted_missions: AcceptedMissionsDTO[];
 	active_conflict: any; // null
 	boost_windows: any[];
 	cadet_schedule: {
@@ -1289,28 +1292,30 @@ export interface MissionQuestMasteryLevelDTO {
 	rewards: (PotentialRewardDTO | RewardDTO)[]; // first item is PotentialRewardDTO with type=0, second is RewardDTO
 }
 
+export interface MissionQuestChallengeDTO {
+	children: number[];
+	critical: {
+		claimed: boolean;
+		reward: RewardDTO[];
+		standard_loot: PotentialRewardDTO[];
+		threshold: number;
+	};
+	difficulty: number;
+	difficulty_by_mastery: number[];
+	grid_x: number;
+	grid_y: number;
+	id: number;
+	image: ImageDataDTO;
+	locks: any[];
+	name: string;
+	skill: string;
+	trait_bonuses: { trait: string; bonuses: number[] }[];
+}
+
 export interface MissionQuestDTO {
 	action: string;
 	cadet?: boolean;
-	challenges: {
-		children: number[];
-		critical: {
-			claimed: boolean;
-			reward: RewardDTO[];
-			standard_loot: PotentialRewardDTO[];
-			threshold: number;
-		};
-		difficulty: number;
-		difficulty_by_mastery: number[];
-		grid_x: number;
-		grid_y: number;
-		id: number;
-		image: ImageDataDTO;
-		locks: any[];
-		name: string;
-		skill: string;
-		trait_bonuses: { trait: string; bonuses: number[] }[];
-	}[];
+	challenges: MissionQuestChallengeDTO[];
 	crew_requirement?: {
 		description: string;
 		max_stars: number;

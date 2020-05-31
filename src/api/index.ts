@@ -10,7 +10,7 @@ export { CrewSkills } from '../components/crew/SkillCell';
 export { download } from '../utils/pal';
 export { formatCrewStatsVoy } from '../components/crew/CrewTools';
 export { bonusCrewForCurrentEvent } from '../components/events/EventTools';
-export { calculateQuestRecommendations } from './MissionCrewSuccess';
+export { calculateQuestRecommendations, IQuestRecommendations } from './MissionCrewSuccess';
 export { formatTimeSeconds } from './MiscTools';
 export { refreshAllFactions, loadFactionStore } from './FactionTools';
 export { getCrewDetailsLink, getItemDetailsLink } from './LinkProvider';

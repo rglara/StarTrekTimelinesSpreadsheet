@@ -1,23 +1,20 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
-import { CrewData, SkillData } from "./DTO";
+import { CrewData, MissionDTO, MissionQuestChallengeDTO, MissionQuestDTO, SkillData } from "./DTO";
 
-export interface IChallengeSuccessTrait
-{
+export interface IChallengeSuccessTrait {
     trait: string;
     bonus: number;
 }
 
-export interface IChallengeSuccessCrew
-{
-    crew: any;
+export interface IChallengeSuccessCrew {
+    crew: CrewData;
     success: number;
     rollRequired: number;
     rollCrew: number;
 }
 
-export interface IChallengeSuccess
-{
+export interface IChallengeSuccess {
     mission: any;
     quest: any;
     challenge: any;
@@ -26,9 +23,9 @@ export interface IChallengeSuccess
     skill: string;
     cadet: boolean;
     crew_requirement: any;
-    traits: Array<IChallengeSuccessTrait>;
+    traits: IChallengeSuccessTrait[];
     lockedTraits: Array<string>;
-    crew: Array<IChallengeSuccessCrew>;
+    crew: IChallengeSuccessCrew[];
 }
 
 export function calculateMissionCrewSuccess(): Array<IChallengeSuccess> {
@@ -74,8 +71,7 @@ export function calculateMissionCrewSuccess(): Array<IChallengeSuccess> {
 
                     let fixUp = function(trait: string): string {
                         // Replace "nonhuman" with "alien" to match the search fixup
-                        if (trait =='nonhuman')
-                            return 'alien';
+                        if (trait === 'nonhuman') { return 'alien'; }
                         return trait;
                     }
 
@@ -120,11 +116,12 @@ export function calculateMissionCrewSuccess(): Array<IChallengeSuccess> {
                         let rollCrew = csk.core;
 
                         // If crew doesn't have a skill, its default value is lowest_skill / 5
-                        if (rollCrew == 0) {
+                        if (rollCrew === 0) {
                             let lowestSkill = 99999;
                             for (let skill in CONFIG.SKILLS) {
-                                if ((csk.core > 0) && (lowestSkill > csk.core)) {
-                                    lowestSkill = csk.core
+                                const coreSkill = crew.skills[skill].core;
+                                if ((coreSkill > 0) && (lowestSkill > coreSkill)) {
+                                    lowestSkill = coreSkill;
                                 }
                             }
 
@@ -168,24 +165,28 @@ export function calculateMinimalComplementAsync(): void {
     worker.postMessage({ success: STTApi.missionSuccess });*/
 }
 
-export interface ICrewPath
-{
-    path: any;
+export interface ICrewPath {
+    path: number[];
     crew: IChallengeSuccessCrew[];
     success: number;
 }
 
-export interface IQuestRecommendations
-{
-    mission: any;
+export interface IQuestMission extends MissionQuestDTO {
+    difficulty_by_mastery?: number[];
+    critical_threshold?: number;
+    trait_bonuses?: number[];
+}
+
+export interface IQuestRecommendations {
+    mission?: IQuestMission;
     bestCrewPaths?: ICrewPath[];
     allFinished: boolean;
 }
 
-export function calculateQuestRecommendations(questId: number, loadEvenFinishedNodes: boolean): IQuestRecommendations {
-    let mission: any = undefined;
-    STTApi.missions.forEach((episode: any) => {
-        episode.quests.forEach((quest: any) => {
+export function calculateQuestRecommendations(questId: number, masteryIndex: number, loadEvenFinishedNodes: boolean): IQuestRecommendations {
+    let mission: IQuestMission | undefined;
+    STTApi.missions.forEach((episode: MissionDTO) => {
+        episode.quests.forEach((quest: MissionQuestDTO) => {
             if (quest.id === questId) {
                 mission = quest;
             }
@@ -201,34 +202,36 @@ export function calculateQuestRecommendations(questId: number, loadEvenFinishedN
     }
 
     // Get the numbers from the first challenge that has them (since they match across the quest)
-    mission.challenges.forEach((challenge: any) => {
+    mission.challenges.forEach((challenge: MissionQuestChallengeDTO) => {
         if (challenge.difficulty_by_mastery) {
-            mission.difficulty_by_mastery = challenge.difficulty_by_mastery;
+            mission!.difficulty_by_mastery = challenge.difficulty_by_mastery;
         }
 
         if (challenge.critical && challenge.critical.threshold) {
-            mission.critical_threshold = challenge.critical.threshold;
+            mission!.critical_threshold = challenge.critical.threshold;
         }
 
         if (challenge.trait_bonuses && (challenge.trait_bonuses.length > 0)) {
-            mission.trait_bonuses = challenge.trait_bonuses[0].bonuses;
+            mission!.trait_bonuses = challenge.trait_bonuses[0].bonuses;
         }
     });
 
     // This algorithm assumes the graph is acyclic
-    let nodeElem: {[index:number]: any} = {};
+    let nodeElem: { [index: number]: any } = {};
     let unfinishedNodes: number[] = [];
     mission.challenges.forEach((challenge: any) => {
         nodeElem[challenge.id] = challenge;
 
-        if (challenge.critical && !challenge.critical.claimed) {
+        const unclaimedCritical = mission?.mastery_levels[masteryIndex].jackpots
+            .find(jp => (jp.id === challenge.id) && !jp.claimed);
+        if (unclaimedCritical) {
             unfinishedNodes.push(challenge.id)
         }
     });
 
     // DFS to build all possible paths through the graph
     let paths: number[][] = [];
-    let buildTree = (index: number, path: number[]) => {
+    const buildTree = (index: number, path: number[]) => {
         let newPath = path.slice(0);
         newPath.push(index);
         if (nodeElem[index].children && nodeElem[index].children.length > 0) {
@@ -257,13 +260,13 @@ export function calculateQuestRecommendations(questId: number, loadEvenFinishedN
     // WARNING - computationally intensive (consider showing a progress and using a WebWorker to unblock the UI thread)
     paths.forEach(path => {
         let crewSelections: IChallengeSuccessCrew[][] = [];
-        let pathStep = (level: number, crewSelection: IChallengeSuccessCrew[]) => {
+        const pathStep = (level: number, crewSelection: IChallengeSuccessCrew[]) => {
             if (path.length === level) {
                 crewSelections.push(crewSelection);
                 return;
             }
 
-            let recommendations = STTApi.missionSuccess.find(missionSuccess => (missionSuccess.quest.id === mission.id) && (missionSuccess.challenge.id === path[level]));
+            let recommendations = STTApi.missionSuccess.find(missionSuccess => (missionSuccess.quest.id === mission!.id) && (missionSuccess.challenge.id === path[level]));
             if (recommendations && recommendations.crew.length > 0) {
                 recommendations.crew.forEach(recommendation => {
                     // If we already picked 3 crew, all subsequent choices must be from those 3
@@ -278,21 +281,21 @@ export function calculateQuestRecommendations(questId: number, loadEvenFinishedN
         pathStep(0, []);
 
         // Apply tired crew coefficient and sort crew selections by total success
-        let totalSuccess = (crewSelection: IChallengeSuccessCrew[]) => {
+        const totalSuccess = (crewSelection: IChallengeSuccessCrew[]) => {
             let min = crewSelection[0].success;
             let total = crewSelection[0].success;
             for (let i = 1; i < crewSelection.length; i++) {
                 if (crewSelection[i].crew.id == crewSelection[i - 1].crew.id) {
                     // If crew is used on consecutive nodes, it gets -20% to skill rating
                     let skill = nodeElem[path[i]].skill;
-                    let tiredSuccess = ((crewSelection[i].rollCrew + crewSelection[i].crew[skill].max) * STTApi.serverConfig!.config.conflict.tired_crew_coefficient - crewSelection[i].rollRequired) * 100 /
-                        (crewSelection[i].crew[skill].max - crewSelection[i].crew[skill].min);
-                    if (tiredSuccess > 100) tiredSuccess = 100;
-
+                    let tiredSuccess = ((crewSelection[i].rollCrew + crewSelection[i].crew.skills[skill].max) * STTApi.serverConfig!.config.conflict.tired_crew_coefficient - crewSelection[i].rollRequired) * 100 /
+                        (crewSelection[i].crew.skills[skill].max - crewSelection[i].crew.skills[skill].min);
+                    if (tiredSuccess > 100) {
+                        tiredSuccess = 100;
+                    }
                     if (tiredSuccess < min) {
                         min = tiredSuccess;
                     }
-
                     total += tiredSuccess;
                 }
                 else {
@@ -315,8 +318,6 @@ export function calculateQuestRecommendations(questId: number, loadEvenFinishedN
         }
     });
 
-    let allFinished = unfinishedNodes.length === 0;
-    allFinished = allFinished && (mission.mastery_levels.reduce((accumulator: number, currentValue: any) => (accumulator + currentValue.progress.goals - currentValue.progress.goal_progress), 0) === 0);
-
+    const allFinished = unfinishedNodes.length === 0;
     return { mission, bestCrewPaths, allFinished };
 }

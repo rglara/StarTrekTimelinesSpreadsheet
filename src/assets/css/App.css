@@ -416,15 +416,106 @@
     border-left-color: #0078d7;
 }
 
-.faction-page {
+.mission-selection {
+    width: 50%;
+    margin-bottom: 20px;
+}
+
+.mission-content {
+    height: calc(100vh - 190px);
+}
+
+.mission-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.mission-matrix {
+    display: grid;
+    grid-template-columns: 160px 1fr 1fr 1fr;
+    font-size: medium;
+    align-items: start;
+}
+
+.mm-label {
+    justify-self: right;
+}
+
+.mm-header {
+    justify-self: center;
+    margin: 0px 10px;
+}
+
+.mm-data {
+    margin: 0px 10px;
+    text-align: center;
+}
+
+.mm-divider {
+    grid-column-start: 1;
+    grid-column-end: 5;
+}
+
+.mm-note {
+    justify-self: left;
+    margin-left: 20px;
+    grid-column-start: 2;
+    grid-column-end: 5;
+}
+
+.mission-calc {
+    grid-column-start: 1;
+    grid-column-end: 3;
+}
+
+.mission-challenge {
+    margin-top: 10px;
+}
+
+.mc-matrix {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 4px 20px;
+    font-size: medium;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.mcm-label {
+    justify-self: end;
+}
+
+.mcm-value {
+    justify-self: start;
+}
+
+.mcm-value .ms-Image {
+    display: inline-block;
+}
+
+.mc-personnel {
+    display: grid;
+    grid-auto-flow: row;
+}
+
+.faction-page,
+.mission-page {
     padding: 10px;
+    max-height: calc(100vh - 50px);
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+.faction-content,
+.mission-content {
+    -webkit-overflow-scrolling: touch;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .faction-content {
-    -webkit-overflow-scrolling: touch;
-    max-height: calc(100vh - 230px);
-    overflow-x: hidden;
-    overflow-y: auto;
+    height: calc(100vh - 230px);
 }
 
 .faction-gallery {
