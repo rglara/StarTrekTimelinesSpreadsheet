@@ -669,12 +669,12 @@ const GauntletSelectCrew = (props: {
 	startsIn?: string;
 	gauntletLoaded: (data: { gauntlet: GauntletDTO}) => void;
 }) => {
-	const [crewSelection, setCrewSelection] = React.useState(undefined as unknown as number[]);
-	const [calculating, setCalculating] = React.useState(false);
-	const [includeFrozen, setIncludeFrozen] = React.useState(false);
+	const [crewSelection, setCrewSelection] = React.useState<number[] | undefined>();
+	const [calculating, setCalculating] = React.useState<boolean>(false);
+	const [includeFrozen, setIncludeFrozen] = React.useState<boolean>(false);
 	// Recommendation calculation settings
-	const [featuredSkillBonus, setFeaturedSkillBonus] = React.useState(10);
-	const [critBonusDivider, setCritBonusDivider] = React.useState(3);
+	const [featuredSkillBonus, setFeaturedSkillBonus] = React.useState<number>(10);
+	const [critBonusDivider, setCritBonusDivider] = React.useState<number>(3);
 
 	const renderBestCrew = () => {
 		if (!crewSelection) {
@@ -823,7 +823,7 @@ const GauntletSelectCrew = (props: {
 const GauntletCrewBonusTable = (props: {
 	gauntlet: GauntletDTO;
 }) => {
-	const [sorted, setSorted] = React.useState([{ id: 'bonus', desc: true }] as SortingRule[]);
+	const [sorted, setSorted] = React.useState([{ id: 'bonus', desc: true },{id: 'gauntlet_score', desc: true}] as SortingRule[]);
 	const [filterText, setFilterText] = React.useState('');
 
 	const columns = getColumns();

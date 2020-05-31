@@ -400,8 +400,8 @@ export const GalaxyEvent = (props: {
          <h3>Galaxy event: {currEvent.name}</h3>
          <div>
             <EventStat label="Current Rares" value={rareCount ?? 'unknown'} />
-            <EventStat label="VP from Rares" value={rareVP ?? 'unknown'} />
-            <EventStat label="VP with Rares" value={vpCurr + (rareVP ?? 0)} />
+            <EventStat label="Est. VP from Rares" value={rareVP ?? 'unknown'} />
+            <EventStat label="Est. VP with Rares" value={vpCurr + (rareVP ?? 0)} />
          </div>
          {vpTopThresh > vpCurr && <div>
             <EventStat label="Missions without Rares" value={rawTurninsToGo ?? 'unknown'} />
