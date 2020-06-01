@@ -234,11 +234,9 @@ export const VoyageCrewSelect = (props: {
 						Start voyage with recommendations
 					</Form.Button>
 
-					{/* #!if ENV === 'electron' */}
 					<Form.Button onClick={() => _generateVoyCrewRank()} disabled={calcState.state === 'inprogress'}>
 						Export CSV with crew Voyage ranking...
 					</Form.Button>
-					{/* #!endif */}
 				</Form.Group>
 			</Form>
 			<Message attached='bottom' error hidden={!error}>
@@ -378,7 +376,6 @@ export const VoyageCrewSelect = (props: {
 		});
 	}
 
-	// #!if ENV === 'electron'
 	function _generateVoyCrewRank() {
 		function nthIndex(str:string, pat:string, n:number) {
 			let L = str.length, i = -1;
@@ -508,7 +505,6 @@ export const VoyageCrewSelect = (props: {
 			}
 		);
 	}
-	// #!endif
 }
 
 const BestCrew = (props : {

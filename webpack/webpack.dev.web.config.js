@@ -8,8 +8,6 @@ const FaviconsWebpackPlugin = require('favicons-webpack-plugin');
 const SRC_DIR = path.resolve(__dirname, '../src');
 const OUTPUT_DIR = path.resolve(__dirname, '../dist');
 
-// TODO: Figure out how to serve voymod.wasm
-
 module.exports = merge(baseConfig('webtest', true), {
 	plugins: [
 		new FaviconsWebpackPlugin({
