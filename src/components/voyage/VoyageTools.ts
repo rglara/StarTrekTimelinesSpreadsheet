@@ -1,8 +1,10 @@
 import Moment from 'moment';
+import VoyWorker from "worker-loader!./VoyageWorker";
 import STTApi, { CONFIG } from '../../api/index';
 import { mergeDeep } from '../../api/ObjectMerge';
 import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO, VoyageExportData, VoyageDescriptionDTO } from '../../api/DTO';
 import { CalcChoice, CalcExportData } from './voyageCalc';
+import { VoyageWorkerResult } from './VoyageWorker';
 
 /**
  * Worst-case voyage AM decay rate (if all hazards fail)
@@ -175,19 +177,14 @@ export function voyDuration(narrative: VoyageNarrativeDTO[]) : number {
 
 export function toSkillValues(sels: CalcChoice[], vdesc: VoyageDescriptionDTO) : {[sk:string]:number} {
 	let svs : {[sk:string]:number} = {};
-	sels.forEach((ch, sid) => {
-		Object.keys(ch.choice.skills).forEach(sk => {
-			if (!svs[sk]) { svs[sk] = 0; }
-			svs[sk] += ch.choice.skills[sk].voy;
-		});
-		const t = vdesc.crew_slots[sid].trait;
-		// if (ch.choice.rawTraits.includes(t)) {
-		// 	am += ANTIMATTER_FOR_SKILL_MATCH;
-		// }
-	});
+	sels.forEach(ch => Object.keys(ch.choice.skills).forEach(sk => {
+		if (!svs[sk]) { svs[sk] = 0; }
+		svs[sk] += ch.choice.skills[sk].voy;
+	}));
 	return svs;
 }
 
+//TODO: duplicated within the voyage worker; push calls to this to the worker as well
 // Estimates voyage duration based on skill value and first failure time
 export function estimateVoyageDuration(pri: string, sec: string, svs: {[sk:string]:number}, currVoyTimeMinutes: number, amStart: number, log: boolean) : number {
 	const iph = 4; // indexes per hazard
@@ -289,213 +286,37 @@ export function estimateVoyageDuration(pri: string, sec: string, svs: {[sk:strin
 	return vtMins;
 }
 
-const LOG_CALCULATE = false;
-const ANTIMATTER_FOR_SKILL_MATCH = 25;
-
-// Compute "best" crew for the voyage
-// Uses a basic simulated annealing metaheuristic approach:
-//   select first unused for each slot (decent good selection)
-//   permutate slightly
-//   keep better result; keep worse result if it passes a threshhold (to jump to another local maximum)
-export function calculateVoyage(options: {
+interface VoyCalcOptions {
 	vd: VoyageDescriptionDTO;
 	roster: CrewData[];
 	shipAM: number;
-},
+}
+
+export function calculateVoyage(options: VoyCalcOptions,
 	progressCallback: (choices: CalcChoice[], hoursLeft: number) => void,
 	doneCallback: (choices: CalcChoice[], hoursLeft: number) => void) : void
 {
-	const bestCrew : CrewData[][] = [];
-	options.vd.crew_slots.forEach((slot, sid) => {
-		let best = bestCrew[sid];
-		if (!best) {
-			best = [];
-			bestCrew[sid] = best;
-		}
-		options.roster.forEach(c => {
-			let vs = c.skills[slot.skill].voy;
-			if (vs > 0) {
-				best.push(c);
-			}
-		});
-		// Sort by total voy skill (desc)
-		best.sort((a,b) => b.voyage_score - a.voyage_score);
-	});
+	const worker = new VoyWorker() as Worker;
 
-	// Initial configuration
-	let current = selectRandom(undefined);
-	let next: CalcChoice[] = [];
-	let iteration = 0;
-	let alpha = 0.999;
-	let temperature = 400.0;
-	let epsilon = 0.001;
-	let currentNrg = nrgToMax(current);
-	// Not necessary, but keeps from blowing up indefinitely if the math goes wrong
-	const maxIter = 100000;
+	worker.onmessage = (event: MessageEvent) => {
+		const r = event.data as VoyageWorkerResult
+		//console.log(event);
+		doneCallback(r.choices, r.hoursLeft);
+	};
 
-	//console.log("Initial energy: " + currentNrg);
-	progressCallback(current, currentNrg / 60);
+	progressCallback([], 0);
 
-	//while the temperature did not reach epsilon
-	while (temperature > epsilon && iteration < maxIter) {
-		iteration++;
-		// report every 400 iterations
-		if (iteration % 400 == 0) {
-			// console.log(currentNrg);
-			progressCallback(current, currentNrg / 60);
-		}
-
-		next = selectRandom(current);
-		let nextNrg = nrgToMax(next);
-		if (nextNrg == currentNrg) {
-			continue;
-		}
-		if (nextNrg > currentNrg) {
-			if (LOG_CALCULATE) {
-				console.log("Better energy: " + nextNrg + " > " + currentNrg);
-			}
-			current = next;
-			currentNrg = nextNrg;
-		}
-		else {
-			const proba = Math.random();
-			//if the new nrg is worse accept
-			//it but with a probability level
-			//if the probability is less than
-			//E to the power -delta/temperature.
-			//otherwise the old value is kept
-			const delta = nextNrg - currentNrg;
-			const threshold = Math.exp(delta / temperature);
-			if (proba < threshold) {
-				if (LOG_CALCULATE) {
-					console.log("Override better energy: " + nextNrg + " < " + currentNrg + " @ " + proba + " " + threshold);
-				}
-				current = next;
-				currentNrg = nextNrg;
-			}
-		}
-		//cooling process on every iteration
-		temperature *= alpha;
-	}
-
-	//if (LOG_CALCULATE) {
-	console.log("Best energy: " + currentNrg + " iters:" + iteration);
-	//}
-	doneCallback(current, currentNrg / 60);
-	//return current;
-
-	// Energy function for annealing.
-	// Voyage estimated running time (in hours)
-	function nrgToMax(sels: CalcChoice[]): number {
-		const vd = options.vd;
-		let am = options.shipAM;
-		const svs = toSkillValues(sels, vd);
-		sels.forEach((ch, sid) => {
-			const t = vd.crew_slots[sid].trait;
-			if (ch.choice.rawTraits.includes(t)) {
-				am += ANTIMATTER_FOR_SKILL_MATCH;
-			}
-		});
-		const dur = estimateVoyageDuration(vd.skills.primary_skill, vd.skills.secondary_skill, svs, 0, am, false);
-		return dur;
-	}
-
-	function selectRandom(selsCurrent?: CalcChoice[]): CalcChoice[] {
-		let sels: CalcChoice[] = [];
-		let usedCrew: Set<number> = new Set<number>();
-
-		//TODO: allow user override of crew-slot choices here
-		// options.userChoices.forEach(ch => {
-		// 	let userChosen = userChoices.find(uc => uc.calc.shuttle.id === calc.shuttle.id)?.chosen ?? [];
-		// 	userChosen.forEach(uc => {
-		// 		const c = uc.item;
-		// 		if (c) {
-		// 			let crid = cid(c.crew)
-		// 			if (crid) {
-		// 				usedCrew.add(crid);
-		// 			}
-		// 		}
-		// 	});
-		// });
-
-		// function shuffle(array: any[]) {
-		// 	for (let i = array.length - 1; i > 0; i--) {
-		// 		const j = Math.floor(Math.random() * (i + 1));
-		// 		[array[i], array[j]] = [array[j], array[i]];
-		// 	}
-		// }
-		// let calcs = shuttleCalcs.slice();
-		// shuffle(calcs);
-
-		options.vd.crew_slots.forEach((cs, sid) => {
-			let choice : CrewData | undefined = undefined;
-			//TODO: allow user override of crew-slot choice
-			// const userSel = userChoices.find(uc => uc.calc.shuttle.id === calc.shuttle.id);
-			// let userChosen = userSel?.chosen ?? [];
-			// let userChoice = userChosen.find(uc => uc.slotIndex === si);
-			// if (userChoice?.item) {
-			// 	choice = userChoice.item;
-			// }
-			// else
-			{
-				if (selsCurrent) {
-					const bestOpts = bestCrew[sid].filter(c => !usedCrew.has(c.crew_id));
-					// Weight the random selection toward the front of the list
-					for (let i = 0; i < bestOpts.length; ++i) {
-						const r = Math.random();
-						// Select if the random value is below the curve in the higher probability range
-						const gap = .5; // 50% chance of select starting with first index - others may be better due to total voy still or trait match
-						const pass = r < gap;
-						if (pass) {
-							choice = bestOpts[i];
-							break;
-						}
-						//console.log("skipped option " + i + " " + r + " " + ci + "," + si)
-					}
-					//console.log("selecting random option " + ci + "," + si)
-					// Grab random selection of crew
-				}
-			}
-
-			// could not find a best select or need to initialize, pull first best option
-			if (!choice) {
-				choice = bestCrew[sid].filter(c => !usedCrew.has(c.crew_id)).shift();
-
-				if (!choice) {
-					// look anywhere for a choice
-					choice = options.roster.filter(c => !usedCrew.has(c.crew_id)).shift();
-				}
-
-				if (!choice) {
-					//TODO: ensure at least 12 crew are provided to calculation
-					// failed to find anyone
-					throw new Error('Failed finding enough crew in supplied roster');
-				}
-			}
-
-			usedCrew.add(choice.crew_id);
-
-			let chosen: CalcChoice = {
-				slotId: sid,
-				choice: choice
-			};
-
-			sels.push(chosen);
-		});
-
-		return sels;
-	}
+	worker.postMessage(options /* as VoyageWorkerMessage */);
 }
 
 export function calculateVoyageCrewRank(
-	options: {
-		vd: VoyageDescriptionDTO;
-		roster: CrewData[];
-		shipAM: number;
-	},
-	result: (rankResult: string, estimateResult: string) => void) : void {
+	options: VoyCalcOptions,
+	done: (rankResult: string, estimateResult: string) => void) : void {
 	// rankResult format is: "Score,Alt 1,Alt 2,Alt 3,Alt 4,Alt 5,Status,Crew,Voyages (Pri),Voyages(alt)"
 	// estimateResult format is "Primary,Secondary,Estimate,Crew\nDIP, CMD, 8.2, crew1 | crew2 | crew3 | crew4 | crew5 | ... crew12\nCMD, DIP, 8.2, crew1 | ... "
+
+	let result : { p: string, s: string, est: number, c: CalcChoice[] }[] = [];
+	let tasks : VoyCalcOptions[] = [];
 
 	Object.keys(CONFIG.SKILLS).forEach(pri => {
 		Object.keys(CONFIG.SKILLS).forEach(sec => {
@@ -503,7 +324,7 @@ export function calculateVoyageCrewRank(
 				return;
 			}
 
-			let opts = {
+			let opts : VoyCalcOptions = {
 				...options,
 				vd: {
 					...options.vd,
@@ -511,27 +332,24 @@ export function calculateVoyageCrewRank(
 					crew_slots: options.vd.crew_slots.map(cs => {return {...cs, trait: '_no_trait_'};})
 				}
 			};
-
-			calculateVoyage(
-				opts,
-				(entries: CalcChoice[], score: number) => {
-					// setCalcState({
-					// 	crewSelection: entries,
-					// 	estimatedDuration: score,
-					// 	state: 'inprogress'
-					// });
-				},
-				(entries: CalcChoice[], score: number) => {
-					// setCalcState({
-					// 	crewSelection: entries,
-					// 	estimatedDuration: score,
-					// 	state: 'done'
-					// });
-					//TODO: collect results and provide to the handler
-					console.log(CONFIG.SKILLS_SHORT[pri] + '-' + CONFIG.SKILLS_SHORT[sec] + ' ' + score);
-					result('', '');
-				}
-			);
+			tasks.push(opts);
 		})
 	});
+
+	tasks.forEach(opts =>
+		calculateVoyage(
+			opts,
+			(entries: CalcChoice[], score: number) => {
+			},
+			(entries: CalcChoice[], score: number) => {
+				console.log(CONFIG.SKILLS_SHORT[opts.vd.skills.primary_skill] + '-' + CONFIG.SKILLS_SHORT[opts.vd.skills.secondary_skill] + ' ' + score);
+				result.push({ p: opts.vd.skills.primary_skill, s: opts.vd.skills.secondary_skill, est: score, c: entries});
+
+				if (result.length === tasks.length) {
+					//TODO: properly collect results and provide to the handler
+					done('', '');
+				}
+			}
+		)
+	);
 }
