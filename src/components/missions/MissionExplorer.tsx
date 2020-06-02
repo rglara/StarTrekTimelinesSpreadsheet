@@ -27,13 +27,10 @@ interface MissionOptions extends IDropdownOption {
 }
 
 export class MissionExplorer extends React.Component<MissionExplorerProps, MissionExplorerState> {
-	missionDetailsRef: React.RefObject<MissionDetails>;
-
 	constructor(props: MissionExplorerProps) {
 		super(props);
 
 		this.loadOptions = this.loadOptions.bind(this);
-		this.missionDetailsRef = React.createRef<MissionDetails>();
 
 		this.state = {
 			dataAvailable: true,
@@ -45,6 +42,14 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 
 	componentDidMount() {
 		this._updateCommandItems();
+	}
+
+	componentDidUpdate(_prevProps: MissionExplorerProps, prevState: MissionExplorerState) {
+		if (this.state.options.length !== prevState.options.length) {
+			if (!this.state.options.find(opt => opt.key === this.state.selectedItem?.key)) {
+				this.setState({ selectedItem: undefined });
+			}
+		}
 	}
 
 	_updateCommandItems() {
@@ -60,10 +65,10 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 						canCheck: true,
 						isChecked: this.state.onlyIncomplete,
 						onClick: () => {
-							let isChecked = !this.state.onlyIncomplete;
+							const isChecked = !this.state.onlyIncomplete;
 							this.setState({
 								options: this.loadOptions(isChecked),
-								onlyIncomplete: isChecked
+								onlyIncomplete: isChecked,
 							}, () => { this._updateCommandItems(); });
 						}
 					}]
@@ -169,9 +174,6 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 							selectedKey={this.state.selectedItem?.key}
 							onChange={(_evt, item) => {
 								this.setState({ selectedItem: item });
-								if (this.missionDetailsRef.current && item && item.data) {
-									this.missionDetailsRef.current.loadMissionDetails(item.data.questId);
-								}
 							}}
 							onRenderTitle={this._onRenderTitle}
 							placeholder='Select a mission'
@@ -181,8 +183,7 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 					</div>
 					<div className='mission-content'>
 						<MissionDetails
-							questId={this.state.selectedItem}
-							ref={this.missionDetailsRef} />
+							questId={this.state.selectedItem} />
 					</div>
 				</div>
 			);

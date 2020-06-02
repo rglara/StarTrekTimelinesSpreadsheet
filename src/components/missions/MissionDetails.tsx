@@ -20,9 +20,12 @@ interface MissionDetailsState extends IQuestRecommendations {
 
 export class MissionDetails extends React.Component<MissionDetailsProps, MissionDetailsState> {
 	missionDisplay: MissionDisplay | undefined;
+	canvasRef: React.RefObject<HTMLCanvasElement>;
 
 	constructor(props: MissionDetailsProps) {
 		super(props);
+
+		this.canvasRef = React.createRef();
 
 		this.loadMissionDetails = this.loadMissionDetails.bind(this);
 		this.loadMissionDetailsInternal = this.loadMissionDetailsInternal.bind(this);
@@ -46,7 +49,15 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 		}
 	}
 
-	componentDidUpdate(_prevProps: MissionDetailsProps, prevState: MissionDetailsState) {
+	componentDidUpdate(prevProps: MissionDetailsProps, prevState: MissionDetailsState) {
+		if (this.props.questId !== prevProps.questId) {
+			if (this.props.questId && this.props.questId.data) {
+				this.loadMissionDetails(this.props.questId.data.questId);
+			}
+			else {
+				this.loadMissionDetails(-1);
+			}
+		}
 		if ((this.state.mission !== prevState.mission)
 			|| (this.state.masteryIndex !== prevState.masteryIndex)){
 			this.setState({ selectedChallenge: undefined });
@@ -64,8 +75,9 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 	}
 
 	updateGraph() {
-		if (!this.refs.canvasMission)
+		if (!this.canvasRef.current) {
 			return;
+		}
 
 		let mission = this.state.mission;
 		if (mission) {
@@ -82,7 +94,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 				this.missionDisplay.reset(maxX, maxY);
 			} else {
 				this.missionDisplay = new MissionDisplay(
-					this.refs.canvasMission, maxX, maxY,
+					this.canvasRef.current, maxX, maxY,
 					(id?: number) => this.setState({ selectedChallenge: id })
 				);
 			}
@@ -453,7 +465,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 				</div>
 				<div className='mission-graph'>
 					<canvas
-						ref='canvasMission'
+						ref={this.canvasRef}
 						width={1000}
 						height={450}
 						style={{ width: '100%', height: 'auto' }}
