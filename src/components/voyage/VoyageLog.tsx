@@ -433,12 +433,13 @@ export const VoyageLog = (props:{}) => {
 
 		const vd = STTApi.playerData.character.voyage_descriptions[0];
 		const svs = toSkillValues(assigned, vd);
-		const dur = estimateVoyageDuration(vd.skills.primary_skill,
+		estimateVoyageDuration(vd.skills.primary_skill,
 			vd.skills.secondary_skill,
-			svs, voyage.voyage_duration / 60, voyage.hp, false);
-		const estimate = dur - (voyage.voyage_duration / 60);
-		setEstimatedMinutesLeft(estimate);
-		setComputingNativeEstimate(false);
+			svs, voyage.voyage_duration / 60, voyage.hp, false, (dur) => {
+				const estimate = dur - (voyage.voyage_duration / 60);
+				setEstimatedMinutesLeft(estimate);
+				setComputingNativeEstimate(false);
+			});
 
 			// if (!voyage || !voyage.max_hp) {
 			// 	return;

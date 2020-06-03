@@ -367,12 +367,12 @@ export const VoyageCrewSelect = (props: {
 
 		const svs = toSkillValues(calcState.crewSelection, vd)
 
-		const minutesLeft = estimateVoyageDuration(vd.skills.primary_skill, vd.skills.secondary_skill, svs, 0, amStart, false);
-
-		setCalcState({
-			crewSelection: calcState.crewSelection,
-			estimatedDuration: minutesLeft / 60,
-			state: 'done'
+		estimateVoyageDuration(vd.skills.primary_skill, vd.skills.secondary_skill, svs, 0, amStart, false, (minutesLeft) => {
+			setCalcState({
+				crewSelection: calcState.crewSelection,
+				estimatedDuration: minutesLeft / 60,
+				state: 'done'
+			});
 		});
 	}
 

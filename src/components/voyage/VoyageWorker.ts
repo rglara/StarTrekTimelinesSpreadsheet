@@ -14,17 +14,39 @@ export interface VoyageWorkerResult {
 	hoursLeft: number;
 }
 
+export interface VoyageDurationWorkerMessage {
+	pri: string;
+	sec: string;
+	svs: {[sk:string]:number};
+	currVoyTimeMinutes: number;
+	amStart: number;
+	log: boolean;
+}
+
+export interface VoyageDurationWorkerResult {
+	minutesLeft: number;
+}
+
 const ctx: Worker = self as any;
 
 ctx.onmessage = (event) => {
-	const msg = event.data as VoyageWorkerMessage;
-	calculateVoyage(msg, () => {}, (choices: CalcChoice[], hoursLeft: number) => {
-		const r : VoyageWorkerResult = { choices, hoursLeft };
-		//TODO: might need to reduce choices to crew-id[] to pass back
-		ctx.postMessage(r);
+	const op = event.data.op;
+	if (op === 'calculateVoyage') {
+		const options = event.data.options as VoyageWorkerMessage;
+		calculateVoyage(options, () => {}, (choices: CalcChoice[], hoursLeft: number) => {
+			const r : VoyageWorkerResult = { choices, hoursLeft };
+			//TODO: might need to reduce choices to crew-id[] to pass back
+			ctx.postMessage(r);
+			self.close();
+		})
+		//console.log(event);
+	}
+	if (op === 'estimateDuration') {
+		const options = event.data.options as VoyageDurationWorkerMessage;
+		const mins = estimateVoyageDuration(options.pri, options.sec, options.svs, options.currVoyTimeMinutes, options.amStart, options.log);
+		ctx.postMessage({minutesLeft:mins} as VoyageDurationWorkerResult);
 		self.close();
-	})
-	//console.log(event);
+	}
 };
 
 function toSkillValues(sels: CalcChoice[], vdesc: VoyageDescriptionDTO) : {[sk:string]:number} {
@@ -240,7 +262,6 @@ function calculateVoyage(options: {
 	}
 }
 
-//TODO: expose this as a worker task
 // Estimates voyage duration based on skill value and first failure time
 function estimateVoyageDuration(pri: string, sec: string, svs: {[sk:string]:number}, currVoyTimeMinutes: number, amStart: number, log: boolean) : number {
 	const iph = 4; // indexes per hazard

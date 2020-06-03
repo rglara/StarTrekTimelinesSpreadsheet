@@ -4,7 +4,7 @@ import STTApi, { CONFIG } from '../../api/index';
 import { mergeDeep } from '../../api/ObjectMerge';
 import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO, VoyageExportData, VoyageDescriptionDTO } from '../../api/DTO';
 import { CalcChoice, CalcExportData } from './voyageCalc';
-import { VoyageWorkerResult } from './VoyageWorker';
+import { VoyageWorkerResult, VoyageDurationWorkerResult, VoyageDurationWorkerMessage, VoyageWorkerMessage } from './VoyageWorker';
 
 /**
  * Worst-case voyage AM decay rate (if all hazards fail)
@@ -184,106 +184,17 @@ export function toSkillValues(sels: CalcChoice[], vdesc: VoyageDescriptionDTO) :
 	return svs;
 }
 
-//TODO: duplicated within the voyage worker; push calls to this to the worker as well
 // Estimates voyage duration based on skill value and first failure time
-export function estimateVoyageDuration(pri: string, sec: string, svs: {[sk:string]:number}, currVoyTimeMinutes: number, amStart: number, log: boolean) : number {
-	const iph = 4; // indexes per hazard
-	const currVoyTicks = currVoyTimeMinutes * 60 / 20; // conv to seconds and div by tick rate
-	//console.log("   voy ticks: " + currVoyTicks);
+export function estimateVoyageDuration(pri: string, sec: string, svs: {[sk:string]:number}, currVoyTimeMinutes: number, amStart: number, log: boolean, done: (mins:number) => void) {
+	const worker = new VoyWorker() as Worker;
 
-	let chance: { [sk: string]: number } = {};
-	let ffi : { [sk: string] : number } = {};
-	let pass: { [sk: string]: number } = {};
-	let passAdd: { [sk: string]: number } = {};
-	let fail: { [sk: string]: number } = {};
-	let failSubtract: { [sk: string]: number } = {};
-	let ffiMax = 0;
+	worker.onmessage = (event: MessageEvent) => {
+		const r = event.data as VoyageDurationWorkerResult
+		//console.log(event);
+		done(r.minutesLeft);
+	};
 
-	//const hazards = narr.narrative.filter(n => n.encounter_type === 'hazard' && n.skill_check?.skill);
-	Object.keys(CONFIG.SKILLS_SHORT).forEach(sk => {
-		if (log)
-			console.log('Skill:' + sk);
-		chance[sk] = .1;
-		if (sk === pri) {
-			chance[sk] = .35;
-		}
-		else if (sk === sec) {
-			chance[sk] = .25;
-		}
-		if (log)
-			console.log('  select chance: ' + chance[sk]);
-
-		let sv = svs[sk];
-		if (log)
-			console.log('  value: ' + sv);
-		if (!sv) {
-			return;
-		}
-
-		ffi[sk] = sv * .15;
-		if (log)
-			console.log('  ffi(base): ' + ffi[sk] + ' @' + (ffi[sk] * 20 / 60 / 60));
-
-		// This block is to estimate voyage time remaining, not from the start of a voyage
-		if (currVoyTimeMinutes > 0) {
-			ffi[sk] -= currVoyTicks;
-			if (log)
-				console.log('  ffi(remaining): ' + ffi[sk]);
-			if (ffi[sk] < 0) {
-				ffi[sk] = 0;
-			}
-		}
-		if (log)
-			console.log('  ffi: ' + ffi[sk]);
-
-		pass[sk] = ffi[sk] * chance[sk] / iph;
-		if (log)
-			console.log('  passes: ' + pass[sk]);
-
-		passAdd[sk] = pass[sk] * (5);
-		if (log)
-			console.log('  pass AM+: ' + passAdd[sk]);
-
-		if (ffi[sk] > ffiMax) {
-			ffiMax = ffi[sk];
-		}
-		//console.log('Skill:' + sk + ' select chance:' + chance[sk] + ' sv:' + sv + ' ffi:' + ffi[sk]);
-	});
-
-	Object.keys(CONFIG.SKILLS_SHORT).forEach(sk => {
-		fail[sk] = (ffiMax - ffi[sk]) * chance[sk] / iph;
-		failSubtract[sk] = fail[sk] * 30;
-		if (log) {
-			console.log('Skill:' + sk);
-			console.log('  fails: ' + fail[sk]);
-			console.log('  fail AM-: ' + failSubtract[sk]);
-		}
-	});
-
-	let amBalance = amStart;
-	if (log)
-		console.log('AM: ' + amBalance + ' ffiMax:' + ffiMax);
-
-	// subtract 1 AM per tick
-	amBalance -= ffiMax;
-	if (log)
-		console.log('am minus ticks:' + amBalance);
-	Object.keys(CONFIG.SKILLS_SHORT).forEach(sk => {
-		amBalance += passAdd[sk];
-		amBalance -= failSubtract[sk];
-		if (log)
-			console.log('am:' + amBalance + ' Skill:' + sk);// + ' pass:' + pass[sk] + ' fail:' + fail[sk]+ ' passAdd:' + passAdd[sk] + ' failSubtract:' + failSubtract[sk]);
-	});
-
-	if (log)
-		console.log('ffiMax: ' + ffiMax + ' amBalance: ' + amBalance + ' am/21: ' + (amBalance/21));
-	let fftMins = ffiMax * 20 / 60;
-
-	if (log)
-		console.log('fft(min): ' + fftMins + ' fft(hr): ' + (fftMins / 60));
-	let vtMins = fftMins + (amBalance / 21) + currVoyTimeMinutes;
-
-	return vtMins;
+	worker.postMessage({op:'estimateDuration', options:{pri, sec, svs, currVoyTimeMinutes, amStart, log} as VoyageDurationWorkerMessage });
 }
 
 interface VoyCalcOptions {
@@ -306,7 +217,8 @@ export function calculateVoyage(options: VoyCalcOptions,
 
 	progressCallback([], 0);
 
-	worker.postMessage(options /* as VoyageWorkerMessage */);
+	const opts = options as VoyageWorkerMessage;
+	worker.postMessage({op:'calculateVoyage', options: opts });
 }
 
 export function calculateVoyageCrewRank(
