@@ -201,6 +201,9 @@ export const computeCrew = async (
 	// Not necessary, but keeps from blowing up indefinitely if the math goes wrong
 	const maxIter = 100000;
 
+	let best = current;
+	let bestNrg = currentNrg;
+
 	//console.log("Initial energy: " + currentNrg);
 
 	//while the temperature did not reach epsilon
@@ -222,6 +225,9 @@ export const computeCrew = async (
 			}
 			current = next;
 			currentNrg = nextNrg;
+
+			best = current;
+			bestNrg = currentNrg;
 		}
 		else {
 			const proba = Math.random();
@@ -244,10 +250,10 @@ export const computeCrew = async (
 		temperature *= alpha;
 	}
 
-	//if (LOG_CALCULATE) {
-	console.log("Best energy: " + currentNrg + " iters:" + iteration);
-	//}
-	return current;
+	if (LOG_CALCULATE) {
+		console.log("Best energy: " + bestNrg + " iters:" + iteration);
+	}
+	return best;
 
 	// Energy function for annealing.
 	// Sums the percent chance for shuttles to succeed, then subtracts a factor of the std dev to even them

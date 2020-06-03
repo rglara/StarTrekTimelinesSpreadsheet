@@ -87,10 +87,10 @@ export async function startVoyage(
 	selectedCrewIds: Array<number>
 ): Promise<void> {
 	// Start by getting up-to-date crew status
-	let currentPlayer = await STTApi.resyncInventory();
+	await STTApi.resyncInventory();
 
 	let availableCrew = new Set<number>();
-	currentPlayer.player.character.crew.forEach((crew) => {
+	STTApi.playerData.character.crew.forEach((crew) => {
 		if (!crew.active_id) {
 			availableCrew.add(crew.id);
 		}

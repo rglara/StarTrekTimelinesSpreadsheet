@@ -501,14 +501,8 @@ export class STTApiClass {
 		}
 	}
 
-	async resyncInventory(): Promise<{ player: PlayerDTO }> {
-		// TODO: we should sync this data back into _playerData.player somehow (but we're adding too much stuff onto it now to work, like iconUrls, immortals, etc.)
-		let data = await this.executeGetRequest('player/resync_inventory');
-		if (data.player) {
-			return data;
-		} else {
-			throw new Error('Invalid data for player!');
-		}
+	async resyncInventory(): Promise<void> {
+		await this.executeGetRequestWithUpdates('player/resync_inventory');
 	}
 
 	async loadShipSchematics(): Promise<void> {
@@ -668,6 +662,10 @@ export class STTApiClass {
 								adv.shuttles[0] = mergeDeep(adv.shuttles[0], data.shuttle, ['slots','rewards']);
 						  }
 					 });
+				}
+
+				if (data.item_archetype_cache) {
+					//TODO
 				}
 			} else if (data.action === 'delete') {
 				// TODO
