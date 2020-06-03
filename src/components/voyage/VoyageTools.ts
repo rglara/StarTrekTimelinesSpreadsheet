@@ -312,8 +312,6 @@ export function calculateVoyage(options: VoyCalcOptions,
 export function calculateVoyageCrewRank(
 	options: VoyCalcOptions,
 	done: (rankResult: string, estimateResult: string) => void) : void {
-	// rankResult format is: "Score,Alt 1,Alt 2,Alt 3,Alt 4,Alt 5,Status,Crew,Voyages (Pri),Voyages(alt)"
-	// estimateResult format is "Primary,Secondary,Estimate,Crew\nDIP, CMD, 8.2, crew1 | crew2 | crew3 | crew4 | crew5 | ... crew12\nCMD, DIP, 8.2, crew1 | ... "
 
 	let result : { p: string, s: string, est: number, c: CalcChoice[] }[] = [];
 	let tasks : VoyCalcOptions[] = [];
@@ -342,14 +340,54 @@ export function calculateVoyageCrewRank(
 			(entries: CalcChoice[], score: number) => {
 			},
 			(entries: CalcChoice[], score: number) => {
-				console.log(CONFIG.SKILLS_SHORT[opts.vd.skills.primary_skill] + '-' + CONFIG.SKILLS_SHORT[opts.vd.skills.secondary_skill] + ' ' + score);
+				//console.log(CONFIG.SKILLS_SHORT[opts.vd.skills.primary_skill] + '-' + CONFIG.SKILLS_SHORT[opts.vd.skills.secondary_skill] + ' ' + score);
 				result.push({ p: opts.vd.skills.primary_skill, s: opts.vd.skills.secondary_skill, est: score, c: entries});
 
 				if (result.length === tasks.length) {
+					// rankResult format is: "Score,Alt 1,Alt 2,Alt 3,Alt 4,Alt 5,Status,Crew,Voyages (Pri),Voyages(alt)"
+					// estimateResult format is "Primary,Secondary,Estimate,Crew\nDIP, CMD, 8.2, crew1 | crew2 | crew3 | crew4 | crew5 | ... crew12\nCMD, DIP, 8.2, crew1 | ... "
 					//TODO: properly collect results and provide to the handler
-					done('', '');
+					done(toCrewResult(result), toEstimateResult(result));
 				}
 			}
 		)
 	);
+}
+
+function cleanCrewName(name: string) : string {
+	if (!name) { return 'unknown'; }
+	return name.replace(/[^\x00-\x7F]/g, "").replace(/"/g, "'")
+}
+
+function toCrewResult(result: { p: string, s: string, est: number, c: CalcChoice[] }[]) : string {
+	let ranks : { [cid: string] : { cd: CrewData, voys: string[] }} = {};
+
+	result.forEach(r => {
+		let v = CONFIG.SKILLS_SHORT[r.p] + '/' + CONFIG.SKILLS_SHORT[r.s];
+		r.c.forEach(c => {
+			let cr = ranks[c.choice.crew_id] ?? { cd: c.choice, voys: []};
+			ranks[c.choice.crew_id] = cr;
+			cr.voys.push(v);
+			//console.log(c.choice.crew_id + ' ' + c.choice.name + ' ');
+			//console.log(v);
+		});
+	});
+
+	//result.forEach(r => console.log(r.c));
+
+	let crew = Object.keys(ranks).map(k => ranks[k]).sort((a,b) => b.voys.length - a.voys.length);
+
+	let rv : string[] = ['Score,Alt 1,Alt 2,Alt 3,Alt 4,Alt 5,Status,Crew,Voyages (Pri),Voyages(alt)'];
+	crew.map(c => c.voys.length + ',,,,,, ,"'+cleanCrewName(c.cd.name)+'",' + c.voys.join(' ') + ',').forEach(r => rv.push(r));
+
+	return rv.join('\n');
+}
+
+function toEstimateResult(result: { p: string, s: string, est: number, c: CalcChoice[] }[]) : string {
+	let r = [...result];
+	let rv: string[] = ['Primary,Secondary,Estimate,Crew'];
+	r.sort((a,b) => b.est - a.est);
+
+	r.map(e => CONFIG.SKILLS_SHORT[e.p]+',' + CONFIG.SKILLS_SHORT[e.s] + ',' + e.est + ',' + e.c.map(c => c.choice.name).join(' | ')).forEach(e => rv.push(e));
+	return rv.join('\n');
 }

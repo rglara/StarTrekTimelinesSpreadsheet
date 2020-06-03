@@ -396,7 +396,7 @@ export const VoyageCrewSelect = (props: {
 			},
 			(rankResult: string, estimateResult: string) => {
 				// estimateResult is of the form "Primary,Secondary,Estimate,Crew\nDIP, CMD, 8.2, crew1 | crew2 | crew3 | crew4 | crew5 | ... crew12\nCMD, DIP, 8.2, crew1 | ... "
-				// crew names may have spaces and commas
+				// crew names may have spaces, commas, and single or double quotes
 				let lines = estimateResult.split('\n');
 				let estimateResultSplit = "";
 				lines.forEach((line: string,index:number) => {
@@ -411,26 +411,18 @@ export const VoyageCrewSelect = (props: {
 					let posEst = nthIndex(line, ',', 2);
 					let posNames = nthIndex(line, ',', 3);
 					let est = line.substring(posEst+1, posNames);
-					if (est.indexOf('.') >= 0) {
-						let whole = est.substring(0, est.indexOf('.'));
-						let part : string | number = est.substring(whole.length); // include decimal
-						if (part.length > 0) {
-							part = 60 * Number(part);
-							if (part < 10)
-								part = '0' + part;
-						}
-						else {
-							part = '00';
-						}
-						est = whole + ':' + part;
-					}
-					else {
-						est = est + ':00';
+					let estN = Number(est);
+					if (!isNaN(estN)) {
+						est = formatTimeSeconds(estN * 60 * 60)
 					}
 					let crewline = line.substring(posNames+1);
 					let crewlist = crewline.split('|');
 
-					crewlist = crewlist.map(s => s.trim());// don't sort so you can see position assignments //.sort();
+					function cleanCrewName(name: string) : string {
+						return name.replace(/[^\x00-\x7F]/g, "").replace(/"/g, "'")
+					}
+
+					crewlist = crewlist.map(s => cleanCrewName(s.trim()));// don't sort so you can see position assignments //.sort();
 
 					estimateResultSplit += line.substring(0, posEst) + ',' + est + ', "' + crewlist.join(' | ') + '"\n'; // join back with pipe to make easier equations
 				});
@@ -481,11 +473,25 @@ export const VoyageCrewSelect = (props: {
 				});
 
 				// Inject any crew with a usage value but no voyage score
-				STTApi.roster.forEach(crew => {
+				STTApi.roster.sort((a,b) => {
+					let v = b.usage_value - a.usage_value;
+					if (v != 0) {
+						return v;
+					}
+					let r = b.max_rarity - a.max_rarity;
+					if (r != 0) {
+						return r;
+					}
+					r = b.rarity - a.rarity;
+					if (r != 0) {
+						return r;
+					}
+					return a.name.localeCompare(b.name);
+				}).forEach(crew => {
 					if (!includedCrew[crew.id]) {
 						if (crew.buyback || crew.isExternal || crew.usage_value === undefined)
 							return;
-						if (crew.usage_value > 0 || (crew.max_rarity > 3 && crew.frozen < 1)) {
+						if (crew.usage_value > 0 || crew.frozen === 0) {
 							includedCrew[crew.id] = crew;
 							let status : string | number = crew.rarity == crew.max_rarity ? crew.max_rarity : (crew.rarity + '/' + crew.max_rarity);
 							if (crew.frozen > 0)
