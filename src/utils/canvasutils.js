@@ -2,9 +2,12 @@ import { CONFIG } from '../api';
 
 class SimpleCanvas {
     constructor(canvas, onSelectionChanged) {
-        this.canvas = canvas;
+        this.canvasSelectStart = (e) => { e.preventDefault(); return false; };
+        const me = this;
+        this.canvasMouseDown = (e) => me.mouseDown(e);
+
+        this.setHtmlCanvas(canvas);
         this.onSelectionChanged = onSelectionChanged;
-        this.ctx = canvas.getContext('2d');
 
         if (document.defaultView && document.defaultView.getComputedStyle) {
             this.stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(canvas, undefined)['paddingLeft'], 10) || 0;
@@ -20,13 +23,6 @@ class SimpleCanvas {
         // State
         this.valid = false; // when set to false, the canvas will redraw everything
         this.shapes = [];
-
-        // Hook canvas events
-
-        this.canvas.addEventListener('selectstart', (e) => { e.preventDefault(); return false; }, false);
-
-        let me = this;
-        this.canvas.addEventListener('mousedown', (e) => me.mouseDown(e), true);
     }
 
     get width() {
@@ -37,8 +33,20 @@ class SimpleCanvas {
         return this.canvas.height;
     }
 
-    reset() {
+    setHtmlCanvas(htmlCanvas) {
+        this.canvas = htmlCanvas;
+        this.ctx = htmlCanvas.getContext('2d');
+        this.clear();
+        // Hook canvas events
+        this.canvas.addEventListener('selectstart', this.canvasSelectStart, false);
+        this.canvas.addEventListener('mousedown', this.canvasMouseDown, true);
+    }
+
+    reset(htmlCanvas) {
         this.shapes.splice(0, this.shapes.length);
+        this.canvas.removeEventListener('selectstart', this.canvasSelectStart, false);
+        this.canvas.removeEventListener('mousedown', this.canvasMouseDown, true);
+        this.setHtmlCanvas(htmlCanvas);
         this.valid = false;
     }
 
@@ -130,9 +138,6 @@ export class MissionDisplay {
 
         this.maxX = maxX;
         this.maxY = maxY;
-
-        this.interval = 60;
-        setInterval(() => this.draw(), this.interval);
     }
 
     _onSelectionChanged() {
@@ -148,17 +153,22 @@ export class MissionDisplay {
         }
     }
 
-    reset(maxX, maxY) {
-        this.canvas.reset();
+    reset(maxX, maxY, htmlCanvas) {
+        this.canvas.reset(htmlCanvas);
 
         this.maxX = maxX;
         this.maxY = maxY;
     }
 
+    invalidate() {
+        this.canvas.valid = false;
+        this.draw();
+    }
+
     loadSprite(spriteName) {
         let img = new Image();
         img.src = CONFIG.SPRITES[spriteName].url;
-        img.onload = () => { this.canvas.valid = false; };
+        img.onload = () => { this.invalidate(); };
         return img;
     }
 

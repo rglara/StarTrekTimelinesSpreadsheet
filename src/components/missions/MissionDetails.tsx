@@ -57,12 +57,15 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 			else {
 				this.loadMissionDetails(-1);
 			}
+			this.updateGraph();
 		}
 		if ((this.state.mission !== prevState.mission)
 			|| (this.state.masteryIndex !== prevState.masteryIndex)){
 			this.setState({ selectedChallenge: undefined });
-			this.renderChallengeDetails();
 			this.updateGraph();
+		}
+		if (this.state.selectedChallenge !== prevState.selectedChallenge) {
+			this.missionDisplay?.invalidate();
 		}
 	}
 
@@ -91,7 +94,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 			maxX++; maxY++;
 
 			if (this.missionDisplay) {
-				this.missionDisplay.reset(maxX, maxY);
+				this.missionDisplay.reset(maxX, maxY, this.canvasRef.current);
 			} else {
 				this.missionDisplay = new MissionDisplay(
 					this.canvasRef.current, maxX, maxY,
@@ -129,6 +132,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 						challenge.name);
 				}
 			});
+			this.missionDisplay.invalidate();
 		}
 	}
 
