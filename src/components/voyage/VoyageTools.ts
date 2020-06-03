@@ -1,7 +1,10 @@
 import Moment from 'moment';
-import STTApi from '../../api/index';
+import VoyWorker from "worker-loader!./VoyageWorker";
+import STTApi, { CONFIG } from '../../api/index';
 import { mergeDeep } from '../../api/ObjectMerge';
-import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO, VoyageExportData } from '../../api/DTO';
+import { CrewData, VoyageUpdateDTO, VoyageNarrativeDTO, ShipDTO, VoyageExportData, VoyageDescriptionDTO } from '../../api/DTO';
+import { CalcChoice, CalcExportData } from './voyageCalc';
+import { VoyageWorkerResult, VoyageDurationWorkerResult, VoyageDurationWorkerMessage, VoyageWorkerMessage } from './VoyageWorker';
 
 /**
  * Worst-case voyage AM decay rate (if all hazards fail)
@@ -145,6 +148,7 @@ export function bestVoyageShip(): {ship: ShipDTO, score: number }[] {
 	return consideredShips;
 }
 
+// Determines actual voyage duration from the narrative
 export function voyDuration(narrative: VoyageNarrativeDTO[]) : number {
 	if (!narrative || narrative.length == 0)
 		return 0;
@@ -169,4 +173,133 @@ export function voyDuration(narrative: VoyageNarrativeDTO[]) : number {
 	}
 
 	return dilemmaCount * TICKS_PER_DILEMMA * SECONDS_PER_TICK;
+}
+
+export function toSkillValues(sels: CalcChoice[], vdesc: VoyageDescriptionDTO) : {[sk:string]:number} {
+	let svs : {[sk:string]:number} = {};
+	sels.forEach(ch => Object.keys(ch.choice.skills).forEach(sk => {
+		if (!svs[sk]) { svs[sk] = 0; }
+		svs[sk] += ch.choice.skills[sk].voy;
+	}));
+	return svs;
+}
+
+// Estimates voyage duration based on skill value and first failure time
+export function estimateVoyageDuration(pri: string, sec: string, svs: {[sk:string]:number}, currVoyTimeMinutes: number, amStart: number, log: boolean, done: (mins:number) => void) {
+	const worker = new VoyWorker() as Worker;
+
+	worker.onmessage = (event: MessageEvent) => {
+		const r = event.data as VoyageDurationWorkerResult
+		//console.log(event);
+		done(r.minutesLeft);
+	};
+
+	worker.postMessage({op:'estimateDuration', options:{pri, sec, svs, currVoyTimeMinutes, amStart, log} as VoyageDurationWorkerMessage });
+}
+
+interface VoyCalcOptions {
+	vd: VoyageDescriptionDTO;
+	roster: CrewData[];
+	shipAM: number;
+}
+
+export function calculateVoyage(options: VoyCalcOptions,
+	progressCallback: (choices: CalcChoice[], hoursLeft: number) => void,
+	doneCallback: (choices: CalcChoice[], hoursLeft: number) => void) : void
+{
+	const worker = new VoyWorker() as Worker;
+
+	worker.onmessage = (event: MessageEvent) => {
+		const r = event.data as VoyageWorkerResult
+		//console.log(event);
+		doneCallback(r.choices, r.hoursLeft);
+	};
+
+	progressCallback([], 0);
+
+	const opts = options as VoyageWorkerMessage;
+	worker.postMessage({op:'calculateVoyage', options: opts });
+}
+
+export function calculateVoyageCrewRank(
+	options: VoyCalcOptions,
+	done: (rankResult: string, estimateResult: string) => void) : void {
+
+	let result : { p: string, s: string, est: number, c: CalcChoice[] }[] = [];
+	let tasks : VoyCalcOptions[] = [];
+
+	Object.keys(CONFIG.SKILLS).forEach(pri => {
+		Object.keys(CONFIG.SKILLS).forEach(sec => {
+			if (pri === sec) {
+				return;
+			}
+
+			let opts : VoyCalcOptions = {
+				...options,
+				vd: {
+					...options.vd,
+					skills: { primary_skill: pri, secondary_skill: sec },
+					crew_slots: options.vd.crew_slots.map(cs => {return {...cs, trait: '_no_trait_'};})
+				}
+			};
+			tasks.push(opts);
+		})
+	});
+
+	tasks.forEach(opts =>
+		calculateVoyage(
+			opts,
+			(entries: CalcChoice[], score: number) => {
+			},
+			(entries: CalcChoice[], score: number) => {
+				//console.log(CONFIG.SKILLS_SHORT[opts.vd.skills.primary_skill] + '-' + CONFIG.SKILLS_SHORT[opts.vd.skills.secondary_skill] + ' ' + score);
+				result.push({ p: opts.vd.skills.primary_skill, s: opts.vd.skills.secondary_skill, est: score, c: entries});
+
+				if (result.length === tasks.length) {
+					// rankResult format is: "Score,Alt 1,Alt 2,Alt 3,Alt 4,Alt 5,Status,Crew,Voyages (Pri),Voyages(alt)"
+					// estimateResult format is "Primary,Secondary,Estimate,Crew\nDIP, CMD, 8.2, crew1 | crew2 | crew3 | crew4 | crew5 | ... crew12\nCMD, DIP, 8.2, crew1 | ... "
+					//TODO: properly collect results and provide to the handler
+					done(toCrewResult(result), toEstimateResult(result));
+				}
+			}
+		)
+	);
+}
+
+function cleanCrewName(name: string) : string {
+	if (!name) { return 'unknown'; }
+	return name.replace(/[^\x00-\x7F]/g, "").replace(/"/g, "'")
+}
+
+function toCrewResult(result: { p: string, s: string, est: number, c: CalcChoice[] }[]) : string {
+	let ranks : { [cid: string] : { cd: CrewData, voys: string[] }} = {};
+
+	result.forEach(r => {
+		let v = CONFIG.SKILLS_SHORT[r.p] + '/' + CONFIG.SKILLS_SHORT[r.s];
+		r.c.forEach(c => {
+			let cr = ranks[c.choice.crew_id] ?? { cd: c.choice, voys: []};
+			ranks[c.choice.crew_id] = cr;
+			cr.voys.push(v);
+			//console.log(c.choice.crew_id + ' ' + c.choice.name + ' ');
+			//console.log(v);
+		});
+	});
+
+	//result.forEach(r => console.log(r.c));
+
+	let crew = Object.keys(ranks).map(k => ranks[k]).sort((a,b) => b.voys.length - a.voys.length);
+
+	let rv : string[] = ['Score,Alt 1,Alt 2,Alt 3,Alt 4,Alt 5,Status,Crew,Voyages (Pri),Voyages(alt)'];
+	crew.map(c => c.voys.length + ',,,,,, ,"'+cleanCrewName(c.cd.name)+'",' + c.voys.join(' ') + ',').forEach(r => rv.push(r));
+
+	return rv.join('\n');
+}
+
+function toEstimateResult(result: { p: string, s: string, est: number, c: CalcChoice[] }[]) : string {
+	let r = [...result];
+	let rv: string[] = ['Primary,Secondary,Estimate,Crew'];
+	r.sort((a,b) => b.est - a.est);
+
+	r.map(e => CONFIG.SKILLS_SHORT[e.p]+',' + CONFIG.SKILLS_SHORT[e.s] + ',' + e.est + ',' + e.c.map(c => c.choice.name).join(' | ')).forEach(e => rv.push(e));
+	return rv.join('\n');
 }

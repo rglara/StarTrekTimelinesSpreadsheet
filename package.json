@@ -119,8 +119,6 @@
 		"semantic-ui-react": "^0.88.2",
 		"semver": "^7.3.2",
 		"snarkdown": "^1.2.2",
-		"stt-native": "file:native",
-		"stt-native-wasm": "file:native_wasm",
 		"url-search-params-polyfill": "^8.1.0",
 		"uuid": "^8.0.0"
 	}
