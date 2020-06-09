@@ -88,5 +88,5 @@ export function computeExtraItems() : ItemData[] {
     //     item => equipmentAlreadyOnCrew.has(item.archetype_id) && item.quantity === 1 && item.rarity > 1
     // );
 
-    return STTApi.items.filter(item => item.type === 2 && item.name.includes("'s "));
+    return STTApi.items.filter(item => item.type === 2 && (item.name.includes("'s ") || item.name.includes("’s ")));
 }

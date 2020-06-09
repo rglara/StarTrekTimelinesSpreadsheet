@@ -10,6 +10,7 @@ import { ShuttleSelection, ShuttleCalc, CrewItem, CrewChoice,
 	getBonusedRoster, computeCrew, cid, ShuttleCalcSlot, shuttleStart, computeChance, skillBonus
 } from '../api/ShuttleTools';
 import { ItemDisplay } from '../utils/ItemDisplay';
+import { BonusCrew } from './events/EventTools';
 
 export const Shuttles = (props: {
 	onTabSwitch?: (newTab: string) => void;
@@ -31,7 +32,12 @@ export const Shuttles = (props: {
 		event = STTApi.playerData.character.events[0];
 	}
 
-	let eventCrew = bonusCrewForCurrentEvent(false);
+	let eventCrew : BonusCrew | undefined = undefined;
+	// If this event is not undefined, then it is a shuttle event; so we WANT to use bonus crew,
+	// so leave them undefined. We want to avoid using them for galaxy events.
+	if (!event) {
+		eventCrew = bonusCrewForCurrentEvent(false);
+	}
 	const [currentSelectedItems, setCurrentSelectedItems] = React.useState(eventCrew ? eventCrew.crewIds : []);
 
 	React.useEffect(() => {

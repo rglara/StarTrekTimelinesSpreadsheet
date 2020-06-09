@@ -2,6 +2,7 @@ import React from 'react';
 import { EventDTO, EVENT_TYPES } from "../../api/DTO";
 import { Label } from 'semantic-ui-react';
 import { EventCrewBonusTable, EventStat } from './EventHelperPage';
+import STTApi from '../../api';
 
 export const ShuttleEvent = (props: {
 	event: EventDTO;
@@ -21,17 +22,21 @@ export const ShuttleEvent = (props: {
 	const vpTopThresh = props.event.threshold_rewards[props.event.threshold_rewards.length - 1].points;
 
 	let shuttlesToGo = undefined;
-	if (eventShuttleVP) {
+	if (eventShuttleVP > 0) {
 		shuttlesToGo = (vpTopThresh - vpCurr) / eventShuttleVP;
 	}
 
 	let shPerBatch = undefined;
+	let vpMinimum = undefined;
+	const bays = STTApi.playerData.character.shuttle_bays;
 	if (props.event.opened_phase !== undefined && eventShuttleVP > 0 && shuttlesToGo) {
 		let secondsToEnd = props.event.phases[props.event.opened_phase].seconds_to_end;
 		let hoursToEnd = secondsToEnd / (60 * 60);
 		let threeHourSlotsToEnd = hoursToEnd / 3;
 
 		shPerBatch = shuttlesToGo / threeHourSlotsToEnd;
+
+		vpMinimum = bays * threeHourSlotsToEnd * eventShuttleVP;
 	}
 
 	return <div>
@@ -43,6 +48,7 @@ export const ShuttleEvent = (props: {
 			<h4>To achieve top threshold reward in this phase:</h4>
 			<EventStat label="Shuttle Successes" value={shuttlesToGo ?? 'unknown'} />
 			<EventStat label="Shuttle Successes every 3 hours" value={shPerBatch ?? 'unknown'} />
+			<EventStat label={"VP for "+ bays+" bays every 3 hours"} value={vpMinimum ?? 'unknown'} />
 		</div>}
 		<div style={{ margin: '0' }}>
 			<span>
