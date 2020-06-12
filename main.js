@@ -29,7 +29,7 @@ const appConfig = require('electron-settings');
 let mainWindow;
 
 // If seeing certificate errors, uncomment this line. DO NOT SHIP THIS TURNED ON!
-// app.commandLine.appendSwitch('ignore-certificate-errors'); 
+// app.commandLine.appendSwitch('ignore-certificate-errors');
 
 // Keep a reference for dev mode
 let dev = false;
@@ -104,7 +104,7 @@ function createWindow() {
   if (dev && process.argv.indexOf('--noDevServer') === -1) {
     indexPath = url.format({
       protocol: 'http:',
-      host: 'localhost:8080',
+      host: 'localhost:8081',
       pathname: 'index.html',
       slashes: true
     });

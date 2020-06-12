@@ -1353,7 +1353,7 @@ export const EVENT_TYPES = {
 }
 
 export interface EventContentGatherDTO {
-	content_type: 'gather';
+	content_type: string;//'gather';
 	craft_bonus: number;
 	crew_bonuses: {
 		[crew_symbol: string]: number;
@@ -1378,7 +1378,7 @@ export interface EventContentSkirmishDTO {
 		elite: any;
 		epic: any;
 	};
-	content_type: 'skirmish';
+	content_type: string;//'skirmish';
 	currency: {
 		currency: string; // 'intel'
 		max: number;
@@ -1405,13 +1405,13 @@ export interface EventContentSkirmishDTO {
 }
 
 export interface EventContentShuttlesDTO {
-	content_type: 'shuttles';
+	content_type: string;//'shuttles';
 
 	shuttles: EventShuttleDTO[];
 }
 
 export interface EventContentExpeditionDTO {
-	content_type: 'expedition';
+	content_type: string;// 'expedition';
 	crew_debuffs: any[];
 	description: string;
 	has_vote: boolean;
