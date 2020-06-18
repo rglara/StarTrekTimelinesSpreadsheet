@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dropdown as SuiDropdown, Item, Label, Form, Checkbox } from 'semantic-ui-react';
+import { Dropdown as SuiDropdown, Item, Image, Label, Form, Checkbox, List } from 'semantic-ui-react';
 
 import STTApi, { CONFIG, formatTimeSeconds, CrewSkills, RarityStars, bonusCrewForCurrentEvent } from '../api';
 import { CrewData, PlayerShuttleDTO, EventDTO,
@@ -64,6 +64,15 @@ export const Shuttles = (props: {
 	});
 	crewList.sort((a, b) => (a.text < b.text) ? -1 : ((a.text > b.text) ? 1 : 0));
 
+	let borrowable = STTApi.playerData.character.crew_borrows ?? [];
+	if (borrowable.length === 0) {
+		// These are synchronized, but don't have "active*" fields
+		borrowable = STTApi.borrowableCrew ?? [];
+	}
+	if (!event?.content.shuttles?.[0].allow_borrow) {
+		borrowable = [];
+	}
+
 	const activeShuttleAdventures = STTApi.playerData.character.shuttle_adventures;
 
 	const canUserSelect = selections.filter(sel => sel.calc.shuttle.state === SHUTTLE_STATE_OPENED).length > 0;
@@ -77,6 +86,15 @@ export const Shuttles = (props: {
 						<span>Click to see bonus crew and other event details: <Label as='a' onClick={() =>
 							props.onTabSwitch && props.onTabSwitch('Events')}>Event Details</Label>
 					</span>}
+					{borrowable.length > 0 && <List horizontal>
+						{borrowable.map(cb => <List.Item key={cb.symbol}>
+								{/* FIXME: image not always ready <Image avatar src={(cb as any).iconUrl} /> */}
+								<List.Content>
+									<List.Header>{cb.name} <RarityStars max={cb.max_rarity} value={cb.rarity} asSpan={true} /></List.Header>
+								</List.Content>
+							</List.Item>
+						)}
+					</List>}
 				</div>}
 				<h3>Active shuttles</h3>
 				{(!activeShuttleAdventures || activeShuttleAdventures.length == 0) && <div>
