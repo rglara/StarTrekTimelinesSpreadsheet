@@ -1,19 +1,19 @@
 /*
-    StarTrekTimelinesSpreadsheet - A tool to help with crew management in Star Trek Timelines
-    Copyright (c) 2017 - 2018 IAmPicard
+	StarTrekTimelinesSpreadsheet - A tool to help with crew management in Star Trek Timelines
+	Copyright (c) 2017 - 2018 IAmPicard
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	This program is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 import { NetworkFetch } from './NetworkFetch';
 import { DexieCache, QuestsTable, EquipmentTable, ImmortalsDB, ConfigTable, WikiImageTable } from './Cache';
@@ -30,7 +30,10 @@ import { NeededEquipmentClass, EquipNeedFilter, UnparsedEquipment, EquipNeed } f
 import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
-import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO, CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO, ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO, DatacoreCrewDTO, PlayerInspectDTO, EventLeaderboardDTO, BorrowedCrewDTO } from './DTO';
+import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO,
+	CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO,
+	ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO, DatacoreCrewDTO, PlayerInspectDTO,
+	EventLeaderboardDTO, BorrowedCrewDTO, ImageDataDTO } from './DTO';
 // #!if ENV === 'electron'
 import fs from 'fs';
 import { getAppPath } from '../utils/pal';
@@ -94,6 +97,10 @@ export class STTApiClass {
 	public missionSuccess!: IChallengeSuccess[];
 	public minimalComplement?: MinimalComplement;
 	public imageProvider!: ImageProvider;
+	private imageUrlCache : {[path: string]:string};
+	// map lookup should be faster than array search lookup
+	private imageUrlCachePending : {[path: string]: boolean};
+
 	public inWebMode: boolean;
 	public allcrew!: CrewData[];
 	public datacore!: DatacoreCrewDTO[];
@@ -119,6 +126,8 @@ export class STTApiClass {
 		this.inWebMode = false;
 		this._buffConfig = {};
 		this.allcrew = [];
+		this.imageUrlCache = {};
+		this.imageUrlCachePending = {};
 	}
 
 	setWebMode(webMode: boolean, keepServerAddress: boolean) {
@@ -657,11 +666,11 @@ export class STTApiClass {
 				}
 
 				if (data.shuttle) {
-					 this._playerData!.player!.character.shuttle_adventures.forEach((adv: PlayerShuttleAdventureDTO) => {
-						  if (adv.shuttles[0].id === data.shuttle.id) {
-								adv.shuttles[0] = mergeDeep(adv.shuttles[0], data.shuttle, ['slots','rewards']);
-						  }
-					 });
+					this._playerData!.player!.character.shuttle_adventures.forEach((adv: PlayerShuttleAdventureDTO) => {
+						if (adv.shuttles[0].id === data.shuttle.id) {
+							adv.shuttles[0] = mergeDeep(adv.shuttles[0], data.shuttle, ['slots','rewards']);
+						}
+					});
 				}
 
 				if (data.item_archetype_cache) {
@@ -730,9 +739,9 @@ export class STTApiClass {
 		return this._neededEquipment.filterNeededEquipment(filters, limitCrew);
 	}
 
-    getNeededEquipmentFromList(unparsedEquipment: UnparsedEquipment[]): EquipNeed[] {
-        return this._neededEquipment.filterNeededEquipmentFromList(unparsedEquipment);
-    }
+	getNeededEquipmentFromList(unparsedEquipment: UnparsedEquipment[]): EquipNeed[] {
+		return this._neededEquipment.filterNeededEquipmentFromList(unparsedEquipment);
+	}
 
 	getEquipmentManager() : NeededEquipmentClass {
 		return this._neededEquipment;
@@ -756,5 +765,55 @@ export class STTApiClass {
 				this.items = this.items.filter(itemData => itemData.id !== item.id);
 			}
 		}
+	}
+
+	private imageCacheState() {
+		return Object.keys(this.imageUrlCache).sort().join(' ');
+	}
+
+	private imgLoad(path: string | undefined, delayed: (url: string) => void) : string | undefined {
+		if (!path) {
+			return undefined;
+		}
+		let url = this.imageUrlCache[path];
+		if (url) {
+			delete this.imageUrlCachePending[path];
+			return url;
+		}
+
+		if (this.imageUrlCachePending[path]) {
+			//console.log('skipping request for ' + path);
+			return undefined;
+		}
+
+		this.imageUrlCachePending[path] = true;
+
+		this.imageProvider.getImageUrl(path, '')
+			.then(found => {
+				if (found.url) {
+					this.imageUrlCache[path] = found.url;
+					delete this.imageUrlCachePending[path];
+					delayed(found.url);
+				}
+			});
+
+		return undefined;
+	}
+
+	/**
+	 * Load the image URL for the given DTO. If the URL is available (alrady cached) it
+	 * is returned, otherwise the update function will be called when it is loaded and
+	 * this function can be called again to provide the URL.
+	 */
+	imgUrl(dto: ImageDataDTO | undefined, cacheUpdate?: (cacheState: string) => void) : string {
+		if (!dto) {
+			return '';
+		}
+		const cached = this.imgLoad(dto?.file, url => {
+			if (cacheUpdate) {
+				cacheUpdate(this.imageCacheState());
+			}
+		});
+		return cached ?? '';
 	}
 }

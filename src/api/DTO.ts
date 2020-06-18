@@ -1041,7 +1041,6 @@ export interface ShipDTO {
 
 	//Added by app
 	traitNames?: string;
-	iconUrl?: string;
 }
 
 export interface ShipSchematicDTO {

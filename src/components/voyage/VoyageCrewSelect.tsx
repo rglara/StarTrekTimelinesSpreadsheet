@@ -26,6 +26,7 @@ export const VoyageCrewSelect = (props: {
 	const [includeFrozen, setIncludeFrozen] = React.useState(false);
 	const [includeActive, setIncludeActive] = React.useState(false);
 	const [shipName, setShipName] = React.useState(undefined as string | undefined);
+	const [, imageCacheUpdated] = React.useState<string>('');
 	const spriteClass = GetSpriteCssClass();
 
 	const initialCalcState = {
@@ -93,7 +94,7 @@ export const VoyageCrewSelect = (props: {
 			value: entry.ship.id,
 			content: (
 				<Header
-					icon={<img src={entry.ship.iconUrl} height={48} style={{ display: 'inline-block' }} />}
+					icon={<img src={STTApi.imgUrl(entry.ship.icon, imageCacheUpdated)} height={48} style={{ display: 'inline-block' }} />}
 					content={entry.ship.name}
 					subheader={`${entry.score.toFixed(0)} antimatter`}
 				/>

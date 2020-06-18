@@ -131,15 +131,6 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
     onProgress('Loading Ships...');
     STTApi.ships = await matchShips(STTApi.playerData.character.ships);
 
-    for (let ship of STTApi.ships) {
-        ship.iconUrl = STTApi.imageProvider.getCached(ship);
-        if (ship.iconUrl === '') {
-            await updateProgress('', ship.name,
-                STTApi.imageProvider.getShipImageUrl(ship)
-                    .then(found => { ship.iconUrl = found.url; }));
-        }
-    }
-
     onProgress('Loading Faction Rewards...');
     await refreshAllFactions();
     let rewardItemIds = new Map<string, Set<number>>();

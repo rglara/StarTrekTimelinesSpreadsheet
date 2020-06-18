@@ -10,6 +10,7 @@ import { ShipDTO, ShipSchematicDTO } from '../api/DTO';
 export const ShipList = () => {
 	const [sorted, setSorted] = React.useState([{ id: 'name', desc: false },{id: 'sort_level', desc:false}] as SortingRule[]);
 	const [filterText, setFilterText] = React.useState<string>('');
+	const [, imageCacheUpdated] = React.useState<string>('');
 
 	let playerSchematics = STTApi.items.filter(item => item.type === 8);
 
@@ -66,7 +67,6 @@ export const ShipList = () => {
 		});
 	}
 
-
 	function getColumns() : Column<ShipObj>[] {
 		return [
 		{
@@ -75,7 +75,7 @@ export const ShipList = () => {
 			minWidth: 60,
 			maxWidth: 60,
 			accessor: (obj) => obj.ship.name,
-			Cell: (p:any) => <img src={p.original.ship.iconUrl} width={48} height={48} style={{ objectFit: 'contain' }} />
+			Cell: (p) => <img src={STTApi.imgUrl((p.original as ShipObj).ship.icon, imageCacheUpdated)} width={48} height={48} style={{ objectFit: 'contain' }} />
 		},
 		{
 			id: 'name',

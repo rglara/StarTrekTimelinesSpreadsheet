@@ -84,6 +84,8 @@ export class AssetImageProvider implements ImageProvider {
             return { id, url: cachedUrl };
         }
 
+        //console.log('Requesting uncached image ' + iconFile);
+
         let data: any;
         const urlPrefix = this.getAssetUrl(iconFile);
         try {
