@@ -491,13 +491,13 @@ const VoyageCurrentCrewSkills = (props: {
 		)
 	};
 	const failOutput = (sk: Skill) => {
+		const sv = sk.core + (sk.range_min + sk.range_max) / 2;
+		const failSeconds = (sv * 0.045 + 34) * 60;
+
 		const ff = firstFailures[sk.skill] ?? -1;
-		if (ff > 0) {
-			return (
-				<span>First Failure<br/>@ {formatTimeSeconds(ff * 20)}</span>
-			)
-		}
-		return <span></span>
+		return <span>First Failure<br/><i>Expected @ {formatTimeSeconds(failSeconds)}</i>
+			{ ff > 0 && <><br/>Actual @ {formatTimeSeconds(ff * 20)}</>}
+		</span>;
 	};
 	return <div>
 		<div className='voyage-crew'>
@@ -545,11 +545,28 @@ const VoyageState = (props: {
 	voyRunTime: number;
 	recall: () => void;
 }) => {
+	const [estTime, setEstTime] = React.useState<number>(0)
 	if (!props.voyage) {
 		return <div className='voyage-stats'></div>;
 	}
 	if (props.voyage.state === 'recalled') {
+		let svs : {[sk:string]:number} = {};
+		props.voyage.crew_slots
+			.map(s => STTApi.roster.find(c => c.crew_id === s.crew.id)!)
+			.filter(o => o !== undefined)
+			.forEach(c => Object.keys(c.skills).forEach(sk => {
+				if (!svs[sk]) { svs[sk] = 0; }
+				svs[sk] += c.skills[sk].voy;
+			}));
+
+		estimateVoyageDuration(props.voyage.skills.primary_skill, props.voyage.skills.secondary_skill, svs, 0, props.voyage.max_hp, false, (minutesLeft) => {
+			setEstTime(minutesLeft);
+		});
+
 		return <div className='voyage-stats'>
+			{ estTime > 0 &&
+				<VoyageStat label="Estimated Length" value={formatTimeSeconds(estTime * 60)} />
+			}
 			<VoyageStat label="Voyage Length" value={formatTimeSeconds(props.voyRunTime)} />
 			<VoyageStat label="Time With Recall" value={formatTimeSeconds(props.voyage.voyage_duration)} />
 			<VoyageStat label="Recall Time Left" value={formatTimeSeconds(props.voyage.recall_time_left ?? 0)} />
