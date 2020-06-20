@@ -193,7 +193,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 			recommendations.crew.forEach(item => {
 				crewSuccess.push(<Persona
 					key={item.crew.name}
-					imageUrl={item.crew.iconUrl}
+					imageUrl={STTApi.imgUrl(item.crew.portrait, undefined)} // should refresh on load when this is converted to a function component
 					text={item.crew.name}
 					secondaryText={item.success.toFixed(2) + '%'}
 					showSecondaryText={true}
@@ -275,7 +275,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 				crewpath.crew.forEach((crewpathcrew, index) => {
 					crewSuccess.push(<Persona
 						key={crewpathcrew.crew.name + index}
-						imageUrl={crewpathcrew.crew.iconUrl}
+						imageUrl={STTApi.imgUrl(crewpathcrew.crew.portrait, undefined)} // should refresh on load when this is converted to a function component
 						text={`(${crewpath.path[index]}) ${crewpathcrew.crew.name}${(crewpathcrew.crew.frozen > 0) ? ' - FROZEN' : ''}`}
 						size={PersonaSize.extraExtraSmall}
 						presence={PersonaPresence.none} />);

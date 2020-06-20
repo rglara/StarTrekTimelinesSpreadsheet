@@ -57,7 +57,7 @@ export const VoyageCrewSelect = (props: {
 			peopleListVal.push({
 				key: crew.crew_id || crew.id,
 				value: crew.crew_id || crew.id,
-				image: { avatar: true, src: crew.iconUrl },
+				image: { avatar: true, src: STTApi.imgUrl(crew.portrait, imageCacheUpdated) },
 				text: crew.name
 			});
 		}
@@ -521,6 +521,7 @@ const BestCrew = (props : {
 	crewUpdated: (selection: CalcChoice[]) => void
 }) => {
 	const [selectSlotId, setSelectSlotId] = React.useState(undefined as number | undefined);
+	const [, imageCacheUpdated] = React.useState<string>('');
 
 	let skill_aggregates: { [sk: string]: { skill: string; core: number; range_min: number; range_max: number; } } = {};
 	Object.keys(CONFIG.SKILLS).forEach(sk => skill_aggregates[sk] = { skill : sk, core : 0, range_max: 0, range_min: 0});
@@ -544,7 +545,7 @@ const BestCrew = (props : {
 				let crewCard =
 					<Card key={entry.choice.crew_id || entry.choice.id} color={status === 'Frozen' ? 'red' : status === 'Available' ? 'green' : 'yellow'}>
 						<Card.Content>
-							<Image floated='right' size='mini' src={entry.choice.iconUrl} />
+							<Image floated='right' size='mini' src={STTApi.imgUrl(entry.choice.portrait, imageCacheUpdated)} />
 							<Card.Header>{entry.choice.name}</Card.Header>
 							<Card.Meta>
 								{STTApi.playerData.character.voyage_descriptions[0].crew_slots[entry.slotId].name}<br/>
@@ -644,7 +645,7 @@ const BestCrew = (props : {
 		}).map(c => ({
 			content: <span>{c.name} <CrewSkills crew={c} useIcon={true} asVoyScore={true} addVoyTotal={true} /> {
 				c.rawTraits.find(t => t === slotTrait) ? <b>{slotTrait}</b> : ''}</span>,
-			image: c.iconUrl,
+			image: STTApi.imgUrl(c.portrait, imageCacheUpdated),
 			value: c.crew_id
 		} as DropdownItemProps));
 	}

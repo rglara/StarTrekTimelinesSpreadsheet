@@ -442,6 +442,7 @@ const VoyageCurrentCrewSkills = (props: {
 	skillChecks?: SkillChecks;
 	exportNarrative?: VoyageNarrativeDTO[];
 }) => {
+	const [, imageCacheUpdated] = React.useState<string>('');
 	let firstFailures : {[sk:string]: number} = {};
 	if (props.exportNarrative) {
 		const hazards = props.exportNarrative.filter(n => n.encounter_type === 'hazard' && n.skill_check?.skill);
@@ -502,7 +503,7 @@ const VoyageCurrentCrewSkills = (props: {
 								<div className='vcp-name'>{slot.name}</div>
 								<div className='vcp-pic'>
 									<Popup flowing
-										trigger={<img className='image-fit' src={crew.iconUrl} />}
+										trigger={<img className='image-fit' src={STTApi.imgUrl(crew.portrait, imageCacheUpdated)} />}
 										content={<CrewSkills crew={crew} useIcon={false} asVoyScore={true} addVoyTotal={true} />}
 									/>
 								</div>

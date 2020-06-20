@@ -203,12 +203,6 @@ export function buildCrewDataAll(allcrew: CrewDTO[]): CrewData[] {
 		rosterAll.push(rosterEntry);
 	});
 
-	for (let crew of rosterAll) {
-		// Populate default icons (if they're already cached)
-		crew.iconUrl = STTApi.imageProvider.getCrewCached(crew, false);
-		crew.iconBodyUrl = STTApi.imageProvider.getCrewCached(crew, true);
-	}
-
 	return rosterAll;
 }
 
@@ -256,12 +250,6 @@ export async function buildCrewData(character: PlayerCharacterDTO): Promise<Crew
 		});
 
 		await Promise.all(frozenPromises).then(datas => roster.splice(roster.length, 0, ...datas));
-	}
-
-	for (let crew of roster) {
-		// Populate default icons (if they're already cached)
-		crew.iconUrl = STTApi.imageProvider.getCrewCached(crew, false);
-		crew.iconBodyUrl = STTApi.imageProvider.getCrewCached(crew, true);
 	}
 
 	// collects usage_value field for the given skill over the entire roster

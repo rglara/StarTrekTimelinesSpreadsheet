@@ -15,11 +15,7 @@ export interface CrewAvatarDTO {
 	full_body: ImageDataDTO;
 	icon: ImageDataDTO;
 	portrait: ImageDataDTO;
-
 	hide_from_cryo: boolean;
-
-	// These properties are added by the app
-	iconUrl?: string;
 }
 
 export interface ImageDataDTO {
@@ -175,8 +171,6 @@ export interface CrewData {
 		fe: boolean;
 	}
 	full_body: ImageDataDTO;
-	iconUrl?: string;
-	iconBodyUrl?: string;
 	/** @deprecated moved to avatar_id */
 	id: number;
 	avatar_id: number;
@@ -292,9 +286,6 @@ export interface GauntletCrewDTO {
 	rarity: any; // huh? came in as boolean
 	selected: boolean;
 	skills: { min: number; max: number; skill: string }[];
-
-	/** @deprecated Added by app, but unused? */
-	iconUrl?: string;
 }
 
 export interface GauntletOpponentDTO {
@@ -590,7 +581,7 @@ export interface PlayerCharacterDTO {
 	can_purchase_crew_limit_increase: boolean;
 	can_purchase_shuttle_bay: boolean;
 	crew: CrewDTO[];
-	crew_avatar: any;
+	crew_avatar?: CrewAvatarDTO;
 	crew_borrows: BorrowedCrewDTO[];
 	crew_collection_buffs: {
 		name: string,
@@ -803,21 +794,7 @@ export interface PlayerInspectDTO {
 }
 
 export interface FleetMemberDTO {
-	crew_avatar: {
-		default_avatar: boolean;
-		full_body: ImageDataDTO;
-		hide_from_cryo: boolean;
-		icon: ImageDataDTO;
-		id: number;
-		max_rarity: number;
-		name: string;
-		portrait: ImageDataDTO;
-		short_name: string;
-		skills: string[];
-		symbol: string;
-		traits: string[];
-		traits_hidden: string[];
-	};
+	crew_avatar?: CrewAvatarDTO;
 	daily_activity: number;
 	dbid: number;
 	display_name: string;
@@ -1087,9 +1064,6 @@ export interface ItemArchetypeDTO {
 	short_name?: string;
 	symbol: string;
 	type: number;
-
-	//HACK: added by the app
-	iconUrl?: string;
 }
 
 export interface ItemArchetypeSourceDTO {
@@ -1133,7 +1107,6 @@ export interface ItemDTO {
 
 // Used internaly by the app; not a DTO
 export interface ItemData extends ItemDTO {
-	iconUrl: string;
 	cadetable?: string;
 	factions: string[];
 	//typeName?: string;
@@ -1164,9 +1137,6 @@ export interface CryoCollectionDTO {
 	progress: number;
 	traits: string[];
 	type_id: number;
-
-	//HACK: added by the app
-	iconUrl?: string;
 }
 
 export interface PlatformConfigDTO {

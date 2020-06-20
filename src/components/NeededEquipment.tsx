@@ -27,6 +27,7 @@ export const NeededEquipment = (props: {
 	const [neededEquipment, setNeededEquipment] = React.useState([] as EquipNeed[]);
 	const [currentSelectedItems, setCurrentSelectedItems] = React.useState([] as number[]);
 	const [replicatorTarget, setReplicatorTarget] = React.useState(undefined as ItemArchetypeDTO | undefined);
+	const [, imageCacheUpdated] = React.useState<string>('');
 
 	React.useEffect(() => {
 		_updateCommandItems();
@@ -40,7 +41,7 @@ export const NeededEquipment = (props: {
 		peopleListInit.push({
 			key: crew.id,
 			value: crew.id,
-			image: { src: crew.iconUrl },
+			image: { src: STTApi.imgUrl(crew.portrait, imageCacheUpdated) },
 			text: `${crew.name} (${have ? 'owned' : 'unowned'} ${crew.max_rarity}*)`
 		});
 	});
@@ -228,7 +229,7 @@ export const NeededEquipment = (props: {
 			{neededEquipment.map((entry, idx) =>
 				<div key={idx} className="ui raised segment" style={{ display: 'grid', gridTemplateColumns: '128px auto', gridTemplateAreas: `'icon name' 'icon details'`, padding: '8px 4px', margin: '8px', backgroundColor: getTheme().palette.themeLighter }}>
 					<div style={{ gridArea: 'icon', textAlign: 'center' }}>
-						<ItemDisplay src={entry.equipment.iconUrl || ''} size={128} maxRarity={entry.equipment.rarity} rarity={entry.equipment.rarity} />
+						<ItemDisplay src={STTApi.imgUrl(entry.equipment.icon, imageCacheUpdated)} size={128} maxRarity={entry.equipment.rarity} rarity={entry.equipment.rarity} />
 						<button style={{ marginBottom: '8px' }} className="ui button" onClick={() => setReplicatorTarget(entry.equipment)}>Replicate...</button>
 					</div>
 					<div style={{ gridArea: 'name', alignSelf: 'start', margin: '0' }}>

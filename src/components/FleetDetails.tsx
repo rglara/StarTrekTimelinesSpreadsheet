@@ -3,6 +3,7 @@ import ReactTable, { Column } from "react-table";
 import { Button } from 'semantic-ui-react';
 import STTApi, { CollapsibleSection, RarityStars, formatTimeSeconds, download } from '../api';
 import { simplejson2csv } from '../utils/simplejson2csv';
+import { CrewAvatarDTO } from '../api/DTO';
 
 // #!if ENV === 'electron'
 import { loginPubNub } from '../utils/chat';
@@ -15,8 +16,9 @@ const MemberList = (props: {
 	if (!STTApi.fleetData) {
 		return <span></span>;
 	}
-	let members = props.members;
 	const [sorted, setSorted] = React.useState([{ id: 'display_name', desc: false }]);
+	const [, imageCacheUpdated] = React.useState<string>('');
+	const members = props.members;
 	const columns = getColumns();
 
 	return (<CollapsibleSection title={props.title}>
@@ -92,7 +94,7 @@ const MemberList = (props: {
 				maxWidth: 44,
 				resizable: false,
 				accessor: 'display_name',
-				Cell: (cell) => cell.original.iconUrl ? <img src={cell.original.iconUrl} width={32} height={32} style={{ objectFit: 'contain' }} /> : <span />
+				Cell: (cell) => <img src={STTApi.imgUrl((cell.original as FleetMember).crew_avatar?.icon, imageCacheUpdated)} width={32} height={32} style={{ objectFit: 'contain' }} />
 			},
 			{
 				id: 'display_name',
@@ -240,13 +242,12 @@ const ChatHistory = (props: {
 }
 
 interface FleetMember {
-	crew_avatar: any;
+	crew_avatar?: CrewAvatarDTO;
 	currentShip: string;
 	daily_activity: number;
 	dbid: number;
 	display_name: string;
 	event_rank: number;
-	iconUrl?: string,
 	last_active: any;
 	level: number;
 	location?: string;
@@ -300,15 +301,8 @@ export const FleetDetails = (props: {}) => {
 		setMembers(mems);
 	}
 
-	let iconPromises : Promise<any>[] = [];
+	// let iconPromises : Promise<any>[] = [];
 	members.forEach((member) => {
-		if (member.crew_avatar) {
-			iconPromises.push(STTApi.imageProvider.getCrewImageUrl(member.crew_avatar, false).then(({url}) => {
-				member.iconUrl = url;
-				return Promise.resolve();
-			}).catch((error) => { }));
-		}
-
 		// // Load player details
 		// iconPromises.push(STTApi.inspectPlayer(member.pid).then(memberData => {
 		// 	member.level = memberData.character.level;
@@ -316,7 +310,7 @@ export const FleetDetails = (props: {}) => {
 		// 	member.currentShip = memberData.character.current_ship.name;
 		// }));
 	});
-	Promise.all(iconPromises).then(() => forceUpdate({}));
+	// Promise.all(iconPromises).then(() => forceUpdate({}));
 
 // #!if ENV === 'electron'
 	loginPubNub().then(data => {

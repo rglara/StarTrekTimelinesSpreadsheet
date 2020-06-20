@@ -15,6 +15,7 @@ export const ItemList = (props: {
 }) => {
 	const [sorted, setSorted] = React.useState<SortingRule[]>([{ id: 'name', desc: false }, { id: 'rarity', desc: false }]);
 	const [replicatorTarget, setReplicatorTarget] = React.useState<ItemArchetypeDTO | undefined>(undefined);
+	const [, imageCacheUpdated] = React.useState<string>('');
 
 	let items = props.data;
 
@@ -94,7 +95,7 @@ export const ItemList = (props: {
 
 		return <div className="ui items">
 			<div className="item">
-				<img src={item.iconUrl} height={40} />
+				<img src={STTApi.imgUrl(item.icon, imageCacheUpdated)} height={40} />
 				<div className="content" style={{ padding: '12px', overflow: 'auto' }}>
 					<div className="header">{item.name}</div>
 					<div className="description">Sources:
@@ -131,7 +132,7 @@ export const ItemList = (props: {
 							id: item.archetype_id
 						};
 					}
-					return <ItemDisplay src={item.iconUrl} size={50} maxRarity={item.rarity} rarity={item.rarity}
+					return <ItemDisplay src={STTApi.imgUrl((item as ItemData).icon, imageCacheUpdated)} size={50} maxRarity={item.rarity} rarity={item.rarity}
 						onClick={() => setReplicatorTarget(found)} />;
 				}
 			},

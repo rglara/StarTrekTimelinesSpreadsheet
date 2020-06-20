@@ -97,37 +97,6 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
         await promise.catch((error: any) => { /*console.warn(error);*/ });
     };
 
-    onProgress('Loading Crew Images...');
-    for (let rosterCrew of STTApi.roster) {
-        if (rosterCrew.iconUrl === '') {
-            rosterCrew.iconUrl = STTApi.imageProvider.getCrewCached(rosterCrew, false);
-            if (rosterCrew.iconUrl === '') {
-                await updateProgress('Loading Crew Images...', rosterCrew.name,
-                    STTApi.imageProvider.getCrewImageUrl(rosterCrew, false)
-                        .then(found => { rosterCrew.iconUrl = found.url; }));
-            }
-        }
-
-        if (rosterCrew.iconBodyUrl === '') {
-            rosterCrew.iconBodyUrl = STTApi.imageProvider.getCrewCached(rosterCrew, true);
-            if (rosterCrew.iconBodyUrl === '') {
-                await updateProgress('Loading Crew Images...', rosterCrew.name,
-                    STTApi.imageProvider.getCrewImageUrl(rosterCrew, true)
-                        .then(found => { rosterCrew.iconBodyUrl = found.url; }));
-            }
-        }
-    }
-
-    // Also load the avatars for crew not in the roster
-    for (let avatar of STTApi.crewAvatars) {
-        avatar.iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
-        if (avatar.iconUrl === '') {
-            await updateProgress('Loading Crew Images...', avatar.name,
-                STTApi.imageProvider.getCrewImageUrl(avatar, false)
-                    .then(found => { avatar.iconUrl = found.url; }));
-        }
-    }
-
     onProgress('Loading Ships...');
     STTApi.ships = await matchShips(STTApi.playerData.character.ships);
 
@@ -157,7 +126,6 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
             let item : ItemData = {
                 ...itemDTO,
                 factions: [],
-                iconUrl: STTApi.imageProvider.getCached(itemDTO),
                 //typeName = itemDTO.icon.file.replace("/items", "").split("/")[1];
                 //symbol2 = itemDTO.icon.file.replace("/items", "").split("/")[2];
                 sources: []
@@ -166,12 +134,6 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
 
             //NOTE: this used to overwrite the DTO's symbol; is it needed?
             //itemDTO.symbol = itemDTO.icon.file.replace("/items", "").split("/")[2];
-
-            if (item.iconUrl === '') {
-                await updateProgress('Loading Item Images...', item.name,
-                    STTApi.imageProvider.getItemImageUrl(item, item.id)
-                        .then(found => { item.iconUrl = found.url || ''; }));
-            }
 
             item.cadetable = '';
             const cadetSources = STTApi.getEquipmentManager().getCadetableItems().get(item.archetype_id);
@@ -269,38 +231,12 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
         STTApi.allcrew = [];
     }
 
-    // Also load the avatars for crew not in the roster
-    onProgress('Loading Supplemental Crew...');
-    for (let crew of STTApi.allcrew) {
-        crew.iconUrl = STTApi.imageProvider.getCrewCached(crew, false);
-        if (crew.iconUrl === '') {
-            await updateProgress('Loading Supplemental Crew...', crew.name,
-                STTApi.imageProvider.getCrewImageUrl(crew, false)
-                    .then(found => { crew.iconUrl = found.url; }));
-        }
-    }
-
     onProgress('Loading Equipment...');
     if (STTApi.inWebMode) {
         // In web mode we already augmented the itemarchetypes with whatever we had cached, just try to fix stuff up here
         fixupAllCrewIds();
     } else {
         await loadFullTree(onProgress, false);
-    }
-
-    // We no longer need to keep these around
-    STTApi.allcrew.forEach((crew: CrewData) => {
-        crew.archetypes = [];
-    });
-
-    onProgress('Loading Equipment Images...');
-    for (let equipment of STTApi.itemArchetypeCache.archetypes) {
-        equipment.iconUrl = STTApi.imageProvider.getCached(equipment);
-        if (equipment.iconUrl === '') {
-            await updateProgress('Loading Equipment Images...', equipment.name,
-                STTApi.imageProvider.getItemImageUrl(equipment, equipment.id)
-                    .then(found => { equipment.iconUrl = found.url; }));
-        }
     }
 
     onProgress('Loading Sprites...');

@@ -32,9 +32,8 @@ export class ModalCrewDetails extends React.Component {
 
         this.setState({ modalOpen: true, recipeTree: undefined, crew, collections, iconUrl: undefined });
 
-        STTApi.imageProvider.getCrewImageUrl(crew, true).then(({ id, url }) => {
-            this.setState({ iconUrl: url });
-        }).catch((error) => { this.setState({ iconUrl: '' }); });
+        const imgUrl = STTApi.imgUrl(crew.full_body, () => this.forceUpdate());
+        this.setState({ iconUrl: imgUrl });
     }
 
     handleClose() {

@@ -16,7 +16,6 @@ import { ReplicatorFuel, computeExtraSchematics, computeExtraItems,
 
 type FuelTankItem = {
 	name: string;
-	iconUrl?: string;
 	quantity: number;
 	id: number;
 	type: number;
@@ -41,6 +40,7 @@ export const ReplicatorDialog = (props:{
 	const [targetArchetype, setTargetArchetype] = React.useState(props.targetArchetype);
 	const [sortedAvailable, setSortedAvailable] = React.useState([{ id: 'name', desc: false }] as SortingRule[]);
 	const [errorMessage, setErrorMessage] = React.useState(undefined as string | undefined);
+	const [, imageCacheUpdated] = React.useState<string>('');
 
 	// Call when props change
 	React.useEffect(() => {
@@ -167,7 +167,6 @@ export const ReplicatorDialog = (props:{
 		else {
 			currentTank.push({
 				name: item.name,
-				iconUrl: item.iconUrl,
 				quantity: amount,
 				// Not for display
 				id: item.id,
@@ -294,7 +293,7 @@ export const ReplicatorDialog = (props:{
 								resizable: false,
 								sortable: false,
 								accessor: 'name',
-								Cell: p => <ItemDisplay src={p.original.iconUrl} size={50} maxRarity={p.original.rarity} rarity={p.original.rarity} />
+								Cell: p => <ItemDisplay src={STTApi.imgUrl((p.original as ItemData).icon, imageCacheUpdated)} size={50} maxRarity={p.original.rarity} rarity={p.original.rarity} />
 							},
 							{
 								id: 'name',
@@ -379,7 +378,7 @@ export const ReplicatorDialog = (props:{
 								resizable: false,
 								sortable: false,
 								accessor: 'name',
-								Cell: p => <ItemDisplay src={p.original.iconUrl} size={50} maxRarity={p.original.rarity} rarity={p.original.rarity} />
+								Cell: p => <ItemDisplay src={STTApi.imgUrl((p.original as FuelTankItem).item.icon, imageCacheUpdated)} size={50} maxRarity={p.original.rarity} rarity={p.original.rarity} />
 							},
 							{
 								id: 'name',

@@ -11,48 +11,61 @@ import { isMobile } from 'react-device-detect';
 import { ItemDisplay } from '../../utils/ItemDisplay';
 
 import STTApi, { CONFIG, RarityStars, getCrewDetailsLink } from '../../api';
-import { CrewData, ItemArchetypeDTO } from '../../api/DTO';
-
-export interface CrewShipListProps {
-	data: CrewData[];
-	sortColumn?: string;
-	filterText?: string;
-}
+import { CrewData, ItemArchetypeDTO, CrewActionChargePhaseDTO } from '../../api/DTO';
 
 interface CrewShipListState {
 	items: CrewData[];
 	sorted: SortingRule[];
 }
 
-export class CrewShipList extends React.Component<CrewShipListProps, CrewShipListState> {
-
+export const CrewShipList = (props: {
+	data: CrewData[];
+	sortColumn?: string;
+	filterText?: string;
+}) => {
+	const [sorted, setSorted] = React.useState<SortingRule[]>([{ id: props.sortColumn || 'max_rarity', desc: false }]);
+	const [, imageCacheUpdated] = React.useState<string>('');
 	// static defaultProps = {
 	// 	sortColumn: 'max_rarity',
 	// };
 
-	constructor(props:CrewShipListProps) {
-		super(props);
+	let columns = getColumns();
+	let items = props.data;
 
-		this.state = {
-			items: props.data,
-			sorted: [{ id: props.sortColumn || 'max_rarity', desc: false }],
-		};
-
-		this._onRenderExpandedCard = this._onRenderExpandedCard.bind(this);
-		this._onRenderCompactCard = this._onRenderCompactCard.bind(this);
+	if (props.filterText) {
+		items = items.filter(i => filterCrew(i, props.filterText!.toLowerCase()))
 	}
 
-	//TODO: is this even needed?
-	// componentWillReceiveProps(nextProps:CrewShipListProps) {
-	// 	if (nextProps.data !== this.state.items) {
-	// 		this.setState({ items: nextProps.data });
-	// 	}
-	// }
-
-	_onRenderCompactCard(item:CrewData) {
+	return (
+		<div className={'data-grid'} data-is-scrollable='true'>
+			<ReactTable
+				data={items}
+				columns={columns}
+				defaultPageSize={(items.length <= 50) ? items.length : 50}
+				pageSize={(items.length <= 50) ? items.length : 50}
+				sorted={sorted}
+				onSortedChange={setSorted}
+				showPagination={(items.length > 50)}
+				showPageSizeOptions={false}
+				className="-striped -highlight"
+				style={((items.length > 50)) ? { height: 'calc(100vh - 92px)' } : {}}
+				getTrProps={(s:any, r:any) => {
+					return {
+						style: {
+							opacity: (r && r.original && r.original.isExternal) ? "0.5" : "inherit"
+						}
+					};
+				}}
+				getTdProps={(s: any, r: any) => {
+					return { style: { padding: "2px 3px" } };
+				}}
+			/>
+		</div>
+	);
+	function _onRenderCompactCard(item: CrewData) {
 		return <div className="ui items">
 			<div className="item">
-				<img src={item.iconBodyUrl} height={180} />
+				<img src={STTApi.imgUrl(item.full_body, imageCacheUpdated)} height={180} />
 				<div className="content" style={{ padding: '12px' }}>
 					<div className="header">{item.name}</div>
 					<div className="meta">{item.flavor}</div>
@@ -63,7 +76,7 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 		</div>;
 	}
 
-	_onRenderExpandedCard(item:CrewData) {
+	function _onRenderExpandedCard(item: CrewData) {
 		let equipment : {e?: ItemArchetypeDTO, have?: boolean }[] = [];
 		item.equipment_slots.forEach(es => {
 			equipment.push(
@@ -80,11 +93,10 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 				<h4 className="ui header">Equipment</h4>
 				<table><tbody>
 					<tr>
-						{
-							equipment.map((eq, ix) => {
+						{equipment.map((eq, ix) => {
 								if (eq.e) {
 									return (<td key={eq.e.name + ix}>
-										<ItemDisplay src={eq.e.iconUrl || ''} size={100} maxRarity={eq.e.rarity} rarity={eq.e.rarity} />
+										<ItemDisplay src={STTApi.imgUrl(eq.e.icon, imageCacheUpdated)} size={100} maxRarity={eq.e.rarity} rarity={eq.e.rarity} />
 										<span style={{ fontSize: '0.8rem', color: eq.have ? "" : "red" }}>{eq.e.name}</span>
 									</td>);
 								}
@@ -111,18 +123,21 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 				<Label>Duration: {item.action.duration}s  Cooldown: {item.action.cooldown}s  Initial Cooldown: {item.action.initial_cooldown}s  </Label>
 				{item.action.limit && <Label>Limit: {item.action.limit} uses per battle</Label>}
 
-				{this.renderChargePhases(item.action.charge_phases)}
+				{renderChargePhases(item.action.charge_phases)}
 				</span>}
 			</div>
 		);
 	}
 
-	renderChargePhases(charge_phases: any) {
+	function renderChargePhases(charge_phases: CrewActionChargePhaseDTO[] | undefined) {
 		if (!charge_phases) {
 			return <span />;
-		} else {
-			let phases :any[] = [];
-			charge_phases.forEach((cp:any, idx:number) => {
+		}
+
+		return <div>
+		<h4 className="ui header">Charge phases</h4>
+		<div>
+			{charge_phases.map((cp, idx) => {
 				let phaseDescription = `Charge time: ${cp.charge_time}s`;
 
 				if (cp.ability_amount) {
@@ -141,56 +156,13 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 					phaseDescription += `  Cooldown: ${cp.cooldown}s`;
 				}
 
-				phases.push(<Label key={idx}>{phaseDescription}</Label>);
-			});
-
-			return (<div>
-				<h4 className="ui header">Charge phases</h4>
-				<div>
-					{phases}
-				</div>
-			</div>);
-		}
-	}
-
-	render() {
-		let { items, sorted } = this.state;
-
-		let columns = this._getColumns();
-
-		if (this.props.filterText) {
-			items = items.filter(i => this._filterCrew(i, this.props.filterText!.toLowerCase()))
-		}
-
-		return (
-			<div className={'data-grid'} data-is-scrollable='true'>
-				<ReactTable
-					data={items}
-					columns={columns}
-					defaultPageSize={(items.length <= 50) ? items.length : 50}
-					pageSize={(items.length <= 50) ? items.length : 50}
-					sorted={sorted}
-					onSortedChange={sorted => this.setState({ sorted })}
-					showPagination={(items.length > 50)}
-					showPageSizeOptions={false}
-					className="-striped -highlight"
-					style={((items.length > 50)) ? { height: 'calc(100vh - 92px)' } : {}}
-					getTrProps={(s:any, r:any) => {
-						return {
-							style: {
-								opacity: (r && r.original && r.original.isExternal) ? "0.5" : "inherit"
-							}
-						};
-					}}
-					getTdProps={(s: any, r: any) => {
-						return { style: { padding: "2px 3px" } };
-					}}
-				/>
+				return <Label key={idx}>{phaseDescription}</Label>;
+			})}
 			</div>
-		);
+		</div>;
 	}
 
-	_getColumns() {
+	function getColumns() {
 		let _columns : Column<CrewData>[] = [];
 
 		_columns.push({
@@ -202,7 +174,7 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 			accessor: 'name',
 			Cell: (cell) => {
 				if (cell && cell.original) {
-					return <Image src={cell.original.iconUrl} width={22} height={22} imageFit={ImageFit.contain} shouldStartVisible={true} />;
+					return <Image src={STTApi.imgUrl((cell.original as CrewData).portrait, imageCacheUpdated)} width={22} height={22} imageFit={ImageFit.contain} shouldStartVisible={true} />;
 				} else {
 					return <span />;
 				}
@@ -243,8 +215,8 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 								compactCardHeight: 180,
 								expandedCardHeight: 420,
 								renderData: cell.original,
-								onRenderExpandedCard: this._onRenderExpandedCard,
-								onRenderCompactCard: this._onRenderCompactCard,
+								onRenderExpandedCard: _onRenderExpandedCard,
+								onRenderCompactCard: _onRenderCompactCard,
 								styles: { root: { width: '520px' } }
 							}}
 							instantOpenOnClick={true}>
@@ -312,7 +284,7 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 				style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
 				resizable: false,
 				accessor: 'frozen',
-				Cell: (cell: any) => {
+				Cell: (cell) => {
 					if (cell && cell.value && cell.original) {
 						return <TooltipHost content={`You have ${(cell.value === 1) ? 'one copy' : `${cell.value} copies`} of ${cell.original.short_name} frozen (cryo-d)`} calloutProps={{ gapSpace: 0 }}>
 							{cell.value > 1 ? cell.value : ''}<Icon iconName='Snowflake' />
@@ -458,7 +430,7 @@ export class CrewShipList extends React.Component<CrewShipListProps, CrewShipLis
 		return _columns;
 	}
 
-	_filterCrew(crew:CrewData, searchString:string) {
+	function filterCrew(crew: CrewData, searchString: string) {
 		return searchString.split(';').some(segment => {
 			if (segment.trim().length == 0) return false;
 			return segment.split(' ').every(text => {

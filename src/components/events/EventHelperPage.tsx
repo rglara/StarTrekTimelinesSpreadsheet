@@ -208,6 +208,7 @@ export const EventCrewBonusTable = (props: {
 }) => {
 	const [sorted, setSorted] = React.useState([{ id: 'bonus', desc: true }] as SortingRule[]);
 	const [filterText, setFilterText] = React.useState('');
+	const [, imageCacheUpdated] = React.useState<string>('');
 
 	let columns = getColumns();
 
@@ -224,10 +225,6 @@ export const EventCrewBonusTable = (props: {
 		}
 
 		let bonusValue = props.bonuses[cb];
-		let iconUrl = avatar.iconUrl;
-		if (!iconUrl || iconUrl == '') {
-			iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
-		}
 
 		crews.forEach(crew => {
 			// override skills and skill data shallow copies and incorporate bonuses directly
@@ -280,7 +277,7 @@ export const EventCrewBonusTable = (props: {
 			accessor: 'name',
 			Cell: (cell) => {
 				if (cell && cell.original) {
-					return <Image src={cell.original.iconUrl} width={compactMode ? 22 : 50} height={compactMode ? 22 : 50} imageFit={ImageFit.contain} shouldStartVisible={true} />;
+					return <Image src={STTApi.imgUrl((cell.original as CrewData).portrait, imageCacheUpdated)} width={compactMode ? 22 : 50} height={compactMode ? 22 : 50} imageFit={ImageFit.contain} shouldStartVisible={true} />;
 				} else {
 					return <span />;
 				}

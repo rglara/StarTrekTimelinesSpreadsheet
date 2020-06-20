@@ -14,6 +14,7 @@ export const ExpeditionEvent = (props: {
 	) {
 		return <span />;
 	}
+	const [, imageCacheUpdated] = React.useState<string>('');
 
 	let crew_bonuses : { avatar: CrewAvatarDTO, iconUrl: string }[] = [];
 	let crew_bonuses_owned : {[symbol:string]: number } = {};
@@ -25,17 +26,12 @@ export const ExpeditionEvent = (props: {
 
 		crew_bonuses.push({
 			avatar,
-			iconUrl: STTApi.imageProvider.getCrewCached(avatar, false)
+			iconUrl: STTApi.imgUrl(avatar.icon, imageCacheUpdated)
 		});
 
 		let crew = STTApi.roster.find(c => c.symbol === avatar!.symbol);
 		if (!crew) {
 			return;
-		}
-
-		let iconUrl = avatar.iconUrl;
-		if (!iconUrl || iconUrl == '') {
-			iconUrl = STTApi.imageProvider.getCrewCached(avatar, false);
 		}
 
 		crew_bonuses_owned[crew.symbol] = 1;
