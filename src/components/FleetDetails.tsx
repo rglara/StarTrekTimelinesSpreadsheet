@@ -3,6 +3,7 @@ import ReactTable, { Column } from "react-table";
 import { Button } from 'semantic-ui-react';
 import STTApi, { CollapsibleSection, RarityStars, formatTimeSeconds, download } from '../api';
 import { simplejson2csv } from '../utils/simplejson2csv';
+import { CrewAvatarDTO } from '../api/DTO';
 
 // #!if ENV === 'electron'
 import { loginPubNub } from '../utils/chat';
@@ -15,8 +16,9 @@ const MemberList = (props: {
 	if (!STTApi.fleetData) {
 		return <span></span>;
 	}
-	let members = props.members;
 	const [sorted, setSorted] = React.useState([{ id: 'display_name', desc: false }]);
+	const [, imageCacheUpdated] = React.useState<string>('');
+	const members = props.members;
 	const columns = getColumns();
 
 	return (<CollapsibleSection title={props.title}>
@@ -92,7 +94,7 @@ const MemberList = (props: {
 				maxWidth: 44,
 				resizable: false,
 				accessor: 'display_name',
-				Cell: (cell) => cell.original.iconUrl ? <img src={cell.original.iconUrl} width={32} height={32} style={{ objectFit: 'contain' }} /> : <span />
+				Cell: (cell) => <img src={STTApi.imgUrl((cell.original as FleetMember).crew_avatar?.icon, imageCacheUpdated)} width={32} height={32} style={{ objectFit: 'contain' }} />
 			},
 			{
 				id: 'display_name',
@@ -175,34 +177,14 @@ const MemberList = (props: {
 const Starbase = (props: {
 	title: string;
 }) => {
-	const [showSpinner, setShowSpinner] = React.useState(true);
+	const [, imageCacheUpdated] = React.useState<string>('');
+	// const [showSpinner, setShowSpinner] = React.useState(false);
 
-	let iconPromises : Promise<any>[] = [];
-	STTApi.starbaseRooms.forEach((room) => {
-		if ((room.level > 0) && !room.iconUrl) {
-			if (room.upgrades[room.level].buffs.length > 0) {
-				iconPromises.push(STTApi.imageProvider.getItemImageUrl(room.upgrades[room.level].buffs[0], room.id).then((found) => {
-					const rm = STTApi.starbaseRooms.find(sr => sr.id === found.id);
-					if (rm)
-						rm.iconUrl = found.url;
-				}).catch((error) => { /*console.warn(error);*/ }));
-			}
-
-			iconPromises.push(STTApi.imageProvider.getImageUrl('/' + room.background, room.id).then((found) => {
-				const rm = STTApi.starbaseRooms.find(sr => sr.id === found.id);
-				if (rm)
-					rm.backgroundUrl = found.url;
-			}).catch((error) => { /*console.warn(error);*/ }));
-		}
-	});
-
-	Promise.all(iconPromises).then(() => setShowSpinner(false));
-
-	if (showSpinner) {
-		return <div className="centeredVerticalAndHorizontal">
-			<div className="ui huge centered text active inline loader">Loading starbase details...</div>
-		</div>;
-	}
+	// if (showSpinner) {
+	// 	return <div className="centeredVerticalAndHorizontal">
+	// 		<div className="ui huge centered text active inline loader">Loading starbase details...</div>
+	// 	</div>;
+	// }
 
 	const roomContainerStyle = {
 		display: 'grid',
@@ -224,14 +206,14 @@ const Starbase = (props: {
 			let upgrade = room.upgrades[room.level];
 
 			return <div style={roomContainerStyle} key={room.id}>
-				<img style={{ position: 'absolute', width: '512px', height: '256px', zIndex: 0, opacity: 0.3 }} src={room.backgroundUrl} />
+				<img style={{ position: 'absolute', width: '512px', height: '256px', zIndex: 0, opacity: 0.3 }} src={STTApi.imgUrl(room?.upgrades[room.level]?.buffs[0]?.icon, imageCacheUpdated)} />
 				<span style={{ gridArea: 'roomname', justifySelf: 'start', fontSize: '1.5em', fontWeight: 700 }}>{room.name}</span>
 				<span style={{ gridArea: 'roomstars', justifySelf: 'start' }}><RarityStars min={1} max={room.max_level} value={(room.level > 0) ? room.level : undefined} /></span>
 				<span style={{ gridArea: 'buff1', justifySelf: 'start', fontSize: '1.4em', fontWeight: 600 }}>{upgrade.name}</span>
 				<span style={{ gridArea: 'buff2', justifySelf: 'start', fontSize: '1.4em', fontWeight: 600 }}>{(upgrade.buffs && upgrade.buffs.length > 0) ? upgrade.buffs[0].name : ''}</span>
 				<span style={{ gridArea: 'upgrade', justifySelf: 'start', fontSize: '1.4em', fontWeight: 600 }}>{
 					(room.recommended && room.level !== room.max_level) ? 'Donations recommended' : ''}</span>
-				<img style={{ gridArea: 'image', width: '128px', height: '128px', justifySelf: 'center' }} src={room.iconUrl} />
+				<img style={{ gridArea: 'image', width: '128px', height: '128px', justifySelf: 'center' }} src={STTApi.imgUrl({file:'/' + room.background}, imageCacheUpdated)} />
 			</div>;
 		})}
 	</CollapsibleSection>);
@@ -260,13 +242,12 @@ const ChatHistory = (props: {
 }
 
 interface FleetMember {
-	crew_avatar: any;
+	crew_avatar?: CrewAvatarDTO;
 	currentShip: string;
 	daily_activity: number;
 	dbid: number;
 	display_name: string;
 	event_rank: number;
-	iconUrl?: string,
 	last_active: any;
 	level: number;
 	location?: string;
@@ -320,15 +301,8 @@ export const FleetDetails = (props: {}) => {
 		setMembers(mems);
 	}
 
-	let iconPromises : Promise<any>[] = [];
+	// let iconPromises : Promise<any>[] = [];
 	members.forEach((member) => {
-		if (member.crew_avatar) {
-			iconPromises.push(STTApi.imageProvider.getCrewImageUrl(member.crew_avatar, false).then(({url}) => {
-				member.iconUrl = url;
-				return Promise.resolve();
-			}).catch((error) => { }));
-		}
-
 		// // Load player details
 		// iconPromises.push(STTApi.inspectPlayer(member.pid).then(memberData => {
 		// 	member.level = memberData.character.level;
@@ -336,7 +310,7 @@ export const FleetDetails = (props: {}) => {
 		// 	member.currentShip = memberData.character.current_ship.name;
 		// }));
 	});
-	Promise.all(iconPromises).then(() => forceUpdate({}));
+	// Promise.all(iconPromises).then(() => forceUpdate({}));
 
 // #!if ENV === 'electron'
 	loginPubNub().then(data => {

@@ -1,4 +1,4 @@
-import { ShipDTO, ImageDataDTO, FactionDTO } from "../../api/DTO";
+import { ImageDataDTO } from "../../api/DTO";
 
 export interface FoundResult<T> {
 	id: T; // value supplied when a request is made
@@ -34,13 +34,7 @@ export interface ItemImageData {
 }
 
 export interface ImageProvider {
-	getCrewImageUrl(crew: CrewImageData, fullBody: boolean): Promise<FoundResult<CrewImageData>>;
-	getShipImageUrl(ship: ShipDTO): Promise<FoundResult<string>>;
-	getItemImageUrl(item: ItemImageData, id: number): Promise<FoundResult<number>>;
-	getFactionImageUrl(faction: FactionDTO, id: number): Promise<FoundResult<number>>;
 	getSprite(assetName: string, spriteName: string, id: string): Promise<FoundResult<string>>;
 	getImageUrl<T>(iconFile: string, id: T): Promise<FoundResult<T>>;
-	getCached(withIcon: { icon?: ImageDataDTO }): string;
-	getCrewCached(crew: CrewImageData, fullBody: boolean): string;
 	getSpriteCached(assetName: string, spriteName: string): string;
 }

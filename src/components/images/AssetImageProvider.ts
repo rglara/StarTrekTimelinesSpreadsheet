@@ -1,8 +1,7 @@
 import STTApi from "../../api/index";
 import CONFIG from "../../api/CONFIG";
-import { ImageProvider, ImageCache, IBitmap, FoundResult, CrewImageData, ItemImageData } from './ImageProvider';
+import { ImageProvider, ImageCache, FoundResult } from './ImageProvider';
 import { WorkerPool } from '../../api/WorkerPool';
-import { ShipDTO, ImageDataDTO, FactionDTO } from "../../api/DTO";
 
 export class AssetImageProvider implements ImageProvider {
     private _imageCache: ImageCache;
@@ -22,41 +21,8 @@ export class AssetImageProvider implements ImageProvider {
         return this._baseURLAsset;
     }
 
-    getCached(withIcon: { icon?: ImageDataDTO }): string {
-        if (!withIcon.icon)
-            return '';
-
-        if (!withIcon.icon.file)
-            return '';
-
-        return this._imageCache.getCached(withIcon.icon.file);
-    }
-
-    getCrewCached(crew: CrewImageData, fullBody: boolean): string {
-        return this._imageCache.getCached(fullBody ? crew.full_body.file : crew.portrait.file);
-    }
-
     getSpriteCached(assetName: string, spriteName: string): string {
         return this._imageCache.getCached(((assetName.length > 0) ? (assetName + '_') : '') + spriteName);
-    }
-
-    getCrewImageUrl(crew: CrewImageData, fullBody: boolean): Promise<FoundResult<CrewImageData>> {
-        if (!crew) {
-            return this.getImageUrl("", crew);
-        }
-        return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, crew);
-    }
-
-    getShipImageUrl(ship: ShipDTO): Promise<FoundResult<string>> {
-        return this.getImageUrl(ship.icon.file, ship.name); //schematic_icon
-    }
-
-    getItemImageUrl(item: ItemImageData, id: number): Promise<FoundResult<number>> {
-        return this.getImageUrl(item.icon.file, id);
-    }
-
-    getFactionImageUrl(faction: FactionDTO, id: number): Promise<FoundResult<number>> {
-        return this.getImageUrl(faction.icon.file, id); //faction.reputation_item_icon.file and faction.shuttle_token_preview_item.icon.file
     }
 
     async getSprite(assetName: string, spriteName: string, id: string): Promise<FoundResult<string>> {
@@ -83,6 +49,8 @@ export class AssetImageProvider implements ImageProvider {
         if (cachedUrl) {
             return { id, url: cachedUrl };
         }
+
+        //console.log('Requesting uncached image ' + iconFile);
 
         let data: any;
         const urlPrefix = this.getAssetUrl(iconFile);

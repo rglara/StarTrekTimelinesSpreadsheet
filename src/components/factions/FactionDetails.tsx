@@ -7,24 +7,11 @@ import { FactionDisplay } from './FactionDisplay';
 
 export const FactionDetails = () => {
 	const [showSpinner, setShowSpinner] = React.useState(true);
-	const [factionUrls, setFactionUrls] = React.useState<{[key: string]: string}>({});
+	const [, imageCacheUpdated] = React.useState<string>('');
 	const stringId = (id: number) => `faction${id}`;
 
 	refreshAllFactions().then(() => {
 		setShowSpinner(false);
-	});
-
-	STTApi.playerData.character.factions.forEach(faction => {
-		STTApi.imageProvider.getImageUrl(faction.reputation_item_icon.file, faction.id)
-			.then(found => {
-				if (found.url) {
-					factionUrls[stringId(faction.id)] = found.url;
-					setFactionUrls(factionUrls);
-				}
-			})
-			.catch(error => {
-				console.warn(error);
-			});
 	});
 
 	if (showSpinner) {
@@ -52,7 +39,7 @@ export const FactionDetails = () => {
 		galleryItems.push(
 			<div key={faction.id} onClick={() => handleClick(faction.id)}>
 				<Popup
-					trigger={<img src={factionUrls[stringId(faction.id)]} />}
+					trigger={<img src={STTApi.imgUrl(faction.reputation_item_icon, imageCacheUpdated)} />}
 					content={faction.name}
 					position='bottom center'
 				/>

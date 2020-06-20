@@ -16,6 +16,7 @@ export const Shuttles = (props: {
 	onTabSwitch?: (newTab: string) => void;
 }) => {
 	const [, forceUpdate] = React.useState();
+	const [, imageCacheUpdated] = React.useState<string>('');
 	const [userChoices, setUserChoices] = React.useState<ShuttleSelection[]>([]);
 	const [selections, setSelections] = React.useState<ShuttleSelection[]>([]);
 	const [selType, setSelType] = React.useState<string | undefined>();
@@ -57,7 +58,7 @@ export const Shuttles = (props: {
 			crewList.push({
 				key: crew.crew_id || crew.id,
 				value: crew.crew_id || crew.id,
-				image: { avatar: true, src: crew.iconUrl },
+				image: { avatar: true, src: STTApi.imgUrl(crew.portrait, imageCacheUpdated) },
 				text: crew.name
 			});
 		}
@@ -88,7 +89,7 @@ export const Shuttles = (props: {
 					</span>}
 					{borrowable.length > 0 && <List horizontal>
 						{borrowable.map(cb => <List.Item key={cb.symbol}>
-								{/* FIXME: image not always ready <Image avatar src={(cb as any).iconUrl} /> */}
+								<Image avatar src={STTApi.imgUrl(cb.icon, imageCacheUpdated)} />
 								<List.Content>
 									<List.Header>{cb.name} <RarityStars max={cb.max_rarity} value={cb.rarity} asSpan={true} /></List.Header>
 								</List.Content>
@@ -333,7 +334,7 @@ const ShuttleItem = (props: {
 
 	return (
 		<Item key={shuttle.id}>
-			<Item.Image size='small' src={faction!.iconUrl} style={{ 'backgroundColor': '#aaa' }} />
+			<Item.Image size='small' src={STTApi.imgUrl(faction?.icon, props.refresh)} style={{ 'backgroundColor': '#aaa' }} />
 
 			<Item.Content verticalAlign='middle'>
 				<Item.Header>
@@ -446,6 +447,7 @@ const ShuttleBonusSelector = (props:{
 		useBonuses45?: boolean;
 	};
 }) => {
+	const [, imageCacheUpdated] = React.useState<string>('');
 	let availableBonuses: ItemData[] = [];
 	if (props.options?.useBonuses) {
 		availableBonuses = STTApi.items.filter(item => item.type === 4);
@@ -468,7 +470,7 @@ const ShuttleBonusSelector = (props:{
 			size={50}
 			rarity={props.selection.bonus.item.rarity}
 			maxRarity={props.selection.bonus.item.rarity}
-			src={props.selection.bonus.item.iconUrl} />
+			src={STTApi.imgUrl(props.selection.bonus.item.icon, imageCacheUpdated)} />
 			{props.selection.bonus.item.name}{' '}
 			<RarityStars max={props.selection.bonus.item.rarity} value={props.selection.bonus.item.rarity} asSpan={true} />
 		</>;
@@ -507,7 +509,7 @@ const ShuttleBonusSelector = (props:{
 							item={item}
 							rarity={item.rarity}
 							maxRarity={item.rarity}
-							src={item.iconUrl} />{item.name}{' '}<RarityStars max={item.rarity} value={item.rarity} asSpan={true}/>
+							src={STTApi.imgUrl(item.icon, imageCacheUpdated)} />{item.name}{' '}<RarityStars max={item.rarity} value={item.rarity} asSpan={true}/>
 						</Dropdown.Item>)}
 				</Dropdown.Menu>
 			</Dropdown>
@@ -552,7 +554,7 @@ function buildSlotCalculator(bonusedRoster: CrewItem[], event: EventDTO | undefi
 					c.content = <span>{c.crew.name} <CrewSkills crew={c.crew as CrewData} useIcon={true} addScore={c.total} hideProf={true} /></span>;
 				}
 				c.value = cid(c.crew);
-				c.image = (c.crew as any).iconUrl;
+				c.image = STTApi.imgUrl(c.crew.portrait, undefined); //TODO: will have to pass some context through to get this to refresh on load
 			});
 		}
 

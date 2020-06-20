@@ -35,6 +35,7 @@ export const CrewList = (props: {
 	const [selection, setSelection] = React.useState(props.selectedIds ? props.selectedIds : new Set<number>());
 	const [active, setActive] = React.useState({} as { activeId?: number; name?: string; });
 	const [replicatorTarget, setReplicatorTarget] = React.useState(undefined as ItemArchetypeDTO | undefined);
+	const [, imageCacheUpdated] = React.useState<string>('');
 
 	const items = props.data;
 
@@ -58,7 +59,7 @@ export const CrewList = (props: {
 	function _onRenderCompactCard(item:CrewData) {
 		return <div className="ui items">
 			<div className="item">
-				<img src={item.iconBodyUrl} height={180} />
+				<img src={STTApi.imgUrl(item.full_body, imageCacheUpdated)} height={180} />
 				<div className="content" style={{ padding: '12px' }}>
 					<div className="header">{item.name}</div>
 					<div className="meta">{item.flavor}</div>
@@ -90,7 +91,7 @@ export const CrewList = (props: {
 							equipment.map((eq, ix) => {
 								if (eq.e) {
 									return (<td key={eq.e.name + ix}>
-										<ItemDisplay src={eq.e.iconUrl || ''}
+										<ItemDisplay src={STTApi.imgUrl(eq?.e?.icon, imageCacheUpdated)}
 											size={100} maxRarity={eq.e.rarity} rarity={eq.e.rarity}
 											onClick={() => setReplicatorTarget(eq.e)} />
 										<span style={{ fontSize: '0.8rem', color: eq.have ? "" : "red" }}>{eq.e.name}</span>
@@ -267,7 +268,7 @@ export const CrewList = (props: {
 			accessor: 'name',
 			Cell: (cell) => {
 				if (cell && cell.original) {
-					return <Image src={cell.original.iconUrl} width={compactMode ? 22 : 50} height={compactMode ? 22 : 50} imageFit={ImageFit.contain} shouldStartVisible={true} />;
+					return <Image src={STTApi.imgUrl((cell.original as CrewData).portrait, imageCacheUpdated)} width={compactMode ? 22 : 50} height={compactMode ? 22 : 50} imageFit={ImageFit.contain} shouldStartVisible={true} />;
 				} else {
 					return <span />;
 				}

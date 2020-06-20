@@ -35,8 +35,9 @@ const GauntletCrew = (props: {
 	reviveCost: { currency: number; amount: number };
 	revive: (save: boolean) => void;
 }) => {
+	const [, imageCacheUpdated] = React.useState<string>('');
 	//let curr = CONFIG.CURRENCIES[props.reviveCost.currency];
-	let avatar = STTApi.getCrewAvatarBySymbol(props.crew.archetype_symbol);
+	const avatar = STTApi.getCrewAvatarBySymbol(props.crew.archetype_symbol);
 
 	return <div className="ui compact segments" style={{ textAlign: 'center', margin: '8px' }}>
 		<h5 className="ui top attached header" style={{ color: getTheme().palette.neutralDark,
@@ -44,7 +45,7 @@ const GauntletCrew = (props: {
 		>{avatar ? avatar.name : ''}</h5>
 		<div className="ui attached segment" style={{ backgroundColor: getTheme().palette.themeLighter, padding: '0' }}>
 			<div style={{ position: 'relative', display: 'inline-block' }}>
-				<img src={avatar ? avatar.iconUrl : ''} className={props.crew.disabled ? 'image-disabled' : ''} height={100} />
+				<img src={STTApi.imgUrl(avatar?.portrait, imageCacheUpdated)} className={props.crew.disabled ? 'image-disabled' : ''} height={100} />
 				<div style={{ position: 'absolute', right: '0', top: '0' }}>
 					<CircularLabel percent={props.crew.crit_chance} />
 				</div>
@@ -80,7 +81,10 @@ const GauntletMatch = (props: {
 	doSpin: (sp: boolean) => void;
 	onNewData: (data: GauntletData, logPath: string | undefined, match: Match) => void;
 }) => {
+	const [, imageCacheUpdated] = React.useState<string>('');
 	const fleetmate = STTApi.fleetMembers.find(fm => fm.pid === props.match.opponent.player_id);
+	const oppCrew = STTApi.crewAvatars.find(avatar => avatar.symbol === props.match.opponent.archetype_symbol);
+	const crewOdd = STTApi.crewAvatars.find(avatar => avatar.symbol === props.match.crewOdd.archetype_symbol);
 
 	//TODO: 320px hardcoded below!
 	let containerStyle = {
@@ -95,8 +99,6 @@ const GauntletMatch = (props: {
 		"pcrewimage chance chance chance ocrewimage"
 		"pcrewimage button button button ocrewimage"`};
 
-	let oppCrew = STTApi.getCrewAvatarBySymbol(props.match.opponent.archetype_symbol);
-	let crewOdd = STTApi.getCrewAvatarBySymbol(props.match.crewOdd.archetype_symbol);
 
 	return <div className="ui compact segments" style={{ margin: 'unset' }}>
 		<h5 className="ui top attached header" style={{ color: getTheme().palette.neutralDark, backgroundColor: getTheme().palette.themeLighter, textAlign: 'center', padding: '2px' }}>
@@ -105,7 +107,7 @@ const GauntletMatch = (props: {
 		<div style={containerStyle} className="ui attached segment">
 			<span style={{ gridArea: 'pcrewname', justifySelf: 'center' }}>{crewOdd ? crewOdd.short_name : ''}</span>
 			<div style={{ gridArea: 'pcrewimage', position: 'relative' }}>
-				<img src={props.match.crewOdd.iconUrl} height={128} />
+				<img src={STTApi.imgUrl(crewOdd?.full_body, imageCacheUpdated)} height={128} />
 				<CircularLabel percent={props.match.crewOdd.crit_chance} />
 			</div>
 
@@ -135,7 +137,7 @@ const GauntletMatch = (props: {
 			</div>
 
 			<div style={{ gridArea: 'ocrewimage', position: 'relative' }}>
-				<img src={props.match.opponent.iconUrl} height={128} />
+				<img src={STTApi.imgUrl(oppCrew?.full_body, imageCacheUpdated)} height={128} />
 				<CircularLabel percent={props.match.opponent.crit_chance} />
 			</div>
 
@@ -347,53 +349,7 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 				roundOdds: result
 			});
 
-			let iconPromises : Promise<void>[] = [];
-
-			data.gauntlet.contest_data.selected_crew.forEach((crew) => {
-				let avatar = STTApi.getCrewAvatarBySymbol(crew.archetype_symbol);
-				const cid = crew.crew_id;
-				iconPromises.push(
-					STTApi.imageProvider.getCrewImageUrl(avatar!, true).then(({ id, url }) => {
-						data.gauntlet.contest_data.selected_crew.forEach((crew) => {
-							if (crew.crew_id === cid) {
-								crew.iconUrl = url;
-							}
-						});
-						return Promise.resolve();
-					}).catch((error) => { /*console.warn(error);*/ }));
-			});
-
-			result.matches.forEach((match) => {
-				let avatar = STTApi.getCrewAvatarBySymbol(match.crewOdd.archetype_symbol);
-				let avatarOpp = STTApi.getCrewAvatarBySymbol(match.opponent.archetype_symbol);
-				const cidOdd = match.crewOdd.crew_id;
-				const cidOpp = match.opponent.crew_id;
-				iconPromises.push(
-					STTApi.imageProvider.getCrewImageUrl(avatar!, true).then(({ id, url }) => {
-						if (this.state.roundOdds) {
-							this.state.roundOdds.matches.forEach((match) => {
-								if (match.crewOdd.crew_id === cidOdd) {
-									match.crewOdd.iconUrl = url;
-								}
-							});
-						}
-						return Promise.resolve();
-					}).catch((error) => { /*console.warn(error);*/ }));
-
-				iconPromises.push(
-					STTApi.imageProvider.getCrewImageUrl(avatarOpp!, true).then(({ id, url }) => {
-						if (this.state.roundOdds) {
-							this.state.roundOdds.matches.forEach((match) => {
-								if (match.opponent.crew_id === cidOpp) {
-									match.opponent.iconUrl = url;
-								}
-							});
-						}
-						return Promise.resolve();
-					}).catch((error) => { /*console.warn(error);*/ }));
-			});
-
-			Promise.all(iconPromises).then(() => this.forceUpdate());
+			// Promise.all(iconPromises).then(() => this.forceUpdate());
 		}
 		// else if (data.gauntlet.state == 'UNSTARTED') {
 		// 	// You joined a gauntled and are waiting for opponents
@@ -408,38 +364,6 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 		}
 
 		if (data.lastResult) {
-			if (data.rewards && data.rewards.loot) {
-				let iconPromises: any[] = [];
-				data.rewards.loot.forEach((reward) => {
-					reward.iconUrl = '';
-					if (reward.type === 1) { // crew
-						iconPromises.push(STTApi.imageProvider.getCrewImageUrl(reward as CrewImageData, false)
-							.then(found => {
-								reward.iconUrl = found.url;
-								this.forceUpdate();
-							})
-							.catch(error => {
-								/*console.warn(error);*/
-							})
-						);
-					} else {
-						iconPromises.push(
-							STTApi.imageProvider
-								.getItemImageUrl(reward, reward.id)
-								.then(found => {
-									reward.iconUrl = found.url;
-									this.forceUpdate();
-								})
-								.catch(error => {
-									/*console.warn(error);*/
-								})
-						);
-					}
-				});
-
-				//Promise.all(iconPromises).then(() => this.forceUpdate());
-			}
-
 			this.setState({
 				lastResult: data.lastResult,
 				lastMatch: match,
@@ -531,6 +455,9 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 			const stNorm = { textAlign: 'center', verticalAlign: 'middle' };
 			const stLoad = this.state.showLoading ? { fontStyle: 'italic'} : {}
 
+			const crewAvatar = STTApi.crewAvatars.find(a => a.symbol === this.state.lastMatch?.crewOdd.archetype_symbol);
+			const oppAvatar = STTApi.crewAvatars.find(a => a.symbol === this.state.lastMatch?.opponent.archetype_symbol);
+
 			return (
 				<div className='tab-panel' data-is-scrollable='true'>
 					<span className='quest-mastery'>Featured skill is <img src={CONFIG.SPRITES['icon_' + this.state.gauntlet.contest_data.featured_skill].url} height={18}
@@ -566,7 +493,7 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 								<div style={containerStyleLast} className="ui attached segment">
 									<span style={{ gridArea: 'pcrewname', justifySelf: 'center' }}>Your <b>{playerCrew}</b></span>
 									<div style={{ gridArea: 'pcrewimage', position: 'relative' }}>
-										<img src={this.state.lastMatch.crewOdd.iconUrl} height={128} />
+										<img src={STTApi.imgUrl(crewAvatar?.full_body, () => this.forceUpdate)} height={128} />
 										<CircularLabel percent={this.state.lastMatch.crewOdd.crit_chance} />
 									</div>
 
@@ -590,7 +517,7 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 									</div>
 
 									<div style={{ gridArea: 'ocrewimage', position: 'relative' }}>
-										<img src={this.state.lastMatch.opponent.iconUrl} height={128} />
+										<img src={STTApi.imgUrl(oppAvatar?.full_body, () => this.forceUpdate)} height={128} />
 										<CircularLabel percent={this.state.lastMatch.opponent.crit_chance} />
 									</div>
 
@@ -604,12 +531,14 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 											Rewards:
 											<div>
 											{rewards.loot.map((loot, index) => {
-												if (!loot.iconUrl) {
-													loot.iconUrl = STTApi.imageProvider.getCached(loot);
+												let imgUrl = '';
+												if (loot.type === 1) {
+													imgUrl = STTApi.imgUrl(loot.full_body, (s) => this.forceUpdate())
+												} else {
+													imgUrl = STTApi.imgUrl(loot.icon, (s) => this.forceUpdate())
 												}
-
 												return <span key={index} style={{ color: loot.rarity ? CONFIG.RARITIES[loot.rarity].color : '#000' }}
-												><img src={loot.iconUrl || ''} width='50' height='50' /><br/>{loot.quantity} {(loot.rarity == null) ? '' : CONFIG.RARITIES[loot.rarity].name} {loot.full_name}
+												><img src={imgUrl} width='50' height='50' /><br/>{loot.quantity} {(loot.rarity == null) ? '' : CONFIG.RARITIES[loot.rarity].name} {loot.full_name}
 													{index < rewards.loot.length - 1 ? ', ' : ''}</span>;
 											})}
 											</div>
@@ -675,6 +604,7 @@ const GauntletSelectCrew = (props: {
 	// Recommendation calculation settings
 	const [featuredSkillBonus, setFeaturedSkillBonus] = React.useState<number>(10);
 	const [critBonusDivider, setCritBonusDivider] = React.useState<number>(3);
+	const [, imageCacheUpdated] = React.useState<string>('');
 
 	const renderBestCrew = () => {
 		if (!crewSelection) {
@@ -690,7 +620,7 @@ const GauntletSelectCrew = (props: {
 
 			let crewSpan = <Persona
 				key={crew.crew_id}
-				imageUrl={crew.iconUrl}
+				imageUrl={STTApi.imgUrl(crew.portrait, imageCacheUpdated)}
 				text={crew.name}
 				secondaryText={crew.short_name}
 				tertiaryText={formatCrewStatsVoy(crew)} //FIXME: only need to show proficiencies, not voy scores
@@ -825,6 +755,7 @@ const GauntletCrewBonusTable = (props: {
 }) => {
 	const [sorted, setSorted] = React.useState([{ id: 'bonus', desc: true },{id: 'gauntlet_score', desc: true}] as SortingRule[]);
 	const [filterText, setFilterText] = React.useState('');
+	const [, imageCacheUpdated] = React.useState<string>('');
 
 	const columns = getColumns();
 	const bonusValues = [0, 25, 45, 65];
@@ -874,7 +805,7 @@ const GauntletCrewBonusTable = (props: {
 			accessor: 'name',
 			Cell: (cell) => {
 				if (cell && cell.original) {
-					return <Image src={cell.original.iconUrl} width={compactMode ? 22 : 50} height={compactMode ? 22 : 50} imageFit={ImageFit.contain} shouldStartVisible={true} />;
+					return <Image src={STTApi.imgUrl((cell.original as CrewData).portrait, imageCacheUpdated)} width={compactMode ? 22 : 50} height={compactMode ? 22 : 50} imageFit={ImageFit.contain} shouldStartVisible={true} />;
 				} else {
 					return <span />;
 				}

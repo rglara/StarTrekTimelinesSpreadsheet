@@ -42,17 +42,20 @@ export class FileImageCache implements ImageCache {
 		return rv;
 	}
 
-	getImage(url: string) : Promise<string | undefined> {
-		return new Promise((resolve, reject) => {
-			fs.exists(this.formatUrl(url), (exists) => {
-				if (exists) {
-					resolve('file://' + this.formatUrl(url));
-				}
-				else {
-					resolve(undefined);
-				}
-			});
-		});
+	async getImage(url: string) : Promise<string | undefined> {
+		function delay(ms: number) {
+			return new Promise(resolve => setTimeout(resolve, ms));
+		}
+
+		// Add an artificial delay to prevent the UI from blocking
+		await delay(400);
+
+		const exists = fs.existsSync(this.formatUrl(url));
+		//console.log('check exists ' + url + (exists? ' passed':' failed'));
+		if (exists) {
+			return 'file://' + this.formatUrl(url);
+		}
+		return undefined;
 	}
 
 	bitmapToPng(data: IBitmap, callback: (bytes:Uint8Array) => void) : void {

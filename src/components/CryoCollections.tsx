@@ -44,13 +44,8 @@ export const CryoCollections = (props: {
 const CryoCollection = (props: {
 	collection: CryoCollectionDTO;
 }) => {
-	const [imageUrl, setImageUrl] = React.useState<string | undefined>(props.collection.iconUrl);
-	if (!imageUrl) {
-		STTApi.imageProvider.getImageUrl(props.collection.image, props.collection.id).then((found) => {
-			props.collection.iconUrl = found.url;
-			setImageUrl(found.url);
-		}).catch((error) => { console.warn(error); });
-	}
+	const [, imageCacheUpdated] = React.useState<string>('');
+	const imageUrl = STTApi.imgUrl({file:props.collection.image}, imageCacheUpdated);
 
 	let archetypes = STTApi.crewAvatars.filter(crew =>
 		(crew.traits
@@ -137,6 +132,8 @@ const CryoCrewList = (props:{
 	numColumns: number;
 	crew: (CrewData | CrewAvatarDTO)[];
 }) => {
+	const [, imageCacheUpdated] = React.useState<string>('');
+
 	return <div>
 		{props.title && <b>{props.title} ({props.crew.length}):</b>}
 		<div style={{
@@ -146,7 +143,7 @@ const CryoCrewList = (props:{
 			gridGap: '10px'
 		}}>
 			{props.crew.map((c) => <div key={c.id}>
-				<img src={c.iconUrl ?? ''} height={40} />
+				<img src={STTApi.imgUrl(c.portrait, imageCacheUpdated)} height={40} />
 				<RarityStars value={(c as any).rarity ?? 0} max={c.max_rarity} colored={true} asSpan={true} />
 				{c.name}
 			</div>

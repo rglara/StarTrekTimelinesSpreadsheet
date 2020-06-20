@@ -107,14 +107,10 @@ export async function enterGauntlet(gauntletId: number, crewIds: Array<number>):
 	return STTApi.playerData.character.gauntlets[0];
 }
 
-export interface CrewOdd {
-	archetype_symbol: string;
-	crew_id: number;
-	crit_chance: number;
+export interface CrewOdd extends GauntletCrewDTO {
 	used: number;
 	max: number[];
 	min: number[];
-	iconUrl: string | undefined;
 }
 
 export interface OpponentOdd {
@@ -126,7 +122,6 @@ export interface OpponentOdd {
 	crew_id: number;
 	archetype_symbol: string;
 	crit_chance: number;
-	iconUrl: string | undefined;
 	max: number[];
 	min: number[];
 }
@@ -155,17 +150,12 @@ export function gauntletRoundOdds(currentGauntlet: GauntletDTO, simulatedRounds:
 	};
 
 	currentGauntlet.contest_data.selected_crew.forEach((crew: GauntletCrewDTO) => {
-		// crew.iconUrl = '';
-
 		if (!crew.disabled) {
 			let crewOdd: CrewOdd = {
-				archetype_symbol: crew.archetype_symbol,
-				crew_id: crew.crew_id,
-				crit_chance: crew.crit_chance,
+				...crew,
 				used: crew.debuff / 4,
 				max: [0, 0],
 				min: [0, 0],
-				iconUrl: ''
 			};
 
 			crew.skills.forEach((skillStats) => {
@@ -192,7 +182,6 @@ export function gauntletRoundOdds(currentGauntlet: GauntletDTO, simulatedRounds:
 			crew_id: opponent.crew_contest_data.crew[0].crew_id,
 			archetype_symbol: opponent.crew_contest_data.crew[0].archetype_symbol,
 			crit_chance: opponent.crew_contest_data.crew[0].crit_chance,
-			iconUrl: '',
 			max: [0, 0],
 			min: [0, 0]
 		};

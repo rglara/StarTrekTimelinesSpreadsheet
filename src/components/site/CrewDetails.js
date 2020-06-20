@@ -32,9 +32,8 @@ export class ModalCrewDetails extends React.Component {
 
         this.setState({ modalOpen: true, recipeTree: undefined, crew, collections, iconUrl: undefined });
 
-        STTApi.imageProvider.getCrewImageUrl(crew, true).then(({ id, url }) => {
-            this.setState({ iconUrl: url });
-        }).catch((error) => { this.setState({ iconUrl: '' }); });
+        const imgUrl = STTApi.imgUrl(crew.full_body, () => this.forceUpdate());
+        this.setState({ iconUrl: imgUrl });
     }
 
     handleClose() {
@@ -134,7 +133,7 @@ export class ModalCrewDetails extends React.Component {
                 key: es.archetype + '_' + es.level,
                 text: `${equipment.name} (level ${es.level})`,
                 value: es.archetype,
-                content: <Header icon={<ItemDisplay src={STTTools.assetProvider.getCached(equipment)} size={48} maxRarity={equipment.rarity} rarity={equipment.rarity} />} content={equipment.name} subheader={`Level ${es.level}`} />
+                content: <Header icon={<ItemDisplay src={STTApi.imgUrl(equipment.icon, () => this.forceUpdate())} size={48} maxRarity={equipment.rarity} rarity={equipment.rarity} />} content={equipment.name} subheader={`Level ${es.level}`} />
             });
         });
 
@@ -171,7 +170,7 @@ export class ModalCrewDetails extends React.Component {
                 {demands.map(entry => <Grid.Column key={entry.equipment.id} textAlign='center'>
                     <Popup
                         trigger={<Label as='a' style={{ background: CONFIG.RARITIES[entry.equipment.rarity].color }} image size='big'>
-                            <img src={STTTools.assetProvider.getCached(entry.equipment)} />
+                            <img src={STTApi.imgUrl(entry.equipment.icon, () => this.forceUpdate())} />
                             x{entry.count}
                         </Label>}
                         header={CONFIG.RARITIES[entry.equipment.rarity].name + ' ' + entry.equipment.name}

@@ -1,7 +1,7 @@
 import STTApi from "../../api/index";
 import CONFIG from "../../api/CONFIG";
 import { ImageProvider, FoundResult, ImageCache, CrewImageData, ItemImageData } from './ImageProvider';
-import { ShipDTO, ImageDataDTO, FactionDTO } from "../../api/DTO";
+import { ShipDTO, FactionDTO } from "../../api/DTO";
 
 const fs = require('fs');
 const request = require('request');
@@ -121,14 +121,6 @@ export class WikiImageProvider implements ImageProvider {
 		return getWikiImageUrl(fileName, id);
 	}
 
-	getCached(withIcon: { icon?: ImageDataDTO }): string {
-		return '';
-	}
-
-	getCrewCached(crew: CrewImageData, fullBody: boolean): string {
-		return '';
-	}
-
 	getSpriteCached(assetName: string, spriteName: string): string {
 		return '';
 	}
@@ -143,43 +135,6 @@ export class ImageProviderChain implements ImageProvider {
 		this.imageCache = cache;
 		this.base = base;
 		this.ext = ext;
-	}
-
-	async getCrewImageUrl(crew: CrewImageData, fullBody: boolean): Promise<FoundResult<CrewImageData>> {
-		if (!crew) {
-			return this.getImageUrl("", crew);
-		}
-		// let cached = this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, 0);
-
-		let result = await this.base.getCrewImageUrl(crew, fullBody);
-		if (this.ext && (!result.url || result.url === '')) {
-			return this.ext.getCrewImageUrl(crew, fullBody);
-		}
-		return result;
-	}
-
-	async getShipImageUrl(ship: ShipDTO): Promise<FoundResult<string>> {
-		let result = await this.base.getShipImageUrl(ship);
-		if (this.ext && (!result.url || result.url === '')) {
-			return this.ext.getShipImageUrl(ship);
-		}
-		return result;
-	}
-
-	async getItemImageUrl(item: ItemImageData, id: number): Promise<FoundResult<number>> {
-		let result = await this.base.getItemImageUrl(item, id);
-		if (this.ext && (!result.url || result.url === '')) {
-			return this.ext.getItemImageUrl(item, id);
-		}
-		return result;
-	}
-
-	async getFactionImageUrl(faction: FactionDTO, id: number): Promise<FoundResult<number>> {
-		let result = await this.base.getFactionImageUrl(faction, id);
-		if (this.ext && (!result.url || result.url === '')) {
-			return this.ext.getFactionImageUrl(faction, id);
-		}
-		return result;
 	}
 
 	async getSprite(assetName: string, spriteName: string, id: string): Promise<FoundResult<string>> {
@@ -209,20 +164,6 @@ export class ImageProviderChain implements ImageProvider {
 			//this.imageCache.saveImage(iconFile, rawBitmap);
 		}
 		return result;
-	}
-
-	getCached(withIcon: { icon?: ImageDataDTO }): string {
-		if (!withIcon.icon)
-			return '';
-
-		if (!withIcon.icon.file)
-			return '';
-
-		return this.imageCache.getCached(withIcon.icon.file);
-	}
-
-	getCrewCached(crew: CrewImageData, fullBody: boolean): string {
-		return this.imageCache.getCached(fullBody ? crew.full_body.file : crew.portrait.file);
 	}
 
 	getSpriteCached(assetName: string, spriteName: string): string {

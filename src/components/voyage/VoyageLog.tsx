@@ -34,6 +34,7 @@ export const VoyageLog = (props:{}) => {
 	const [voyageExport, setVoyageExport] = React.useState<VoyageExportData | undefined>(undefined);
 	const [indexedNarrative, setIndexedNarrative] = React.useState<IndexedNarrative | undefined>(undefined);
 	const [skillChecks, setSkillChecks] = React.useState<SkillChecks | undefined>(undefined);
+	const [, imageCacheUpdated] = React.useState<string>('');
 
 	async function recall() {
 		await recallVoyage(STTApi.playerData.character.voyage[0].id);
@@ -137,7 +138,16 @@ export const VoyageLog = (props:{}) => {
 				maxWidth: 42,
 				resizable: false,
 				accessor: (row) => row.full_name,
-				Cell: (p) => <img className={`image-fit ${spriteClass}`} src={p.original.iconUrl} height='32px' />
+				Cell: (p) => {
+					const reward = p.original as RewardDTO;
+					let imgUrl = '';
+					if (reward.type === 1) {
+						imgUrl = STTApi.imgUrl(reward.portrait, imageCacheUpdated)
+					} else {
+						imgUrl = STTApi.imgUrl(reward.icon, imageCacheUpdated)
+					}
+					return <img className={`image-fit ${spriteClass}`} src={STTApi.imgUrl((p.original as RewardDTO).icon, imageCacheUpdated)} height='32px' />;
+				}
 			},
 			{
 				id: 'quantity',
@@ -362,33 +372,6 @@ export const VoyageLog = (props:{}) => {
 					});
 					return all;
 				}, voyageRewards);
-			let iconPromises: any[] = [];
-			voyageRewards.forEach((reward) => {
-				reward.iconUrl = '';
-				if (reward.type === 1) { // crew
-					iconPromises.push(STTApi.imageProvider.getCrewImageUrl(reward as CrewImageData, false)
-						.then(found => {
-							reward.iconUrl = found.url;
-						})
-						.catch(error => {
-							/*console.warn(error);*/
-						})
-					);
-				} else {
-					iconPromises.push(
-						STTApi.imageProvider
-							.getItemImageUrl(reward, reward.id)
-							.then(found => {
-								reward.iconUrl = found.url;
-							})
-							.catch(error => {
-								/*console.warn(error);*/
-							})
-					);
-				}
-			});
-
-			await Promise.all(iconPromises);
 
 			let ship_name = voyage.ship_name;
 			if (!ship_name) {
@@ -459,6 +442,7 @@ const VoyageCurrentCrewSkills = (props: {
 	skillChecks?: SkillChecks;
 	exportNarrative?: VoyageNarrativeDTO[];
 }) => {
+	const [, imageCacheUpdated] = React.useState<string>('');
 	let firstFailures : {[sk:string]: number} = {};
 	if (props.exportNarrative) {
 		const hazards = props.exportNarrative.filter(n => n.encounter_type === 'hazard' && n.skill_check?.skill);
@@ -519,7 +503,7 @@ const VoyageCurrentCrewSkills = (props: {
 								<div className='vcp-name'>{slot.name}</div>
 								<div className='vcp-pic'>
 									<Popup flowing
-										trigger={<img className='image-fit' src={crew.iconUrl} />}
+										trigger={<img className='image-fit' src={STTApi.imgUrl(crew.portrait, imageCacheUpdated)} />}
 										content={<CrewSkills crew={crew} useIcon={false} asVoyScore={true} addVoyTotal={true} />}
 									/>
 								</div>
@@ -604,7 +588,7 @@ const VoyageState = (props: {
 		const estRecallDurationSec = 0.4 * (props.voyage.voyage_duration + (props.estimatedMinutesLeft * 60));
 		const recallNowDurationSec = 0.4 * (props.voyage.voyage_duration);
 
-		//const srcDil = STTApi.imageProvider.getCached({ icon: { file: 'images/icons/dilemma_icon' } });
+		//const srcDil = STTApi.imgUrl({ file: 'images/icons/dilemma_icon' });
 
 		return (
 			<div className='voyage-stats'>

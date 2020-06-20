@@ -56,8 +56,6 @@ interface AppHomeState {
 	dataLoaded: boolean,
 	showLoginDialog: boolean,
 	captainName: string,
-	captainAvatarUrl: string,
-	captainAvatarBodyUrl: string,
 	spinnerLabel: string,
 	spinnerSublabel?: string,
 	hideErrorDialog: boolean,
@@ -107,8 +105,6 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 			dataLoaded: false,
 			showLoginDialog: false,
 			captainName: 'Welcome!',
-			captainAvatarUrl: '',
-			captainAvatarBodyUrl: '',
 			spinnerLabel: 'Loading...',
 			spinnerSublabel: '',
 			hideErrorDialog: true,
@@ -300,7 +296,6 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 
 			case 'HomePage':
 				return <HomePage
-					captainAvatarBodyUrl={this.state.captainAvatarBodyUrl}
 					onLogout={this._onLogout}
 					onRefresh={this._onRefresh}
 					onTabSwitch={this._switchTab} />;
@@ -415,7 +410,7 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 	renderCaptainName() {
 		return <div style={{ height: '100%' }}>
 			<div style={{ cursor: 'pointer', display: 'flex', height: '100%', flexWrap: 'nowrap', justifyContent: 'center', alignItems: 'center' }} onClick={() => this._switchTab('HomePage')}>
-				<Image src={this.state.captainAvatarUrl} height={32} style={{ display: 'inline-block' }} />
+				<Image src={STTApi.imgUrl(STTApi.playerData.character.crew_avatar?.portrait, () => this.forceUpdate())} height={32} style={{ display: 'inline-block' }} />
 				<span style={{ padding: '5px' }}>{this.state.captainName}</span>
 			</div>
 		</div>;
@@ -598,19 +593,5 @@ export class AppHome extends React.Component<AppHomeProps, AppHomeState> {
 		// 		this.refs.modalNotification.show(data.title, data.contents);
 		// 	}
 		// });
-
-		if (STTApi.playerData.character.crew_avatar) {
-			STTApi.imageProvider.getCrewImageUrl(STTApi.playerData.character.crew_avatar, false).then(({ id, url }) => {
-				if (url) {
-					this.setState({ captainAvatarUrl: url });
-				}
-			}).catch((error) => { this.setState({ captainAvatarUrl: '' }); });
-
-			STTApi.imageProvider.getCrewImageUrl(STTApi.playerData.character.crew_avatar, true).then(({ id, url }) => {
-				if (url) {
-					this.setState({ captainAvatarBodyUrl: url });
-				}
-			}).catch((error) => { this.setState({ captainAvatarBodyUrl: '' }); });
-		}
 	}
 }

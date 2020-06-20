@@ -11,8 +11,9 @@ import { StoreItem } from './StoreItem';
 export const FactionDisplay = (props: {
 	faction: FactionDTO;
 }) => {
-	const [reputationIconUrl, setReputationIconUrl] = React.useState('');
 	const [showSpinner, setShowSpinner] = React.useState(true);
+	const [, imageCacheUpdated] = React.useState<string>('');
+	React.useEffect(() => refreshStore(), []);
 
 	//TODO: this could be partially looked up from STTApi.items instead of recursively scanned here (but only for inventory items, not for those not in inventory)
 	let rewardItemIds = new Set();
@@ -38,17 +39,58 @@ export const FactionDisplay = (props: {
 		}
 	});
 
-	STTApi.imageProvider
-		.getImageUrl(props.faction.reputation_item_icon.file, props.faction.id)
-		.then(found => {
-			if (found.url)
-				setReputationIconUrl(found.url);
-		})
-		.catch(error => {
-			console.warn(error);
-		});
-
-	refreshStore();
+	const token = STTApi.items.find(item => item.archetype_id === props.faction.shuttle_token_id);
+	const tokens = token ? token.quantity : 0;
+	const numRewardColumns = 4;
+	const pluralize = (count: number, noun: string) => `${count} ${noun}${count !== 1 ? 's' : ''}`;
+	return (
+		<div className='faction-section'>
+			<div style={{ display: 'grid', gridTemplateColumns: 'min-content auto', gridTemplateAreas: `'icon description'`, gridGap: '10px' }}>
+				<div style={{ gridArea: 'icon' }}>
+					<img src={STTApi.imgUrl(props.faction.reputation_item_icon, imageCacheUpdated)} height={90} />
+				</div>
+				<div style={{ gridArea: 'description' }}>
+					<h2>{props.faction.name}</h2>
+					<h3>({`${_getReputationName(props.faction.reputation)} - ${pluralize(tokens, 'transmission')}`})</h3>
+					<p>{pluralize(props.faction.completed_shuttle_adventures, 'completed shuttle adventure')}</p>
+				</div>
+			</div>
+			<Accordion
+				defaultActiveIndex={-1}
+				className='faction-reward-list'
+				panels={[
+					{
+						key: '1',
+						title: 'Potential shuttle rewards',
+						content: {
+							style: {
+								gridTemplateColumns: `repeat(${numRewardColumns}, 1fr)`,
+								gridTemplateRows: `repeat(${Math.ceil(equipment.length / numRewardColumns)}, 1fr)`,
+							},
+							content: equipment
+								.sort((a, b) => a.name.localeCompare(b.name))
+								.map((item, idx) => (
+								<div key={idx}>
+									<ItemDisplay
+										style={{ display: 'inline-block' }}
+										src={STTApi.imgUrl(item.icon, imageCacheUpdated)}
+										size={24}
+										maxRarity={item.rarity}
+										rarity={item.rarity}
+									/>{' '}
+									{item.name}
+									<RarityStars asSpan={true} max={item.rarity} value={item.rarity} />
+								</div>
+							))
+						}
+					}
+				]}
+			/>
+			<h5>Store</h5>
+			{renderStoreItems()}
+			<hr/>
+		</div>
+	);
 
 	function refreshStore() {
 		loadFactionStore(props.faction).then(() => {
@@ -97,57 +139,4 @@ export const FactionDisplay = (props: {
 
 		return 'Unknown';
 	}
-
-	const token = STTApi.items.find(item => item.archetype_id === props.faction.shuttle_token_id);
-	const tokens = token ? token.quantity : 0;
-	const numRewardColumns = 4;
-	const pluralize = (count: number, noun: string) => `${count} ${noun}${count !== 1 ? 's' : ''}`;
-	return (
-		<div className='faction-section'>
-			<div style={{ display: 'grid', gridTemplateColumns: 'min-content auto', gridTemplateAreas: `'icon description'`, gridGap: '10px' }}>
-				<div style={{ gridArea: 'icon' }}>
-					<img src={reputationIconUrl} height={90} />
-				</div>
-				<div style={{ gridArea: 'description' }}>
-					<h2>{props.faction.name}</h2>
-					<h3>({`${_getReputationName(props.faction.reputation)} - ${pluralize(tokens, 'transmission')}`})</h3>
-					<p>{pluralize(props.faction.completed_shuttle_adventures, 'completed shuttle adventure')}</p>
-				</div>
-			</div>
-			<Accordion
-				defaultActiveIndex={-1}
-				className='faction-reward-list'
-				panels={[
-					{
-						key: '1',
-						title: 'Potential shuttle rewards',
-						content: {
-							style: {
-								gridTemplateColumns: `repeat(${numRewardColumns}, 1fr)`,
-								gridTemplateRows: `repeat(${Math.ceil(equipment.length / numRewardColumns)}, 1fr)`,
-							},
-							content: equipment
-								.sort((a, b) => a.name.localeCompare(b.name))
-								.map((item, idx) => (
-								<div key={idx}>
-									<ItemDisplay
-										style={{ display: 'inline-block' }}
-										src={item.iconUrl ? item.iconUrl : ''}
-										size={24}
-										maxRarity={item.rarity}
-										rarity={item.rarity}
-									/>{' '}
-									{item.name}
-									<RarityStars asSpan={true} max={item.rarity} value={item.rarity} />
-								</div>
-							))
-						}
-					}
-				]}
-			/>
-			<h5>Store</h5>
-			{renderStoreItems()}
-			<hr/>
-		</div>
-	);
 }

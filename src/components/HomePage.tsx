@@ -49,11 +49,11 @@ const Recommendation = (props: {
 }
 
 export const HomePage = (props: {
-	captainAvatarBodyUrl?: string;
 	onLogout: () => void;
 	onRefresh: () => void;
 	onTabSwitch?: (newTab: string) => void;
 }) => {
+	const [, imageCacheUpdated] = React.useState<string>('');
 	//TODO: seconds_from_last_boost_claim - for ad warping?
 
 	if (STTApi.playerData.character.open_packs && STTApi.playerData.character.open_packs.length > 0) {
@@ -142,7 +142,7 @@ export const HomePage = (props: {
 
 			<div style={{ display: 'grid', gridTemplateColumns: 'min-content auto', gridTemplateAreas: `'image description'` }}>
 				<div style={{ gridArea: 'image' }}>
-					<img src={props.captainAvatarBodyUrl} height='320px' />
+					<img src={STTApi.imgUrl(STTApi.playerData.character.crew_avatar?.full_body, imageCacheUpdated)} height='320px' />
 				</div>
 				<div style={{ gridArea: 'description' }}>
 					<h3>Welcome, {STTApi.playerData.character.display_name}!</h3>
@@ -274,6 +274,7 @@ const DailyMissionStatus = (props:{}) => {
 const InventoryStatus = (props: {
 	onTabSwitch?: (newTab: string) => void;
 }) => {
+	const [, imageCacheUpdated] = React.useState<string>('');
 	let icon = Priority.CHECK;
 
 	let overflowingItems = STTApi.items.filter(item => item.quantity > 32000);
@@ -331,7 +332,7 @@ const InventoryStatus = (props: {
 			<div style={{ display: 'flex' }}>
 				{overflowingItems.map((item, idx) => (
 					<span style={{ display: 'contents' }} key={idx}>
-						<ItemDisplay src={item.iconUrl || ''} size={24} maxRarity={item.rarity} rarity={item.rarity} /> {item.name} ({item.quantity}){' '}
+						<ItemDisplay src={STTApi.imgUrl(item.icon, imageCacheUpdated)} size={24} maxRarity={item.rarity} rarity={item.rarity} /> {item.name} ({item.quantity}){' '}
 					</span>
 				))}
 			</div>

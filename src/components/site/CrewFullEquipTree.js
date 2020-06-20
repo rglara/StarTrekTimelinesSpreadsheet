@@ -82,7 +82,7 @@ export class CrewFullEquipTree extends React.Component {
                         <Grid.Column key={entry.equipment.id}>
                             <Popup
                                 trigger={<Header style={{ display: 'flex', cursor: 'zoom-in' }}
-                                    icon={<ItemDisplay src={STTTools.assetProvider.getCached(entry.equipment)} size={48} maxRarity={entry.equipment.rarity} rarity={entry.equipment.rarity} />}
+                                    icon={<ItemDisplay src={STTApi.imgUrl(entry.equipment.icon, () => this.forceUpdate())} size={48} maxRarity={entry.equipment.rarity} rarity={entry.equipment.rarity} />}
                                     content={entry.equipment.name}
                                     subheader={`Need ${entry.count} ${entry.factionOnly ? ' (FACTION)' : ''}`} />}
                                 header={CONFIG.RARITIES[entry.equipment.rarity].name + ' ' + entry.equipment.name}
