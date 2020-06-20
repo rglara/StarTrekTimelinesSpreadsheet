@@ -107,7 +107,7 @@ const GauntletMatch = (props: {
 		<div style={containerStyle} className="ui attached segment">
 			<span style={{ gridArea: 'pcrewname', justifySelf: 'center' }}>{crewOdd ? crewOdd.short_name : ''}</span>
 			<div style={{ gridArea: 'pcrewimage', position: 'relative' }}>
-				<img src={STTApi.imgUrl(crewOdd?.portrait, imageCacheUpdated)} height={128} />
+				<img src={STTApi.imgUrl(crewOdd?.full_body, imageCacheUpdated)} height={128} />
 				<CircularLabel percent={props.match.crewOdd.crit_chance} />
 			</div>
 
@@ -137,7 +137,7 @@ const GauntletMatch = (props: {
 			</div>
 
 			<div style={{ gridArea: 'ocrewimage', position: 'relative' }}>
-				<img src={STTApi.imgUrl(oppCrew?.portrait, imageCacheUpdated)} height={128} />
+				<img src={STTApi.imgUrl(oppCrew?.full_body, imageCacheUpdated)} height={128} />
 				<CircularLabel percent={props.match.opponent.crit_chance} />
 			</div>
 

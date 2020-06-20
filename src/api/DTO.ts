@@ -171,6 +171,7 @@ export interface CrewData {
 		fe: boolean;
 	}
 	full_body: ImageDataDTO;
+	icon: ImageDataDTO;
 	/** @deprecated moved to avatar_id */
 	id: number;
 	avatar_id: number;

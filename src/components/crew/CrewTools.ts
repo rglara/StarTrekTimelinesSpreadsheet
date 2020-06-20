@@ -96,6 +96,7 @@ function crewToRoster(dto: CrewDTO) : CrewData {
 		short_name: dto.short_name,
 		portrait: dto.portrait,
 		full_body: dto.full_body,
+		icon: dto.icon,
 
 		buyback: dto.in_buy_back_state,
 		frozen: 0,
