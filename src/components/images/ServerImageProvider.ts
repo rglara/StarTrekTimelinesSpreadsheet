@@ -28,16 +28,6 @@ export class ServerImageProvider implements ImageProvider {
         return imageName;
     }
 
-    getCached(withIcon: { icon?: ImageDataDTO }): string {
-        if (!withIcon.icon)
-            return '';
-
-        if (!withIcon.icon.file)
-            return '';
-
-        return this.internalGetCached(withIcon.icon.file);
-    }
-
     internalGetCached(url: string): string {
         if (this._cachedAssets.has(this.formatUrl(url))) {
             return this._baseURLAsset + this.formatUrl(url);
@@ -46,24 +36,12 @@ export class ServerImageProvider implements ImageProvider {
         }
     }
 
-    getCrewCached(crew: CrewImageData, fullBody: boolean): string {
-        return this.internalGetCached(fullBody ? crew.full_body.file : crew.portrait.file);
-    }
-
     getSpriteCached(assetName: string, spriteName: string): string {
         if (!assetName) {
             return this.internalGetCached(spriteName);
         }
 
         return this.internalGetCached(((assetName.length > 0) ? (assetName + '_') : '') + spriteName);
-    }
-
-    getCrewImageUrl(crew: CrewImageData, fullBody: boolean): Promise<FoundResult<CrewImageData>> {
-        return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, crew);
-    }
-
-    getItemImageUrl(item: ItemImageData, id: number): Promise<FoundResult<number>> {
-        return this.getImageUrl(item.icon.file, id);
     }
 
     async getSprite(assetName: string, spriteName: string, id: string): Promise<FoundResult<string>> {
@@ -95,9 +73,9 @@ export class ServerImageProvider implements ImageProvider {
         }
 
         //HACK: ignore server image fetch until asset bundle extraction is fixed
-        if (true) {
-            return { id, url: undefined };
-        }
+        // if (true) {
+        //     return { id, url: undefined };
+        // }
 
         let assetUrl = await STTApi.networkHelper.get(this._serverURL + 'asset/get', {
             "client_platform": CONFIG.CLIENT_PLATFORM,

@@ -1,8 +1,7 @@
 import STTApi from "../../api/index";
 import CONFIG from "../../api/CONFIG";
-import { ImageProvider, ImageCache, FoundResult, CrewImageData, ItemImageData } from './ImageProvider';
+import { ImageProvider, ImageCache, FoundResult } from './ImageProvider';
 import { WorkerPool } from '../../api/WorkerPool';
-import { ImageDataDTO } from "../../api/DTO";
 
 export class AssetImageProvider implements ImageProvider {
     private _imageCache: ImageCache;
@@ -22,33 +21,8 @@ export class AssetImageProvider implements ImageProvider {
         return this._baseURLAsset;
     }
 
-    getCached(withIcon: { icon?: ImageDataDTO }): string {
-        if (!withIcon.icon)
-            return '';
-
-        if (!withIcon.icon.file)
-            return '';
-
-        return this._imageCache.getCached(withIcon.icon.file);
-    }
-
-    getCrewCached(crew: CrewImageData, fullBody: boolean): string {
-        return this._imageCache.getCached(fullBody ? crew.full_body.file : crew.portrait.file);
-    }
-
     getSpriteCached(assetName: string, spriteName: string): string {
         return this._imageCache.getCached(((assetName.length > 0) ? (assetName + '_') : '') + spriteName);
-    }
-
-    getCrewImageUrl(crew: CrewImageData, fullBody: boolean): Promise<FoundResult<CrewImageData>> {
-        if (!crew) {
-            return this.getImageUrl("", crew);
-        }
-        return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, crew);
-    }
-
-    getItemImageUrl(item: ItemImageData, id: number): Promise<FoundResult<number>> {
-        return this.getImageUrl(item.icon.file, id);
     }
 
     async getSprite(assetName: string, spriteName: string, id: string): Promise<FoundResult<string>> {

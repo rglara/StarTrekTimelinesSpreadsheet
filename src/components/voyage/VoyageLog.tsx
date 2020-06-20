@@ -588,7 +588,7 @@ const VoyageState = (props: {
 		const estRecallDurationSec = 0.4 * (props.voyage.voyage_duration + (props.estimatedMinutesLeft * 60));
 		const recallNowDurationSec = 0.4 * (props.voyage.voyage_duration);
 
-		//const srcDil = STTApi.imageProvider.getCached({ icon: { file: 'images/icons/dilemma_icon' } });
+		//const srcDil = STTApi.imgUrl({ file: 'images/icons/dilemma_icon' });
 
 		return (
 			<div className='voyage-stats'>

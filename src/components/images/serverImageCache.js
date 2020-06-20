@@ -27,16 +27,6 @@ export class ServerImageProvider {
         return imageName;
 	}
 
-    getCached(withIcon) {
-        if (!withIcon.icon)
-            return '';
-
-        if (!withIcon.icon.file)
-            return '';
-
-        return this.internalGetCached(withIcon.icon.file);
-    }
-
     internalGetCached(url) {
         if (this._cachedAssets.has(this.formatUrl(url))) {
             return this._baseURLAsset + this.formatUrl(url);
@@ -45,24 +35,12 @@ export class ServerImageProvider {
         }
     }
 
-    getCrewCached(crew, fullBody) {
-        return this.internalGetCached(fullBody ? crew.full_body.file : crew.portrait.file);
-    }
-
     getSpriteCached(assetName, spriteName) {
         if (!assetName) {
             return this.internalGetCached(spriteName);
         }
 
         return this.internalGetCached(((assetName.length > 0) ? (assetName + '_') : '') + spriteName);
-    }
-
-    getCrewImageUrl(crew, fullBody, id) {
-        return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, id);
-    }
-
-    getItemImageUrl(item, id) {
-        return this.getImageUrl(item.icon.file, id);
     }
 
     async getSprite(assetName, spriteName, id) {
