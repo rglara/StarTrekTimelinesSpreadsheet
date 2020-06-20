@@ -408,38 +408,6 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 		}
 
 		if (data.lastResult) {
-			if (data.rewards && data.rewards.loot) {
-				let iconPromises: any[] = [];
-				data.rewards.loot.forEach((reward) => {
-					reward.iconUrl = '';
-					if (reward.type === 1) { // crew
-						iconPromises.push(STTApi.imageProvider.getCrewImageUrl(reward as CrewImageData, false)
-							.then(found => {
-								reward.iconUrl = found.url;
-								this.forceUpdate();
-							})
-							.catch(error => {
-								/*console.warn(error);*/
-							})
-						);
-					} else {
-						iconPromises.push(
-							STTApi.imageProvider
-								.getItemImageUrl(reward, reward.id)
-								.then(found => {
-									reward.iconUrl = found.url;
-									this.forceUpdate();
-								})
-								.catch(error => {
-									/*console.warn(error);*/
-								})
-						);
-					}
-				});
-
-				//Promise.all(iconPromises).then(() => this.forceUpdate());
-			}
-
 			this.setState({
 				lastResult: data.lastResult,
 				lastMatch: match,
@@ -604,12 +572,14 @@ export class GauntletHelper extends React.Component<GauntletHelperProps, Gauntle
 											Rewards:
 											<div>
 											{rewards.loot.map((loot, index) => {
-												if (!loot.iconUrl) {
-													loot.iconUrl = STTApi.imageProvider.getCached(loot);
+												let imgUrl = '';
+												if (loot.type === 1) {
+													imgUrl = STTApi.imgUrl(loot.full_body, (s) => this.forceUpdate())
+												} else {
+													imgUrl = STTApi.imgUrl(loot.icon, (s) => this.forceUpdate())
 												}
-
 												return <span key={index} style={{ color: loot.rarity ? CONFIG.RARITIES[loot.rarity].color : '#000' }}
-												><img src={loot.iconUrl || ''} width='50' height='50' /><br/>{loot.quantity} {(loot.rarity == null) ? '' : CONFIG.RARITIES[loot.rarity].name} {loot.full_name}
+												><img src={imgUrl} width='50' height='50' /><br/>{loot.quantity} {(loot.rarity == null) ? '' : CONFIG.RARITIES[loot.rarity].name} {loot.full_name}
 													{index < rewards.loot.length - 1 ? ', ' : ''}</span>;
 											})}
 											</div>

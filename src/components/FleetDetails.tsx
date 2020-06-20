@@ -175,34 +175,14 @@ const MemberList = (props: {
 const Starbase = (props: {
 	title: string;
 }) => {
-	const [showSpinner, setShowSpinner] = React.useState(true);
+	const [, imageCacheUpdated] = React.useState<string>('');
+	// const [showSpinner, setShowSpinner] = React.useState(false);
 
-	let iconPromises : Promise<any>[] = [];
-	STTApi.starbaseRooms.forEach((room) => {
-		if ((room.level > 0) && !room.iconUrl) {
-			if (room.upgrades[room.level].buffs.length > 0) {
-				iconPromises.push(STTApi.imageProvider.getItemImageUrl(room.upgrades[room.level].buffs[0], room.id).then((found) => {
-					const rm = STTApi.starbaseRooms.find(sr => sr.id === found.id);
-					if (rm)
-						rm.iconUrl = found.url;
-				}).catch((error) => { /*console.warn(error);*/ }));
-			}
-
-			iconPromises.push(STTApi.imageProvider.getImageUrl('/' + room.background, room.id).then((found) => {
-				const rm = STTApi.starbaseRooms.find(sr => sr.id === found.id);
-				if (rm)
-					rm.backgroundUrl = found.url;
-			}).catch((error) => { /*console.warn(error);*/ }));
-		}
-	});
-
-	Promise.all(iconPromises).then(() => setShowSpinner(false));
-
-	if (showSpinner) {
-		return <div className="centeredVerticalAndHorizontal">
-			<div className="ui huge centered text active inline loader">Loading starbase details...</div>
-		</div>;
-	}
+	// if (showSpinner) {
+	// 	return <div className="centeredVerticalAndHorizontal">
+	// 		<div className="ui huge centered text active inline loader">Loading starbase details...</div>
+	// 	</div>;
+	// }
 
 	const roomContainerStyle = {
 		display: 'grid',
@@ -224,14 +204,14 @@ const Starbase = (props: {
 			let upgrade = room.upgrades[room.level];
 
 			return <div style={roomContainerStyle} key={room.id}>
-				<img style={{ position: 'absolute', width: '512px', height: '256px', zIndex: 0, opacity: 0.3 }} src={room.backgroundUrl} />
+				<img style={{ position: 'absolute', width: '512px', height: '256px', zIndex: 0, opacity: 0.3 }} src={STTApi.imgUrl(room?.upgrades[room.level]?.buffs[0]?.icon, imageCacheUpdated)} />
 				<span style={{ gridArea: 'roomname', justifySelf: 'start', fontSize: '1.5em', fontWeight: 700 }}>{room.name}</span>
 				<span style={{ gridArea: 'roomstars', justifySelf: 'start' }}><RarityStars min={1} max={room.max_level} value={(room.level > 0) ? room.level : undefined} /></span>
 				<span style={{ gridArea: 'buff1', justifySelf: 'start', fontSize: '1.4em', fontWeight: 600 }}>{upgrade.name}</span>
 				<span style={{ gridArea: 'buff2', justifySelf: 'start', fontSize: '1.4em', fontWeight: 600 }}>{(upgrade.buffs && upgrade.buffs.length > 0) ? upgrade.buffs[0].name : ''}</span>
 				<span style={{ gridArea: 'upgrade', justifySelf: 'start', fontSize: '1.4em', fontWeight: 600 }}>{
 					(room.recommended && room.level !== room.max_level) ? 'Donations recommended' : ''}</span>
-				<img style={{ gridArea: 'image', width: '128px', height: '128px', justifySelf: 'center' }} src={room.iconUrl} />
+				<img style={{ gridArea: 'image', width: '128px', height: '128px', justifySelf: 'center' }} src={STTApi.imgUrl({file:'/' + room.background}, imageCacheUpdated)} />
 			</div>;
 		})}
 	</CollapsibleSection>);

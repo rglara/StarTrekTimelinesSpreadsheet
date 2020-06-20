@@ -12,7 +12,7 @@ export { formatCrewStatsVoy } from '../components/crew/CrewTools';
 export { bonusCrewForCurrentEvent } from '../components/events/EventTools';
 export { calculateQuestRecommendations, IQuestRecommendations } from './MissionCrewSuccess';
 export { formatTimeSeconds } from './MiscTools';
-export { refreshAllFactions, loadFactionStore } from './FactionTools';
+export { refreshAllFactions, loadFactionStore } from '../components/factions/FactionTools';
 export { getCrewDetailsLink, getItemDetailsLink } from './LinkProvider';
 import CONFIG from "./CONFIG";
 export { CONFIG }

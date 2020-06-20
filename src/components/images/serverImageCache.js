@@ -61,16 +61,8 @@ export class ServerImageProvider {
         return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, id);
     }
 
-    getShipImageUrl(ship, id) {
-        return this.getImageUrl(ship.icon.file, id);
-    }
-
     getItemImageUrl(item, id) {
         return this.getImageUrl(item.icon.file, id);
-    }
-
-    getFactionImageUrl(faction, id) {
-        return this.getImageUrl(faction.icon.file, id);
     }
 
     async getSprite(assetName, spriteName, id) {

@@ -333,9 +333,6 @@ export interface GauntletContestLootDTO {
 	rarity: number;
 	symbol: string;
 	type: number;
-
-	//HACK: added by app
-	iconUrl?: string;
 }
 
 export interface VoyageUpdateInProgressDTO {
@@ -391,9 +388,6 @@ export interface RewardDTO {
 	traits?: string[];
 	/** See CONFIG.REWARDS_ITEM_TYPE */
 	type: number;
-
-	// added by the app
-	iconUrl?: string;
 }
 
 export interface VoyageDTO {
@@ -869,10 +863,6 @@ export interface FleetStarbaseRoomDTO {
 	symbol: string;
 	upgrade_finish_in: number;
 	upgrades: FleetStarbaseRoomUpgradeDTO[];
-
-	//HACK: added by app
-	iconUrl: string | undefined;
-	backgroundUrl: string | undefined;
 }
 
 export interface FleetStarbaseRoomUpgradeDTO {
@@ -987,9 +977,6 @@ export interface FactionDTO {
 	shuttle_token_preview_item: any;
 	//These are populated when faction store details are refreshed/fetched
 	storeItems?: FactionStoreItemDTO[];
-
-	//HACK: added by app
-	iconUrl?: string;
 }
 
 export interface FactionStoreItemDTO {

@@ -333,7 +333,7 @@ const ShuttleItem = (props: {
 
 	return (
 		<Item key={shuttle.id}>
-			<Item.Image size='small' src={faction!.iconUrl} style={{ 'backgroundColor': '#aaa' }} />
+			<Item.Image size='small' src={STTApi.imgUrl(faction?.icon, props.refresh)} style={{ 'backgroundColor': '#aaa' }} />
 
 			<Item.Content verticalAlign='middle'>
 				<Item.Header>

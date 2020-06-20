@@ -1,5 +1,5 @@
 import STTApi, { CONFIG }  from '../../api';
-import { ShipDTO, ImageDataDTO, FactionDTO } from '../../api/DTO';
+import { ImageDataDTO } from '../../api/DTO';
 import { CrewImageData, ImageProvider, FoundResult, ItemImageData } from './ImageProvider';
 
 export class ServerImageProvider implements ImageProvider {
@@ -62,16 +62,8 @@ export class ServerImageProvider implements ImageProvider {
         return this.getImageUrl(fullBody ? crew.full_body.file : crew.portrait.file, crew);
     }
 
-    getShipImageUrl(ship: ShipDTO): Promise<FoundResult<string>> {
-        return this.getImageUrl(ship.icon.file, ship.name);
-    }
-
     getItemImageUrl(item: ItemImageData, id: number): Promise<FoundResult<number>> {
         return this.getImageUrl(item.icon.file, id);
-    }
-
-    getFactionImageUrl(faction: FactionDTO, id: number): Promise<FoundResult<number>> {
-        return this.getImageUrl(faction.icon.file, id);
     }
 
     async getSprite(assetName: string, spriteName: string, id: string): Promise<FoundResult<string>> {

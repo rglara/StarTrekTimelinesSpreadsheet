@@ -1,12 +1,12 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
-import { buildCrewData, buildCrewDataAll, buildCrewDataAllFromDatacore } from '../components/crew/CrewTools';
+import { buildCrewData, buildCrewDataAllFromDatacore } from '../components/crew/CrewTools';
 import { matchShips } from './ShipTools';
 import { loadMissionData } from './MissionTools';
 import { loadFullTree, fixupAllCrewIds, getMissionCostDetails } from './EquipmentTools';
-import { refreshAllFactions, loadFactionStore } from './FactionTools';
+import { refreshAllFactions, loadFactionStore } from '../components/factions/FactionTools';
 import { calculateMissionCrewSuccess, calculateMinimalComplementAsync } from './MissionCrewSuccess';
-import { CrewData, CrewDTO, ItemData, PotentialRewardDTO, RewardDTO } from "./DTO";
+import { CrewData, ItemData, PotentialRewardDTO, RewardDTO } from "./DTO";
 
 export async function loginSequence(onProgress: (description: string, subDesc?: string) => void) {
     let mainResources = [
@@ -257,13 +257,6 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
 
     onProgress('Loading Faction and Faction Store Images...');
     for (let faction of STTApi.playerData.character.factions) {
-        faction.iconUrl = STTApi.imageProvider.getCached(faction);
-
-        if (!faction.iconUrl || faction.iconUrl === '') {
-            await updateProgress('Loading Faction Image...', faction.name,
-                STTApi.imageProvider.getFactionImageUrl(faction, faction.id)
-                    .then(found => { faction.iconUrl = found.url; }));
-        }
         await updateProgress('', '', loadFactionStore(faction));
     }
 

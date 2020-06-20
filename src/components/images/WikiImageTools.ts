@@ -158,26 +158,10 @@ export class ImageProviderChain implements ImageProvider {
 		return result;
 	}
 
-	async getShipImageUrl(ship: ShipDTO): Promise<FoundResult<string>> {
-		let result = await this.base.getShipImageUrl(ship);
-		if (this.ext && (!result.url || result.url === '')) {
-			return this.ext.getShipImageUrl(ship);
-		}
-		return result;
-	}
-
 	async getItemImageUrl(item: ItemImageData, id: number): Promise<FoundResult<number>> {
 		let result = await this.base.getItemImageUrl(item, id);
 		if (this.ext && (!result.url || result.url === '')) {
 			return this.ext.getItemImageUrl(item, id);
-		}
-		return result;
-	}
-
-	async getFactionImageUrl(faction: FactionDTO, id: number): Promise<FoundResult<number>> {
-		let result = await this.base.getFactionImageUrl(faction, id);
-		if (this.ext && (!result.url || result.url === '')) {
-			return this.ext.getFactionImageUrl(faction, id);
 		}
 		return result;
 	}

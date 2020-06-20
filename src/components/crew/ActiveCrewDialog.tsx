@@ -29,7 +29,7 @@ export const ShuttleAdventure = (props:ShuttleAdventureProps) => {
             challenge_rating = shuttle.challenge_rating;
             let faction = STTApi.playerData.character.factions.find((faction) => faction.id === shuttle.faction_id);
             if (faction) {
-                factionIcon = faction.iconUrl;
+                factionIcon = STTApi.imgUrl(faction.reputation_item_icon, undefined);
                 factionName = faction.name;
                 factionCompleted = faction.completed_shuttle_adventures;
             }
