@@ -277,26 +277,27 @@ const InventoryStatus = (props: {
 	const [, imageCacheUpdated] = React.useState<string>('');
 	let icon = Priority.CHECK;
 
-	let overflowingItems = STTApi.items.filter(item => item.quantity > 32000);
-	if (overflowingItems.length > 0) {
-		icon = Priority.EXCLAMATION;
-	}
-
 	let replicator_uses_left = STTApi.playerData.replicator_limit - STTApi.playerData.replicator_uses_today;
 	if (replicator_uses_left > 0) {
 		icon = Priority.INFO;
 	}
 
+	let overflowingItems = STTApi.items.filter(item => item.quantity > 32000);
+	if (overflowingItems.length > 0) {
+		icon = Priority.EXCLAMATION;
+	}
+
 	let itemCount = STTApi.items.length;
 	let itemCapReached = false;
 	let itemCapNearing = false;
-	if (itemCount > STTApi.playerData.character.item_limit - 5) {
-		itemCapReached = true;
-		icon = Priority.EXCLAMATIONRED;
-	}
 	if ((itemCount * 100) / STTApi.playerData.character.item_limit > 90) {
 		itemCapNearing = true;
 		icon = Priority.EXCLAMATION;
+	}
+
+	if (itemCount > STTApi.playerData.character.item_limit - 5) {
+		itemCapReached = true;
+		icon = Priority.EXCLAMATIONRED;
 	}
 
 	//TODO: use replicator dialog in link
@@ -308,9 +309,9 @@ const InventoryStatus = (props: {
 				{STTApi.playerData.character.item_limit}; the game is randomly dismissing items.
 			</div>
 			<div style={{ margin: '0' }}>
-				Get rid of some items by equipping, or throwing them in the replicator. See
-				the <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('NeededEquipment')}>Needed Equipment</Label> tab
-				for recommendations on what equipment you may no longer need.
+				Consider getting rid of some items by equipping, or look for
+				<Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Items')}>Items</Label> to replicate and use
+				extras as replicator fuel.
 			</div>
 		</div>}
 		{ itemCapNearing && <div>
@@ -320,9 +321,9 @@ const InventoryStatus = (props: {
 				{STTApi.playerData.character.item_limit}.
 			</div>
 			<div style={{ margin: '0' }}>
-				Consider getting rid of some items by equipping, or throwing them in the replicator. See
-				the <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('NeededEquipment')}>Needed Equipment</Label> tab
-				for recommendations on what equipment you may no longer need.
+			Consider getting rid of some items by equipping, or look for
+				<Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Items')}>Items</Label> to replicate and use
+				extras as replicator fuel.
 			</div>
 		</div>}
 		{ overflowingItems.length > 0 && <div>
@@ -343,7 +344,8 @@ const InventoryStatus = (props: {
 		{ (replicator_uses_left > 0) && <div style={{ margin: '0' }}>
 			You have {replicator_uses_left} replicator uses left for today. See
 			the <Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('NeededEquipment')}>Needed Equipment</Label> tab
-			for recommendations on what to spend them on.
+			for recommendations on what to spend them on or look for
+			<Label as='a' onClick={() => props.onTabSwitch && props.onTabSwitch('Items')}>Items</Label> to replicate.
 		</div>}
 		{(!itemCapReached && !itemCapNearing) && <div>
 			<div style={{ margin: '0' }}>
