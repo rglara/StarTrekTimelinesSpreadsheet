@@ -300,7 +300,6 @@ const InventoryStatus = (props: {
 		icon = Priority.EXCLAMATIONRED;
 	}
 
-	//TODO: use replicator dialog in link
 	return <Recommendation title='Inventory' icon={icon}>
 		{ itemCapReached && <div>
 			You are over the inventory limit and are losing items

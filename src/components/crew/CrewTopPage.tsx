@@ -1,6 +1,6 @@
 import React from 'react';
 
-import STTApi, { CONFIG } from '../../api';
+import STTApi, { CONFIG, RarityStars } from '../../api';
 import { CrewData } from '../../api/DTO';
 import { ICommandBarItemProps } from 'office-ui-fabric-react/lib/CommandBar';
 import { Image, ImageFit } from 'office-ui-fabric-react/lib/Image';
@@ -13,6 +13,8 @@ interface RankMeta {
 	valueTitle: string;
 	compareFn: (a:CrewData, b:CrewData) => number;
 	valueFn: (c:CrewData) => number;
+	valueText?: (c:CrewData) => string;
+	showRarity?: boolean;
 }
 
 export const CrewTopPage = (props: {
@@ -43,7 +45,19 @@ export const CrewTopPage = (props: {
 				valueTitle: 'Value',
 				// Base skill rank is DESC, so get b-a
 				compareFn: (a,b) => (b.skills[sk]?.core ?? 0) - (a.skills[sk]?.core ?? 0),
-				valueFn: (c) => c.skills[sk]?.core ?? 0
+				valueFn: (c) => c.skills[sk]?.core ?? 0,
+				valueText: (c) => {
+					let v = c.skills[sk]?.core ?? 0;
+					if (c.rarity === c.max_rarity) {
+						return '' + v;
+					}
+					const max = STTApi.allcrew.find(ac => ac.symbol === c.symbol);
+					if (!max) {
+						return '' + v;
+					}
+					return v + ' (' + (max.skills[sk]?.core ?? 0) + ')';
+				},
+				showRarity: true,
 			});
 		});
 	}
@@ -55,7 +69,8 @@ export const CrewTopPage = (props: {
 				valueTitle: 'Rank',
 				// gauntlet 'rank' is ASC, so get a-b
 				compareFn: (a, b) => (a.datacore?.ranks['B_' + skA_short] ?? 10000) - (b.datacore?.ranks['B_' + skA_short] ?? 10000),
-				valueFn: (c) => c.datacore?.ranks['B_' + skA_short] ?? 0
+				valueFn: (c) => c.datacore?.ranks['B_' + skA_short] ?? 0,
+				showRarity: true,
 			});
 		});
 	}
@@ -235,6 +250,7 @@ export const CrewTopList = (props: {
 						{!c.status.fe && ' EQ'}
 						{(c.level !== 100) && <> L{c.level}</>}
 						</span>
+						{rm.showRarity && <RarityStars asSpan={true} max={c.max_rarity} value={c.rarity} />}
 					</span>;
 				},
 			});
@@ -246,11 +262,10 @@ export const CrewTopList = (props: {
 				maxWidth: 90,
 				show: !allZero,
 				resizable: true,
-				Cell: (cell) => <span>{rm.valueFn(cell.original[i])}</span>,
+				Cell: (cell) => <span>{ (rm.valueText === undefined ? rm.valueFn(cell.original[i]) : rm.valueText(cell.original[i])) }</span>,
 			});
 		});
 
 		return _columns;
 	}
 }
-

@@ -72,11 +72,17 @@ function crewToRoster(dto: CrewDTO) : CrewData {
 	});
 
 	(dto.equipment ?? []).forEach(equipment => {
-		equipment_slots[equipment[0]].have = true;
+		equipment_slots.filter(es => es.archetype === equipment[1]).forEach(es => es.have = true);
 	});
 
-	let traits = dto.traits.concat(dto.traits_hidden).map((trait) => STTApi.getTraitName(trait)).join();
-	let rawTraits = dto.traits.concat(dto.traits_hidden);
+	let traitSet : Set<string> = new Set();
+	dto.traits.forEach(t => traitSet.add(t));
+	dto.traits_hidden.forEach(th => traitSet.add(th));
+	let ts : string[] = [];
+	traitSet.forEach(t => ts.push(t))
+
+	let traits = ts.map((trait) => STTApi.getTraitName(trait)).join();
+	let rawTraits = ts;
 
 	// Replace "nonhuman" with "alien" to make the search easier
 	let nh = rawTraits.indexOf('nonhuman');
@@ -85,7 +91,7 @@ function crewToRoster(dto: CrewDTO) : CrewData {
 	}
 
 	// Add datacore "big book" details
-	let datacore = STTApi.datacore.find((c: any) => c.symbol === dto.symbol);
+	let datacore = STTApi.datacore.find(c => c.symbol === dto.symbol);
 
 	return {
 		id: dto.archetype_id,
