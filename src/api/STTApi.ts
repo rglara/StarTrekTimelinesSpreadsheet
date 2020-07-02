@@ -31,7 +31,7 @@ import Dexie from 'dexie';
 import CONFIG from './CONFIG';
 import Moment from 'moment';
 import { PlayerDTO, ItemArchetypeDTO, PlatformConfigDTO, CrewAvatarDTO, ServerConfigDTO, ShipSchematicDTO,
-	CrewData, ShipDTO, MissionDTO, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO,
+	CrewData, ShipDTO, MissionData, CrewDTO, SkillDTO, FleetSquadDTO, FleetMemberDTO, FleetStarbaseRoomDTO,
 	ItemData, PlayerResponseDTO, PlayerShuttleAdventureDTO, DatacoreCrewDTO, PlayerInspectDTO,
 	EventLeaderboardDTO, BorrowedCrewDTO, ImageDataDTO } from './DTO';
 // #!if ENV === 'electron'
@@ -93,7 +93,7 @@ export class STTApiClass {
 	public roster: CrewData[];
 	public items: ItemData[];
 	public ships: ShipDTO[];
-	public missions: MissionDTO[];
+	public missions: MissionData[];
 	public missionSuccess!: IChallengeSuccess[];
 	public minimalComplement?: MinimalComplement;
 	public imageProvider!: ImageProvider;

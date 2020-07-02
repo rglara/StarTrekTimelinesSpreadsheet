@@ -1,7 +1,7 @@
 import STTApi from "./index";
-import { AcceptedMissionsDTO, MissionDTO } from "./DTO";
+import { AcceptedMissionsDTO, MissionData, MissionQuestDTO, MissionDisputeHistoryDTO, MissionCadetScheduleDTO } from "./DTO";
 
-async function loadQuestData(completed: boolean, quest: any) {
+async function loadQuestData(completed: boolean, quest: MissionQuestDTO) {
 	// The mission is incomplete, but maybe the quest itself is complete and already cached
 	if (!completed) {
 		if (quest.mastery_levels) {
@@ -34,7 +34,7 @@ async function loadQuestData(completed: boolean, quest: any) {
 	}
 }
 
-async function loadConflictInfo(quest: any) {
+async function loadConflictInfo(quest: MissionQuestDTO) {
 	let data = await STTApi.executeGetRequest("quest/conflict_info", { id: quest.id });
 	if (!data.mastery_levels) {
 		throw new Error('Invalid data for quest conflict!');
@@ -54,19 +54,19 @@ async function loadConflictInfo(quest: any) {
 		description: quest.description,
 		challenges: quest.challenges,
 		mastery_levels: quest.mastery_levels,
-		cadet: quest.cadet,
+		cadet: quest.cadet ?? false,
 		crew_requirement: quest.crew_requirement
 	});
 }
 
 export async function loadMissionData(
-	accepted_missions: { symbol?: string, id: number }[],
-	dispute_histories: { symbol: string, mission_ids: number[] }[]
-	): Promise<MissionDTO[]> {
+	accepted_missions: (MissionCadetScheduleDTO | AcceptedMissionsDTO)[],
+	dispute_histories: MissionDisputeHistoryDTO[]
+): Promise<MissionData[]> {
 	let mission_ids: any[] = [];
 
 	accepted_missions.forEach((mission) => {
-		if (mission.symbol !== 'mission_npev2') {
+		if ((mission as AcceptedMissionsDTO).symbol !== 'mission_npev2') {
 			// Ignore the tutorial episode
 			mission_ids.push(mission.id);
 		}
@@ -74,7 +74,7 @@ export async function loadMissionData(
 
 	// Add all the episodes' missions (if not cadet)
 	if (dispute_histories) {
-		dispute_histories.forEach((dispute: any) => {
+		dispute_histories.forEach((dispute) => {
 			if (dispute.symbol === 'dispute_logic_under_fire_NPE') {
 				return; // Ignore the tutorial dispute
 			}
@@ -84,7 +84,7 @@ export async function loadMissionData(
 	}
 
 	let data = await STTApi.executeGetRequest("mission/info", { ids: mission_ids });
-	let missions: MissionDTO[] = [];
+	let missions: MissionData[] = [];
 	let questPromises: Promise<void>[] = [];
 
 	data.character.accepted_missions.forEach((mission: AcceptedMissionsDTO) => {
@@ -92,10 +92,11 @@ export async function loadMissionData(
 			return; // Ignore the tutorial episode
 		}
 
-		if (mission.episode_title != null) {
-			let missionData: MissionDTO = {
+		if (mission.episode_title) {
+			let missionData: MissionData = {
 				id: mission.id,
 				episode_title: mission.episode_title,
+				episode: mission.episode,
 				description: mission.description,
 				stars_earned: mission.stars_earned,
 				total_stars: mission.total_stars,
@@ -106,7 +107,7 @@ export async function loadMissionData(
 				missionData.episode_title =`Episode ${mission.episode} : ${mission.episode_title}`;
 			}
 
-			mission.quests.forEach((quest: any) => {
+			mission.quests.forEach((quest) => {
 				if ((!quest.locked) && quest.name) {
 					if (quest.quest_type === 'ConflictQuest') {
 						questPromises.push(loadQuestData(mission.stars_earned === mission.total_stars, quest));
@@ -124,7 +125,7 @@ export async function loadMissionData(
 		else {
 			// Could be one of the episodes
 			if (dispute_histories) {
-				dispute_histories.forEach((dispute: any) => {
+				dispute_histories.forEach((dispute) => {
 					if (dispute.symbol === 'dispute_logic_under_fire_NPE') {
 						return; // Ignore the tutorial dispute
 					}
@@ -133,8 +134,8 @@ export async function loadMissionData(
 						if (!dispute.quests)
 							dispute.quests = [];
 
-						mission.quests.forEach((quest: any) => {
-							if ((!quest.locked) && quest.name && !dispute.quests.find((q: any) => q.id === quest.id)) {
+						mission.quests.forEach((quest) => {
+							if ((!quest.locked) && quest.name && !dispute.quests!.find((q) => q.id === quest.id)) {
 								if (quest.quest_type === 'ConflictQuest') {
 									questPromises.push(loadQuestData(dispute.stars_earned === dispute.total_stars, quest));
 								}
@@ -142,7 +143,7 @@ export async function loadMissionData(
 									quest.description = 'Ship battle';
 								}
 
-								dispute.quests.push(quest);
+								dispute.quests!.push(quest);
 							}
 						});
 					}
@@ -155,18 +156,19 @@ export async function loadMissionData(
 
 	if (dispute_histories) {
 		// Pretend the episodes (disputes) are missions too, to get them to show up
-		dispute_histories.forEach((dispute: any) => {
+		dispute_histories.forEach((dispute) => {
 			if (dispute.symbol === 'dispute_logic_under_fire_NPE') {
 				return; // Ignore the tutorial dispute
 			}
 
-			let missionData: MissionDTO = {
+			let missionData: MissionData = {
 				id: dispute.mission_ids[0],
+				episode: dispute.episode,
 				episode_title: 'Episode ' + dispute.episode + ' : ' + dispute.name,
 				description: 'Episode ' + dispute.episode,
 				stars_earned: dispute.stars_earned,
 				total_stars: dispute.total_stars,
-				quests: dispute.quests
+				quests: dispute.quests ?? []
 			};
 
 			missions.push(missionData);

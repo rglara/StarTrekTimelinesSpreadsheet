@@ -544,7 +544,7 @@ export interface AcceptedMissionsDTO {
 	episode: number;
 	episode_portrait: ImageDataDTO;
 	episode_title: string;
-	exclude_from_timeline: boolean | null;
+	exclude_from_timeline?: boolean;
 	id: number;
 	main_story: boolean;
 	marker: number[];
@@ -564,16 +564,7 @@ export interface PlayerCharacterDTO {
 		current: number;
 		day: number;
 		ends_in: number;
-		missions: {
-			description: string;
-			id: number;
-			image: ImageDataDTO;
-			image_small: ImageDataDTO;
-			portrait: ImageDataDTO;
-			requirement: string;
-			speaker: string;
-			title: string;
-		}[];
+		missions: MissionCadetScheduleDTO[];
 		next: number;
 		next_starts_in: number;
 		schedule: {day: number; mission: number }[];
@@ -637,7 +628,7 @@ export interface PlayerCharacterDTO {
 	};
 	destination: any;
 	display_name: string;
-	dispute_histories: any[];
+	dispute_histories: MissionDisputeHistoryDTO[];
 	disputes: any[];
 	event_tickets: any;
 	events: EventDTO[];
@@ -1116,7 +1107,7 @@ export interface ItemData extends ItemDTO {
 }
 
 export interface ItemDataSource {
-   mission?: MissionDTO;
+   mission?: MissionData;
    quest?: MissionQuestDTO;
    questMastery?: MissionQuestMasteryLevelDTO;
    cost?: number; // chrons
@@ -1231,13 +1222,42 @@ export interface ServerConfigDTO {
 	voyages_seconds_per_narrative_event: number;
 }
 
-export interface MissionDTO {
+export interface MissionData {
 	description: string;
+	episode: number;
 	episode_title: string;
 	id: number;
 	quests: MissionQuestDTO[];
 	stars_earned: number;
 	total_stars: number;
+}
+
+export interface MissionDisputeHistoryDTO {
+	completed: boolean;
+	episode: number;
+	exclude_from_timeline?: boolean;
+	faction_id: number;
+	id: number;
+	marker: number[]; // len=2
+	mission_ids: number[];
+	name: string;
+	stars_earned: number;
+	symbol: string;
+	total_stars: number;
+
+	//Added by app
+	quests?: MissionQuestDTO[];
+}
+
+export interface MissionCadetScheduleDTO {
+	description: string;
+	id: number;
+	image: ImageDataDTO;
+	image_small: ImageDataDTO;
+	portrait: ImageDataDTO;
+	requirement: string;
+	speaker: string;
+	title: string;
 }
 
 export interface MissionQuestMasteryLevelDTO {
@@ -1272,7 +1292,7 @@ export interface MissionQuestChallengeDTO {
 export interface MissionQuestDTO {
 	action: string;
 	cadet?: boolean;
-	challenges: MissionQuestChallengeDTO[];
+	challenges?: MissionQuestChallengeDTO[];
 	crew_requirement?: {
 		description: string;
 		max_stars: number;
@@ -1283,14 +1303,14 @@ export interface MissionQuestDTO {
 	id: number;
 	locked: boolean;
 	mastery_levels: MissionQuestMasteryLevelDTO[];
-	material_bundle: string;
+	material_bundle?: string;
 	name: string;
-	place: string;
+	place?: string;
 	quest_type: string;
-	star_background: boolean;
+	star_background?: boolean;
 	symbol: string;
 	timeline_icon: ImageDataDTO;
-	unlock_text?: any;
+	unlock_text: string | null;
 }
 
 export interface PotentialRewardDTO {

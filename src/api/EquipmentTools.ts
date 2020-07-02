@@ -1,5 +1,5 @@
-import STTApi from './index';
-import { CrewData, PotentialRewardDTO, ItemArchetypeDTO, MissionDTO, MissionQuestDTO, FactionDTO, MissionQuestMasteryLevelDTO } from './DTO';
+import STTApi, { CONFIG } from './index';
+import { CrewData, PotentialRewardDTO, ItemArchetypeDTO, MissionData, MissionQuestDTO, FactionDTO, MissionQuestMasteryLevelDTO, ItemData, ItemDTO, RewardDTO, ItemDataSource } from './DTO';
 
 export function fixupAllCrewIds() : void {
 	// Now replace the ids with proper ones
@@ -43,7 +43,7 @@ export function getMissionCost(questId: number, mastery_level: number) : number 
 }
 
 export interface MissionCostDetails {
-	mission?: MissionDTO,
+	mission?: MissionData,
 	quest?: MissionQuestDTO,
 	questMastery?: MissionQuestMasteryLevelDTO,
 	cost?: number
@@ -153,10 +153,10 @@ export async function loadFullTree(onProgress: (description: string, subDesc?: s
 			digest: STTApi.serverConfig!.config.craft_config.recipe_tree.digest,
 			archetypeCache: STTApi.itemArchetypeCache.archetypes
 		});
-		
+
 		return;
 	}
-	
+
 	onProgress('Loading equipment...', `(${missingEquipment.length} remaining)`);
 
 	// Load the description for the missing equipment
@@ -201,9 +201,189 @@ async function loadItemsDescription(ids: number[] | string[]): Promise<ItemArche
 	return archetypes;
 }
 
+function scanRewards(
+	potential_rewards: (PotentialRewardDTO | RewardDTO)[] | undefined,
+	visitor: (reward: RewardDTO) => void
+) {
+	if (!potential_rewards)
+		return;
+	potential_rewards.forEach(reward => {
+		if ((reward as PotentialRewardDTO).potential_rewards) {
+			scanRewards((reward as PotentialRewardDTO).potential_rewards, visitor);
+		} else {
+			visitor(reward as RewardDTO);
+		}
+	});
+};
+
+export function buildItemData(dtos: ItemDTO[]) : ItemData[] {
+	let items : ItemData[] = [];
+
+	let factionNameItemIds = new Map<string, Set<number>>();
+	STTApi.playerData.character.factions.forEach(f => {
+		factionNameItemIds.set(f.name, new Set());
+		scanRewards(f.shuttle_mission_rewards,
+			(reward) => {
+				//if (reward.type === 2) {
+					factionNameItemIds.get(f.name)!.add(reward.id);
+				//}
+			}
+		);
+	});
+
+	const cadetable = STTApi.getEquipmentManager().getCadetableItems();
+	for (const itemDTO of dtos) {
+		try {
+			let item : ItemData = {
+				...itemDTO,
+				factions: [],
+				//typeName = itemDTO.icon.file.replace("/items", "").split("/")[1];
+				//symbol2 = itemDTO.icon.file.replace("/items", "").split("/")[2];
+				sources: []
+			};
+
+			// Push onto items before trying things that might throw so it can be partially complete
+			items.push(item);
+
+			//NOTE: this used to overwrite the DTO's symbol; is it needed?
+			//itemDTO.symbol = itemDTO.icon.file.replace("/items", "").split("/")[2];
+
+			item.cadetable = '';
+			const cadetSources = cadetable.get(item.archetype_id);
+			if (cadetSources) {
+				cadetSources.forEach(v => {
+					let name = v.mission.episode_title;
+					let mastery = v.masteryLevel;
+
+					let questName = v.quest.action;
+					let questIndex = null;
+					v.mission.quests.forEach((q, i) => {
+						if (q.id === v.quest.id)
+							questIndex = i + 1;
+					});
+
+					if (item.cadetable)
+						item.cadetable += ' | ';
+					item.cadetable += name + ' : ' + questIndex + ' : ' + questName + ' : ' + CONFIG.MASTERY_LEVELS[mastery].name;
+
+					// const costDetails = getMissionCostDetails(v.quest.id, mastery);
+					item.sources.push({
+						chance: 0,
+						quotient: 0,
+						title: name + ' #' + questIndex + ' ' + CONFIG.MASTERY_LEVELS[mastery].name + ' (' + questName + ')',
+							// + '[' + entry.chance_grade + '/5 @ ' +
+							// costDetails.cost + ' Chrons (q=' + (Math.round(entry.energy_quotient * 100) / 100) + ')]',
+						type: 'cadet',
+						mission: v.mission,
+						quest: v.quest,
+					});
+				});
+			}
+
+			let iter = factionNameItemIds.entries();
+			for (let n = iter.next(); !n.done; n = iter.next()) {
+				let e = n.value;
+				if (e[1].has(item.archetype_id)) {
+					item.factions.push(e[0]);
+				}
+				n = iter.next();
+			}
+
+			const archetype = STTApi.itemArchetypeCache.archetypes.find(a => a.id === item.archetype_id);
+			//TODO: what does it mean if there is no archetype?
+			if (archetype) {
+				const missions = archetype.item_sources.filter(e => e.type === 0 || e.type === 1 || e.type === 2);
+				const sources : ItemDataSource[] = missions.map((entry, idx) => {
+					const chance = entry.chance_grade / 5;
+					const quotient = entry.energy_quotient;
+					if (entry.type == 1) {
+						return {
+							chance,
+							quotient: 0,
+							title: entry.name,
+							type: 'faction'
+						};
+					}
+					const costDetails = getMissionCostDetails(entry.id, entry.mastery);
+					let title = '';
+					if (costDetails.mission && costDetails.quest && costDetails.cost && costDetails.questMastery) {
+						const qoff = costDetails.mission.quests.indexOf(costDetails.quest) + 1;
+						const missionTitle = costDetails.mission.description.length > costDetails.mission.episode_title.length ?
+							costDetails.mission.episode_title : costDetails.mission.description;
+						title = missionTitle + ' #' + qoff + ' '+CONFIG.MASTERY_LEVELS[costDetails.questMastery.id].name+' (' + costDetails.quest.name + ')[' + entry.chance_grade + '/5 @ ' + costDetails.cost + ' Chrons (q=' + (Math.round(entry.energy_quotient * 100) / 100) + ')]';
+					}
+					return {
+						...costDetails,
+						chance,
+						quotient,
+						title,
+						type: entry.type === 0 ? 'dispute' : 'ship'
+					};
+				});
+				const filtered = sources.filter(s => s.title !== '');
+				filtered.forEach(src => item.sources.push(src));
+			}
+			//console.log('Item: ' + item.name + ' rarity:' + item.rarity + ' sym:' + item.symbol + ' aid:' + item.archetype_id + ' iid:' + item.id
+			// + (' srcs:' + item.sources.map((src, idx, all) => src.title +'-' + src.type + (idx === all.length - 1 ? '' : ', '))));
+		}
+		catch (e) {
+			console.error(e);
+		}
+	}
+
+	// Now iterate through all missions and quests and collect rewards into the sources structure that are missing from
+	// the archetype
+	STTApi.missions.forEach(m => {
+		m.quests.forEach((q, qi) => {
+			q.mastery_levels.forEach((ml, mli) => {
+				scanRewards(ml.rewards, reward => {
+					const item = items.find(itm => itm.archetype_id === reward.id);
+					if (!item) {
+						return;
+					}
+					// Only capture sources for equipment and components
+					if (item.type !== 2 && item.type !== 3) {
+						return;
+					}
+					let src = item.sources.find(src => src.mission?.id === m.id && src.quest?.id === q.id);
+					if (!src) {
+						let type = '';
+						let title = m.episode_title + ' #' + (qi+1) + ' ' + CONFIG.MASTERY_LEVELS[mli].name + ' (' + q.name + ')';
+						if (q.cadet) {
+							type = 'cadet';
+						} else if (q.quest_type === 'ShipBattleQuest') {
+							type = 'ship';
+							const missionTitle = m.episode > 0 ? 'Episode ' + m.episode : m.episode_title;
+							title = missionTitle + ' #' + (qi+1) + ' '+CONFIG.MASTERY_LEVELS[mli].name+' (' + q.name + ')';
+						} else if (q.quest_type === 'ConflictQuest') {
+							type = 'dispute';
+							const missionTitle = m.episode > 0 ? 'Episode ' + m.episode : m.episode_title;
+							title = missionTitle + ' #' + (qi+1) + ' '+CONFIG.MASTERY_LEVELS[mli].name+' (' + q.name + ')';
+						} else {
+							console.log("not found");
+						}
+						src = {
+							chance: 0,
+							quotient: 0,
+							title,
+							type,
+							quest: q,
+							mission: m,
+							questMastery: ml,
+						};
+						item.sources.push(src);
+					}
+				})
+			});
+		});
+	});
+
+	return items;
+}
+
 export interface CadetItemSource {
 	quest: MissionQuestDTO;
-	mission: MissionDTO;
+	mission: MissionData;
 	masteryLevel: number;
 }
 

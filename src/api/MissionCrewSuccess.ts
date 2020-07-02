@@ -1,6 +1,6 @@
 import STTApi from "./index";
 import CONFIG from "./CONFIG";
-import { CrewData, MissionDTO, MissionQuestChallengeDTO, MissionQuestDTO, SkillData } from "./DTO";
+import { CrewData, MissionData, MissionQuestChallengeDTO, MissionQuestDTO, SkillData } from "./DTO";
 
 export interface IChallengeSuccessTrait {
     trait: string;
@@ -185,7 +185,7 @@ export interface IQuestRecommendations {
 
 export function calculateQuestRecommendations(questId: number, masteryIndex: number, loadEvenFinishedNodes: boolean): IQuestRecommendations {
     let mission: IQuestMission | undefined;
-    STTApi.missions.forEach((episode: MissionDTO) => {
+    STTApi.missions.forEach((episode) => {
         episode.quests.forEach((quest: MissionQuestDTO) => {
             if (quest.id === questId) {
                 mission = quest;
@@ -202,7 +202,7 @@ export function calculateQuestRecommendations(questId: number, masteryIndex: num
     }
 
     // Get the numbers from the first challenge that has them (since they match across the quest)
-    mission.challenges.forEach((challenge: MissionQuestChallengeDTO) => {
+    mission.challenges?.forEach((challenge: MissionQuestChallengeDTO) => {
         if (challenge.difficulty_by_mastery) {
             mission!.difficulty_by_mastery = challenge.difficulty_by_mastery;
         }
@@ -217,9 +217,9 @@ export function calculateQuestRecommendations(questId: number, masteryIndex: num
     });
 
     // This algorithm assumes the graph is acyclic
-    let nodeElem: { [index: number]: any } = {};
+    let nodeElem: { [index: number]: MissionQuestChallengeDTO } = {};
     let unfinishedNodes: number[] = [];
-    mission.challenges.forEach((challenge: any) => {
+    mission.challenges?.forEach(challenge => {
         nodeElem[challenge.id] = challenge;
 
         const unclaimedCritical = mission?.mastery_levels[masteryIndex].jackpots
@@ -235,7 +235,7 @@ export function calculateQuestRecommendations(questId: number, masteryIndex: num
         let newPath = path.slice(0);
         newPath.push(index);
         if (nodeElem[index].children && nodeElem[index].children.length > 0) {
-            nodeElem[index].children.forEach((child: number) => {
+            nodeElem[index].children.forEach(child => {
                 buildTree(child, newPath);
             });
         }

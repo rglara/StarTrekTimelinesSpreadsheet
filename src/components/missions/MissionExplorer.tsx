@@ -6,7 +6,7 @@ import { Dropdown, DropdownMenuItemType, IDropdownOption } from 'office-ui-fabri
 import STTApi from '../../api';
 
 import { MissionDetails } from './MissionDetails';
-import { MissionDTO } from '../../api/DTO';
+import { MissionData } from '../../api/DTO';
 
 interface MissionExplorerProps {
 	onCommandItemsUpdate?: (items: ICommandBarItemProps[]) => void;
@@ -77,7 +77,7 @@ export class MissionExplorer extends React.Component<MissionExplorerProps, Missi
 		}
 	}
 
-	_sortMissions(a: MissionDTO, b: MissionDTO): number {
+	_sortMissions(a: MissionData, b: MissionData): number {
 		// sort CADET missions (by id),
 		// then DISTRESS CALLS (alphabetically),
 		// then EPISODES (numerically)

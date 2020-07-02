@@ -86,7 +86,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 		if (mission) {
 			let maxX = 1;
 			let maxY = 1;
-			mission.challenges.forEach(challenge => {
+			mission.challenges?.forEach(challenge => {
 				maxX = Math.max(challenge.grid_x, maxX);
 				maxY = Math.max(challenge.grid_y, maxY);
 			});
@@ -104,7 +104,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 
 			let nodes = [];
 			let edges = [];
-			mission.challenges.forEach(challenge => {
+			mission.challenges?.forEach(challenge => {
 				let color = getTheme().palette.themeDark;
 				if (challenge.critical) {
 					if (!challenge.critical.claimed) {
@@ -140,7 +140,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 		let challenge: MissionQuestChallengeDTO | undefined;
 		let mission = this.state.mission;
 		if (mission) {
-			mission.challenges.forEach(item => {
+			mission.challenges?.forEach(item => {
 				if (item.id === this.state.selectedChallenge) {
 					challenge = item;
 				}
@@ -162,7 +162,7 @@ export class MissionDetails extends React.Component<MissionDetailsProps, Mission
 				lockTraits.push(<span key={lock.trait}>{STTApi.getTraitName(lock.trait)}</span>);
 			}
 			else {
-				const foundItem = mission!.challenges.find(item => item.id == lock.success_on_node_id);
+				const foundItem = mission!.challenges?.find(item => item.id == lock.success_on_node_id);
 				lockTraits.push(<span key={lock.success_on_node_id}>Success on {foundItem ? foundItem.name : '[Unknown]'}</span>);
 			}
 		});

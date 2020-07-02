@@ -3,10 +3,10 @@ import CONFIG from "./CONFIG";
 import { buildCrewData, buildCrewDataAllFromDatacore } from '../components/crew/CrewTools';
 import { matchShips } from './ShipTools';
 import { loadMissionData } from './MissionTools';
-import { loadFullTree, fixupAllCrewIds, getMissionCostDetails } from './EquipmentTools';
+import { loadFullTree, fixupAllCrewIds, buildItemData } from './EquipmentTools';
 import { refreshAllFactions, loadFactionStore } from '../components/factions/FactionTools';
 import { calculateMissionCrewSuccess, calculateMinimalComplementAsync } from './MissionCrewSuccess';
-import { CrewData, ItemData, PotentialRewardDTO, RewardDTO } from "./DTO";
+import { PotentialRewardDTO, RewardDTO } from "./DTO";
 
 export async function loginSequence(onProgress: (description: string, subDesc?: string) => void) {
 	let mainResources = [
@@ -121,124 +121,13 @@ export async function loginSequence(onProgress: (description: string, subDesc?: 
 
 	onProgress('Loading Faction Rewards...');
 	await refreshAllFactions();
-	let rewardItemIds = new Map<string, Set<number>>();
-	const scanRewards = (name: string, potential_rewards?: (PotentialRewardDTO | RewardDTO)[]) => {
-		if (!potential_rewards)
-			return;
-		potential_rewards.forEach(reward => {
-			if ((reward as PotentialRewardDTO).potential_rewards) {
-				scanRewards(name, (reward as PotentialRewardDTO).potential_rewards);
-			} else if (reward.type === 2) {
-				rewardItemIds.get(name)!.add((reward as RewardDTO).id);
-			}
-		});
-	};
-	STTApi.playerData.character.factions.forEach(f => {
-		rewardItemIds.set(f.name, new Set());
-		scanRewards(f.name, f.shuttle_mission_rewards);
-	});
 
 	onProgress('Loading Equipment and Components...');
 	// Don't pre-cache items; they load quickly and aren't in full table listings
 	// STTApi.itemArchetypeCache.archetypes.forEach(item => {
 	// 	STTApi.imgUrl(item.icon, undefined);
 	// })
-	STTApi.items = [];
-	for (const itemDTO of STTApi.playerData.character.items) {
-		try {
-			let item : ItemData = {
-				...itemDTO,
-				factions: [],
-				//typeName = itemDTO.icon.file.replace("/items", "").split("/")[1];
-				//symbol2 = itemDTO.icon.file.replace("/items", "").split("/")[2];
-				sources: []
-			};
-			STTApi.items.push(item);
-
-			//NOTE: this used to overwrite the DTO's symbol; is it needed?
-			//itemDTO.symbol = itemDTO.icon.file.replace("/items", "").split("/")[2];
-
-			item.cadetable = '';
-			const cadetSources = STTApi.getEquipmentManager().getCadetableItems().get(item.archetype_id);
-			if (cadetSources) {
-				cadetSources.forEach(v => {
-					let name = v.mission.episode_title;
-					let mastery = v.masteryLevel;
-
-					let questName = v.quest.action;
-					let questIndex = null;
-					v.mission.quests.forEach((q, i) => {
-						if (q.id === v.quest.id)
-							questIndex = i + 1;
-					});
-
-					if (item.cadetable)
-						item.cadetable += ' | ';
-					item.cadetable += name + ' : ' + questIndex + ' : ' + questName + ' : ' + CONFIG.MASTERY_LEVELS[mastery].name;
-
-					// const costDetails = getMissionCostDetails(v.quest.id, mastery);
-					item.sources.push({
-						chance: 0,
-						quotient: 0,
-						title: name + ' #' + questIndex + ' ' + CONFIG.MASTERY_LEVELS[mastery].name + ' (' + questName + ')',
-							// + '[' + entry.chance_grade + '/5 @ ' +
-							// costDetails.cost + ' Chrons (q=' + (Math.round(entry.energy_quotient * 100) / 100) + ')]',
-						type: 'cadet',
-						mission: v.mission,
-						quest: v.quest,
-					});
-				});
-			}
-
-			let iter = rewardItemIds.entries();
-			for (let n = iter.next(); !n.done; n = iter.next()) {
-				let e = n.value;
-				if (e[1].has(item.archetype_id)) {
-					item.factions.push(e[0]);
-				}
-				n = iter.next();
-			}
-
-			const archetype = STTApi.itemArchetypeCache.archetypes.find(a => a.id === item.archetype_id);
-			if (archetype) {
-				const missions = archetype.item_sources.filter(e => e.type === 0 || e.type === 1 || e.type === 2);
-				const sources = missions.map((entry, idx) => {
-					const chance = entry.chance_grade / 5;
-					const quotient = entry.energy_quotient;
-					if (entry.type == 1) {
-						return {
-							chance,
-							quotient: 0,
-							title: entry.name,
-							type: 'faction'
-						};
-					}
-					const costDetails = getMissionCostDetails(entry.id, entry.mastery);
-					let title = '';
-					if (costDetails.mission && costDetails.quest && costDetails.cost && costDetails.questMastery) {
-						const qoff = costDetails.mission.quests.indexOf(costDetails.quest) + 1;
-						const missionTitle = costDetails.mission.description.length > costDetails.mission.episode_title.length ?
-							costDetails.mission.episode_title : costDetails.mission.description;
-						title = missionTitle + ' #' + qoff + ' '+CONFIG.MASTERY_LEVELS[costDetails.questMastery.id].name+' (' + costDetails.quest.name + ')[' + entry.chance_grade + '/5 @ ' + costDetails.cost + ' Chrons (q=' + (Math.round(entry.energy_quotient * 100) / 100) + ')]';
-					}
-					return {
-						...costDetails,
-						chance,
-						quotient,
-						title,
-						type: entry.type === 0 ? 'dispute' : 'ship'
-					};
-				});
-				const filtered = sources.filter(s => s.title !== '');
-				filtered.forEach(src => item.sources.push(src));
-			}
-			//console.log('Item: ' + item.name + ' rarity:' + item.rarity + ' sym:' + item.symbol + ' aid:' + item.archetype_id + ' iid:' + item.id
-			// + (' srcs:' + item.sources.map((src, idx, all) => src.title +'-' + src.type + (idx === all.length - 1 ? '' : ', '))));
-		}
-		catch (e) {
-			console.error(e);
-		}
-	}
+	STTApi.items = buildItemData(STTApi.playerData.character.items);
 
 	onProgress('Loading Faction and Faction Store Images...');
 	for (let faction of STTApi.playerData.character.factions) {
