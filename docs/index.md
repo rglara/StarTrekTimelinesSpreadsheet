@@ -84,7 +84,7 @@ I encourage you to only use a version of the tool from a trusted source (such as
 **NOTE** This tool does not automate any part of the game play with the purpose of cheating or creating an unfair advantage; its purpose is to function as a tool for management, convenience, and analysis to help players organize their crew and to add utility where the game is lacking (such as inventory management).
 
 **DISCLAIMER** This tool is provided "as is", without warranty of any kind. Use at your own risk!
-It should be understood that *Star Trek Timelines* content and materials are trademarks and copyrights of [Tilting Point, Inc.](https://www.tiltingpoint.com/) or its licensors. All rights reserved. This tool is neither endorsed by nor affiliated with Tilting Point, Inc. (or the previous developer, Disruptor Beam, Inc. [more](DBSupport.png) )
+It should be understood that *Star Trek Timelines* content and materials are trademarks and copyrights of [Tilting Point, Inc.](https://www.tiltingpoint.com/) or its licensors. All rights reserved. This tool is neither endorsed by nor affiliated with Tilting Point, Inc. (or the previous developer, Disruptor Beam, Inc. [more](images/DBSupport.png) )
 
 ## Install and run the tool
 
@@ -106,7 +106,7 @@ Notable features:
 * Inventory max check and Replicator daily use check
 * Event status - event pending or started
 
-![Screenshot tool](homepage.png "Homepage screenshot")
+![Screenshot tool](images/homepage.png "Homepage screenshot")
 
 ### Crew
 
@@ -123,9 +123,9 @@ Notable features:
 * Hover to see equipment and other details; click equipment icon in hover to replicate
 * Show count of frozen crew if multiple
 
-![Screenshot tool](page_crew_base.png "Crew Base Stats")
-![Screenshot tool](page_crew_gaunt.png "Crew Gauntlet Stats")
-![Screenshot tool](page_crew_voy.png "Crew Voyage Stats")
+![Screenshot tool](images/page_crew_base.png "Crew Base Stats")
+![Screenshot tool](images/page_crew_gaunt.png "Crew Gauntlet Stats")
+![Screenshot tool](images/page_crew_voy.png "Crew Voyage Stats")
 
 ### Voyage
 
@@ -146,9 +146,9 @@ Notable features:
 * Calculate and export best crew for all voyage pairs
 * Export voyage log and statistics
 
-![Screenshot Voyage](page_voy_select.png "Voyage screenshot")
+![Screenshot Voyage](images/page_voy_select.png "Voyage screenshot")
 
-![Screenshot Voyage](page_voy_log.png "Voyage log screenshot")
+![Screenshot Voyage](images/page_voy_log.png "Voyage log screenshot")
 
 ### Gauntlet
 
@@ -163,9 +163,9 @@ Notable features:
 * Recommendation mode to help select crew to use in your next gauntlet (if you didn't already start it).
   * This algorithm could use some additional input from contributors.
 
-![Screenshot Gauntlet Round](mac-gauntlet.png "Gauntlet Round screenshot")
+![Screenshot Gauntlet Round](images/mac-gauntlet.png "Gauntlet Round screenshot")
 
-![Screenshot Gauntlet](Screenshot-Gauntlet.png "Gauntlet screenshot")
+![Screenshot Gauntlet](images/Screenshot-Gauntlet.png "Gauntlet screenshot")
 
 ### Events
 
@@ -193,18 +193,18 @@ Notable features:
 * Expedition events show bonus crew
 
 Shuttle Events:
-![Screenshot Shuttle Event](page_event_sh.png "Shuttle Event screenshot")
+![Screenshot Shuttle Event](images/page_event_sh.png "Shuttle Event screenshot")
 
 Galaxy events:
-![Screenshot Galaxy Event](page_event_gal.png "Galaxy Event screenshot")
+![Screenshot Galaxy Event](images/page_event_gal.png "Galaxy Event screenshot")
 Galaxy event full bonus crew listing:
-![Screenshot Galaxy Event Bonus Crew](page_event_gal_bonus.png "Galaxy Event Bonus Crew screenshot")
+![Screenshot Galaxy Event Bonus Crew](images/page_event_gal_bonus.png "Galaxy Event Bonus Crew screenshot")
 Galaxy event owned crew list:
-![Screenshot Galaxy Event Owned Crew](page_event_gal_crew.png "Galaxy Event Owned Crew screenshot")
+![Screenshot Galaxy Event Owned Crew](images/page_event_gal_crew.png "Galaxy Event Owned Crew screenshot")
 Galaxy event crafting details:
-![Screenshot Galaxy Event Crafting Details](page_event_gal_detail.png "Galaxy Event Crafting screenshot")
+![Screenshot Galaxy Event Crafting Details](images/page_event_gal_detail.png "Galaxy Event Crafting screenshot")
 Galaxy event farming list:
-![Screenshot Galaxy Event Farm List](page_event_gal_farm.png "Galaxy Event Farm List screenshot")
+![Screenshot Galaxy Event Farm List](images/page_event_gal_farm.png "Galaxy Event Farm List screenshot")
 
 ### Items
 
@@ -219,7 +219,7 @@ Notable features
 * Click an item icon to replicate
 * Filter to items provided by ship battles (in "Settings") to help with skirmish farming
 
-![Screenshot Items](page_item_sources.png "Items screenshot")
+![Screenshot Items](images/page_item_sources.png "Items screenshot")
 
 ### Item Replication
 
@@ -241,7 +241,7 @@ Notable features
   * In the game, it is difficult to see the item label in some cases
   * Usually junk items are few in quantity, such as Dabo rewards
 
-![Screenshot Items](page_item_repl.png "Items screenshot")
+![Screenshot Items](images/page_item_repl.png "Items screenshot")
 
 ### Shuttles
 
@@ -257,7 +257,7 @@ Notable features
   * Select crew to avoid using in shuttles, such as event crew
 * Send shuttles from the tool (game client must be restarted to see changes)
 
-![Screenshot Shuttles](page_shuttles.png "Shuttles screenshot")
+![Screenshot Shuttles](images/page_shuttles.png "Shuttles screenshot")
 
 ### Ships
 
@@ -266,13 +266,13 @@ Lists the ships you currently have, along with their stats.
 Notable features
 * Sorting by "Level" also sorts by available schematics to allow more easily locating unneeded schematics
 
-![Screenshot Ships](mac-ships.png "Ships screenshot")
+![Screenshot Ships](images/mac-ships.png "Ships screenshot")
 
 ### Cryo Collections
 
 See what active, frozen, and unowned crew exist for each collection, and see your progress with collection milestones.
 
-![Screenshot Collections](page_collections.png "Cryo Collections screenshot")
+![Screenshot Collections](images/page_collections.png "Cryo Collections screenshot")
 
 ### Top Crew
 
@@ -285,14 +285,14 @@ Notable features
 * Shows *EQ* if missing equipment and *L* if not max level
 * Toggle inclusion of frozen crew (in "Settings")
 
-![Screenshot Top Base](page_best_base.png "Top Base screenshot")
-![Screenshot Top Base](page_best_brank.png "Top Base screenshot")
+![Screenshot Top Base](images/page_best_base.png "Top Base screenshot")
+![Screenshot Top Base](images/page_best_brank.png "Top Base screenshot")
 
 ### Crew Ship Abilities
 
 See a table of your crew's ship abilities, including activation type (Attack, Accuracy, or Evasion) and amount, activation action and amount, times for initialization, duration, and cooldown, charge details, and passive bonuses.
 
-![Screenshot Crew Ship Abilities](page_crewship.png "Crew Ship Ability screenshot")
+![Screenshot Crew Ship Abilities](images/page_crewship.png "Crew Ship Ability screenshot")
 
 ### Factions
 
@@ -304,13 +304,13 @@ Notable features
 * See how many shuttle transmissions you have per faction
 * See potential shuttle rewards per faction
 
-![Screenshot Faction Stores](page_facstore.png "Faction Store screenshot")
+![Screenshot Faction Stores](images/page_facstore.png "Faction Store screenshot")
 
 ### Missions
 
 This tab gives an overview of all accepted missions and cadet challenges, along with individual requirements and player stats for each quest and challenge, as well as crew success rates for each challenge (node).
 
-![Screenshot Missions](mac-missions.png "Missions screenshot")
+![Screenshot Missions](images/mac-missions.png "Missions screenshot")
 
 ### Fleet
 
@@ -319,7 +319,7 @@ Notable features
 * Fleet member list with name, level, squad, last online status, event rank
 * Fleet chat logs
 
-![Screenshot Fleet](Screenshot-Fleet.png "Fleet screenshot")
+![Screenshot Fleet](images/Screenshot-Fleet.png "Fleet screenshot")
 
 ## Privacy and security
 There is no server associated with the standalone version of this tool, all state stays on your device. Here's a comprehensive list of URLs that the tool accesses (all these URLs are accessed over a secure (HTTPS) connection):
