@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>STT Crew Management Tool</title>
+		<link rel="stylesheet" href="css/lcars.min.css" />
+		<link rel="stylesheet" href="css/docs.css" />
+	</head>
+	<body>
+		<div class="lcars-app-container">
+			<div id="header" class="lcars-row">
+				<div class="lcars-elbow left-top lcars-bourbon-bg"></div>
+				<div class="lcars-column fill">
+					<div id="app-name" class="lcars-row fill">
+						<div class="lcars-text-box large">Crew Management Tool</div>
+						<div class="lcars-text-box full-centered">Star Trek Timelines</div>
+					</div>
+					<div class="lcars-bar horizontal lcars-bourbon-bg">
+						<div class="lcars-title left">{{ page.title }}</div>
+					</div>
+				</div>
+				<div class="lcars-bar horizontal right-end bottom lcars-bourbon-bg"></div>
+			</div>
+			<div id="left-menu" class="lcars-column start-space lcars-u-1">
+				<div class="lcars-elbow left-bottom lcars-neon-carrot-bg"></div>
+{% for section in site.data.navigation.sections %}
+					<div class="lcars-element lcars-neon-carrot-bg">{{ section.title }}</div>
+{% for page in section.pages %}
+					<div class="lcars-element button left-rounded">{{ page.label }}</div>
+{% endfor %}
+{% endfor %}
+				<div class="lcars-bar lcars-neon-carrot-bg"></div>
+			</div>
+			<div id="container" class="lcars-column start-space">
+				{{ content }}
+			</div>	
+			<div id="footer" class="lcars-row">
+				<div class="lcars-elbow left-top lcars-neon-carrot-bg"></div>
+				<div class="lcars-bar horizontal bottom lcars-neon-carrot-bg"></div>
+				<div class="lcars-bar horizontal right-end bottom lcars-neon-carrot-bg"></div>
+			</div>
+		</div>
+	</body>
+</html>
