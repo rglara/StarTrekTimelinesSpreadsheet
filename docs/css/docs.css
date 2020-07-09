@@ -10,5 +10,10 @@ body {
 }
 .lcars-app-container #container {
 	margin-top: 1em;
-	margin-left: 0.75em;
+	margin-left: 2em;
+	margin-right: 1em;
+}
+blockquote {
+	background-color: #202020;
+	padding: 2em;
 }

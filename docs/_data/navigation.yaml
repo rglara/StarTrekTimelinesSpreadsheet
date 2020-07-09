@@ -4,8 +4,8 @@ sections:
     pages:
       - url: index
         label: Welcome
-      - url: status
-        label: Status
+      - url: history
+        label: Project History
       - url: notes
         label: Notes &amp; Disclaimers
       - url: install
