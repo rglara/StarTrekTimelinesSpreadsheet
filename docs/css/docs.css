@@ -1,12 +1,14 @@
 body {
 	background-color: black;
 }
-
 #app-name {
 	margin-bottom: 0;
 	justify-content: space-between;
 }
-
 #app-name div {
 	width: auto;
+}
+.lcars-app-container #container {
+	margin-top: 1em;
+	margin-left: 0.75em;
 }

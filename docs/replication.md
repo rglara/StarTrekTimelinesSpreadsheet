@@ -1,5 +1,6 @@
 ---
-title: Replication
+title: Item Replication
+section: features
 ---
 
-Replication
+Item Replication

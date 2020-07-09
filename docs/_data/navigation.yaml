@@ -1,5 +1,6 @@
 sections:
   - title: Overview
+    key: overview
     pages:
       - url: index
         label: Welcome
@@ -12,10 +13,11 @@ sections:
       - url: privacy
         label: Privacy &amp; Security
   - title: Features
+    key: features
     pages:
       - url: summary
         label: Summary
-      - url: crew
+      - url: mycrew
         label: Crew
       - url: voyage
         label: Voyage

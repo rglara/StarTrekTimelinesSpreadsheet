@@ -22,12 +22,29 @@
 				<div class="lcars-bar horizontal right-end bottom lcars-bourbon-bg"></div>
 			</div>
 			<div id="left-menu" class="lcars-column start-space lcars-u-1">
-				<div class="lcars-elbow left-bottom lcars-neon-carrot-bg"></div>
+				<div class="lcars-column">
+					<div class="lcars-elbow left-bottom lcars-neon-carrot-bg"></div>
+				</div>
 {% for section in site.data.navigation.sections %}
-					<div class="lcars-element lcars-neon-carrot-bg">{{ section.title }}</div>
-{% for page in section.pages %}
-					<div class="lcars-element button left-rounded">{{ page.label }}</div>
-{% endfor %}
+				<div class="lcars-element lcars-husk-bg">
+					{{ section.title }}
+	{% if section.key != page.section %}
+		{% assign first_page = section.pages.first %}
+					<a href="{{ first_page.url }}" class="lcars-element-decorator right"></a>
+	{% endif %}
+				</div>
+	{% if section.key == page.section %}
+		{% for p in section.pages %}
+			{% if page.url contains p.url or p.url == "index" and page.url == "/" %}
+				<div class="lcars-element left-rounded lcars-anakiwa-bg">{{ p.label }}</div>
+			{% else %}
+				<div class="lcars-element left-rounded">
+					{{ p.label }}
+					<a class="lcars-element-decorator right" href="{{ p.url }}"></a>
+				</div>
+			{% endif %}
+		{% endfor %}
+	{% endif %}
 {% endfor %}
 				<div class="lcars-bar lcars-neon-carrot-bg"></div>
 			</div>
