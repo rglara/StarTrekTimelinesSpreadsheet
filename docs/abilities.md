@@ -1,5 +1,5 @@
 ---
-title: Abilities
+title: Crew Abilities
 section: features
 ---
 

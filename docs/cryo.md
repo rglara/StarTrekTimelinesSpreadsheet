@@ -1,5 +1,5 @@
 ---
-title: Cryo
+title: Cryo Collections
 section: features
 ---
 

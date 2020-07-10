@@ -34,7 +34,7 @@ sections:
       - url: ships
         label: Ships
       - url: cryo
-        label: Cryo
+        label: Cryo Collections
       - url: topcrew
         label: Top Crew
       - url: abilities
