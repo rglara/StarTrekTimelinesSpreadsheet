@@ -1,0 +1,47 @@
+body {
+	background-color: black;
+}
+#app-name {
+	margin-bottom: 0;
+	justify-content: space-between;
+}
+#app-name div {
+	width: auto;
+}
+.lcars-app-container #container {
+	margin-top: 1em;
+	margin-left: 2em;
+	margin-right: 1em;
+}
+blockquote {
+	background-color: #202020;
+	padding: 2em;
+}
+.screenshot {
+	margin-top: 1em;
+	width: 80%;
+}
+.screenshot img {
+	object-fit: cover;
+	width: 100%;
+	height: auto;
+}
+.screenshot .lcars-bracket.top {
+	text-align: center;
+}
+.screenshot .lcars-text-box {
+	width: auto;
+}
+.lcars-element.github {
+	justify-content: center;
+}
+.lcars-element.github a {
+	width: 100%;
+	text-align: center;
+}
+.lcars-element.github img {
+	margin-top: 4px;
+}
+#footer .citation {
+	text-align: right;
+}

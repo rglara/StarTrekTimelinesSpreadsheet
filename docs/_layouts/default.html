@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>STT Crew Management Tool</title>
+		<link rel="stylesheet" href="css/lcars.min.css" />
+		<link rel="stylesheet" href="css/docs.css" />
+	</head>
+	<body>
+		<div class="lcars-app-container">
+			<div id="header" class="lcars-row">
+				<div class="lcars-elbow left-top lcars-bourbon-bg"></div>
+				<div class="lcars-column fill">
+					<div id="app-name" class="lcars-row fill">
+						<div class="lcars-text-box large">Crew Management Tool</div>
+						<div class="lcars-text-box full-centered">Star Trek Timelines</div>
+					</div>
+					<div class="lcars-bar horizontal lcars-bourbon-bg">
+						<div class="lcars-title left">{{ page.title }}</div>
+					</div>
+				</div>
+				<div class="lcars-bar horizontal right-end bottom lcars-bourbon-bg"></div>
+			</div>
+			<div id="left-menu" class="lcars-column start-space lcars-u-1">
+				<div class="lcars-elbow left-bottom lcars-neon-carrot-bg"></div>
+				<div class="lcars-bar spacer"></div>
+{% for section in site.data.navigation.sections %}
+				<div class="lcars-element lcars-husk-bg">
+					{{ section.title }}
+	{% if section.key != page.section %}
+		{% assign first_page = section.pages.first %}
+					<a href="{{ first_page.url }}" class="lcars-element-decorator right"></a>
+	{% endif %}
+				</div>
+	{% if section.key == page.section %}
+		{% for p in section.pages %}
+			{% if page.url contains p.url or p.url == "index" and page.url == "/" %}
+				<div class="lcars-element left-rounded lcars-anakiwa-bg">{{ p.label }}</div>
+			{% else %}
+				<div class="lcars-element left-rounded">
+					{{ p.label }}
+					<a class="lcars-element-decorator right" href="{{ p.url }}"></a>
+				</div>
+			{% endif %}
+		{% endfor %}
+	{% endif %}
+				<div class="lcars-bar lcars-vu-1 lcars-neon-carrot-bg"></div>
+				<div class="lcars-bar spacer"></div>
+{% endfor %}
+				<div class="lcars-element rounded lcars-vu-1 lcars-eggplant-bg github">
+					<a href="https://github.com/paulbilnoski/StarTrekTimelinesSpreadsheet/">
+						<img src="images/GitHub-Mark-Light-32px.png" />
+					</a>
+				</div>
+				<div class="lcars-bar lcars-neon-carrot-bg"></div>
+			</div>
+			<div id="container" class="lcars-column start-space">
+				{{ content }}
+			</div>
+			<div id="footer" class="lcars-row">
+				<div class="lcars-elbow left-top lcars-neon-carrot-bg"></div>
+				<div class="lcars-column fill bottom">
+					<div class="citation"><a href="https://github.com/joernweissenborn/lcars">LCARS provided by joernweissenborn</a></div>
+					<div class="lcars-bar horizontal bottom lcars-neon-carrot-bg"></div>
+				</div>
+				<div class="lcars-bar horizontal right-end bottom lcars-neon-carrot-bg"></div>
+			</div>
+		</div>
+	</body>
+</html>
