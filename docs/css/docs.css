@@ -32,3 +32,16 @@ blockquote {
 .screenshot .lcars-text-box {
 	width: auto;
 }
+.lcars-element.github {
+	justify-content: center;
+}
+.lcars-element.github a {
+	width: 100%;
+	text-align: center;
+}
+.lcars-element.github img {
+	margin-top: 4px;
+}
+#footer .citation {
+	text-align: right;
+}

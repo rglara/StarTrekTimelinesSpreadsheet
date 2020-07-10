@@ -22,9 +22,8 @@
 				<div class="lcars-bar horizontal right-end bottom lcars-bourbon-bg"></div>
 			</div>
 			<div id="left-menu" class="lcars-column start-space lcars-u-1">
-				<div class="lcars-column">
-					<div class="lcars-elbow left-bottom lcars-neon-carrot-bg"></div>
-				</div>
+				<div class="lcars-elbow left-bottom lcars-neon-carrot-bg"></div>
+				<div class="lcars-bar spacer"></div>
 {% for section in site.data.navigation.sections %}
 				<div class="lcars-element lcars-husk-bg">
 					{{ section.title }}
@@ -45,15 +44,25 @@
 			{% endif %}
 		{% endfor %}
 	{% endif %}
+				<div class="lcars-bar lcars-vu-1 lcars-neon-carrot-bg"></div>
+				<div class="lcars-bar spacer"></div>
 {% endfor %}
+				<div class="lcars-element rounded lcars-vu-1 lcars-eggplant-bg github">
+					<a href="https://github.com/paulbilnoski/StarTrekTimelinesSpreadsheet/">
+						<img src="images/GitHub-Mark-Light-32px.png" />
+					</a>
+				</div>
 				<div class="lcars-bar lcars-neon-carrot-bg"></div>
 			</div>
 			<div id="container" class="lcars-column start-space">
 				{{ content }}
-			</div>	
+			</div>
 			<div id="footer" class="lcars-row">
 				<div class="lcars-elbow left-top lcars-neon-carrot-bg"></div>
-				<div class="lcars-bar horizontal bottom lcars-neon-carrot-bg"></div>
+				<div class="lcars-column fill bottom">
+					<div class="citation"><a href="https://github.com/joernweissenborn/lcars">LCARS provided by joernweissenborn</a></div>
+					<div class="lcars-bar horizontal bottom lcars-neon-carrot-bg"></div>
+				</div>
 				<div class="lcars-bar horizontal right-end bottom lcars-neon-carrot-bg"></div>
 			</div>
 		</div>
