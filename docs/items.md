@@ -5,7 +5,7 @@ section: features
 
 Lists all items in your inventory, along with their quantity and type.
 
-Notable features:
+**Notable Features**
 * Displays item icon, name, rarity, quantity, category, and other details
 * Powerful filtering
   * Semicolon for "or", space for "and", allows queries like "clo pat;alc;augment transmission" to find all Clothing Patterns, Alcohol, and items returned from the Augment faction
@@ -14,4 +14,4 @@ Notable features:
 * Click an item icon to replicate
 * Filter to items provided by ship battles (in "Settings") to help with skirmish farming
 
-![Screenshot Items](images/page_item_sources.png "Items screenshot")
+{% include screenshot.html file="page_item_sources" caption="Items" %}

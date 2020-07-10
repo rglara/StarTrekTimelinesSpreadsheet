@@ -5,7 +5,7 @@ section: features
 
 Select an item to replicate to see the replicator dialog.
 
-Notable features:
+**Notable Features**
 * Easy to find an item to replicate
   * Replicate an item in your inventory
     * Restrictions exist for certain items that cannot be replicated
@@ -21,4 +21,4 @@ Notable features:
   * In the game, it is difficult to see the item label in some cases
   * Usually junk items are few in quantity, such as Dabo rewards
 
-![Screenshot Items](images/page_item_repl.png "Items screenshot")
+{% include screenshot.html file="page_item_repl" caption="Item Replication" %}

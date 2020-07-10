@@ -5,7 +5,7 @@ section: features
 
 Calculate "best" crew for a open shuttles, as well as monitor the current shuttle status.
 
-Notable features:
+**Notable Features**
 * See all active shuttles and current status (opened, in progress, completed)
 * Select crew for all shuttles and see chance of success
 * Compute a "best" assignment of available crew to shuttles
@@ -15,4 +15,4 @@ Notable features:
   * Select crew to avoid using in shuttles, such as event crew
 * Send shuttles from the tool (game client must be restarted to see changes)
 
-![Screenshot Shuttles](images/page_shuttles.png "Shuttles screenshot")
+{% include screenshot.html file="page_shuttles" caption="Shuttles (Active)" %}

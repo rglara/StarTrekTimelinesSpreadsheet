@@ -5,7 +5,7 @@ section: features
 
 Sort by various fields, group by rarity as well as export the data as Excel or CSV.
 
-Notable features:
+**Notable Features**
 * Show detail column sets for "Base", "Gauntlet" (proficiency), or "Voyage" (base + proficiency average)
 * Show "big book" tier and whether the crew is available in the portal
 * Show "value" - occurrences of this crew in the top ten of various categories among your other crew
@@ -16,14 +16,8 @@ Notable features:
 * Hover to see equipment and other details; click equipment icon in hover to replicate
 * Show count of frozen crew if multiple
 
-Base Stats:
+{% include screenshot.html file="page_crew_base" caption="Crew - Base Stats" %}
 
-![Screenshot tool](images/page_crew_base.png "Crew Base Stats")
+{% include screenshot.html file="page_crew_gaunt" caption="Crew - Gauntlet Stats" %}
 
-Gauntlet Stats:
-
-![Screenshot tool](images/page_crew_gaunt.png "Crew Gauntlet Stats")
-
-Voyage Stats:
-
-![Screenshot tool](images/page_crew_voy.png "Crew Voyage Stats")
+{% include screenshot.html file="page_crew_voy" caption="Crew - Voyage Stats" %}

@@ -2,10 +2,9 @@
 title: Events
 section: features
 ---
-
 Details of the current event, or shows a message if no event is active or pending.
 
-Notable features:
+**Notable Features**
 * Displays event details for all event types
   * Victory points required for tiers in the top 100 players
   * Your current VP and rank, and top threshold reward VP if not yet reached
@@ -26,26 +25,14 @@ Notable features:
 * Skirmish events show crew ship skills for event bonus crew
 * Expedition events show bonus crew
 
-Shuttle Events:
+{% include screenshot.html file="page_event_sh" caption="Shuttle Event" %}
 
-![Screenshot Shuttle Event](images/page_event_sh.png "Shuttle Event screenshot")
+{% include screenshot.html file="page_event_gal" caption="Galaxy Event (Overview)" %}
 
-Galaxy events:
+{% include screenshot.html file="page_event_gal_bonus" caption="Galaxy Event (Crew Bonuses)" %}
 
-![Screenshot Galaxy Event](images/page_event_gal.png "Galaxy Event screenshot")
+{% include screenshot.html file="page_event_gal_crew" caption="Galaxy Event (Owned Crew)" %}
 
-Galaxy event full bonus crew listing:
+{% include screenshot.html file="page_event_gal_detail" caption="Galaxy Event (Crafting Details)" %}
 
-![Screenshot Galaxy Event Bonus Crew](images/page_event_gal_bonus.png "Galaxy Event Bonus Crew screenshot")
-
-Galaxy event owned crew list:
-
-![Screenshot Galaxy Event Owned Crew](images/page_event_gal_crew.png "Galaxy Event Owned Crew screenshot")
-
-Galaxy event crafting details:
-
-![Screenshot Galaxy Event Crafting Details](images/page_event_gal_detail.png "Galaxy Event Crafting screenshot")
-
-Galaxy event farming list:
-
-![Screenshot Galaxy Event Farm List](images/page_event_gal_farm.png "Galaxy Event Farm List screenshot")
+{% include screenshot.html file="page_event_gal_farm" caption="Galaxy Event (Farming List)" %}

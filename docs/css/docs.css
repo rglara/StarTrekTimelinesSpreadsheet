@@ -17,3 +17,18 @@ blockquote {
 	background-color: #202020;
 	padding: 2em;
 }
+.screenshot {
+	margin-top: 1em;
+	width: 80%;
+}
+.screenshot img {
+	object-fit: cover;
+	width: 100%;
+	height: auto;
+}
+.screenshot .lcars-bracket.top {
+	text-align: center;
+}
+.screenshot .lcars-text-box {
+	width: auto;
+}

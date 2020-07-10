@@ -5,7 +5,7 @@ section: features
 
 Calculate "best" crew for a voyage, as well as monitor the current voyage.
 
-Notable features:
+**Notable Features**
 * Calculate "best" crew for the next voyage
   * Send crew on a voyage from the tool (game client must be restarted to see changes)
   * Automatically exclude event bonus crew
@@ -20,6 +20,6 @@ Notable features:
 * Calculate and export best crew for all voyage pairs
 * Export voyage log and statistics
 
-![Screenshot Voyage](images/page_voy_select.png "Voyage screenshot")
+{% include screenshot.html file="page_voy_select" caption="Voyage (Calculate)" %}
 
-![Screenshot Voyage](images/page_voy_log.png "Voyage log screenshot")
+{% include screenshot.html file="page_voy_log" caption="Voyage (Active)" %}

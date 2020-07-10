@@ -5,7 +5,7 @@ section: features
 
 Run gauntlet battles with a helpful UI
 
-Notable features:
+**Notable Features**
 * Avoids excessive UI frills for quicker battles
 * Display all available gauntlet matchups with chance to beat listed opponent
   * Display fleetmates distinctly from other opponents
@@ -14,6 +14,6 @@ Notable features:
 * Recommendation mode to help select crew to use in your next gauntlet (if you didn't already start it).
   * This algorithm could use some additional input from contributors.
 
-![Screenshot Gauntlet Round](images/mac-gauntlet.png "Gauntlet Round screenshot")
+{% include screenshot.html file="mac-gauntlet" caption="Gauntlet (Active Round)" %}
 
-![Screenshot Gauntlet](images/Screenshot-Gauntlet.png "Gauntlet screenshot")
+{% include screenshot.html file="Screenshot-Gauntlet" caption="Gauntlet (Recommendation)" %}
