@@ -3,4 +3,17 @@ title: Gauntlet
 section: features
 ---
 
-Gauntlet
+Run gauntlet battles with a helpful UI
+
+Notable features:
+* Avoids excessive UI frills for quicker battles
+* Display all available gauntlet matchups with chance to beat listed opponent
+  * Display fleetmates distinctly from other opponents
+* Display all gauntlet crew selections and current status (battles fought, disabled) and allow revive/restore
+* Display last gauntlet match details (win/loss, crits, chance to win, last win reward)
+* Recommendation mode to help select crew to use in your next gauntlet (if you didn't already start it).
+  * This algorithm could use some additional input from contributors.
+
+![Screenshot Gauntlet Round](images/mac-gauntlet.png "Gauntlet Round screenshot")
+
+![Screenshot Gauntlet](images/Screenshot-Gauntlet.png "Gauntlet screenshot")
