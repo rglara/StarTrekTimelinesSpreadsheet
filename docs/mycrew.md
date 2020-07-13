@@ -7,12 +7,11 @@ Sort by various fields, group by rarity as well as export the data as Excel or C
 
 **Notable Features**
 * Show detail column sets for "Base", "Gauntlet" (proficiency), or "Voyage" (base + proficiency average)
-* Show "big book" tier and whether the crew is available in the portal
 * Show "value" - occurrences of this crew in the top ten of various categories among your other crew
-* Show gauntlet score (proficiency sum), gauntlet global rank, voyage score, voyage global rank
+* Show gauntlet score (proficiency sum), voyage score
 * Powerful filtering
   * Semicolon for "or", space for "and", allows queries like "dax pilot;mayw;kirk" to find all Dax that are also Pilots and all Mayweathers and Kirks
-* Link to click to open in [datacore.app]
+* Link to click to open in [https://stt.wiki/wiki/]
 * Hover to see equipment and other details; click equipment icon in hover to replicate
 * Show count of frozen crew if multiple
 

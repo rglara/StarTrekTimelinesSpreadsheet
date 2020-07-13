@@ -8,4 +8,4 @@ section: features
 * Fleet member list with name, level, squad, last online status, event rank
 * Fleet chat logs
 
-{% include screenshot.html file="Screenshot-Fleet" caption="Fleet" %}
+{% include screenshot.html file="page_fleet" caption="Fleet" %}

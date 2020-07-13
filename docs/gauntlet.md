@@ -14,6 +14,6 @@ Run gauntlet battles with a helpful UI
 * Recommendation mode to help select crew to use in your next gauntlet (if you didn't already start it).
   * This algorithm could use some additional input from contributors.
 
-{% include screenshot.html file="mac-gauntlet" caption="Gauntlet (Active Round)" %}
+{% include screenshot.html file="page_gauntlet" caption="Gauntlet (Active Round)" %}
 
-{% include screenshot.html file="Screenshot-Gauntlet" caption="Gauntlet (Recommendation)" %}
+{% include screenshot.html file="page_gauntlet_select" caption="Gauntlet (Recommendation)" %}
