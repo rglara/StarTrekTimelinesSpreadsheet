@@ -43,6 +43,7 @@ export class STTApiClass {
 	private _accessToken: string | undefined;
 	// Change this to use mock data - JSON data from previously captured responses, edited as necessary to coerce particular behavior
 	private _usemock: boolean = false;
+	private mockPath: string = '~/StarTrekTimelinesSpreadsheet/mock/';//getAppPath() + '/mock/'; // NOTE: needs trailing path separator
 	private _net: NetworkFetch;
 	private _playerData?: PlayerResponseDTO;
 	private _starbaseData: {
@@ -344,7 +345,7 @@ export class STTApiClass {
 
 	getMockData(url: string): any {
 		// #!if ENV === 'electron'
-		const path = getAppPath() + '/mock/';
+		const path = this.mockPath;
 
 		if (!fs.existsSync(path)) {
 			console.log("Cannot mock; no files found");
