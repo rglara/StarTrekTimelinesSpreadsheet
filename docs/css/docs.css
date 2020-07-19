@@ -12,11 +12,11 @@ body {
 	color: white;
 	margin: 5px;
 	font-family: Arial, Helvetica, sans-serif;
-	font-size: 14pt;
+	font-size: 1em;
 }
 blockquote {
 	background-color: #202020;
-	padding: 2em;
+	padding: 0.25rem 2rem;
 }
 
 .container {
@@ -29,10 +29,11 @@ blockquote {
 
 .lcars-font {
 	font-family: "Okuda", Arial, Helvetica, sans-serif;
-	font-size: 24pt;
+	font-size: 1.75em;
 }
-.lcars-font.small { font-size: 18pt; }
-.lcars-font.large {	font-size: 32pt; }
+.lcars-font.small { font-size: 1.5em; }
+.lcars-font.large { font-size: 2em; }
+.lcars-font.menu { font-size: 1.25em; }
 
 .with-links a {
 	text-decoration: none;
@@ -91,6 +92,24 @@ blockquote {
 	background-color: #B62;
 	grid-column: 1;
 	grid-row: 1 / span 2;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+.header-left .github-button {
+	display: inline-block;
+	padding: 0.25rem 1.5rem;
+	margin: 0.5rem 1.25rem 0 0;
+	border-radius: 2rem;
+	border: solid 1px #B62;
+}
+.header-left .github-button:hover {
+	border-color: white;
+}
+.header-left .github-button img {
+	width: 2rem;
+	height: 2rem;
+	margin-top: 0.25rem;
 }
 .header-content {
 	grid-column: 2 / span 2;
@@ -122,16 +141,54 @@ blockquote {
 	grid-row: 4 / span 2;
 }
 .menu {
-	/* background-color: #f93; */
-	background-color: pink;
 	grid-column: 1;
 	grid-row: 6;
 	margin-right: 2rem;
+	display: flex;
+	flex-direction: column;
+}
+.menu div, .menu a {
+	text-align: right;
+	color: black;
+	height: auto;
+	margin: 0 0 0.25rem 0;
+	padding: 0.25em 0.25em;
+	line-height: 0.75em;
+}
+.menu a {
+	text-decoration: none;
+}
+.menu .group-button {
+	background-color: #ba5;
+}
+.menu .group-label {
+	background-color: #ba5;
+}
+.menu .current-page {
+	background-color: #9cf;
+}
+.menu .page-button {
+	background-color: #fc6;
+}
+.menu .section-spacer {
+	background-color: #f93;
+	height: 0.5rem;
+}
+.menu .section-spacer:last-child {
+	height: 80%;
+	justify-content: stretch;
+	margin: 0;
 }
 .content-top-bar {
 	background-color: #f93;
 	grid-column: 2;
 	grid-row: 4;
+	display: flex;
+	align-items: center;
+}
+.content-top-bar .content-title {
+	background-color: black;
+	padding: 0 0.5rem;
 }
 .content-top-end {
 	background-color: #f93;
@@ -145,6 +202,8 @@ blockquote {
 .content {
 	grid-column: 2 / span 2;
 	grid-row: 5 / span 2;
+	margin: 0.2rem 0.75rem 0.2rem 0.5rem;
+	overflow: auto;
 }
 .footer-left {
 	background-color: #f93;
@@ -176,18 +235,7 @@ blockquote {
 	border-bottom-right-radius: 0.75rem;
 }
 
-/* #app-name {
-	margin-bottom: 0;
-	justify-content: space-between;
-}
-#app-name div {
-	width: auto;
-}
-.lcars-app-container #container {
-	margin-top: 1em;
-	margin-left: 2em;
-	margin-right: 1em;
-}
+/*
 .screenshot {
 	margin-top: 1em;
 	width: 80%;
@@ -203,16 +251,4 @@ blockquote {
 .screenshot .lcars-text-box {
 	width: auto;
 }
-.lcars-element.github {
-	justify-content: center;
-}
-.lcars-element.github a {
-	width: 100%;
-	text-align: center;
-}
-.lcars-element.github img {
-	margin-top: 4px;
-}
-#footer .citation {
-	text-align: right;
-} */
+*/
