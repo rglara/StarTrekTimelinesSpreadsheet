@@ -1,8 +1,18 @@
+@font-face {
+	font-family: 'Okuda';
+	src: url('Okuda.ttf') format('truetype'),
+		 url('Okuda.woff') format('woff'),
+		 url('Okuda.woff2') format('woff2');
+	font-weight: normal;
+	font-style: normal;
+}
+
 body {
 	background-color: black;
 	color: white;
 	margin: 5px;
 	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14pt;
 }
 blockquote {
 	background-color: #202020;
@@ -18,13 +28,11 @@ blockquote {
 }
 
 .lcars-font {
-	/* add okuda here */
-	font-weight: bold;
-	font-size: large;
+	font-family: "Okuda", Arial, Helvetica, sans-serif;
+	font-size: 24pt;
 }
-.lcars-font.large {
-	font-size: x-large;
-}
+.lcars-font.small { font-size: 18pt; }
+.lcars-font.large {	font-size: 32pt; }
 
 .with-links a {
 	text-decoration: none;
