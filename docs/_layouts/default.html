@@ -24,17 +24,23 @@
 {% for section in site.data.navigation.sections %}
 	{% if section.key != page.section %}
 		{% assign first_page = section.pages.first %}
-				<a href="{{ first_page.url }}" class="group-button">{{ section.title }}</a>
+				<a href="{{ first_page.url }}" class="group button">{{ section.title }}</a>
 	{% else %}
-				<div class="group-label">{{ section.title }}</div>
-	{% endif %}
+				<div class="current group">
+					<div class="label">{{ section.title }}</div>
+					<div class="decorator"></div>
+				</div>
+{% endif %}
 
 	{% if section.key == page.section %}
 		{% for p in section.pages %}
 			{% if page.url contains p.url or p.url == "index" and page.url == "/" %}
-				<div class="current-page">{{ p.label }}</div>
+				<div class="current page">
+					<div class="label">{{ p.label }}</div>
+					<div class="decorator"></div>
+				</div>
 			{% else %}
-				<a class="page-button" href="{{ p.url }}">{{ p.label }}</a>
+				<a class="page button" href="{{ p.url }}">{{ p.label }}</a>
 			{% endif %}
 		{% endfor %}
 	{% endif %}

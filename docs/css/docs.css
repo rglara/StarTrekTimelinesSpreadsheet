@@ -33,7 +33,7 @@ blockquote {
 }
 .lcars-font.small { font-size: 1.5em; }
 .lcars-font.large { font-size: 2em; }
-.lcars-font.menu { font-size: 1.25em; }
+.lcars-font.menu { font-size: 1.5em; }
 
 .with-links a {
 	text-decoration: none;
@@ -48,6 +48,7 @@ blockquote {
 }
 .with-links a:hover {
 	background-color: #090703;
+	color: #f90;
 }
 .with-links a:active {
 	color: #ff9;
@@ -150,25 +151,54 @@ blockquote {
 .menu div, .menu a {
 	text-align: right;
 	color: black;
-	height: auto;
-	margin: 0 0 0.25rem 0;
+	margin-bottom: 0.25rem;
 	padding: 0.25em 0.25em;
 	line-height: 0.75em;
 }
 .menu a {
 	text-decoration: none;
 }
-.menu .group-button {
-	background-color: #ba5;
+.menu .group,
+.menu .page {
+	border-top-left-radius: 0.75rem;
+	border-bottom-left-radius: 0.75rem;
 }
-.menu .group-label {
-	background-color: #ba5;
+.menu .group:first-child {
+	margin-top: 0.25rem;
 }
-.menu .current-page {
+.menu .group.button {
+	background-color: #97a;
+}
+.menu .group.button:hover {
+	background-color: #746;
+}
+.menu .current {
+	border-top-left-radius: 0.75rem;
+	border-bottom-left-radius: 0.75rem;
+	display: flex;
+	justify-content: flex-end;
+	padding: 0;
+}
+.menu .current .label {
+	margin: 0;
+}
+.menu .current .decorator {
+	background-color: black;
+	width: 0.25rem;
+	margin: 0 0.5rem 0 0;
+	padding: 0;
+}
+.menu .current.group {
+	background-color: #97a;
+}
+.menu .current.page {
 	background-color: #9cf;
 }
-.menu .page-button {
+.menu .page.button {
 	background-color: #fc6;
+}
+.menu .page.button:hover {
+	background-color: #f90;
 }
 .menu .section-spacer {
 	background-color: #f93;
