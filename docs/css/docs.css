@@ -33,7 +33,7 @@ blockquote {
 }
 .lcars-font.small { font-size: 1.5em; }
 .lcars-font.large { font-size: 2em; }
-.lcars-font.menu { font-size: 1.5em; }
+.lcars-font.x-large { font-size: 2.5em; }
 
 .with-links a {
 	text-decoration: none;
@@ -264,8 +264,6 @@ blockquote {
 	border-top-right-radius: 0.75rem;
 	border-bottom-right-radius: 0.75rem;
 }
-
-/*
 .screenshot {
 	margin-top: 1em;
 	width: 80%;
@@ -275,10 +273,21 @@ blockquote {
 	width: 100%;
 	height: auto;
 }
-.screenshot .lcars-bracket.top {
-	text-align: center;
+.screenshot .header {
+	background-color: #36c;
+	border-top-left-radius: 2rem;
+	border-top-right-radius: 2rem;
+	margin-bottom: 0.25rem;
+	display: flex;
+	justify-content: center;
 }
-.screenshot .lcars-text-box {
-	width: auto;
+.screenshot .header .label {
+	background-color: black;
+	padding: 0 0.5rem;
 }
-*/
+.screenshot .footer {
+	background-color: #36c;
+	height: 1rem;
+	border-bottom-left-radius: 2rem;
+	border-bottom-right-radius: 2rem;
+}

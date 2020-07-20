@@ -14,13 +14,13 @@
 				</a>
 			</div>
 			<div class="header-content">
-				<div class="lcars-font large">Crew Management Tool</div>
-				<div class="lcars-font">Star Trek Timelines</div>
+				<div class="lcars-font x-large">Crew Management Tool</div>
+				<div class="lcars-font large">Star Trek Timelines</div>
 			</div>
 			<div class="header-bottom-bar"></div>
 			<div class="header-bottom-end"></div>
 			<div class="menu-top elbow top"></div>
-			<div class="menu lcars-font">
+			<div class="menu lcars-font small">
 {% for section in site.data.navigation.sections %}
 	{% if section.key != page.section %}
 		{% assign first_page = section.pages.first %}
@@ -48,7 +48,7 @@
 {% endfor %}
 			</div>
 			<div class="content-top-bar">
-				<div class="content-title lcars-font small">{{ page.title | upcase }}</div>
+				<div class="content-title lcars-font">{{ page.title | upcase }}</div>
 			</div>
 			<div class="content-top-end"></div>
 			<div class="content with-links">{{ content }}</div>
