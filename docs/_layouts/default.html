@@ -3,68 +3,61 @@
 	<head>
 		<meta charset="utf-8">
 		<title>STT Crew Management Tool</title>
-		<link rel="stylesheet" href="css/lcars.min.css" />
 		<link rel="stylesheet" href="css/docs.css" />
 	</head>
 	<body>
-		<div class="lcars-app-container">
-			<div id="header" class="lcars-row">
-				<div class="lcars-elbow left-top lcars-bourbon-bg"></div>
-				<div class="lcars-column fill">
-					<div id="app-name" class="lcars-row fill">
-						<div class="lcars-text-box large">Crew Management Tool</div>
-						<div class="lcars-text-box full-centered">Star Trek Timelines</div>
-					</div>
-					<div class="lcars-bar horizontal lcars-bourbon-bg">
-						<div class="lcars-title left">{{ page.title }}</div>
-					</div>
-				</div>
-				<div class="lcars-bar horizontal right-end bottom lcars-bourbon-bg"></div>
+		<div class="container">
+			<div class="header-left elbow bottom">
+				<a href="https://github.com/paulbilnoski/StarTrekTimelinesSpreadsheet/"
+				   class="github-button" >
+					<img src="images/GitHub-Mark-Light-32px.png" />
+				</a>
 			</div>
-			<div id="left-menu" class="lcars-column start-space lcars-u-1">
-				<div class="lcars-elbow left-bottom lcars-neon-carrot-bg"></div>
-				<div class="lcars-bar spacer"></div>
+			<div class="header-content">
+				<div class="lcars-font x-large">Crew Management Tool</div>
+				<div class="lcars-font large">Star Trek Timelines</div>
+			</div>
+			<div class="header-bottom-bar"></div>
+			<div class="header-bottom-end"></div>
+			<div class="menu-top elbow top"></div>
+			<div class="menu lcars-font small">
 {% for section in site.data.navigation.sections %}
-				<div class="lcars-element lcars-husk-bg">
-					{{ section.title }}
 	{% if section.key != page.section %}
 		{% assign first_page = section.pages.first %}
-					<a href="{{ first_page.url }}" class="lcars-element-decorator right"></a>
-	{% endif %}
+				<a href="{{ first_page.url }}" class="group button">{{ section.title }}</a>
+	{% else %}
+				<div class="current group">
+					<div class="label">{{ section.title }}</div>
+					<div class="decorator"></div>
 				</div>
+{% endif %}
+
 	{% if section.key == page.section %}
 		{% for p in section.pages %}
 			{% if page.url contains p.url or p.url == "index" and page.url == "/" %}
-				<div class="lcars-element left-rounded lcars-anakiwa-bg">{{ p.label }}</div>
-			{% else %}
-				<div class="lcars-element left-rounded">
-					{{ p.label }}
-					<a class="lcars-element-decorator right" href="{{ p.url }}"></a>
+				<div class="current page">
+					<div class="label">{{ p.label }}</div>
+					<div class="decorator"></div>
 				</div>
+			{% else %}
+				<a class="page button" href="{{ p.url }}">{{ p.label }}</a>
 			{% endif %}
 		{% endfor %}
 	{% endif %}
-				<div class="lcars-bar lcars-vu-1 lcars-neon-carrot-bg"></div>
-				<div class="lcars-bar spacer"></div>
+				<div class="section-spacer"></div>
 {% endfor %}
-				<div class="lcars-element rounded lcars-vu-1 lcars-eggplant-bg github">
-					<a href="https://github.com/paulbilnoski/StarTrekTimelinesSpreadsheet/">
-						<img src="images/GitHub-Mark-Light-32px.png" />
-					</a>
-				</div>
-				<div class="lcars-bar lcars-neon-carrot-bg"></div>
 			</div>
-			<div id="container" class="lcars-column start-space">
-				{{ content }}
+			<div class="content-top-bar">
+				<div class="content-title lcars-font">{{ page.title | upcase }}</div>
 			</div>
-			<div id="footer" class="lcars-row">
-				<div class="lcars-elbow left-top lcars-neon-carrot-bg"></div>
-				<div class="lcars-column fill bottom">
-					<div class="citation"><a href="https://github.com/joernweissenborn/lcars">LCARS provided by joernweissenborn</a></div>
-					<div class="lcars-bar horizontal bottom lcars-neon-carrot-bg"></div>
-				</div>
-				<div class="lcars-bar horizontal right-end bottom lcars-neon-carrot-bg"></div>
+			<div class="content-top-end"></div>
+			<div class="content with-links">{{ content }}</div>
+			<div class="footer-left elbow bottom"></div>
+			<div class="footer-content with-links">
+				<div class="lcars-font small"><a href="notes">design acknowledgements</a></div>
 			</div>
+			<div class="footer-bottom-bar"></div>
+			<div class="footer-bottom-end"></div>
 		</div>
 	</body>
 </html>
