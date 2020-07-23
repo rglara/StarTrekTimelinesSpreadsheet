@@ -46,6 +46,8 @@ Minimal set of steps required
 
 ##### Development
 * Run `npm run dev` to start *webpack-dev-server*. Electron will launch automatically after compilation.
+  * No need to open a browser. The new window displays after the list of assets emitted and a "Compiled successfully" message.
+  * If the window displays early, the app will load as a blank page. This may be due to a conflict in services running on local ports. Try changing the port used in the `main.js` to `8080` or `8081` or another unused port on your local machine.
 
 ##### Production
 _You have two options, an automatic build or two manual steps_
