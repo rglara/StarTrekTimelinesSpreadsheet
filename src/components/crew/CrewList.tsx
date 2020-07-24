@@ -418,7 +418,7 @@ export const CrewList = (props: {
 		if (!isMobile) {
 			_columns.push({
 				id: 'active_id',
-				Header: () => <Icon iconName='Balloons' />,
+				Header: () => 'V/S',
 				minWidth: 30,
 				maxWidth: 30,
 				style: { textAlign: 'center' },
@@ -426,18 +426,17 @@ export const CrewList = (props: {
 				accessor: 'active_id',
 				Cell: (cell) => {
 					if (cell && cell.original && cell.original.active_id) {
-						if (compactMode) {
-							let isShuttle = false;
-							STTApi.playerData.character.shuttle_adventures.forEach((shuttle) => {
-								if (shuttle.shuttles[0].id === cell.original.active_id) {
-									isShuttle = true;
-								}
-							});
-							return isShuttle ? 'S' : 'V';
-						}
-						return <IconButton iconProps={{ iconName: 'Balloons' }}
-							title='Active engagement'
-							onClick={() => setActive({ activeId: cell.original.active_id, name: cell.original.name })} />;
+						let isShuttle = false;
+						STTApi.playerData.character.shuttle_adventures.forEach((shuttle) => {
+							if (shuttle.shuttles[0].id === cell.original.active_id) {
+								isShuttle = true;
+							}
+						});
+						return <TooltipHost content={ isShuttle ? 'Active on Shuttle' : 'Active on Voyage'} calloutProps={{ gapSpace: 0 }}>
+							<a href='javascript:;' onClick={() => setActive({ activeId: cell.original.active_id, name: cell.original.name })}>{
+								isShuttle ? 'S' : 'V'
+							}</a>
+						</TooltipHost>;
 					} else {
 						return <span />;
 					}
