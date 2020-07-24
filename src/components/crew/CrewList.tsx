@@ -356,7 +356,7 @@ export const CrewList = (props: {
 				Header: () => <Icon iconName='FavoriteStar' />,
 				minWidth: 30,
 				maxWidth: 30,
-				style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
+				style: { textAlign: 'center' },
 				resizable: false,
 				accessor: 'favorite',
 				Cell: (cell) => {
@@ -375,7 +375,7 @@ export const CrewList = (props: {
 				Header: () => <Icon iconName='Snowflake' />,
 				minWidth: 30,
 				maxWidth: 30,
-				style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
+				style: { textAlign: 'center' },
 				resizable: false,
 				accessor: 'frozen',
 				Cell: (cell) => {
@@ -399,7 +399,7 @@ export const CrewList = (props: {
 				Header: () => <Icon iconName='EmptyRecycleBin' />,
 				minWidth: 30,
 				maxWidth: 30,
-				style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
+				style: { textAlign: 'center' },
 				resizable: false,
 				accessor: 'buyback',
 				Cell: (cell) => {
@@ -421,7 +421,7 @@ export const CrewList = (props: {
 				Header: () => <Icon iconName='Balloons' />,
 				minWidth: 30,
 				maxWidth: 30,
-				style: { paddingLeft: 0, paddingRight: 0, textAlign: 'center' },
+				style: { textAlign: 'center' },
 				resizable: false,
 				accessor: 'active_id',
 				Cell: (cell) => {
